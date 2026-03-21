@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="sv" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Björklöven Stats Hub | Slutspel 2026</title>
+  <meta name="description" content="Interaktiv statistikplattform för IF Björklövens slutspel 2026" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bjork: { bg: '#1A1A2E', surface: '#16213E', 'surface-light': '#1F3460', gold: '#C8963E', 'gold-light': '#E8B75E', 'gold-dark': '#9A7230' }
+          },
+          fontFamily: { display: ['Outfit', 'sans-serif'], body: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- SheetJS moved to server-side ETL -->
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.15.3/umd/Recharts.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1A1A2E;
+      color: #F0F0F0;
+      min-height: 100vh;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-display {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #16213E;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #C8963E;
+      border-radius: 3px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes countUp {
+      from {
+        opacity: 0;
+        transform: scale(0.8)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .5
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0
+      }
+
+      100% {
+        background-position: 200% 0
+      }
+    }
+
+    .animate-fade {
+      animation: fadeIn .4s ease-out;
+    }
+
+    .animate-count {
+      animation: countUp .3s ease-out;
+    }
+
+    .glass {
+      background: rgba(22, 33, 62, .7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(200, 150, 62, .15);
+    }
+
+    .gold-glow {
+      box-shadow: 0 0 20px rgba(200, 150, 62, .15);
+    }
+
+    .upload-zone {
+      border: 2px dashed rgba(200, 150, 62, .4);
+      transition: all .3s;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: #C8963E;
+      background: rgba(200, 150, 62, .08);
+    }
+
+    .tab-active {
+      border-bottom: 3px solid #C8963E;
+      color: #C8963E;
+    }
+
+    .heat-green {
+      background: rgba(74, 222, 128, .15);
+      color: #4ADE80;
+    }
+
+    .heat-red {
+      background: rgba(248, 113, 113, .15);
+      color: #F87171;
+    }
+
+    .heat-neutral {
+      background: rgba(136, 146, 176, .1);
+      color: #8892B0;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .2s;
+      border: 1px solid rgba(200, 150, 62, .3);
+      color: #C8963E;
+    }
+
+    .chip:hover {
+      background: rgba(200, 150, 62, .15);
+      border-color: #C8963E;
+    }
+
+    .markdown-content h3 {
+      font-size: 1.1em;
+      font-weight: 700;
+      margin: 12px 0 6px;
+      color: #E8B75E;
+    }
+
+    .markdown-content ul {
+      padding-left: 20px;
+      margin: 6px 0;
+    }
+
+    .markdown-content li {
+      margin: 3px 0;
+    }
+
+    .markdown-content strong {
+      color: #C8963E;
+    }
+
+    .markdown-content table {
+      margin: 8px 0;
+    }
+
+    .markdown-content th,
+    .markdown-content td {
+      padding: 4px 10px;
+      border: 1px solid #1F3460;
+      text-align: left;
+    }
+
+    .markdown-content th {
+      background: #1F3460;
+      color: #C8963E;
+    }
+
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .role-sniper {
+      background: rgba(248, 113, 113, .2);
+      color: #F87171;
+    }
+
+    .role-playmaker {
+      background: rgba(79, 156, 247, .2);
+      color: #4F9CF7;
+    }
+
+    .role-enforcer {
+      background: rgba(251, 146, 60, .2);
+      color: #FB923C;
+    }
+
+    .role-twoway {
+      background: rgba(74, 222, 128, .2);
+      color: #4ADE80;
+    }
+
+    .role-power {
+      background: rgba(167, 139, 250, .2);
+      color: #A78BFA;
+    }
+
+    .role-defensive {
+      background: rgba(136, 146, 176, .2);
+      color: #8892B0;
+    }
+
+    .role-offD {
+      background: rgba(232, 183, 94, .2);
+      color: #E8B75E;
+    }
+
+    .role-stayD {
+      background: rgba(100, 116, 139, .2);
+      color: #94A3B8;
+    }
+
+    .role-gk {
+      background: rgba(167, 139, 250, .2);
+      color: #A78BFA;
+    }
+
+    .form-hot {
+      color: #F97316;
+    }
+
+    .form-warm {
+      color: #FBBF24;
+    }
+
+    .form-cold {
+      color: #60A5FA;
+    }
+
+    .form-ice {
+      color: #94A3B8;
+    }
+
+    @keyframes flame {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.2);
+      }
+    }
+
+    .form-flame {
+      animation: flame 1s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    .chemistry-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(136, 146, 176, .2);
+      overflow: hidden;
+    }
+
+    .chemistry-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+
+    .compare-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+    }
+
+    .compare-bar-fill {
+      height: 6px;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .compare-leader {
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useReducer, useMemo, useCallback, useRef } = React;
+    const { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+      XAxis, YAxis, CartesianGrid, Tooltip, Legend, RadarChart, Radar, PolarGrid,
+      PolarAngleAxis, PolarRadiusAxis, Area, AreaChart } = Recharts;
+
+    const GOLD = '#C8963E', GOLD_L = '#E8B75E', GOLD_D = '#9A7230', BG = '#1A1A2E',
+      SURFACE = '#16213E', SURF_L = '#1F3460', BLUE = '#4F9CF7', GREEN = '#4ADE80',
+      RED = '#F87171', MUTED = '#8892B0';
+    const CHART_COLORS = [GOLD, BLUE, GREEN, '#A78BFA', '#FB923C', '#F472B6'];
+    const TT = { contentStyle: { background: SURFACE, border: `1px solid ${GOLD}`, borderRadius: 8, fontSize: 13 }, labelStyle: { color: GOLD } };
+
+    // ===== UTILITIES =====
+    function toiSec(t) { if (!t) return 0; const p = String(t).split(':'); return (parseInt(p[0]) || 0) * 60 + (parseInt(p[1]) || 0); }
+    function secToi(s) { const m = Math.floor(s / 60), ss = Math.round(s % 60); return `${m}:${ss < 10 ? '0' : ''}${ss}`; }
+    function pct(a, b) { return b > 0 ? (a / b * 100) : 0; }
+    function safeNum(v) { const n = Number(v); return isNaN(n) ? 0 : n; }
+
+    function parseFileName(fn) {
+      const name = fn.replace(/\.xlsx?$/i, '');
+      const parts = name.split('_');
+      if (parts.length < 3) throw new Error('Filnamn måste vara: Motståndare_Bjorkloven_YYYYDDMM.xlsx');
+      const opp = parts[0];
+      const ds = parts[parts.length - 1];
+      if (ds.length !== 8) throw new Error('Datumformat i filnamn måste vara YYYYDDMM');
+      const y = ds.slice(0, 4), d = ds.slice(4, 6), mo = ds.slice(6, 8);
+      return { opponent: opp, date: `${y}-${mo}-${d}`, matchId: `match_${y}${mo}${d}_${opp.toLowerCase()}` };
+    }
+
+    function parseSheet(ws) {
+      // Try simple single-table approach first (all players in one table)
+      const simpleRows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      const goalies = [], skaters = [];
+
+      // Check if simple approach works (has expected columns)
+      const hasSkaterCols = simpleRows.length > 0 && ('G' in simpleRows[0] || 'g' in simpleRows[0] || 'POS' in simpleRows[0]);
+
+      if (hasSkaterCols && simpleRows.some(r => r.Spelare || r.spelare || r.NR || r.Nr)) {
+        // Single-table format - parse directly
+        simpleRows.forEach(r => {
+          if (!r.Spelare && !r.spelare && !r.NR && !r.Nr) return;
+          const name = r.Spelare || r.spelare || '';
+          const pos = String(r.POS || r.Pos || r.pos || '').toUpperCase().trim();
+          const nr = safeNum(r.NR || r.Nr || r.nr);
+          if (pos === 'GK' || pos === 'MV') {
+            const soga = safeNum(r.SOGA || r.soga), svs = safeNum(r.SVS || r.svs || r.Räddningar);
+            goalies.push({
+              name, number: nr, line: safeNum(r.LINE || r.Line || r.line) || 1,
+              ga: safeNum(r.GA || r.ga || r['Insläppta']), soga, spga: safeNum(r.SPGA || r.spga), svs,
+              svsPct: r['SVS%'] != null && r['SVS%'] !== '' ? safeNum(r['SVS%']) : pct(svs, soga)
+            });
+          } else if (name || nr) {
+            const g = safeNum(r.G || r.g), a = safeNum(r.A || r.a), fw = safeNum(r.FOW || r.fow), fl = safeNum(r.FOL || r.fol);
+            const toi = r.TOI || r.toi || r['Tid'] || '0:00';
+            skaters.push({
+              name, number: nr, pos: pos || 'FW', line: safeNum(r.LINE || r.Line || r.line) || 1,
+              goals: g, assists: a, points: g + a, ppg: safeNum(r.PPG || r.ppg),
+              shotsWide: safeNum(r.SW || r.sw), pim: safeNum(r.PIM || r.pim),
+              sog: safeNum(r.SOG || r.sog), ppsog: safeNum(r.PPSOG || r.ppsog),
+              plusMinus: safeNum(r['+/-'] || r['Plus/Minus'] || r.plusminus),
+              toi, toiSeconds: toiSec(toi), hits: safeNum(r.Hits || r.hits || r.HIT),
+              fow: fw, fol: fl, foPct: r['FO%'] != null && r['FO%'] !== '' ? safeNum(r['FO%']) : pct(fw, fw + fl)
+            });
+          }
+        });
+        if (goalies.length > 0 || skaters.length > 0) {
+          console.log(`[Stats Hub] Parsed (single-table): ${goalies.length} goalies, ${skaters.length} skaters`);
+          return { goalies, skaters };
+        }
+      }
+
+      // Multi-section format: scan raw data for header rows
+      console.log('[Stats Hub] Trying multi-section parse...');
+      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      function findHeaderRow(data, markers) {
+        for (let i = 0; i < data.length; i++) {
+          const row = (data[i] || []).map(c => String(c).trim().toUpperCase());
+          if (markers.every(m => row.some(cell => cell === m.toUpperCase()))) return i;
+        }
+        return -1;
+      }
+
+      function parseSection(data, headerIdx) {
+        if (headerIdx < 0 || headerIdx >= data.length) return [];
+        const headers = (data[headerIdx] || []).map(c => String(c).trim());
+        const rows = [];
+        for (let i = headerIdx + 1; i < data.length; i++) {
+          const rowData = data[i] || [];
+          if (rowData.length === 0 || rowData.every(c => c === '' || c == null)) break;
+          // Stop if we hit another header row (contains 'Spelare' as value in first cols)
+          const firstCells = rowData.slice(0, 3).map(c => String(c).trim().toUpperCase());
+          if (firstCells.includes('SPELARE') && i > headerIdx + 1) break;
+          const obj = {};
+          headers.forEach((h, idx) => { if (h) obj[h] = rowData[idx] != null ? rowData[idx] : ''; });
+          rows.push(obj);
+        }
+        return rows;
+      }
+
+      // Find goalie section (look for GA or SOGA or SVS columns)
+      const gkIdx = findHeaderRow(raw, ['Spelare', 'NR']);
+      let skIdx = -1;
+
+      if (gkIdx >= 0) {
+        const gkHeaders = (raw[gkIdx] || []).map(c => String(c).trim().toUpperCase());
+        const isGoalieHeader = gkHeaders.includes('GA') || gkHeaders.includes('SVS') || gkHeaders.includes('SOGA');
+
+        if (isGoalieHeader) {
+          // Parse goalies from this section
+          const gkRows = parseSection(raw, gkIdx);
+          gkRows.forEach(r => {
+            const soga = safeNum(r.SOGA || r.soga), svs = safeNum(r.SVS || r.svs);
+            if (r.Spelare || r.NR) goalies.push({
+              name: r.Spelare || '', number: safeNum(r.NR),
+              line: safeNum(r.LINE || r.Line) || 1, ga: safeNum(r.GA), soga, spga: safeNum(r.SPGA), svs,
+              svsPct: r['SVS%'] != null && r['SVS%'] !== '' ? safeNum(r['SVS%']) : pct(svs, soga)
+            });
+          });
+          // Find skater section after goalie section
+          skIdx = findHeaderRow(raw.slice(gkIdx + 1), ['Spelare', 'NR']);
+          if (skIdx >= 0) skIdx += gkIdx + 1;
+        } else {
+          // First header is skaters, try to find goalies elsewhere
+          skIdx = gkIdx;
+        }
+      }
+
+      if (skIdx < 0) skIdx = findHeaderRow(raw, ['Spelare', 'G']);
+      if (skIdx < 0) skIdx = findHeaderRow(raw, ['Spelare', 'SOG']);
+
+      if (skIdx >= 0) {
+        const skRows = parseSection(raw, skIdx);
+        skRows.forEach(r => {
+          const name = r.Spelare || r.spelare || '';
+          const pos = String(r.POS || r.Pos || '').toUpperCase().trim();
+          const nr = safeNum(r.NR || r.Nr);
+          if (!name && !nr) return;
+          // If this row is actually a goalie in the skater section
+          if (pos === 'GK' || pos === 'MV') {
+            const soga = safeNum(r.SOGA), svs = safeNum(r.SVS);
+            goalies.push({
+              name, number: nr, line: safeNum(r.LINE || r.Line) || 1,
+              ga: safeNum(r.GA), soga, spga: safeNum(r.SPGA), svs,
+              svsPct: r['SVS%'] != null && r['SVS%'] !== '' ? safeNum(r['SVS%']) : pct(svs, soga)
+            });
+            return;
+          }
+          const g = safeNum(r.G), a = safeNum(r.A), fw = safeNum(r.FOW), fl = safeNum(r.FOL);
+          const toi = r.TOI || '0:00';
+          skaters.push({
+            name, number: nr, pos: pos || 'FW', line: safeNum(r.LINE || r.Line) || 1,
+            goals: g, assists: a, points: g + a, ppg: safeNum(r.PPG),
+            shotsWide: safeNum(r.SW), pim: safeNum(r.PIM), sog: safeNum(r.SOG), ppsog: safeNum(r.PPSOG),
+            plusMinus: safeNum(r['+/-']), toi, toiSeconds: toiSec(toi), hits: safeNum(r.Hits || r.HIT),
+            fow: fw, fol: fl, foPct: r['FO%'] != null && r['FO%'] !== '' ? safeNum(r['FO%']) : pct(fw, fw + fl)
+          });
+        });
+      }
+
+      console.log(`[Stats Hub] Parsed (multi-section): ${goalies.length} goalies, ${skaters.length} skaters`);
+      if (goalies.length === 0 && skaters.length === 0) {
+        console.warn('[Stats Hub] No data found! Sheet contents:', raw.slice(0, 5));
+      }
+      return { goalies, skaters };
+    }
+
+    function teamTotals(sk, gk) {
+      const t = { sog: 0, pim: 0, hits: 0, fow: 0, fol: 0, ppg: 0, goals: 0, assists: 0, points: 0, shotsWide: 0, ppsog: 0 };
+      sk.forEach(s => {
+        t.sog += s.sog; t.pim += s.pim; t.hits += s.hits; t.fow += s.fow; t.fol += s.fol;
+        t.ppg += s.ppg; t.goals += s.goals; t.assists += s.assists; t.points += s.points; t.shotsWide += s.shotsWide; t.ppsog += s.ppsog;
+      });
+      t.foPct = pct(t.fow, t.fow + t.fol);
+      t.ga = gk.reduce((s, g) => s + g.ga, 0); t.svs = gk.reduce((s, g) => s + g.svs, 0); t.soga = gk.reduce((s, g) => s + g.soga, 0);
+      t.svsPct = pct(t.svs, t.soga);
+      return t;
+    }
+
+    function groupLines(sk) {
+      const lines = {};
+      sk.forEach(s => { if (!lines[s.line]) lines[s.line] = []; lines[s.line].push(s); });
+      return Object.entries(lines).sort((a, b) => a[0] - b[0]).map(([n, p]) => ({
+        line: Number(n),
+        forwards: p.filter(x => ['LW', 'CE', 'RW'].includes(x.pos)), defense: p.filter(x => ['LD', 'RD'].includes(x.pos)),
+        all: p, totals: {
+          plusMinus: p.reduce((s, x) => s + x.plusMinus, 0), sog: p.reduce((s, x) => s + x.sog, 0),
+          pim: p.reduce((s, x) => s + x.pim, 0), goals: p.reduce((s, x) => s + x.goals, 0), hits: p.reduce((s, x) => s + x.hits, 0),
+          toi: secToi(p.reduce((s, x) => s + x.toiSeconds, 0) / Math.max(p.length, 1))
+        }
+      }));
+    }
+
+    async function parseExcelFile(file) {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      if (wb.SheetNames.length < 2) throw new Error('Excel-filen måste ha minst 2 sheets (Björklöven + Motståndare)');
+      const info = parseFileName(file.name);
+
+      // Auto-detect which sheet is Björklöven by name
+      let bjorkIdx = 0, oppIdx = 1;
+      const names = wb.SheetNames.map(n => n.toLowerCase().trim());
+      console.log('[Stats Hub] Sheet names:', wb.SheetNames);
+
+      const bjorkMatch = names.findIndex(n => n.includes('björklöven') || n.includes('bjorkloven') || n.includes('bjork'));
+      const oppMatch = names.findIndex(n => n.toLowerCase().includes(info.opponent.toLowerCase()));
+
+      if (bjorkMatch >= 0 && oppMatch >= 0 && bjorkMatch !== oppMatch) {
+        bjorkIdx = bjorkMatch;
+        oppIdx = oppMatch;
+      } else if (bjorkMatch >= 0) {
+        bjorkIdx = bjorkMatch;
+        oppIdx = bjorkMatch === 0 ? 1 : 0;
+      } else if (oppMatch >= 0) {
+        oppIdx = oppMatch;
+        bjorkIdx = oppMatch === 0 ? 1 : 0;
+      } else {
+        // Filename format: Motståndare_Bjorkloven_DATE — opponent is first in name
+        // Convention from spec: Sheet 1 = Björklöven, Sheet 2 = Opponent
+        // Keep default: sheet 0 = björklöven, sheet 1 = opponent
+        bjorkIdx = 0;
+        oppIdx = 1;
+      }
+
+      console.log(`[Stats Hub] Using sheet ${bjorkIdx} (${wb.SheetNames[bjorkIdx]}) as Björklöven, sheet ${oppIdx} (${wb.SheetNames[oppIdx]}) as ${info.opponent}`);
+
+      const bjork = parseSheet(wb.Sheets[wb.SheetNames[bjorkIdx]]);
+      const opp = parseSheet(wb.Sheets[wb.SheetNames[oppIdx]]);
+      const bjorkTotals = teamTotals(bjork.skaters, bjork.goalies);
+      const oppTotals = teamTotals(opp.skaters, opp.goalies);
+      return {
+        id: info.matchId, date: info.date, opponent: info.opponent,
+        result: { bjorkloven: bjork.skaters.reduce((s, x) => s + x.goals, 0), opponent: opp.skaters.reduce((s, x) => s + x.goals, 0) },
+        bjorkloven: { goalies: bjork.goalies, skaters: bjork.skaters, totals: bjorkTotals, lines: groupLines(bjork.skaters) },
+        opponentTeam: { goalies: opp.goalies, skaters: opp.skaters, totals: oppTotals, lines: groupLines(opp.skaters) },
+        meta: { arena: '', round: '', overtime: false }
+      };
+    }
+
+    // ===== PLAYER SEASON =====
+    function buildPlayerSeasons(matches) {
+      const map = {};
+      matches.forEach(m => {
+        m.bjorkloven.skaters.forEach(s => {
+          const id = `${s.number}_${s.name.replace(/\s/g, '')}`;
+          if (!map[id]) map[id] = {
+            playerId: id, name: s.name, number: s.number, pos: s.pos, gamesPlayed: 0,
+            totals: { goals: 0, assists: 0, points: 0, ppg: 0, pim: 0, sog: 0, plusMinus: 0, hits: 0, fow: 0, fol: 0, toiSeconds: 0, shotsWide: 0, ppsog: 0 },
+            trend: [], bestMatch: null, bestPts: 0
+          };
+          const p = map[id]; p.gamesPlayed++; p.pos = s.pos;
+          Object.keys(p.totals).forEach(k => { if (k in s) p.totals[k] += s[k]; });
+          p.totals.points = p.totals.goals + p.totals.assists;
+          p.trend.push({ matchId: m.id, date: m.date, opponent: m.opponent, ...s });
+          if (s.points > p.bestPts) { p.bestPts = s.points; p.bestMatch = m.id; }
+        });
+        m.bjorkloven.goalies.forEach(g => {
+          const id = `${g.number}_${g.name.replace(/\s/g, '')}_GK`;
+          if (!map[id]) map[id] = {
+            playerId: id, name: g.name, number: g.number, pos: 'GK', gamesPlayed: 0,
+            totals: { ga: 0, soga: 0, spga: 0, svs: 0 }, trend: [], bestMatch: null, bestSvs: 0
+          };
+          const p = map[id]; p.gamesPlayed++;
+          p.totals.ga += g.ga; p.totals.soga += g.soga; p.totals.spga += g.spga; p.totals.svs += g.svs;
+          p.trend.push({ matchId: m.id, date: m.date, opponent: m.opponent, ...g });
+          if (g.svs > p.bestSvs) { p.bestSvs = g.svs; p.bestMatch = m.id; }
+        });
+      });
+      return Object.values(map);
+    }
+
+    // ===== ADVANCED ANALYTICS =====
+    // Note: Complex metrics (Form, Chemistry, etc) are now pre-calculated by the Node.js backend API
+
+    function calcProjection(p, totalGames = 7) {
+      const gp = Math.max(p.gamesPlayed, 1);
+      return {
+        goals: Math.round(p.totals.goals / gp * totalGames),
+        assists: Math.round(p.totals.assists / gp * totalGames),
+        points: Math.round(p.totals.points / gp * totalGames)
+      };
+    }
+
+    function radarData(p, allPlayers) {
+      if (p.pos === 'GK') return [];
+      const gp = Math.max(p.gamesPlayed, 1), t = p.totals;
+      const skaters = allPlayers.filter(x => x.pos !== 'GK' && x.gamesPlayed > 0);
+      const maxOf = (fn) => Math.max(...skaters.map(fn), 1);
+      const norm = (val, max) => Math.min(Math.round(val / max * 100), 100);
+      // V2 Radar Spec
+      return [
+        { stat: 'Scoring', value: norm(t.points / gp, maxOf(x => x.totals.points / Math.max(x.gamesPlayed, 1))) },
+        { stat: 'Skottfarlighet', value: t.sog > 0 ? norm(t.goals / t.sog * 100, maxOf(x => (x.totals.goals / (x.totals.sog || 1)) * 100)) : 0 },
+        { stat: 'Fysik', value: norm((t.hits / gp) * 50 + (t.sog / gp) * 50, maxOf(x => (x.totals.hits / (x.gamesPlayed || 1)) * 50 + (x.totals.sog / (x.gamesPlayed || 1)) * 50)) },
+        { stat: 'Tekning', value: p.pos === 'CE' ? norm(pct(t.fow, t.fow + t.fol), 100) : 0 },
+        { stat: 'Disciplin', value: Math.max(100 - (t.pim / gp * 10), 0) },
+        { stat: 'Istid', value: norm(t.toiSeconds / gp, maxOf(x => x.totals.toiSeconds / Math.max(x.gamesPlayed, 1))) }
+      ];
+    }
+
+    // ===== API STATE MANAGEMENT =====
+    const API_BASE = '';
+    async function fetchMatches() {
+      const res = await fetch(`${API_BASE}/api/matches`);
+      if (!res.ok) throw new Error('Kunde inte hämta matchdata');
+      return res.json();
+    }
+    async function fetchPlayers() {
+      const res = await fetch(`${API_BASE}/api/players`);
+      if (!res.ok) throw new Error('Kunde inte hämta spelardata');
+      return res.json();
+    }
+    async function apiClear() {
+      const res = await fetch(`${API_BASE}/api/clear`, { method: 'POST' });
+      if (!res.ok) throw new Error('Kunde inte rensa data');
+    }
+    function loadApiKey() { try { return localStorage.getItem('bjork_api_key') || ''; } catch { return ''; } }
+    function saveApiKey(k) { try { localStorage.setItem('bjork_api_key', k); } catch { } }
+
+    // ===== SMALL COMPONENTS =====
+    function StatCard({ label, value, sub, className = '' }) {
+      return (<div className={`glass rounded-xl p-4 text-center ${className}`}>
+        <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">{label}</div>
+        <div className="text-2xl font-display text-bjork-gold animate-count">{value}</div>
+        {sub && <div className="text-xs text-gray-500 mt-1">{sub}</div>}
+      </div>);
+    }
+    function EmptyState({ title, desc }) {
+      return (<div className="flex flex-col items-center justify-center py-20 animate-fade">
+        <svg className="w-20 h-20 text-bjork-gold opacity-30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+        <h3 className="text-xl font-display text-gray-400 mb-2">{title}</h3>
+        <p className="text-gray-500 text-sm">{desc}</p>
+      </div>);
+    }
+    function HeatVal({ val, best = false }) {
+      const cls = val > 0 ? 'heat-green' : val < 0 ? 'heat-red' : 'heat-neutral';
+      return <span className={`${cls} px-2 py-1 rounded text-sm font-semibold ${best ? 'ring-1 ring-bjork-gold' : ''}`}>{val > 0 ? '+' : ''}{val}</span>;
+    }
+    function DeltaArrow({ cur, prev }) {
+      if (prev == null) return null;
+      const d = cur - prev;
+      if (d > 0) return <span className="text-green-400 text-xs ml-1">▲{d}</span>;
+      if (d < 0) return <span className="text-red-400 text-xs ml-1">▼{Math.abs(d)}</span>;
+      return <span className="text-gray-500 text-xs ml-1">—</span>;
+    }
+
+    // ===== UPLOAD ZONE =====
+    function UploadZone({ onFiles, compact }) {
+      const [drag, setDrag] = useState(false);
+      const ref = useRef();
+      const handleDrop = useCallback(e => {
+        e.preventDefault(); setDrag(false);
+        const files = [...e.dataTransfer.files].filter(f => /\.xlsx?$/i.test(f.name));
+        if (files.length) onFiles(files);
+      }, [onFiles]);
+      const handleChange = useCallback(e => {
+        const files = [...e.target.files].filter(f => /\.xlsx?$/i.test(f.name));
+        if (files.length) onFiles(files); e.target.value = '';
+      }, [onFiles]);
+      if (compact) return (<div className="flex items-center gap-3">
+        <button onClick={() => ref.current?.click()} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bjork-gold/20 text-bjork-gold hover:bg-bjork-gold/30 transition text-sm font-medium">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          Ladda upp match
+        </button>
+        <input ref={ref} type="file" accept=".xlsx,.xls" multiple onChange={handleChange} className="hidden" />
+      </div>);
+      return (<div className={`upload-zone rounded-2xl p-12 text-center cursor-pointer ${drag ? 'drag-over' : ''}`}
+        onDragOver={e => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={handleDrop}
+        onClick={() => ref.current?.click()}>
+        <svg className="w-16 h-16 mx-auto text-bjork-gold opacity-50 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        <h3 className="text-xl font-display text-bjork-gold mb-2">Dra & släpp Excel-filer här</h3>
+        <p className="text-gray-400 text-sm mb-3">eller klicka för att välja filer</p>
+        <p className="text-gray-500 text-xs">Format: Motståndare_Bjorkloven_YYYYDDMM.xlsx</p>
+        <input ref={ref} type="file" accept=".xlsx,.xls" multiple onChange={handleChange} className="hidden" />
+      </div>);
+    }
+
+    // ===== TAB 1: MATCHANALYS =====
+    function MatchView({ matches, selId, onSel }) {
+      if (!matches.length) return <EmptyState title="Ingen matchdata" desc="Ladda upp en Excel-fil för att se matchanalys" />;
+      const match = matches.find(m => m.id === selId) || matches[matches.length - 1];
+      const b = match.bjorkloven, o = match.opponentTeam, r = match.result;
+      const won = r.bjorkloven > r.opponent;
+      const compData = [
+        { name: 'SOG', Björklöven: b.totals.sog, [match.opponent]: o.totals.sog },
+        { name: 'Hits', Björklöven: b.totals.hits, [match.opponent]: o.totals.hits },
+        { name: 'PIM', Björklöven: b.totals.pim, [match.opponent]: o.totals.pim },
+        { name: 'PPG', Björklöven: b.totals.ppg, [match.opponent]: o.totals.ppg },
+        { name: 'FOW', Björklöven: b.totals.fow, [match.opponent]: o.totals.fow },
+      ];
+      const mvp = [...b.skaters].sort((a, bb) => bb.points - a.points)[0];
+      const hitL = [...b.skaters].sort((a, bb) => bb.hits - a.hits)[0];
+      const sogL = [...b.skaters].sort((a, bb) => bb.sog - a.sog)[0];
+      const foL = [...b.skaters].filter(s => s.pos === 'CE' && (s.fow + s.fol) > 0).sort((a, bb) => bb.foPct - a.foPct)[0];
+
+      return (<div className="animate-fade space-y-6">
+        <div className="flex items-center gap-4 flex-wrap">
+          <select value={match.id} onChange={e => onSel(e.target.value)}
+            className="bg-bjork-surface border border-bjork-surface-light rounded-lg px-4 py-2 text-sm text-gray-200 focus:outline-none focus:border-bjork-gold">
+            {matches.map(m => <option key={m.id} value={m.id}>{m.date} — vs {m.opponent}</option>)}
+          </select>
+        </div>
+
+        {/* Result Banner */}
+        <div className={`glass rounded-2xl p-6 gold-glow text-center ${won ? 'border-green-500/30' : 'border-red-500/30'} border`}>
+          <div className="text-xs uppercase tracking-widest text-gray-400 mb-2">{match.date}</div>
+          <div className="flex items-center justify-center gap-6 md:gap-12 mb-4">
+            <div className="text-right w-1/3"><div className="font-display text-xl md:text-2xl text-bjork-gold">BJÖRKLÖVEN</div></div>
+            <div className="flex items-baseline justify-center gap-3 w-1/3">
+              <span className={`font-display text-4xl md:text-6xl ${won ? 'text-green-400' : 'text-gray-300'}`}>{r.bjorkloven}</span>
+              <span className="text-gray-500 text-2xl">-</span>
+              <span className={`font-display text-4xl md:text-6xl ${!won ? 'text-red-400' : 'text-gray-300'}`}>{r.opponent}</span>
+            </div>
+            <div className="text-left w-1/3"><div className="font-display text-xl md:text-2xl text-blue-400">{match.opponent.toUpperCase()}</div></div>
+          </div>
+
+          {/* Match Momentum Bar (SOG dominance) */}
+          <div className="max-w-md mx-auto mb-4 relative h-6 bg-bjork-surface-light rounded-full overflow-hidden flex" title={`Skott på mål: Björklöven ${b.totals.sog} - ${o.totals.sog} ${match.opponent}`}>
+            <div style={{ width: `${(b.totals.sog / Math.max(b.totals.sog + o.totals.sog, 1)) * 100}%` }} className="bg-bjork-gold h-full flex items-center justify-start pl-3">
+              <span className="text-[10px] font-bold text-bjork-dark">{b.totals.sog} SOG</span>
+            </div>
+            <div style={{ width: `${(o.totals.sog / Math.max(b.totals.sog + o.totals.sog, 1)) * 100}%` }} className="bg-blue-500 h-full flex items-center justify-end pr-3">
+              <span className="text-[10px] font-bold text-white">{o.totals.sog} SOG</span>
+            </div>
+          </div>
+
+          <div className={`inline-block px-4 py-1 rounded-full text-sm font-semibold ${won ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+            {won ? 'VINST' : 'FÖRLUST'}
+          </div>
+        </div>
+
+        {/* Team Comparison */}
+        <div className="glass rounded-2xl p-5">
+          <h3 className="font-display text-lg text-bjork-gold mb-4">Lagjämförelse</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={compData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={SURF_L} />
+              <XAxis dataKey="name" stroke={MUTED} fontSize={12} />
+              <YAxis stroke={MUTED} fontSize={12} />
+              <Tooltip {...TT} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar dataKey="Björklöven" fill={GOLD} radius={[4, 4, 0, 0]} />
+              <Bar dataKey={match.opponent} fill={BLUE} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+            <StatCard label="FOW%" value={b.totals.foPct.toFixed(1) + "%"} sub={`vs ${o.totals.foPct.toFixed(1)}%`} />
+            <StatCard label="SVS%" value={b.totals.svsPct.toFixed(1) + "%"} sub={`vs ${o.totals.svsPct.toFixed(1)}%`} />
+            <StatCard label="Mål" value={r.bjorkloven} sub={`vs ${r.opponent}`} />
+            <StatCard label="Skott" value={b.totals.sog} sub={`vs ${o.totals.sog}`} />
+          </div>
+        </div>
+
+        {/* Player Lineup */}
+        <div className="glass rounded-2xl p-5">
+          <h3 className="font-display text-lg text-bjork-gold mb-4">Spelaruppställning</h3>
+          <div className="space-y-4">
+            {b.lines.map(ln => (
+              <div key={ln.line} className="bg-bjork-surface-light/30 rounded-xl p-4">
+                <div className="text-xs uppercase tracking-wider text-gray-400 mb-3">Kedja {ln.line}</div>
+                <div className="flex flex-wrap gap-2 justify-center mb-2">
+                  {ln.forwards.sort((a, bb) => ['LW', 'CE', 'RW'].indexOf(a.pos) - ['LW', 'CE', 'RW'].indexOf(bb.pos)).map(s => (
+                    <div key={s.number} className="bg-bjork-surface rounded-lg px-3 py-2 text-center min-w-[100px] border border-bjork-surface-light/50 hover:border-bjork-gold/40 transition">
+                      <div className="text-bjork-gold font-display text-lg">#{s.number}</div>
+                      <div className="text-xs text-gray-300 truncate">{s.name}</div>
+                      <div className="text-[10px] text-gray-500">{s.pos}</div>
+                      <div className="flex gap-2 justify-center mt-1 text-xs">
+                        <span className="text-green-400">{s.goals}G</span>
+                        <span className="text-blue-400">{s.assists}A</span>
+                        <HeatVal val={s.plusMinus} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {ln.defense.length > 0 && <div className="flex flex-wrap gap-2 justify-center">
+                  {ln.defense.sort((a, bb) => a.pos === 'LD' ? -1 : 1).map(s => (
+                    <div key={s.number} className="bg-bjork-surface rounded-lg px-3 py-2 text-center min-w-[100px] border border-blue-500/20 hover:border-blue-400/40 transition">
+                      <div className="text-blue-400 font-display text-lg">#{s.number}</div>
+                      <div className="text-xs text-gray-300 truncate">{s.name}</div>
+                      <div className="text-[10px] text-gray-500">{s.pos}</div>
+                      <div className="flex gap-2 justify-center mt-1 text-xs">
+                        <span className="text-green-400">{s.goals}G</span>
+                        <span className="text-blue-400">{s.assists}A</span>
+                        <HeatVal val={s.plusMinus} />
+                      </div>
+                    </div>
+                  ))}
+                </div>}
+              </div>
+            ))}
+            {b.goalies.length > 0 && <div className="bg-bjork-surface-light/30 rounded-xl p-4">
+              <div className="text-xs uppercase tracking-wider text-gray-400 mb-3">Målvakt</div>
+              <div className="flex flex-wrap gap-3 justify-center">
+                {b.goalies.map(g => (
+                  <div key={g.number} className="bg-bjork-surface rounded-lg px-4 py-3 text-center border border-purple-500/20">
+                    <div className="text-purple-400 font-display text-lg">#{g.number}</div>
+                    <div className="text-xs text-gray-300">{g.name}</div>
+                    <div className="text-[10px] text-gray-500">GK</div>
+                    <div className="flex gap-3 justify-center mt-2 text-xs">
+                      <span><span className="text-gray-400">SVS%</span> <span className="text-bjork-gold font-semibold">{Number(g.svsPct).toFixed(1)}%</span></span>
+                      <span><span className="text-gray-400">SVS</span> <span className="text-green-400">{g.svs}</span></span>
+                      <span><span className="text-gray-400">GA</span> <span className="text-red-400">{g.ga}</span></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>}
+          </div>
+        </div>
+
+        {/* Line Analysis + Chemistry */}
+        <div className="glass rounded-2xl p-5">
+          <h3 className="font-display text-lg text-bjork-gold mb-4">Linjeanalys & Kemi</h3>
+          <div className="table-scroll"><table>
+            <thead><tr className="text-xs uppercase text-gray-400">
+              <th className="bg-bjork-surface px-3 py-2 text-left">Kedja</th>
+              <th className="bg-bjork-surface px-3 py-2 text-center">Mål</th>
+              <th className="bg-bjork-surface px-3 py-2 text-center">+/-</th>
+              <th className="bg-bjork-surface px-3 py-2 text-center">SOG</th>
+              <th className="bg-bjork-surface px-3 py-2 text-center">Hits</th>
+              <th className="bg-bjork-surface px-3 py-2 text-center">PIM</th>
+              <th className="bg-bjork-surface px-3 py-2 text-center">TOI</th>
+              <th className="bg-bjork-surface px-3 py-2 text-center">Kemi</th>
+            </tr></thead>
+            <tbody>{b.lines.map(ln => {
+              const best = b.lines.reduce((mx, l) => l.totals.plusMinus > mx ? l.totals.plusMinus : mx, -999);
+              const chem = ln.chemistry || 0;
+              const chemColor = chem >= 70 ? GREEN : chem >= 40 ? GOLD : RED;
+              return (<tr key={ln.line} className="border-t border-bjork-surface-light/30 hover:bg-bjork-surface-light/20 transition">
+                <td className="px-3 py-3 font-semibold">Kedja {ln.line}</td>
+                <td className="px-3 py-3 text-center font-display text-bjork-gold">{ln.totals.goals}</td>
+                <td className="px-3 py-3 text-center"><HeatVal val={ln.totals.plusMinus} best={ln.totals.plusMinus === best} /></td>
+                <td className="px-3 py-3 text-center">{ln.totals.sog}</td>
+                <td className="px-3 py-3 text-center">{ln.totals.hits}</td>
+                <td className="px-3 py-3 text-center">{ln.totals.pim}</td>
+                <td className="px-3 py-3 text-center text-gray-400">{ln.totals.toi}</td>
+                <td className="px-3 py-3 text-center">
+                  <div className="flex items-center gap-2">
+                    <div className="chemistry-bar flex-1"><div className="chemistry-fill" style={{ width: `${chem}%`, background: chemColor }}></div></div>
+                    <span className="text-xs font-semibold" style={{ color: chemColor }}>{Math.round(chem)}</span>
+                  </div>
+                </td>
+              </tr>);
+            })}</tbody>
+          </table></div>
+        </div>
+
+        {/* Special Teams */}
+        {(() => {
+          const bST = b.totals, oST = o.totals;
+          const bPpEff = bST.ppsog > 0 ? (bST.ppg / bST.ppsog * 100).toFixed(1) : '0.0';
+          const oPpEff = oST.ppsog > 0 ? (oST.ppg / oST.ppsog * 100).toFixed(1) : '0.0';
+          return (
+            <div className="glass rounded-2xl p-5">
+              <h3 className="font-display text-lg text-bjork-gold mb-4">Specialteam</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-bjork-surface-light/20 rounded-xl p-4">
+                  <div className="text-xs uppercase tracking-wider text-green-400 mb-3">Powerplay</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400 mb-1">Björklöven</div>
+                      <div className="text-2xl font-display text-bjork-gold">{bPpEff}%</div>
+                      <div className="text-xs text-gray-500">{bST.ppg} PPG / {Math.round(bST.ppsog)} PPSOG</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400 mb-1">{match.opponent}</div>
+                      <div className="text-2xl font-display text-blue-400">{oPpEff}%</div>
+                      <div className="text-xs text-gray-500">{oST.ppg} PPG / {Math.round(oST.ppsog)} PPSOG</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-bjork-surface-light/20 rounded-xl p-4">
+                  <div className="text-xs uppercase tracking-wider text-red-400 mb-3">Utvisningsminuter</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400 mb-1">Björklöven</div>
+                      <div className="text-2xl font-display" style={{ color: bST.pim > oST.pim ? RED : GREEN }}>{bST.pim}</div>
+                      <div className="text-xs text-gray-500">PIM</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400 mb-1">{match.opponent}</div>
+                      <div className="text-2xl font-display" style={{ color: oST.pim > bST.pim ? RED : GREEN }}>{oST.pim}</div>
+                      <div className="text-xs text-gray-500">PIM</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>);
+        })()}
+
+        {/* TOI Clock */}
+        {(() => {
+          const toiData = b.lines.map(ln => ({ name: `Kedja ${ln.line}`, value: ln.all.reduce((s, x) => s + x.toiSeconds, 0) }));
+          return (
+            <div className="glass rounded-2xl p-5">
+              <h3 className="font-display text-lg text-bjork-gold mb-4">Istidsfördelning</h3>
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <ResponsiveContainer width={260} height={260}>
+                  <PieChart>
+                    <Pie data={toiData} dataKey="value" cx="50%" cy="50%" innerRadius={55} outerRadius={100} paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                      {toiData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip {...TT} formatter={(v) => secToi(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-2">
+                  {toiData.map((d, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}></div>
+                      <span className="text-sm text-gray-300">{d.name}</span>
+                      <span className="text-sm font-display text-gray-400">{secToi(d.value)} total</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>);
+        })()}
+
+        {/* Top Performers */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {mvp && <div className="glass rounded-xl p-4 text-center gold-glow">
+            <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">MVP</div>
+            <div className="text-bjork-gold font-display text-lg">#{mvp.number}</div>
+            <div className="text-sm text-gray-200 truncate">{mvp.name}</div>
+            <div className="text-xs text-gray-400 mt-1">{mvp.goals}G {mvp.assists}A = {mvp.points}P</div>
+          </div>}
+          {sogL && <div className="glass rounded-xl p-4 text-center">
+            <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Flest skott</div>
+            <div className="text-blue-400 font-display text-lg">#{sogL.number}</div>
+            <div className="text-sm text-gray-200 truncate">{sogL.name}</div>
+            <div className="text-xs text-gray-400 mt-1">{sogL.sog} SOG</div>
+          </div>}
+          {hitL && <div className="glass rounded-xl p-4 text-center">
+            <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Flest tacklingar</div>
+            <div className="text-green-400 font-display text-lg">#{hitL.number}</div>
+            <div className="text-sm text-gray-200 truncate">{hitL.name}</div>
+            <div className="text-xs text-gray-400 mt-1">{hitL.hits} Hits</div>
+          </div>}
+          {foL && <div className="glass rounded-xl p-4 text-center">
+            <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Bäst FO%</div>
+            <div className="text-purple-400 font-display text-lg">#{foL.number}</div>
+            <div className="text-sm text-gray-200 truncate">{foL.name}</div>
+            <div className="text-xs text-gray-400 mt-1">{Number(foL.foPct).toFixed(1)}%</div>
+          </div>}
+        </div>
+
+        {/* Enhanced Goalie Comparison */}
+        {b.goalies.length > 0 && o.goalies.length > 0 && <div className="glass rounded-2xl p-5">
+          <h3 className="font-display text-lg text-bjork-gold mb-4">Målvaktsjämförelse</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[{ team: 'Björklöven', gk: b.goalies[0], color: GOLD }, { team: match.opponent, gk: o.goalies[0], color: BLUE }].map(({ team, gk, color }) => {
+              if (!gk) return null;
+              return (
+                <div key={team} className="bg-bjork-surface-light/20 rounded-xl p-4 text-center">
+                  <div className="text-xs uppercase tracking-wider mb-2" style={{ color }}>{team}</div>
+                  <div className="font-display text-lg text-gray-200">{gk.name} #{gk.number}</div>
+                  <div className="grid grid-cols-5 gap-2 mt-3">
+                    <div><div className="text-2xl font-display" style={{ color }}>{Number(gk.svsPct).toFixed(1)}%</div><div className="text-[10px] text-gray-500">SVS%</div></div>
+                    <div><div className="text-2xl font-display text-green-400">{gk.svs}</div><div className="text-[10px] text-gray-500">Räddningar</div></div>
+                    <div><div className="text-2xl font-display text-red-400">{gk.ga}</div><div className="text-[10px] text-gray-500">Insläppta</div></div>
+                    <div><div className="text-2xl font-display text-orange-400">{Number(gk.gaa || 0).toFixed(2)}</div><div className="text-[10px] text-gray-500">GAA</div></div>
+                    <div><div className="text-2xl font-display text-purple-400">{Number(gk.stressIndex || 0).toFixed(1)}</div><div className="text-[10px] text-gray-500">Stress</div></div>
+                  </div>
+                </div>);
+            })}
+          </div>
+        </div>}
+      </div>);
+    }
+
+    // ===== TAB 2: SÄSONG =====
+    function SeasonView({ matches, players }) {
+      if (!matches.length) return <EmptyState title="Ingen säsongsdata" desc="Ladda upp matcher för att se säsongstrender" />;
+      const [sortCol, setSortCol] = useState('points');
+      const [sortDir, setSortDir] = useState(-1);
+      const skaters = players.filter(p => p.pos !== 'GK');
+      const sorted = [...skaters].sort((a, b) => (b.totals[sortCol] - a.totals[sortCol]) * sortDir);
+      const doSort = col => { if (sortCol === col) setSortDir(d => d * -1); else { setSortCol(col); setSortDir(-1); } };
+
+      const timelineData = matches.map(m => {
+        const d = m.result.bjorkloven - m.result.opponent;
+        return { name: m.opponent, date: m.date, diff: d, won: d > 0, bj: m.result.bjorkloven, opp: m.result.opponent };
+      });
+      const trendData = matches.map(m => ({ name: m.opponent, SOG: m.bjorkloven.totals.sog, Hits: m.bjorkloven.totals.hits, PIM: m.bjorkloven.totals.pim }));
+
+      let streak = 0, streakType = '';
+      for (let i = matches.length - 1; i >= 0; i--) {
+        const w = matches[i].result.bjorkloven > matches[i].result.opponent;
+        if (i === matches.length - 1) streakType = w ? 'W' : 'L';
+      }
+
+      const cols = [{ k: 'points', l: 'PTS' }, { k: 'goals', l: 'G' }, { k: 'assists', l: 'A' }, { k: 'sog', l: 'SOG' }, { k: 'plusMinus', l: '+/-' }, { k: 'hits', l: 'Hits' }, { k: 'pim', l: 'PIM' }];
+
+      // --- Team Momentum (Lagmomentum) ---
+      const tStats = { sog: { s: 0, m: 0 }, ga: { s: 0, m: 0 }, hits: { s: 0, m: 0 }, pim: { s: 0, m: 0 } };
+      matches.forEach(m => {
+        tStats.sog.s += m.bjorkloven.totals.sog; tStats.hits.s += m.bjorkloven.totals.hits;
+        tStats.pim.s += m.bjorkloven.totals.pim; tStats.ga.s += m.result.opponent;
+      });
+      const n = Math.max(matches.length, 1);
+      ['sog', 'ga', 'hits', 'pim'].forEach(k => tStats[k].s /= n);
+
+      const last3 = matches.slice(-3);
+      last3.forEach(m => {
+        tStats.sog.m += m.bjorkloven.totals.sog; tStats.hits.m += m.bjorkloven.totals.hits;
+        tStats.pim.m += m.bjorkloven.totals.pim; tStats.ga.m += m.result.opponent;
+      });
+      const n3 = Math.max(last3.length, 1);
+      ['sog', 'ga', 'hits', 'pim'].forEach(k => tStats[k].m /= n3);
+
+      const MomentumStat = ({ label, stat, invert = false }) => {
+        const m = tStats[stat].m, s = tStats[stat].s;
+        let good = m > s; if (invert) good = m < s;
+        const isNeutral = Math.abs(m - s) < 0.5;
+        return (
+          <div className="bg-bjork-surface-light/30 rounded-lg p-3 text-center border border-white/5 flex-1 min-w-[100px]">
+            <div className="text-xs text-gray-400 uppercase tracking-widest">{label}</div>
+            <div className="text-xl font-display text-gray-200 mt-1">{m.toFixed(1)}</div>
+            <div className={`text-xs mt-1 font-semibold ${isNeutral ? 'text-gray-500' : (good ? 'text-green-400' : 'text-red-400')}`}>
+              {isNeutral ? '— Stabil' : (good ? '▲ ' + 'Het' : '▼ ' + 'Kall')}
+            </div>
+            <div className="text-[10px] text-gray-500 mt-1">Snitt: {s.toFixed(1)}</div>
+          </div>
+        );
+      };
+
+      // --- Trophies (Latest match) ---
+      let mvp = null, ironMan = null, enforcer = null;
+      if (matches.length > 0) {
+        const activeSkaters = matches[matches.length - 1].bjorkloven.skaters;
+        if (activeSkaters.length > 0) {
+          mvp = [...activeSkaters].sort((a, b) => b.points - a.points)[0];
+          ironMan = [...activeSkaters].sort((a, b) => b.toiSeconds - a.toiSeconds)[0];
+          enforcer = [...activeSkaters].sort((a, b) => b.hits - a.hits)[0];
+        }
+      }
+
+      const Trophy = ({ title, icon, player, stat }) => (
+        <div className="flex items-center gap-3 bg-bjork-surface-light/20 p-3 rounded-xl border border-bjork-gold/20 flex-1 min-w-[200px]">
+          <div className="text-3xl filter drop-shadow-[0_0_8px_rgba(200,150,62,0.5)]">{icon}</div>
+          <div>
+            <div className="text-[10px] uppercase text-bjork-gold font-bold tracking-widest">{title}</div>
+            <div className="text-sm font-display text-gray-100">{player?.name || '—'} #{player?.number || ''}</div>
+            <div className="text-xs text-gray-400">{stat}</div>
+          </div>
+        </div>
+      );
+
+      return (<div className="animate-fade space-y-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Team Momentum */}
+          <div className="glass rounded-2xl p-5">
+            <h3 className="font-display text-lg text-bjork-gold mb-3 flex items-center justify-between">
+              <span>Lagmomentum (Senaste 3 vs Säsong)</span>
+              <span className="text-xs font-normal text-gray-400 px-2 py-1 bg-bjork-surface rounded">Modul 5</span>
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              <MomentumStat label="Offensiv (SOG)" stat="sog" />
+              <MomentumStat label="Defensiv (GA)" stat="ga" invert />
+              <MomentumStat label="Fysik (Hits)" stat="hits" />
+              <MomentumStat label="Disciplin (PIM)" stat="pim" invert />
+            </div>
+          </div>
+
+          {/* Trophy Shelf */}
+          <div className="glass rounded-2xl p-5">
+            <h3 className="font-display text-lg text-bjork-gold mb-3 flex items-center justify-between">
+              <span>Trophy Shelf (Senaste match)</span>
+              <span className="text-xs font-normal text-gray-400 px-2 py-1 bg-bjork-surface rounded">Modul 5</span>
+            </h3>
+            <div className="flex flex-col gap-2">
+              <Trophy title="Match-MVP" icon="👑" player={mvp} stat={`${mvp?.goals}G, ${mvp?.assists}A, ${mvp?.sog}SOG`} />
+              <div className="flex flex-wrap gap-2">
+                <Trophy title="Iron Man" icon="🛡️" player={ironMan} stat={`${ironMan?.toi} TOI`} />
+                <Trophy title="Enforcer" icon="🔨" player={enforcer} stat={`${enforcer?.hits} Hits`} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="glass rounded-2xl p-5 flex flex-col justify-center items-center text-center flex-1">
+            <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">Aktuell svit</div>
+            <div className={`font-display text-4xl ${streakType === 'W' ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'text-red-400'}`}>
+              {streak}{streakType}
+            </div>
+          </div>
+
+          <div className="glass rounded-2xl p-5 flex-2 md:w-2/3">
+            <h3 className="font-display text-lg text-bjork-gold mb-4">Matchresultattidslinje</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={timelineData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={SURF_L} />
+                <XAxis dataKey="name" stroke={MUTED} fontSize={11} />
+                <YAxis stroke={MUTED} fontSize={11} />
+                <Tooltip {...TT} formatter={(v, n) => [v, n === 'diff' ? 'Målskillnad' : n]} />
+                <Bar dataKey="diff" radius={[4, 4, 0, 0]}>
+                  {timelineData.map((e, i) => <Cell key={i} fill={e.won ? GREEN : RED} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {timelineData.map((e, i) => (
+                <div key={i} className={`text-xs px-2 py-1 rounded ${e.won ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                  {e.bj}-{e.opp}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Points Leaderboard */}
+        <div className="glass rounded-2xl p-5">
+          <h3 className="font-display text-lg text-bjork-gold mb-4">Poängliga</h3>
+          <div className="table-scroll">
+            <table>
+              <thead><tr className="text-xs uppercase text-gray-400">
+                <th className="bg-bjork-surface px-3 py-2 text-left">#</th>
+                <th className="bg-bjork-surface px-3 py-2 text-left">Spelare</th>
+                <th className="bg-bjork-surface px-3 py-2 text-center">GP</th>
+                {cols.map(c => <th key={c.k} className="bg-bjork-surface px-3 py-2 text-center cursor-pointer hover:text-bjork-gold transition"
+                  onClick={() => doSort(c.k)}>{c.l}{sortCol === c.k ? (sortDir < 0 ? ' ▼' : ' ▲') : ''}</th>)}
+              </tr></thead>
+              <tbody>
+                {sorted.slice(0, 25).map((p, i) => {
+                  const prev = p.trend.length >= 2 ? p.trend[p.trend.length - 2] : null;
+                  const last = p.trend[p.trend.length - 1];
+                  return (<tr key={p.playerId} className="border-t border-bjork-surface-light/30 hover:bg-bjork-surface-light/20 transition">
+                    <td className="px-3 py-2 text-gray-500 text-sm">{i + 1}</td>
+                    <td className="px-3 py-2">
+                      <span className="text-bjork-gold font-semibold mr-1">#{p.number}</span>
+                      <span className="text-gray-200">{p.name}</span>
+                      <span className="text-gray-500 text-xs ml-1">{p.pos}</span>
+                    </td>
+                    <td className="px-3 py-2 text-center text-gray-400">{p.gamesPlayed}</td>
+                    {cols.map(c => <td key={c.k} className="px-3 py-2 text-center">
+                      <span className={c.k === 'points' ? 'font-display text-bjork-gold' : ''}>{p.totals[c.k]}</span>
+                      {prev && c.k === 'points' && <DeltaArrow cur={last.points} prev={prev.points} />}
+                    </td>)}
+                  </tr>);
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Team Trends */}
+        <div className="glass rounded-2xl p-5">
+          <h3 className="font-display text-lg text-bjork-gold mb-4">Lagtrender</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={SURF_L} />
+              <XAxis dataKey="name" stroke={MUTED} fontSize={11} />
+              <YAxis stroke={MUTED} fontSize={11} />
+              <Tooltip {...TT} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line type="monotone" dataKey="SOG" stroke={GOLD} strokeWidth={2} dot={{ r: 4, fill: GOLD }} />
+              <Line type="monotone" dataKey="Hits" stroke={GREEN} strokeWidth={2} dot={{ r: 4, fill: GREEN }} />
+              <Line type="monotone" dataKey="PIM" stroke={RED} strokeWidth={2} dot={{ r: 4, fill: RED }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* GF vs GA Trend */}
+        {(() => {
+          let cumGF = 0, cumGA = 0;
+          const gfGaData = matches.map(m => {
+            cumGF += m.result.bjorkloven; cumGA += m.result.opponent;
+            return { name: m.opponent, GF: cumGF, GA: cumGA };
+          });
+          return (
+            <div className="glass rounded-2xl p-5">
+              <h3 className="font-display text-lg text-bjork-gold mb-4">Mål För vs Mål Emot (kumulativt)</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={gfGaData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={SURF_L} />
+                  <XAxis dataKey="name" stroke={MUTED} fontSize={11} />
+                  <YAxis stroke={MUTED} fontSize={11} />
+                  <Tooltip {...TT} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="GF" stroke={GREEN} fill={GREEN} fillOpacity={0.15} strokeWidth={2} name="Mål För" />
+                  <Area type="monotone" dataKey="GA" stroke={RED} fill={RED} fillOpacity={0.15} strokeWidth={2} name="Mål Emot" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>);
+        })()}
+      </div>);
+    }
+    function PlayerView({ players, matches }) {
+      if (!players.length) return <EmptyState title="Inga spelare" desc="Ladda upp matcher för att se spelarstatistik" />;
+      const [search, setSearch] = useState('');
+      const [posFilter, setPosFilter] = useState('all');
+      const [lineFilter, setLineFilter] = useState('all');
+      const [sortCol, setSortCol] = useState('points');
+      const [sortDir, setSortDir] = useState(-1);
+      const [selected, setSelected] = useState(null);
+
+      const filtered = players.filter(p => {
+        if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !String(p.number).includes(search)) return false;
+        if (posFilter === 'fwd' && !['LW', 'CE', 'RW'].includes(p.pos)) return false;
+        if (posFilter === 'def' && !['LD', 'RD'].includes(p.pos)) return false;
+        if (posFilter === 'gk' && p.pos !== 'GK') return false;
+        if (lineFilter !== 'all') { const ln = Number(lineFilter); if (!p.trend.some(t => t.line === ln)) return false; }
+        return true;
+      });
+      const sorted = [...filtered].sort((a, b) => {
+        const av = a.pos === 'GK' ? (a.totals.svs || 0) : (a.totals[sortCol] || 0);
+        const bv = b.pos === 'GK' ? (b.totals.svs || 0) : (b.totals[sortCol] || 0);
+        return (bv - av) * sortDir;
+      });
+      const doSort = col => { if (sortCol === col) setSortDir(d => d * -1); else { setSortCol(col); setSortDir(-1); } };
+      const sel = selected ? players.find(p => p.name === selected) : null;
+      const cols = [{ k: 'points', l: 'PTS' }, { k: 'goals', l: 'G' }, { k: 'assists', l: 'A' }, { k: 'sog', l: 'SOG' }, { k: 'plusMinus', l: '+/-' }, { k: 'hits', l: 'Hits' }, { k: 'pim', l: 'PIM' }];
+
+      return (<div className="animate-fade space-y-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 items-center">
+          <input type="text" placeholder="Sök spelare..." value={search} onChange={e => setSearch(e.target.value)}
+            className="bg-bjork-surface border border-bjork-surface-light rounded-lg px-4 py-2 text-sm text-gray-200 focus:outline-none focus:border-bjork-gold w-48" />
+          <select value={posFilter} onChange={e => setPosFilter(e.target.value)}
+            className="bg-bjork-surface border border-bjork-surface-light rounded-lg px-3 py-2 text-sm text-gray-200">
+            <option value="all">Alla positioner</option><option value="fwd">Forwards</option>
+            <option value="def">Backar</option><option value="gk">Målvakter</option>
+          </select>
+          <select value={lineFilter} onChange={e => setLineFilter(e.target.value)}
+            className="bg-bjork-surface border border-bjork-surface-light rounded-lg px-3 py-2 text-sm text-gray-200">
+            <option value="all">Alla kedjor</option><option value="1">Kedja 1</option>
+            <option value="2">Kedja 2</option><option value="3">Kedja 3</option><option value="4">Kedja 4</option>
+          </select>
+          <span className="text-xs text-gray-500">{filtered.length} spelare</span>
+        </div>
+
+        <div className="flex flex-col xl:flex-row gap-6 items-start">
+          {/* Player Table */}
+          <div className="glass rounded-2xl p-5 flex-1 w-full relative">
+            <div className="table-scroll">
+              <table><thead><tr className="text-xs uppercase text-gray-400">
+                <th className="bg-bjork-surface px-3 py-2 text-left">Spelare</th>
+                <th className="bg-bjork-surface px-3 py-2 text-center">GP</th>
+                {cols.map(c => <th key={c.k} className="bg-bjork-surface px-3 py-2 text-center cursor-pointer hover:text-bjork-gold transition"
+                  onClick={() => doSort(c.k)}>{c.l}{sortCol === c.k ? (sortDir < 0 ? ' ▼' : ' ▲') : ''}</th>)}
+                <th className="bg-bjork-surface px-3 py-2 text-center">Roll</th>
+                <th className="bg-bjork-surface px-3 py-2 text-center">Formtrend</th>
+              </tr></thead>
+                <tbody>{sorted.map(p => {
+                  const isGK = p.pos === 'GK';
+                  const role = p.role || { role: isGK ? 'Målvakt' : 'Spelare', css: isGK ? 'role-gk' : 'role-twoway' };
+                  const form = p.form || { label: '—', css: 'form-ice', index: 0 };
+                  return (<tr key={p.name} className={`border-t border-bjork-surface-light/30 transition cursor-pointer ${selected === p.name ? 'bg-bjork-surface-light/40' : 'hover:bg-bjork-surface-light/20'}`}
+                    onClick={() => setSelected(selected === p.name ? null : p.name)}>
+                    <td className="px-3 py-2"><span className="text-bjork-gold font-semibold mr-1">#{p.number}</span>
+                      <span className="text-gray-200">{p.name}</span>
+                      <span className="text-gray-500 text-xs ml-1">{p.pos}</span></td>
+                    <td className="px-3 py-2 text-center text-gray-400">{p.gamesPlayed}</td>
+                    {cols.map(c => <td key={c.k} className="px-3 py-2 text-center">
+                      {isGK ? '-' : <span className={c.k === 'points' ? 'font-display text-bjork-gold' : ''}>{p.totals[c.k] || 0}</span>}
+                    </td>)}
+                    <td className="px-3 py-2 text-center"><span className={`role-badge ${role.css}`}>{role.role}</span></td>
+                    <td className="px-3 py-2 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={form.css} title={`Form index: ${form.index}`}>{form.label}</span>
+                        {!isGK && p.trend && p.trend.length >= 2 && (
+                          <div style={{ width: 40, height: 16 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={p.trend.slice(-5)}>
+                                <Line type="step" dataKey="points" stroke="#C8963E" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>);
+                })}</tbody></table>
+            </div>
+          </div>
+
+          {/* Enhanced Player Card Side Panel */}
+          {sel && <div className="glass rounded-2xl p-6 gold-glow animate-fade w-full xl:w-[450px] sticky top-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="font-display text-2xl text-bjork-gold">#{sel.number} {sel.name}</div>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-gray-400 text-sm">{sel.pos} &middot; {sel.gamesPlayed} matcher</span>
+                  <span className={`role-badge ${sel.role?.css || ''}`}>{sel.role?.role || ''}</span>
+                  {sel.pos !== 'GK' && sel.form && <span className={`${sel.form.css} text-sm`}><span className="form-flame">{sel.form.label}</span> Form: {sel.form.index}</span>}
+                  {sel.pos !== 'GK' && sel.consistency && <span className="text-xs text-gray-500">Konsistens: {sel.consistency.rating}</span>}
+                </div>
+              </div>
+              <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-300">✕</button>
+            </div>
+            {sel.pos !== 'GK' && <>
+              {/* Advanced Stats */}
+              {(() => {
+                const adv = sel.adv || {}; const proj = calcProjection(sel); return (<>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">
+                    <StatCard label="Mål" value={sel.totals.goals} sub={`${adv.gpg || 0}/GP`} />
+                    <StatCard label="Assist" value={sel.totals.assists} />
+                    <StatCard label="Poäng" value={sel.totals.points} sub={`${adv.ppg || 0}/GP`} />
+                    <StatCard label="P/60" value={adv.p60 || 0} />
+                    <StatCard label="SOG/60" value={adv.sog60 || 0} />
+                    <StatCard label="SH%" value={(adv.shPct || 0) + '%'} />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                    <StatCard label="Hits/60" value={adv.hits60 || 0} />
+                    <StatCard label="+/-" value={sel.totals.plusMinus} />
+                    <StatCard label="Hits" value={sel.totals.hits} />
+                    <StatCard label="SOG" value={sel.totals.sog} />
+                  </div>
+                  {/* Season Projection */}
+                  <div className="bg-bjork-surface-light/20 rounded-xl p-4 mb-5">
+                    <h4 className="text-sm text-gray-400 mb-3">Säsongsprojektion (7 matcher)</h4>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div><div className="text-xl font-display text-green-400">{proj.goals}</div><div className="text-[10px] text-gray-500">Mål</div></div>
+                      <div><div className="text-xl font-display text-blue-400">{proj.assists}</div><div className="text-[10px] text-gray-500">Assist</div></div>
+                      <div><div className="text-xl font-display text-bjork-gold">{proj.points}</div><div className="text-[10px] text-gray-500">Poäng</div></div>
+                    </div>
+                  </div>
+                </>);
+              })()}
+              {/* Radar Chart + Trend */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div>
+                  <h4 className="text-sm text-gray-400 mb-2">Spelarprofil</h4>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <RadarChart data={radarData(sel, players)}>
+                      <PolarGrid stroke={SURF_L} />
+                      <PolarAngleAxis dataKey="stat" stroke={MUTED} fontSize={11} />
+                      <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar name={sel.name} dataKey="value" stroke={GOLD} fill={GOLD} fillOpacity={0.25} strokeWidth={2} />
+                      <Tooltip {...TT} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div>
+                  <h4 className="text-sm text-gray-400 mb-2">Poängtrend per match</h4>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart data={sel.trend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={SURF_L} />
+                      <XAxis dataKey="opponent" stroke={MUTED} fontSize={10} />
+                      <YAxis stroke={MUTED} fontSize={10} allowDecimals={false} />
+                      <Tooltip {...TT} />
+                      <Line type="monotone" dataKey="points" stroke={GOLD} strokeWidth={2} dot={{ r: 4, fill: GOLD }} name="Poäng" />
+                      <Line type="monotone" dataKey="goals" stroke={GREEN} strokeWidth={1.5} dot={{ r: 3, fill: GREEN }} name="Mål" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              {sel.pos === 'CE' && (sel.totals.fow + sel.totals.fol) > 0 && <div>
+                <h4 className="text-sm text-gray-400 mb-2">Faceoffs</h4>
+                <div className="flex items-center gap-6">
+                  <ResponsiveContainer width={140} height={140}>
+                    <PieChart><Pie data={[{ name: 'Vunna', value: sel.totals.fow }, { name: 'Förlorade', value: sel.totals.fol }]}
+                      dataKey="value" cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={3}>
+                      <Cell fill={GREEN} /><Cell fill={RED} />
+                    </Pie><Tooltip {...TT} /></PieChart>
+                  </ResponsiveContainer>
+                  <div>
+                    <div className="text-green-400 text-lg font-display">{sel.totals.fow} <span className="text-xs text-gray-400">vunna</span></div>
+                    <div className="text-red-400 text-lg font-display">{sel.totals.fol} <span className="text-xs text-gray-400">förlorade</span></div>
+                    <div className="text-bjork-gold text-lg font-display">{pct(sel.totals.fow, sel.totals.fow + sel.totals.fol).toFixed(1)}%</div>
+                  </div>
+                </div>
+              </div>}
+            </>}
+            {sel.pos === 'GK' && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <StatCard label="Räddningar" value={sel.totals.svs} />
+              <StatCard label="Insläppta" value={sel.totals.ga} />
+              <StatCard label="Skott mot" value={sel.totals.soga} />
+              <StatCard label="SVS%" value={sel.totals.soga > 0 ? pct(sel.totals.svs, sel.totals.soga).toFixed(1) + '%' : 'N/A'} />
+            </div>}
+          </div>}
+        </div>
+      </div>);
+    }
+
+    function renderMd(text) {
+      if (!text) return '';
+      return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gm, '<h2 style="color:#E8B75E;font-size:1.2em;margin:12px 0 6px">$1</h2>')
+        .replace(/^- (.*$)/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+        .replace(/\n/g, '<br />');
+    }
+
+    function AIView({ matches, players, apiKey, onSetKey }) {
+      const [key, setKey] = useState(apiKey || '');
+      const [msgs, setMsgs] = useState([]);
+      const [input, setInput] = useState('');
+      const [loading, setLoading] = useState(false);
+      const chatRef = useRef();
+      const hasKey = !!apiKey;
+
+      const chips = ['Vem var matchens bästa spelare?', 'Vilken kedja underpresterade?', 'Jämför vår boxplay med motståndarens',
+        'Ge en sammanfattning av säsongen hittills', 'Vilka spelare har bäst trend?'];
+
+      const buildContext = () => {
+        let ctx = `Du är en hockeyanalytiker för IF Björklöven. Slutspelet 2026.\n`;
+        ctx += `Antal matcher spelade: ${matches.length}\n`;
+        matches.forEach(m => {
+          ctx += `\nMatch: Björklöven ${m.result.bjorkloven}-${m.result.opponent} ${m.opponent} (${m.date})\n`;
+          ctx += `Björklöven SOG:${m.bjorkloven.totals.sog} Hits:${m.bjorkloven.totals.hits} PIM:${m.bjorkloven.totals.pim} PPG:${m.bjorkloven.totals.ppg} FOW%:${m.bjorkloven.totals.foPct.toFixed(1)}\n`;
+          ctx += `${m.opponent} SOG:${m.opponentTeam.totals.sog} Hits:${m.opponentTeam.totals.hits} PIM:${m.opponentTeam.totals.pim}\n`;
+          ctx += `Björklöven spelare:\n`;
+          m.bjorkloven.skaters.forEach(s => { ctx += `  ${s.name}(#${s.number},${s.pos},L${s.line}): ${s.goals}G ${s.assists}A ${s.points}P ${s.sog}SOG ${s.plusMinus > 0 ? '+' : ''}${s.plusMinus} ${s.hits}H ${s.toi}TOI`; if (s.pos === 'CE') ctx += ` FO:${s.fow}/${s.fow + s.fol}`; ctx += '\n'; });
+          m.bjorkloven.goalies.forEach(g => { ctx += `  ${g.name}(#${g.number},GK): SVS%:${Number(g.svsPct).toFixed(1)} SVS:${g.svs} GA:${g.ga}\n`; });
+        });
+        if (players.length) {
+          ctx += `\nSäsongstotaler:\n`;
+          players.filter(p => p.pos !== 'GK').sort((a, b) => b.totals.points - a.totals.points).slice(0, 15).forEach(p => {
+            ctx += `${p.name}: ${p.totals.goals}G ${p.totals.assists}A ${p.totals.points}P i ${p.gamesPlayed} matcher\n`;
+          });
+        }
+        return ctx;
+      };
+
+      const send = async (text) => {
+        if (!text.trim() || !apiKey) return;
+        const userMsg = { role: 'user', text };
+        setMsgs(prev => [...prev, userMsg]); setInput(''); setLoading(true);
+        try {
+          const { GoogleGenerativeAI } = await import('https://esm.run/@google/generative-ai');
+          const genAI = new GoogleGenerativeAI(apiKey);
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+          const ctx = buildContext();
+          const history = msgs.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
+          const chat = model.startChat({ history, systemInstruction: { parts: [{ text: `${ctx}\n\nSvara på svenska. Använd markdown-formattering med tabeller och listor där det är relevant. Var konkret och basera analysen på de faktiska siffrorna ovan.` }] } });
+          const result = await chat.sendMessage(text);
+          setMsgs(prev => [...prev, { role: 'assistant', text: result.response.text() }]);
+        } catch (e) { setMsgs(prev => [...prev, { role: 'assistant', text: `❌ Fel: ${e.message}` }]); }
+        setLoading(false);
+        setTimeout(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, 100);
+      };
+
+      if (!hasKey) return (<div className="animate-fade max-w-lg mx-auto mt-12">
+        <div className="glass rounded-2xl p-8 text-center">
+          <div className="text-4xl mb-4">🤖</div>
+          <h3 className="font-display text-xl text-bjork-gold mb-2">AI-analysassistent</h3>
+          <p className="text-gray-400 text-sm mb-6">Ange din Gemini API-nyckel för att aktivera AI-driven matchanalys</p>
+          <input type="password" placeholder="Gemini API-nyckel..." value={key} onChange={e => setKey(e.target.value)}
+            className="w-full bg-bjork-surface border border-bjork-surface-light rounded-lg px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-bjork-gold mb-4" />
+          <button onClick={() => { if (key.trim()) onSetKey(key.trim()); }}
+            className="w-full bg-bjork-gold text-bjork-bg font-semibold py-3 rounded-lg hover:bg-bjork-gold-light transition">Aktivera AI-analys</button>
+          <p className="text-gray-600 text-xs mt-3">Nyckeln sparas lokalt i din webbläsare</p>
+        </div>
+      </div>);
+
+      return (<div className="animate-fade space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg text-bjork-gold">AI-analysassistent</h3>
+          <button onClick={() => { onSetKey(''); setMsgs([]); }} className="text-xs text-gray-500 hover:text-red-400 transition">Byt API-nyckel</button>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {chips.map((c, i) => <button key={i} onClick={() => send(c)} className="chip">{c}</button>)}
+        </div>
+        <div ref={chatRef} className="glass rounded-2xl p-5 h-[400px] overflow-y-auto space-y-4">
+          {msgs.length === 0 && <div className="text-center text-gray-500 mt-16"><p>Ställ en fråga eller klicka på ett förslag ovan</p></div>}
+          {msgs.map((m, i) => (
+            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${m.role === 'user' ? 'bg-bjork-gold/20 text-bjork-gold' : 'bg-bjork-surface-light/50 text-gray-200'}`}>
+                {m.role === 'user' ? m.text : <div className="markdown-content" dangerouslySetInnerHTML={{ __html: renderMd(m.text) }} />}
+              </div>
+            </div>
+          ))}
+          {loading && <div className="flex justify-start"><div className="bg-bjork-surface-light/50 rounded-xl px-4 py-3 text-sm text-gray-400 animate-pulse">Analyserar...</div></div>}
+        </div>
+        <div className="flex gap-2">
+          <input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder="Ställ en fråga om matcherna..."
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } }}
+            className="flex-1 bg-bjork-surface border border-bjork-surface-light rounded-lg px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-bjork-gold" />
+          <button onClick={() => send(input)} disabled={loading || !input.trim()}
+            className="bg-bjork-gold text-bjork-bg font-semibold px-6 py-3 rounded-lg hover:bg-bjork-gold-light transition disabled:opacity-50">Skicka</button>
+        </div>
+      </div>);
+    }
+
+    // ===== TAB 5: COMPARE =====
+    function CompareView({ players }) {
+      const skaters = useMemo(() => players.filter(p => p.pos !== 'GK'), [players]);
+      const [p1, setP1] = useState('');
+      const [p2, setP2] = useState('');
+      if (!skaters.length) return <EmptyState title="Inga spelare" desc="Ladda upp matcher för att jämföra spelare" />;
+      const s1 = skaters.find(p => p.playerId === p1);
+      const s2 = skaters.find(p => p.playerId === p2);
+      const metrics = [
+        { k: 'goals', l: 'Mål' }, { k: 'assists', l: 'Assist' }, { k: 'points', l: 'Poäng' },
+        { k: 'sog', l: 'SOG' }, { k: 'plusMinus', l: '+/-' }, { k: 'hits', l: 'Hits' }, { k: 'pim', l: 'PIM' }
+      ];
+      return (<div className="animate-fade space-y-6">
+        <h3 className="font-display text-lg text-bjork-gold">Spelarjämförelse</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <select value={p1} onChange={e => setP1(e.target.value)} className="bg-bjork-surface border border-bjork-surface-light rounded-lg px-4 py-2 text-sm text-gray-200">
+            <option value="">Välj spelare 1...</option>
+            {skaters.map(p => <option key={p.playerId} value={p.playerId}>#{p.number} {p.name} ({p.pos})</option>)}
+          </select>
+          <select value={p2} onChange={e => setP2(e.target.value)} className="bg-bjork-surface border border-bjork-surface-light rounded-lg px-4 py-2 text-sm text-gray-200">
+            <option value="">Välj spelare 2...</option>
+            {skaters.map(p => <option key={p.playerId} value={p.playerId}>#{p.number} {p.name} ({p.pos})</option>)}
+          </select>
+        </div>
+        {s1 && s2 && <>
+          {/* Side-by-side stats */}
+          <div className="glass rounded-2xl p-5">
+            <div className="grid grid-cols-3 gap-2 text-center mb-4">
+              <div className="font-display text-bjork-gold">#{s1.number} {s1.name}<br /><span className={`role-badge ${classifyRole(s1).css}`}>{classifyRole(s1).role}</span></div>
+              <div className="font-display text-gray-400">VS</div>
+              <div className="font-display text-blue-400">#{s2.number} {s2.name}<br /><span className={`role-badge ${classifyRole(s2).css}`}>{classifyRole(s2).role}</span></div>
+            </div>
+            {metrics.map(m => {
+              const v1 = s1.totals[m.k] || 0, v2 = s2.totals[m.k] || 0;
+              const max = Math.max(Math.abs(v1), Math.abs(v2), 1);
+              const lead1 = v1 > v2, lead2 = v2 > v1;
+              return (<div key={m.k} className="grid grid-cols-[1fr_80px_1fr] gap-2 items-center py-2 border-t border-bjork-surface-light/20">
+                <div className="flex items-center justify-end gap-2">
+                  <span className={`text-sm ${lead1 ? 'compare-leader text-bjork-gold' : 'text-gray-400'}`}>{v1}</span>
+                  <div className="w-24 h-1.5 rounded bg-bjork-surface-light/30"><div className="h-full rounded" style={{ width: `${Math.abs(v1) / max * 100}%`, background: lead1 ? GOLD : MUTED, float: 'right' }}></div></div>
+                </div>
+                <div className="text-center text-xs text-gray-500 font-semibold">{m.l}</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-1.5 rounded bg-bjork-surface-light/30"><div className="h-full rounded" style={{ width: `${Math.abs(v2) / max * 100}%`, background: lead2 ? BLUE : MUTED }}></div></div>
+                  <span className={`text-sm ${lead2 ? 'compare-leader text-blue-400' : 'text-gray-400'}`}>{v2}</span>
+                </div>
+              </div>);
+            })}
+            {/* Advanced per-60 comparison */}
+            {(() => {
+              const a1 = calcAdvanced(s1), a2 = calcAdvanced(s2); const advMetrics = [
+                { l: 'P/60', v1: a1.p60, v2: a2.p60 }, { l: 'SOG/60', v1: a1.sog60, v2: a2.sog60 },
+                { l: 'Hits/60', v1: a1.hits60, v2: a2.hits60 }, { l: 'SH%', v1: a1.shPct, v2: a2.shPct }
+              ];
+              return advMetrics.map(m => {
+                const v1 = Number(m.v1), v2 = Number(m.v2), max = Math.max(v1, v2, 0.1);
+                return (<div key={m.l} className="grid grid-cols-[1fr_80px_1fr] gap-2 items-center py-2 border-t border-bjork-surface-light/20">
+                  <div className="flex items-center justify-end gap-2">
+                    <span className={`text-sm ${v1 > v2 ? 'compare-leader text-bjork-gold' : 'text-gray-400'}`}>{m.v1}</span>
+                    <div className="w-24 h-1.5 rounded bg-bjork-surface-light/30"><div className="h-full rounded" style={{ width: `${v1 / max * 100}%`, background: v1 > v2 ? GOLD : MUTED, float: 'right' }}></div></div>
+                  </div>
+                  <div className="text-center text-xs text-gray-500 font-semibold">{m.l}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-1.5 rounded bg-bjork-surface-light/30"><div className="h-full rounded" style={{ width: `${v2 / max * 100}%`, background: v2 > v1 ? BLUE : MUTED }}></div></div>
+                    <span className={`text-sm ${v2 > v1 ? 'compare-leader text-blue-400' : 'text-gray-400'}`}>{m.v2}</span>
+                  </div>
+                </div>);
+              });
+            })()}
+          </div>
+          {/* Dual Radar */}
+          <div className="glass rounded-2xl p-5">
+            <h4 className="text-sm text-gray-400 mb-3">Profilöverlagring</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={radarData(s1, players).map((d, i) => ({ ...d, value2: radarData(s2, players)[i]?.value || 0 }))}>
+                <PolarGrid stroke={SURF_L} />
+                <PolarAngleAxis dataKey="stat" stroke={MUTED} fontSize={11} />
+                <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                <Radar name={s1.name} dataKey="value" stroke={GOLD} fill={GOLD} fillOpacity={0.2} strokeWidth={2} />
+                <Radar name={s2.name} dataKey="value2" stroke={BLUE} fill={BLUE} fillOpacity={0.2} strokeWidth={2} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Tooltip {...TT} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </>}
+      </div>);
+    }
+
+    // ===== APP SHELL =====
+    const TABS = [{ id: 'match', label: 'Matchanalys', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+    { id: 'season', label: 'Säsong', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { id: 'players', label: 'Spelare', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+    { id: 'compare', label: 'Jämför', icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
+    { id: 'ai', label: 'AI-analys', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' }];
+
+    function App() {
+      const [matches, setMatches] = useState([]);
+      const [players, setPlayers] = useState([]);
+      const [tab, setTab] = useState('match');
+      const [selMatch, setSelMatch] = useState(null);
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(true);
+      const [apiKey, setApiKeyState] = useState(loadApiKey);
+
+      const loadData = useCallback(async () => {
+        try {
+          const [m, p] = await Promise.all([fetchMatches(), fetchPlayers()]);
+          setMatches(m);
+          setPlayers(p);
+          if (m.length && !selMatch) setSelMatch(m[m.length - 1].id);
+        } catch (e) { setError(e.message); }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { loadData(); }, [loadData]);
+
+      // Poll for new data every 10 seconds
+      useEffect(() => {
+        const interval = setInterval(() => {
+          fetchMatches().then(m => {
+            if (m.length !== matches.length) {
+              setMatches(m);
+              fetchPlayers().then(setPlayers).catch(() => { });
+              if (m.length && !selMatch) setSelMatch(m[m.length - 1].id);
+            }
+          }).catch(() => { });
+        }, 10000);
+        return () => clearInterval(interval);
+      }, [matches.length, selMatch]);
+
+      const handleClear = useCallback(async () => {
+        if (!confirm('Rensa all data?')) return;
+        try { await apiClear(); setMatches([]); setPlayers([]); setSelMatch(null); }
+        catch (e) { setError(e.message); }
+      }, []);
+
+      const handleSetKey = useCallback(k => { setApiKeyState(k); saveApiKey(k); }, []);
+
+      return (<div className="min-h-screen bg-bjork-bg font-body">
+        {/* HEADER */}
+        <header className="glass sticky top-0 z-50 px-4 md:px-8 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-bjork-gold flex items-center justify-center font-display text-bjork-bg text-lg font-black">B</div>
+              <div>
+                <h1 className="font-display text-lg md:text-xl text-bjork-gold leading-tight">BJÖRKLÖVEN STATS HUB</h1>
+                <p className="text-xs text-gray-500">Slutspel 2026</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <button onClick={loadData} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bjork-gold/20 text-bjork-gold hover:bg-bjork-gold/30 transition text-sm font-medium">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                Uppdatera
+              </button>
+              {matches.length > 0 && <span className="text-xs text-gray-500">{matches.length} match{matches.length !== 1 ? 'er' : ''}</span>}
+              {matches.length > 0 && <button onClick={handleClear} className="text-xs text-red-400 hover:text-red-300 transition">Rensa</button>}
+            </div>
+          </div>
+        </header>
+
+        {/* TABS */}
+        <nav className="border-b border-bjork-surface-light/30 px-4 md:px-8 bg-bjork-surface/50">
+          <div className="max-w-7xl mx-auto flex gap-1 overflow-x-auto">
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition whitespace-nowrap ${tab === t.id ? 'tab-active' : 'text-gray-400 hover:text-gray-200'}`}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={t.icon} /></svg>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* ERRORS */}
+        {error && <div className="max-w-7xl mx-auto px-4 md:px-8 mt-4">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm flex items-start gap-2">
+            <span className="shrink-0 mt-0.5">⚠️</span><div><pre className="whitespace-pre-wrap">{error}</pre>
+              <button onClick={() => setError('')} className="text-xs underline mt-1">Stäng</button></div>
+          </div>
+        </div>}
+        {loading && <div className="max-w-7xl mx-auto px-4 md:px-8 mt-4"><div className="text-bjork-gold text-sm animate-pulse">Hämtar data från servern...</div></div>}
+
+        {/* CONTENT */}
+        <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+          {matches.length === 0 && !loading && tab !== 'ai' ?
+            <EmptyState title="Ingen data" desc="Lägg Excel-filer i excel_data/ mappen så importeras de automatiskt" /> :
+            <>
+              {tab === 'match' && <MatchView matches={matches} selId={selMatch} onSel={setSelMatch} />}
+              {tab === 'season' && <SeasonView matches={matches} players={players} />}
+              {tab === 'players' && <PlayerView players={players} matches={matches} />}
+              {tab === 'compare' && <CompareView players={players} />}
+              {tab === 'ai' && <AIView matches={matches} players={players} apiKey={apiKey} onSetKey={handleSetKey} />}
+            </>
+          }
+        </main>
+
+        <footer className="text-center py-6 text-xs text-gray-600 border-t border-bjork-surface-light/20">
+          Björklöven Stats Hub &middot; Slutspel 2026 &middot; Node.js + SQLite + React
+        </footer>
+      </div>);
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+
+</html>

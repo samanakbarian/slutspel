@@ -1,0 +1,52 @@
+﻿Sheet names: [ 'Bj├Ârkl├Âven', 'Oskarshamn' ]
+
+=== Bj├Ârkl├Âven (19 rows) ===
+Columns: Spelare, NR, POS, LINE, GA, SOGA, SPGA, SVS, SVS%, G, A, PPG, SW, PIM, SOG, PPSOG, +/-, TOI, Hits, FOW, FOL, FO%
+  Row 1: {"Spelare":"Mattias Lindgren","NR":35,"POS":"GK","LINE":1,"GA":2,"SOGA":28,"SPGA":0,"SVS":26,"SVS%":92.9,"G":"","A":"","PPG":"","SW":"","PIM":"","SOG"
+  Row 2: {"Spelare":"Gustaf Kangas","NR":16,"POS":"CE","LINE":4,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":1,"A":2,"PPG":0,"SW":0,"PIM":0,"SOG":2,"PPSO
+  Row 3: {"Spelare":"Erik Lundberg","NR":19,"POS":"LW","LINE":1,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":2,"A":1,"PPG":1,"SW":1,"PIM":2,"SOG":5,"PPSO
+  Row 4: {"Spelare":"Marcus Nilsson","NR":22,"POS":"RW","LINE":1,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":1,"A":1,"PPG":0,"SW":0,"PIM":0,"SOG":4,"PPS
+  Row 5: {"Spelare":"Johan Svensson","NR":91,"POS":"CE","LINE":1,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":0,"A":2,"PPG":0,"SW":2,"PIM":2,"SOG":3,"PPS
+
+=== Oskarshamn (12 rows) ===
+Columns: Spelare, NR, POS, LINE, GA, SOGA, SPGA, SVS, SVS%, G, A, PPG, SW, PIM, SOG, PPSOG, +/-, TOI, Hits, FOW, FOL, FO%
+  Row 1: {"Spelare":"Alexander Grip","NR":1,"POS":"GK","LINE":1,"GA":4,"SOGA":30,"SPGA":1,"SVS":26,"SVS%":86.7,"G":"","A":"","PPG":"","SW":"","PIM":"","SOG":""
+  Row 2: {"Spelare":"Jonas Hall","NR":11,"POS":"CE","LINE":1,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":1,"A":1,"PPG":0,"SW":1,"PIM":2,"SOG":4,"PPSOG":
+  Row 3: {"Spelare":"Mikael Berg","NR":17,"POS":"LW","LINE":1,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":1,"A":0,"PPG":0,"SW":0,"PIM":0,"SOG":3,"PPSOG"
+  Row 4: {"Spelare":"Peter Nystr├Âm","NR":21,"POS":"RW","LINE":1,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":0,"A":1,"PPG":0,"SW":0,"PIM":0,"SOG":2,"PPSO
+  Row 5: {"Spelare":"David Kraft","NR":9,"POS":"CE","LINE":2,"GA":"","SOGA":"","SPGA":"","SVS":"","SVS%":"","G":0,"A":0,"PPG":0,"SW":0,"PIM":0,"SOG":2,"PPSOG":
+
+
+=== RAW HEADER:1 FORMAT ===
+
+--- Bj├Ârkl├Âven (20 raw rows) ---
+  Row 0: [Spelare | NR | POS | LINE | GA | SOGA | SPGA | SVS | SVS% | G | A | PPG | SW | PIM | SOG | PPSOG | +/- | TOI | Hits | FOW | FOL | FO%]
+  Row 1: [Mattias Lindgre | 35 | GK | 1 | 2 | 28 | 0 | 26 | 92.9 |  |  |  |  |  |  |  |  |  |  |  |  | ]
+  Row 2: [Gustaf Kangas | 16 | CE | 4 |  |  |  |  |  | 1 | 2 | 0 | 0 | 0 | 2 | 0 | 3 | 12:50 | 1 | 9 | 2 | 81]
+  Row 3: [Erik Lundberg | 19 | LW | 1 |  |  |  |  |  | 2 | 1 | 1 | 1 | 2 | 5 | 1 | 2 | 18:30 | 3 | 0 | 0 | 0]
+  Row 4: [Marcus Nilsson | 22 | RW | 1 |  |  |  |  |  | 1 | 1 | 0 | 0 | 0 | 4 | 0 | 1 | 17:45 | 2 | 0 | 0 | 0]
+  Row 5: [Johan Svensson | 91 | CE | 1 |  |  |  |  |  | 0 | 2 | 0 | 2 | 2 | 3 | 0 | 1 | 19:10 | 0 | 7 | 4 | 63.6]
+  Row 6: [Adam Pettersson | 7 | LW | 2 |  |  |  |  |  | 1 | 0 | 0 | 0 | 4 | 3 | 0 | 0 | 15:20 | 4 | 0 | 0 | 0]
+  Row 7: [Viktor L├Â├Âf | 44 | RW | 2 |  |  |  |  |  | 0 | 1 | 0 | 1 | 0 | 2 | 0 | -1 | 14:50 | 1 | 0 | 0 | 0]
+  Row 8: [Daniel Bj├Ârk | 10 | CE | 2 |  |  |  |  |  | 0 | 0 | 0 | 0 | 2 | 1 | 0 | -1 | 13:40 | 2 | 5 | 6 | 45.5]
+  Row 9: [Oskar Lindstr├Âm | 28 | LW | 3 |  |  |  |  |  | 0 | 0 | 0 | 1 | 0 | 1 | 0 | 0 | 11:20 | 1 | 0 | 0 | 0]
+  Row 10: [Filip Bergstr├Âm | 33 | RW | 3 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 10:50 | 0 | 0 | 0 | 0]
+  Row 11: [Anders Holm | 14 | CE | 3 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | -1 | 10:30 | 1 | 3 | 5 | 37.5]
+  Row 12: [Karl Johansson | 55 | LW | 4 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 1 | 8:20 | 2 | 0 | 0 | 0]
+  Row 13: [Nils Eriksson | 8 | RW | 4 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 8:10 | 0 | 0 | 0 | 0]
+  Row 14: [Lucas Andersson | 3 | LD | 1 |  |  |  |  |  | 0 | 1 | 0 | 0 | 0 | 2 | 0 | 2 | 20:40 | 2 | 0 | 0 | 0]
+
+--- Oskarshamn (13 raw rows) ---
+  Row 0: [Spelare | NR | POS | LINE | GA | SOGA | SPGA | SVS | SVS% | G | A | PPG | SW | PIM | SOG | PPSOG | +/- | TOI | Hits | FOW | FOL | FO%]
+  Row 1: [Alexander Grip | 1 | GK | 1 | 4 | 30 | 1 | 26 | 86.7 |  |  |  |  |  |  |  |  |  |  |  |  | ]
+  Row 2: [Jonas Hall | 11 | CE | 1 |  |  |  |  |  | 1 | 1 | 0 | 1 | 2 | 4 | 0 | -1 | 19:00 | 2 | 6 | 5 | 54.5]
+  Row 3: [Mikael Berg | 17 | LW | 1 |  |  |  |  |  | 1 | 0 | 0 | 0 | 0 | 3 | 0 | -1 | 17:30 | 1 | 0 | 0 | 0]
+  Row 4: [Peter Nystr├Âm | 21 | RW | 1 |  |  |  |  |  | 0 | 1 | 0 | 0 | 0 | 2 | 0 | -1 | 17:00 | 3 | 0 | 0 | 0]
+  Row 5: [David Kraft | 9 | CE | 2 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 15:30 | 1 | 4 | 7 | 36.4]
+  Row 6: [Anton Str├Âm | 15 | LW | 2 |  |  |  |  |  | 0 | 0 | 0 | 1 | 4 | 1 | 0 | -1 | 14:00 | 2 | 0 | 0 | 0]
+  Row 7: [Robin Ek | 27 | RW | 2 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 13:50 | 0 | 0 | 0 | 0]
+  Row 8: [Emil Larsson | 30 | CE | 3 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 1 | 0 | -1 | 11:00 | 1 | 2 | 4 | 33.3]
+  Row 9: [Lars Hedman | 4 | LD | 1 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 2 | 0 | -1 | 19:30 | 2 | 0 | 0 | 0]
+  Row 10: [Fredrik Sj├Âberg | 23 | RD | 1 |  |  |  |  |  | 0 | 0 | 0 | 0 | 2 | 1 | 0 | -1 | 19:00 | 1 | 0 | 0 | 0]
+  Row 11: [Gustav Lind | 45 | LD | 2 |  |  |  |  |  | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 16:40 | 0 | 0 | 0 | 0]
+  Row 12: [Patrik Moberg | 12 | RD | 2 |  |  |  |  |  | 0 | 0 | 0 | 1 | 0 | 2 | 0 | 0 | 16:20 | 3 | 0 | 0 | 0]
