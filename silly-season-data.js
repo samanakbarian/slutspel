@@ -94,6 +94,8 @@ const SILLY_SEASON_BASELINE = {
 
     // ===== NYHETSFLÖDE =====
     news_feed: [
+        { id: 'base-madhawk-1', date: '2026-05-01', time: '12:15', tag: 'HETT_RYKTE', title: 'Avslöjar: Stjärnbacken nära Björklöven', body: 'Enligt mina uppgifter är Löven i slutförhandlingar med en SHL-meriterad back. Kontraktet uppges vara värt flera miljoner över två år.', source: 'expressen.se (MrMadhawk)', priority: 'high' },
+        { id: 'base-forum-1', date: '2026-05-01', time: '09:45', tag: 'FORUM_RYKTE', title: 'Forumrykte från BjörkLövaren99', body: 'Hört att sportchefen setts äta lunch med en okänd finne nere på stan idag. Verkar signat och klart för en ny forward?!', source: 'svenskafans.com (Gröngult)', priority: 'normal' },
         { id: 'base-1', date: '2026-04-30', time: '16:00', tag: 'BEKRÄFTAD_FÖRLUST', title: 'OFFICIELLT: Dower-Nilsson klar för Frölunda', body: 'Liam Dower-Nilsson har skrivit på ett tvåårskontrakt med Frölunda HC. Han lämnar Björklöven efter en stark slutspelssäsong.', source: 'frolundahockey.com', priority: 'breaking' },
         { id: 'base-2', date: '2026-04-29', time: '18:00', tag: 'BEKRÄFTAD_FÖRLUST', title: 'Nio spelare lämnar Björklöven', body: 'Björklöven tackar av nio spelare som inte följer med upp till SHL: Eriksson Ek, Asp-Cassåsen, Vainio, Nordsäter, Maione, Theocharidis, Dower-Nilsson, Sjöström och Ihs-Wozniak.', source: 'bjorkloven.com', priority: 'breaking' },
         { id: 'base-3', date: '2026-04-29', time: '17:30', tag: 'BEKRÄFTAD_FÖRLUST', title: 'Vainio bekräftad till AIK', body: 'Olli Vainio lämnar Björklöven och ansluter till AIK. Den finländske backen hade utgående kontrakt.', source: 'bjorkloven.com', priority: 'high' },
