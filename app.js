@@ -31,18 +31,19 @@ function calcTeamTotals(skaters, goalies) {
 function groupByLine(skaters) {
     const lines = {};
     skaters.forEach(s => { if (!lines[s.line]) lines[s.line] = []; lines[s.line].push(s); });
-    return Object.entries(lines).sort((a, b) => a[0] - b[0]).map(([n, p]) => ({
-        line: Number(n),
-        forwards: p.filter(x => ['LW', 'CE', 'RW'].includes(x.pos)).sort((a, b) => ['LW', 'CE', 'RW'].indexOf(a.pos) - ['LW', 'CE', 'RW'].indexOf(b.pos)),
-        defense: p.filter(x => ['LD', 'RD'].includes(x.pos)).sort((a, b) => a.pos === 'LD' ? -1 : 1),
-        all: p,
-        totals: {
-            goals: p.reduce((s, x) => s + x.goals, 0), plusMinus: p.reduce((s, x) => s + x.plusMinus, 0),
-            sog: p.reduce((s, x) => s + x.sog, 0), hits: p.reduce((s, x) => s + x.hits, 0),
-            pim: p.reduce((s, x) => s + x.pim, 0),
-            toi: secToToi(p.reduce((s, x) => s + x.toiSeconds, 0) / Math.max(p.length, 1))
-        }
-    }));
+    return Object.entries(lines).sort((a, b) => a[0] - b[0]).map(([n, p]) => {
+        const forwards = p.filter(x => ['LW', 'CE', 'RW'].includes(x.pos)).sort((a, b) => ['LW', 'CE', 'RW'].indexOf(a.pos) - ['LW', 'CE', 'RW'].indexOf(b.pos));
+        const defense = p.filter(x => ['LD', 'RD'].includes(x.pos)).sort((a, b) => a.pos === 'LD' ? -1 : 1);
+        return {
+            line: Number(n), forwards, defense, all: p,
+            totals: {
+                goals: p.reduce((s, x) => s + x.goals, 0), plusMinus: p.reduce((s, x) => s + x.plusMinus, 0),
+                sog: p.reduce((s, x) => s + x.sog, 0), hits: p.reduce((s, x) => s + x.hits, 0),
+                pim: p.reduce((s, x) => s + x.pim, 0),
+                toi: secToToi(forwards.reduce((s, x) => s + x.toiSeconds, 0) / Math.max(forwards.length, 1))
+            }
+        };
+    });
 }
 
 function buildSeasonStats(matches, side) {
@@ -330,7 +331,7 @@ function MatchView({ match, teamLabel }) {
                 React.createElement(ResponsiveContainer, { width: 240, height: 240 },
                     React.createElement(PieChart, null,
                         React.createElement(Pie, {
-                            data: lines.map(ln => ({ name: `Kedja ${ln.line}`, value: ln.all.reduce((s, x) => s + x.toiSeconds, 0) })),
+                            data: lines.map(ln => ({ name: `Kedja ${ln.line}`, value: ln.forwards.reduce((s, x) => s + x.toiSeconds, 0) })),
                             dataKey: 'value', cx: '50%', cy: '50%', innerRadius: 50, outerRadius: 95, paddingAngle: 3,
                             label: ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`
                         },
@@ -343,9 +344,9 @@ function MatchView({ match, teamLabel }) {
                     lines.map((ln, i) =>
                         React.createElement('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 8 } },
                             React.createElement('div', { style: { width: 10, height: 10, borderRadius: '50%', background: COLORS[i % COLORS.length] } }),
-                            React.createElement('span', { style: { fontSize: 13, color: '#cbd5e1' } }, `Kedja ${ln.line}`),
+                            React.createElement('span', { style: { fontSize: 13, color: '#cbd5e1' } }, `Kedja ${ln.line} (${ln.forwards.map(f => f.name.split(' ').pop()).join(', ')})`),
                             React.createElement('span', { style: { fontSize: 13, fontFamily: 'Outfit', color: MUTED } },
-                                secToToi(ln.all.reduce((s, x) => s + x.toiSeconds, 0)) + ' total'),
+                                secToToi(ln.forwards.reduce((s, x) => s + x.toiSeconds, 0)) + ' total'),
                         )
                     )
                 ),
@@ -694,21 +695,23 @@ function DeepAnalysisView({ match }) {
     // Line productivity: goals per TOI minute
     const getLineProd = (skaters) => {
         const lines = groupByLine(skaters);
-        return lines.map(ln => {
-            const totalToi = ln.all.reduce((s, x) => s + x.toiSeconds, 0);
+        return lines.filter(ln => ln.line > 0 && ln.forwards.length > 0).map(ln => {
+            const totalToi = ln.forwards.reduce((s, x) => s + x.toiSeconds, 0);
             const goals = ln.totals.goals;
             const sog = ln.totals.sog;
+            const fwNames = ln.forwards.map(f => f.name.split(' ').pop()).join(', ');
             return {
                 line: ln.line, goals, sog, toi: totalToi, goalsPerMin: totalToi > 0 ? (goals / (totalToi / 60)) : 0,
-                sogPerMin: totalToi > 0 ? (sog / (totalToi / 60)) : 0, plusMinus: ln.totals.plusMinus
+                sogPerMin: totalToi > 0 ? (sog / (totalToi / 60)) : 0, plusMinus: ln.totals.plusMinus, fwNames
             };
         });
     };
     const hLines = getLineProd(h.skaters), aLines = getLineProd(a.skaters);
     const lineCompData = [];
     for (let i = 0; i < Math.max(hLines.length, aLines.length); i++) {
+        const lbl = `K${i + 1}\n(${hLines[i]?.fwNames || aLines[i]?.fwNames || ''})`;
         lineCompData.push({
-            name: `Kedja ${i + 1}`,
+            name: lbl,
             [HN + ' Mål']: hLines[i] ? hLines[i].goals : 0, [AN + ' Mål']: aLines[i] ? aLines[i].goals : 0,
             [HN + ' SOG']: hLines[i] ? hLines[i].sog : 0, [AN + ' SOG']: aLines[i] ? aLines[i].sog : 0,
         });
@@ -1131,7 +1134,7 @@ function App() {
             const map = {};
             MATCHES.forEach(m => m[side].skaters.forEach(s => {
                 const id = s.number + '_' + s.name;
-                if (!map[id]) map[id] = { ...s, toiSeconds: 0 };
+                if (!map[id]) map[id] = { ...s };
                 else {
                     ['goals', 'assists', 'ppg', 'shotsWide', 'pim', 'sog', 'ppsog', 'plusMinus', 'hits', 'fow', 'fol'].forEach(k => map[id][k] += s[k]);
                     map[id].toiSeconds += s.toiSeconds;
@@ -1192,6 +1195,7 @@ function App() {
                 React.createElement('button', { className: `tab ${activeTab === 'season' ? 'active' : ''}`, onClick: () => setActiveTab('season') }, '📈 Poängliga'),
                 React.createElement('button', { className: `tab ${activeTab === 'deep' ? 'active' : ''}`, onClick: () => setActiveTab('deep') }, '🔬 Djupanalys'),
                 React.createElement('button', { className: `tab ${activeTab === 'insights' ? 'active' : ''}`, onClick: () => setActiveTab('insights') }, '💡 Insikter'),
+                React.createElement('button', { className: `tab ${activeTab === 'silly' ? 'active' : ''}`, onClick: () => setActiveTab('silly'), style: activeTab === 'silly' ? {} : { color: '#fb923c' } }, '🔥 Silly Season'),
             ),
 
             // Content
@@ -1199,6 +1203,7 @@ function App() {
             activeTab === 'season' && React.createElement(SeasonView, { matches: MATCHES, teamLabel: teamView }),
             activeTab === 'deep' && viewMatch && React.createElement(DeepAnalysisView, { match: viewMatch }),
             activeTab === 'insights' && React.createElement(HotColdView, { matches: MATCHES }),
+            activeTab === 'silly' && React.createElement(SillySeasonView),
         ),
 
         // Footer

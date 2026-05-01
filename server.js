@@ -4,6 +4,7 @@ const path = require('path');
 const { loadAllMatches, loadMatch, removeMatch, clearAll } = require('./db');
 const { startWatcher } = require('./etl');
 const analytics = require('./analytics');
+const sillyScraper = require('./silly-season-scraper');
 
 const app = express();
 const PORT = process.env.PORT || 3456;
@@ -123,6 +124,35 @@ app.post('/api/clear', (req, res) => {
     }
 });
 
+// ===== SILLY SEASON API =====
+
+// Get silly season data (auto-updated via scraper)
+app.get('/api/silly-season', async (req, res) => {
+    try {
+        const data = await sillyScraper.getSillySeasonData();
+        if (!data) return res.status(503).json({ error: 'Data not ready yet, try again soon' });
+        res.json(data);
+    } catch (e) {
+        console.error('[API] Silly season error:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Force refresh silly season data
+app.post('/api/silly-season/refresh', async (req, res) => {
+    try {
+        const data = await sillyScraper.refreshSillySeasonData();
+        res.json({ ok: true, meta: data?._meta || null });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get scraper status
+app.get('/api/silly-season/status', (req, res) => {
+    res.json(sillyScraper.getScraperStatus());
+});
+
 // ===== SERVER-SIDE UTILITY FUNCTIONS =====
 function pct(a, b) { return b > 0 ? (a / b * 100) : 0; }
 
@@ -204,10 +234,14 @@ function buildPlayerSeasons(matches) {
 // Start ETL watcher
 startWatcher(EXCEL_DIR);
 
+// Start silly season auto-refresh scraper
+sillyScraper.startAutoRefresh();
+
 app.listen(PORT, () => {
     console.log(`\n🏒 Björklöven Stats Hub`);
     console.log(`   Server:  http://localhost:${PORT}`);
     console.log(`   API:     http://localhost:${PORT}/api/matches`);
+    console.log(`   API:     http://localhost:${PORT}/api/silly-season`);
     console.log(`   Excel:   ${EXCEL_DIR}`);
     console.log(`   DB:      ./data/stats.db\n`);
 });
