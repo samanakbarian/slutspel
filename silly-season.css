@@ -256,6 +256,11 @@
     color: #60a5fa;
 }
 
+.tag-FORUM_RYKTE {
+    background: rgba(167, 139, 250, .15);
+    color: #a78bfa;
+}
+
 /* ===== RUMOR METER ===== */
 .rumor-grid {
     display: grid;

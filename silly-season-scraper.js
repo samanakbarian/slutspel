@@ -49,7 +49,10 @@ function fetchUrl(url) {
         }, (res) => {
             // Handle redirects
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                return fetchUrl(res.headers.location).then(resolve).catch(reject);
+                const nextUrl = res.headers.location.startsWith('http') 
+                    ? res.headers.location 
+                    : new URL(res.headers.location, url).toString();
+                return fetchUrl(nextUrl).then(resolve).catch(reject);
             }
             if (res.statusCode !== 200) {
                 res.resume();
@@ -265,6 +268,86 @@ async function scrapeDagenshockey() {
     return articles;
 }
 
+/**
+ * Scrape Expressen/MrMadhawk for Björklöven news
+ */
+async function scrapeMrMadhawk() {
+    const articles = [];
+    try {
+        const url = 'https://www.expressen.se/sport/hockey/';
+        const html = await fetchUrl(url);
+        const $ = cheerio.load(html);
+
+        $('article, .teaser, [class*="article"], [class*="teaser"]').each((i, el) => {
+            const $el = $(el);
+            const title = $el.find('h2, h3, .title, [class*="title"]').first().text().trim();
+            const body = $el.find('p, .preamble, [class*="preamble"]').first().text().trim();
+            const link = $el.find('a').first().attr('href') || '';
+            const author = $el.find('.author, [class*="author"], .byline').text().toLowerCase();
+            
+            const lowerBodyTitle = (title + ' ' + body).toLowerCase();
+            const isMrMadhawk = author.includes('johan svensson') || author.includes('mrmadhawk') || lowerBodyTitle.includes('mrmadhawk') || lowerBodyTitle.includes('johan svensson');
+            
+            if (title && isBjorklovenRelevant(title + ' ' + body) && isMrMadhawk) {
+                articles.push({
+                    title,
+                    body: body.slice(0, 200),
+                    source: 'expressen.se (MrMadhawk)',
+                    url: link.startsWith('http') ? link : `https://www.expressen.se${link}`,
+                    date: new Date().toISOString().split('T')[0],
+                    tag: classifyArticle(title + ' ' + body),
+                    priority: 'high',
+                });
+            }
+        });
+
+        console.log(`[Scraper] expressen.se (MrMadhawk): ${articles.length} artiklar hittade`);
+    } catch (err) {
+        console.error(`[Scraper] expressen.se fel:`, err.message);
+    }
+    return articles;
+}
+
+/**
+ * Scrape Gröngult forum on SvenskaFans
+ */
+async function scrapeGrongult() {
+    const articles = [];
+    try {
+        const url = 'https://www.svenskafans.com/hockeyzon/bjorkloven/forum';
+        const html = await fetchUrl(url);
+        const $ = cheerio.load(html);
+
+        $('.forum-post, article, .post, [class*="post"]').each((i, el) => {
+            const $el = $(el);
+            const body = $el.find('.post-content, .text, p').first().text().trim() || $el.text().trim();
+            const author = $el.find('.author, .username, strong').first().text().trim();
+            const dateStr = $el.find('.date, time').first().text().trim() || new Date().toISOString();
+
+            if (body && body.length > 20 && isBjorklovenRelevant(body) && isTransferRelated(body)) {
+                const lower = body.toLowerCase();
+                if (lower.includes('rykte') || lower.includes('hört att') || lower.includes('påstås') || lower.includes('signat')) {
+                    const title = `Forumrykte från ${author || 'Anonym'}`;
+                    articles.push({
+                        title,
+                        body: body.slice(0, 200) + (body.length > 200 ? '...' : ''),
+                        source: 'svenskafans.com (Gröngult)',
+                        url: url,
+                        date: parseSwedishDate(dateStr),
+                        tag: 'FORUM_RYKTE',
+                        priority: 'normal',
+                    });
+                }
+            }
+        });
+
+        console.log(`[Scraper] Gröngult: ${articles.length} rykten hittade`);
+    } catch (err) {
+        console.error(`[Scraper] Gröngult fel:`, err.message);
+    }
+    return articles;
+}
+
 // ===== CLASSIFICATION HELPERS =====
 
 function isBjorklovenRelevant(text) {
@@ -390,11 +473,13 @@ async function fetchAndMerge() {
 
     try {
         // Fetch from all sources in parallel
-        const [bjork, hockeysve, hockeynews, dagens] = await Promise.allSettled([
+        const [bjork, hockeysve, hockeynews, dagens, madhawk, grongult] = await Promise.allSettled([
             scrapeBjorklovenOfficial(),
             scrapeHockeysverige(),
             scrapeHockeynews(),
             scrapeDagenshockey(),
+            scrapeMrMadhawk(),
+            scrapeGrongult(),
         ]);
 
         const allScraped = [
@@ -402,6 +487,8 @@ async function fetchAndMerge() {
             ...(hockeysve.status === 'fulfilled' ? hockeysve.value : []),
             ...(hockeynews.status === 'fulfilled' ? hockeynews.value : []),
             ...(dagens.status === 'fulfilled' ? dagens.value : []),
+            ...(madhawk.status === 'fulfilled' ? madhawk.value : []),
+            ...(grongult.status === 'fulfilled' ? grongult.value : []),
         ];
 
         console.log(`[Scraper] Totalt ${allScraped.length} artiklar hämtade`);
@@ -459,6 +546,8 @@ async function fetchAndMerge() {
                     'hockeysverige.se': hockeysve.status === 'fulfilled' ? hockeysve.value.length : 'error',
                     'hockeynews.se': hockeynews.status === 'fulfilled' ? hockeynews.value.length : 'error',
                     'dagenshockey.se': dagens.status === 'fulfilled' ? dagens.value.length : 'error',
+                    'expressen.se': madhawk.status === 'fulfilled' ? madhawk.value.length : 'error',
+                    'grongult': grongult.status === 'fulfilled' ? grongult.value.length : 'error',
                 },
             },
         };
