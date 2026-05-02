@@ -379,7 +379,7 @@ function SillySeasonView() {
     const fetchData = useCallback(async (manual) => {
         try {
             if (manual) setIsRefreshing(true);
-            const res = await fetch('/api/silly-season');
+            const res = await fetch('https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season');
             if (res.ok) {
                 const json = await res.json();
                 setData(json);
@@ -393,7 +393,7 @@ function SillySeasonView() {
     const handleRefresh = useCallback(async () => {
         setIsRefreshing(true);
         try {
-            await fetch('/api/silly-season/refresh', { method: 'POST' });
+            await fetch('https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season/refresh', { method: 'POST' });
             await fetchData(false);
         } catch (e) { console.warn('[SillySeason] refresh error:', e); }
         finally { setIsRefreshing(false); }
