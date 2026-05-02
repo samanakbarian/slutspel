@@ -17,7 +17,7 @@ const TAG_LABELS = {
     BEKRÄFTAD_FÖRLUST: 'BEKRÄFTAD FÖRLUST',
     HETT_RYKTE: 'HETT RYKTE',
     KONTRAKTSFÖRLÄNGNING: 'KONTRAKTSFÖRLÄNGNING',
-    FORUM_RYKTE: 'FORUMRYKTE',
+    // FORUM_RYKTE: 'FORUMRYKTE', // Dold tillsvidare
 };
 
 const h = React.createElement;
@@ -25,7 +25,8 @@ const h = React.createElement;
 // ===== 1. LIVE NEWS FEED =====
 function LiveFeed({ news }) {
     const [filter, setFilter] = useState(null);
-    const filtered = filter ? news.filter(n => n.tag === filter) : news;
+    const noForum = news.filter(n => n.tag !== 'FORUM_RYKTE');
+    const filtered = filter ? noForum.filter(n => n.tag === filter) : noForum;
 
     return h('div', { className: 'card' },
         h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, '📰 Realtidsflödet'),
@@ -67,9 +68,13 @@ function LiveFeed({ news }) {
                             h('span', { className: `tag tag-${item.tag}` }, TAG_LABELS[item.tag] || item.tag),
                             h('span', null, `${item.date} ${item.time}`),
                         ),
-                        h('div', { className: 'feed-title' }, item.title),
+                        h('div', { className: 'feed-title' }, 
+                            item.url ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', style: { color: 'inherit', textDecoration: 'none' } }, item.title) : item.title
+                        ),
                         h('div', { className: 'feed-body' }, item.body),
-                        h('div', { className: 'feed-source' }, `Källa: ${item.source}`),
+                        h('div', { className: 'feed-source' }, 
+                            h('a', { href: item.url || (item.source ? `https://${item.source.replace(' (MrMadhawk)', '')}` : '#'), target: '_blank', rel: 'noopener noreferrer', style: { color: '#94a3b8', textDecoration: 'underline' } }, `Källa: ${item.source || 'Okänd'}`)
+                        ),
                     )
                 )
             ),
