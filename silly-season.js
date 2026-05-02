@@ -68,13 +68,9 @@ function LiveFeed({ news }) {
                             h('span', { className: `tag tag-${item.tag}` }, TAG_LABELS[item.tag] || item.tag),
                             h('span', null, `${item.date} ${item.time}`),
                         ),
-                        h('div', { className: 'feed-title' }, 
-                            item.url ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', style: { color: 'inherit', textDecoration: 'none' } }, item.title) : item.title
-                        ),
+                        h('div', { className: 'feed-title' }, item.title),
                         h('div', { className: 'feed-body' }, item.body),
-                        h('div', { className: 'feed-source' }, 
-                            h('a', { href: item.url || (item.source ? `https://${item.source.replace(' (MrMadhawk)', '')}` : '#'), target: '_blank', rel: 'noopener noreferrer', style: { color: '#94a3b8', textDecoration: 'underline' } }, `Källa: ${item.source || 'Okänd'}`)
-                        ),
+                        h('div', { className: 'feed-source', style: { color: '#94a3b8' } }, `Källa: ${item.source || 'Okänd'}`),
                     )
                 )
             ),
