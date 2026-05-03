@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: dim_matches
+    description: "Match dimension — one row per closed match"
+    columns:
+      - name: match_id
+        description: "Primary key — Sportradar sport_event ID"
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_teams
+    description: "Team dimension — one row per unique team"
+    columns:
+      - name: team_id
+        description: "Primary key — Sportradar competitor ID"
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_seasons
+    description: "Season dimension — one row per season"
+    columns:
+      - name: season_id
+        description: "Primary key — Sportradar season ID"
+        tests:
+          - unique
+          - not_null

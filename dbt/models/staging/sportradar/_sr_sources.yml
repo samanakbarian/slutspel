@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: sportradar
+    database: granskaren-d51a1
+    schema: raw_sportradar
+    description: "Raw JSON data from Sportradar API, loaded from GCS"
+    tables:
+      - name: summaries
+        description: "Season match summaries — one row per match with scores and competitors"
+      - name: timelines
+        description: "Match play-by-play timelines — one row per match with nested event arrays"
+      - name: standings
+        description: "Season standings — league table with W/L/points"
