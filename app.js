@@ -1111,10 +1111,10 @@ function AboutFeedbackView() {
 
     const trimmedFeedback = feedback.trim();
     const issueUrl = useMemo(() => {
-        const title = 'Feedback om Loven Stats Hub PoC';
+        const title = 'Feedback om Löven Stats Hub PoC';
         const body = [
             '## Synpunkt',
-            trimmedFeedback || '(fyll i din synpunkt har)',
+            trimmedFeedback || '(fyll i din synpunkt här)',
             '',
             `## Avsandare`,
             name.trim() || 'Anonym besokare',
@@ -1143,8 +1143,8 @@ function AboutFeedbackView() {
     return React.createElement('div', { className: 'grid-2 gap-md' },
         React.createElement('div', { className: 'card animate-fade about-card' },
             React.createElement('div', { className: 'about-kicker' }, 'Om sidan'),
-            React.createElement('h2', { className: 'font-display about-title' }, 'En PoC for Bjorkloven-supporters som gillar siffror, storytelling och smart produktutveckling.'),
-            React.createElement('p', { className: 'about-copy' }, 'Det har ar en experimentell yta dar statistik, silly season och ekonomi testas som supporterupplevelse innan delarna flyttas in i det riktiga systemet. Fokus ar att gora komplex data begriplig, visuell och rolig att utforska.'),
+            React.createElement('h2', { className: 'font-display about-title' }, 'En PoC för Björklöven-supporters som gillar siffror, storytelling och smart produktutveckling.'),
+            React.createElement('p', { className: 'about-copy' }, 'Det här är en experimentell yta där statistik, silly season och ekonomi testas som supporterupplevelse innan delarna flyttas in i det riktiga systemet. Fokus är att göra komplex data begriplig, visuell och rolig att utforska.'),
             React.createElement('div', { className: 'about-pill-row' },
                 React.createElement('span', { className: 'about-pill' }, 'PoC i slutspel'),
                 React.createElement('span', { className: 'about-pill' }, 'Frontend-fokuserad'),
@@ -1152,13 +1152,13 @@ function AboutFeedbackView() {
             ),
             React.createElement('div', { className: 'card-sm about-note' },
                 React.createElement('div', { className: 'about-note-title' }, 'Om namn'),
-                React.createElement('div', { className: 'about-note-copy' }, 'Jag har hallit den har sektionen generell i PoC:n i stallet for att namna dig personligen. Det ar latt att byta till ditt namn eller en mer personlig presentation senare om du vill.')
+                React.createElement('div', { className: 'about-note-copy' }, 'Jag har hållit den här sektionen generell i PoC:n i stället för att nämna dig personligen. Det är lätt att byta till ditt namn eller en mer personlig presentation senare om du vill.')
             )
         ),
         React.createElement('div', { className: 'card animate-fade feedback-card' },
-            React.createElement('div', { className: 'about-kicker' }, 'Lamna synpunkt'),
-            React.createElement('h3', { className: 'font-display about-feedback-title' }, 'Vad borde byggas vidare pa?'),
-            React.createElement('p', { className: 'about-copy' }, 'Skriv en kort tanke om funktioner, design, data eller buggar. Eftersom PoC-sajten ar statisk skickas synpunkter vidare via en forifylld GitHub-issue eller kan kopieras manuellt.'),
+            React.createElement('div', { className: 'about-kicker' }, 'Lämna synpunkt'),
+            React.createElement('h3', { className: 'font-display about-feedback-title' }, 'Vad borde byggas vidare på?'),
+            React.createElement('p', { className: 'about-copy' }, 'Skriv en kort tanke om funktioner, design, data eller buggar. Eftersom PoC-sajten är statisk skickas synpunkter vidare via en förifylld GitHub-issue eller kan kopieras manuellt.'),
             React.createElement('label', { className: 'about-label', htmlFor: 'feedback-name' }, 'Namn eller alias (valfritt)'),
             React.createElement('input', {
                 id: 'feedback-name',
@@ -1166,7 +1166,7 @@ function AboutFeedbackView() {
                 type: 'text',
                 value: name,
                 onChange: (e) => setName(e.target.value),
-                placeholder: 't.ex. Loven-supporter'
+                placeholder: 't.ex. Löven-supporter'
             }),
             React.createElement('label', { className: 'about-label', htmlFor: 'feedback-text' }, 'Din synpunkt'),
             React.createElement('textarea', {
@@ -1174,7 +1174,7 @@ function AboutFeedbackView() {
                 className: 'about-textarea',
                 value: feedback,
                 onChange: (e) => setFeedback(e.target.value),
-                placeholder: 'Vad saknas, vad ar starkt, vad borde andras?',
+                placeholder: 'Vad saknas, vad är starkt, vad borde ändras?',
                 rows: 7
             }),
             React.createElement('div', { className: 'about-actions' },
@@ -1192,7 +1192,7 @@ function AboutFeedbackView() {
                     disabled: !trimmedFeedback
                 }, copyState === 'copied' ? 'Kopierat' : copyState === 'error' ? 'Kunde inte kopiera' : 'Kopiera text')
             ),
-            React.createElement('div', { className: 'about-footnote' }, 'Ingen backend kravs for detta flode. Senare i riktiga systemet kan en riktig feedback-endpoint eller formulartjanst kopplas pa.')
+            React.createElement('div', { className: 'about-footnote' }, 'Ingen backend krävs för detta flöde. Senare i riktiga systemet kan en riktig feedback-endpoint eller formulärtjänst kopplas på.')
         )
     );
 }

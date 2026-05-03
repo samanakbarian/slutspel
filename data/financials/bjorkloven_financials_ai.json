@@ -1,51 +1,51 @@
 {
   "metadata": {
-    "description": "Forberaknad, kompakt AI-analys per bokslutsperiod for Bjorkloven.",
+    "description": "Förberäknad, kompakt AI-analys per bokslutsperiod för Björklöven.",
     "generated_at": "2026-05-04",
     "mode": "precomputed_static"
   },
   "periods": {
     "2024/2025": {
-      "summary": "2024/2025 visar tydlig resultatforbattring for bade A-lag och koncern, men likviditeten och koncernens egna kapital ar fortfarande for svaga for en trygg SHL-ekonomi.",
-      "key_drivers": "A-lagets omsattning steg till 59,5 MSEK samtidigt som rorelseresultatet gick fran kraftigt minus till nara noll. Koncernen forbattrade ocksa resultatet, men tappet i kassa och eget kapital visar att forbattringen inte annu har byggt finansiell uthallighet.",
-      "team_vs_group": "A-laget ar narmare balans an koncernen. Koncernens svagare resultat och mycket lagre kassa tyder pa att ovriga verksamheter eller centrala kostnader fortsatter att pressa helheten.",
-      "trend_breaks": "Efter det svaga 2023/2024 ar 2024/2025 ett tydligt trendbrott pa resultatsidan. Trendbrottet ar dock inte fullstandigt, eftersom bade koncernkassa och koncernens egna kapital fortsatt faller.",
-      "shl_economy_focus": "Den viktigaste forbattringen ar att bygga tillbaka koncernens egna kapital over 10 MSEK och samtidigt fa upp kassan fran dagens mycket laga niva. Utan starkare likviditet blir SHL-beredskapen skar, aven om resultatet ror sig at ratt hall.",
+      "summary": "2024/2025 visar tydlig resultatförbättring för både A-lag och koncern, men likviditeten och koncernens egna kapital är fortfarande för svaga för en trygg SHL-ekonomi.",
+      "key_drivers": "A-lagets omsättning steg till 59,5 MSEK samtidigt som rörelseresultatet gick från kraftigt minus till nära noll. Koncernen förbättrade också resultatet, men tappet i kassa och eget kapital visar att förbättringen inte ännu har byggt finansiell uthållighet.",
+      "team_vs_group": "A-laget är närmare balans än koncernen. Koncernens svagare resultat och mycket lägre kassa tyder på att övriga verksamheter eller centrala kostnader fortsätter att pressa helheten.",
+      "trend_breaks": "Efter det svaga 2023/2024 är 2024/2025 ett tydligt trendbrott på resultatsidan. Trendbrottet är dock inte fullständigt, eftersom både koncernkassa och koncernens egna kapital fortsatt faller.",
+      "shl_economy_focus": "Den viktigaste förbättringen är att bygga tillbaka koncernens egna kapital över 10 MSEK och samtidigt få upp kassan från dagens mycket låga nivå. Utan starkare likviditet blir SHL-beredskapen skör, även om resultatet rör sig åt rätt håll.",
       "bull_points": [
-        "A-laget okade omsattningen och forbattrade resultatet kraftigt mot foregaende ar.",
-        "Koncernens resultat ar fortfarande negativt, men tappet ar klart mindre an 2023/2024."
+        "A-laget ökade omsättningen och förbättrade resultatet kraftigt mot föregående år.",
+        "Koncernens resultat är fortfarande negativt, men tappet är klart mindre än 2023/2024."
       ],
       "risk_points": [
-        "Koncernens egna kapital ligger fortfarande under uppskattad SHL-niva.",
-        "Kassan i koncernen ar nere pa en mycket lag niva och minskade kraftigt under aret."
+        "Koncernens egna kapital ligger fortfarande under uppskattad SHL-nivå.",
+        "Kassan i koncernen är nere på en mycket låg nivå och minskade kraftigt under året."
       ],
       "recommendations": [
-        "Skydda resultatforbattringen med mer repetitiva partner- och sponsorintakter.",
-        "Prioritera likviditet och eget kapital framfor nya kostnadslyft tills koncernnivan ar starkare."
+        "Skydda resultatförbättringen med mer repetitiva partner- och sponsorintäkter.",
+        "Prioritera likviditet och eget kapital framför nya kostnadslyft tills koncernnivån är starkare."
       ],
       "risk_radar": {
         "axes": [
-          { "label": "Likviditet", "score": 92, "detail": "Koncernkassan ar nere pa 0,3 MSEK och ger mycket liten marginal." },
-          { "label": "Publikberoende", "score": 72, "detail": "Stor del av affaren ar fortfarande kanslig for sportslig dipp och svagare hemmamatcher." },
-          { "label": "Personalkostnads-ratio", "score": 66, "detail": "Resultatforbattring finns, men kostnadsbasen ar fortfarande tung relativt trygg lonnsamhet." },
-          { "label": "Sponsring", "score": 43, "detail": "Partnerintakter ar viktiga, men riskbilden ar inte den mest akuta i den har perioden." },
-          { "label": "Eget Kapital", "score": 78, "detail": "Koncernen ligger fortfarande under uppskattad SHL-niva i eget kapital." }
+          { "label": "Likviditet", "score": 92, "detail": "Koncernkassan är nere på 0,3 MSEK och ger mycket liten marginal." },
+          { "label": "Publikberoende", "score": 72, "detail": "Stor del av affären är fortfarande känslig för sportslig dipp och svagare hemmamatcher." },
+          { "label": "Personalkostnads-ratio", "score": 66, "detail": "Resultatförbättring finns, men kostnadsbasen är fortfarande tung relativt trygg lönsamhet." },
+          { "label": "Sponsring", "score": 43, "detail": "Partnerintäkter är viktiga, men riskbilden är inte den mest akuta i den här perioden." },
+          { "label": "Eget Kapital", "score": 78, "detail": "Koncernen ligger fortfarande under uppskattad SHL-nivå i eget kapital." }
         ],
         "highest_risk_label": "Likviditet",
-        "warning": "Hog risk: likviditeten ar den svagaste axeln just nu. Om publiken sviker eller en sportslig dipp kommer finns mycket sma marginaler att absorbera tappet."
+        "warning": "Hög risk: likviditeten är den svagaste axeln just nu. Om publiken sviker eller en sportslig dipp kommer finns mycket små marginaler att absorbera tappet."
       },
       "scenario_analysis": [
         {
           "label": "Pressad",
-          "analysis": "Vid ny intaktsmotvind riskerar bade kassa och eget kapital att hamna pa for svaga nivaer for att ge arbetsro."
+          "analysis": "Vid ny intäktsmotvind riskerar både kassa och eget kapital att hamna på för svaga nivåer för att ge arbetsro."
         },
         {
           "label": "Bas",
-          "analysis": "Om utvecklingen fortsatter i samma riktning finns en vag mot stabilare drift, men SHL-gapet ar inte stangt."
+          "analysis": "Om utvecklingen fortsätter i samma riktning finns en väg mot stabilare drift, men SHL-gapet är inte stängt."
         },
         {
           "label": "Optimistisk",
-          "analysis": "Med fortsatt tillvaxt och battre kostnadskontroll kan A-laget na tydlig lonnsamhet och ge koncernen utrymme att aterbygga kapital."
+          "analysis": "Med fortsatt tillväxt och bättre kostnadskontroll kan A-laget nå tydlig lönsamhet och ge koncernen utrymme att återbygga kapital."
         }
       ]
     },

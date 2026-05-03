@@ -2,20 +2,20 @@
 
 *Senast uppdaterad: 2026-05-04*  
 *Status: Aktiv PoC i `slutspel`*  
-*Viktigt: Detta ar en demonstrations- och valideringsyta, inte den slutliga produktionslosningen.*
+*Viktigt: Detta är en demonstrations- och valideringsyta, inte den slutliga produktionslösningen.*
 
 ---
 
 ## Syfte
 
-Ekonomifliken i `slutspel` ar byggd som en snabb PoC for att validera att Bjorkloven-data fran bokslut och arsredovisningar kan:
+Ekonomifliken i `slutspel` är byggd som en snabb PoC för att validera att Björklöven-data från bokslut och årsredovisningar kan:
 
 - struktureras per bokslutsperiod
-- visas begripligt for vanliga supportrar
+- visas begripligt för vanliga supportrar
 - kompletteras med analys, trend och prognos
 - senare flyttas in i det riktiga systemet
 
-PoC:n ar uttryckligen till for att testa UX, informationsstruktur och datamodell innan implementation i den permanenta backend- och frontendarkitekturen.
+PoC:n är uttryckligen till för att testa UX, informationsstruktur och datamodell innan implementation i den permanenta backend- och frontendarkitekturen.
 
 ---
 
@@ -24,20 +24,20 @@ PoC:n ar uttryckligen till for att testa UX, informationsstruktur och datamodell
 Nuvarande implementation i `slutspel` innehaller:
 
 - lokal financials-kalla i [data/financials/bjorkloven_financials_raw.json](/abs/path/c:/Users/saman/slutspel/data/financials/bjorkloven_financials_raw.json:1)
-- forberaknad AI-analys i [data/financials/bjorkloven_financials_ai.json](/abs/path/c:/Users/saman/slutspel/data/financials/bjorkloven_financials_ai.json:1)
+- förberäknad AI-analys i [data/financials/bjorkloven_financials_ai.json](/abs/path/c:/Users/saman/slutspel/data/financials/bjorkloven_financials_ai.json:1)
 - frontendvy i [financial-intelligence.js](/abs/path/c:/Users/saman/slutspel/financial-intelligence.js:1)
 - styling i [financial-intelligence.css](/abs/path/c:/Users/saman/slutspel/financial-intelligence.css:1)
 
 PoC:n visar idag:
 
-- flera bokslutsperioder over tid
+- flera bokslutsperioder över tid
 - A-lag vs koncern
 - KPI-kort
 - SHL-gap / elitlicensindikator
 - trendlinjer
 - enkla scenarier
 - regelbaserad analys
-- kompakt forberaknad AI-kommentar per period
+- kompakt förberäknad AI-kommentar per period
 
 ---
 

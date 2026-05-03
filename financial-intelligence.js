@@ -25,23 +25,23 @@ const FINANCIAL_AI_STATIC_PATH = 'data/financials/bjorkloven_financials_ai.json'
 
 const FALLBACK_RAW = {
     metadata: {
-        description: 'IF Bjorkloven - Ekonomisk data (lokal fallback)',
-        source: 'Bjorkloven bokslutskommunike (lokal fallback)',
+        description: 'IF Björklöven - Ekonomisk data (lokal fallback)',
+        source: 'Björklöven bokslutskommuniké (lokal fallback)',
         last_updated: '2026-05-03',
-        notes: 'Fallback-data anvands nar JSON-filen inte kan laddas.'
+        notes: 'Fallback-data används när JSON-filen inte kan laddas.'
     },
     years: [
-        { financial_year: '2022/2023', entity: 'bjorkloven_ab', entity_label: 'Bjorkloven AB (A-lag herr)', revenue_total: 57300000, operating_result: 2300000, equity: 5700000, notes: '' },
-        { financial_year: '2022/2023', entity: 'if_bjorkloven_koncern', entity_label: 'IF Bjorkloven (koncern)', revenue_total: 71500000, result_after_tax: 100000, equity: 13900000, cash: 10100000, notes: '' },
-        { financial_year: '2021/2022', entity: 'bjorkloven_ab', entity_label: 'Bjorkloven AB (A-lag herr)', revenue_total: 49100000, operating_result: 900000, equity: 3400000, notes: '' },
-        { financial_year: '2021/2022', entity: 'if_bjorkloven_koncern', entity_label: 'IF Bjorkloven (koncern)', revenue_total: 69800000, result_after_tax: 8700000, equity: 13800000, cash: 7300000, notes: '' }
+        { financial_year: '2022/2023', entity: 'bjorkloven_ab', entity_label: 'Björklöven AB (A-lag herr)', revenue_total: 57300000, operating_result: 2300000, equity: 5700000, notes: '' },
+        { financial_year: '2022/2023', entity: 'if_bjorkloven_koncern', entity_label: 'IF Björklöven (koncern)', revenue_total: 71500000, result_after_tax: 100000, equity: 13900000, cash: 10100000, notes: '' },
+        { financial_year: '2021/2022', entity: 'bjorkloven_ab', entity_label: 'Björklöven AB (A-lag herr)', revenue_total: 49100000, operating_result: 900000, equity: 3400000, notes: '' },
+        { financial_year: '2021/2022', entity: 'if_bjorkloven_koncern', entity_label: 'IF Björklöven (koncern)', revenue_total: 69800000, result_after_tax: 8700000, equity: 13800000, cash: 7300000, notes: '' }
     ],
-    shl_requirements: { min_equity_shl: 10000000, min_equity_ha: 3000000, notes: 'Offentligt uppskattade licensnivaer.' }
+    shl_requirements: { min_equity_shl: 10000000, min_equity_ha: 3000000, notes: 'Offentligt uppskattade licensnivåer.' }
 };
 
 const FALLBACK_AI_RAW = {
     metadata: {
-        description: 'Forberaknad ekonomisk analys saknas i fallback-laget.',
+        description: 'Förberäknad ekonomisk analys saknas i fallback-läget.',
         mode: 'none'
     },
     periods: {}
@@ -110,7 +110,7 @@ function normalizeFinancials(raw) {
 
     return {
         metadata: {
-            source: raw?.metadata?.source || 'Okand kalla',
+            source: raw?.metadata?.source || 'Okänd källa',
             last_updated: raw?.metadata?.last_updated || null,
             notes: raw?.metadata?.notes || '',
             description: raw?.metadata?.description || ''
@@ -291,19 +291,19 @@ function generateInsights(snapshot, shlRequirements, projection) {
     const shlGap = shlRequirements.minEquity - (k.equity ?? 0);
     const haGap = (d.equity ?? 0) - shlRequirements.minEquityHA;
 
-    if (revGrowth != null) insights.push({ type: revGrowth >= 10 ? 'positive' : 'neutral', icon: revGrowth >= 10 ? '📈' : '📊', text: `Omsattningen i A-laget ar ${formatSEK(d.revenue)} och forandrades ${formatPct(revGrowth)} mot ${p.year || 'foregaende ar'}.` });
-    if (d.operatingResult != null) insights.push({ type: d.operatingResult > 0 ? 'positive' : 'warning', icon: d.operatingResult > 0 ? '✅' : '⚠️', text: `Rorelseresultatet i A-laget ar ${formatSEK(d.operatingResult)}${resultGrowth != null ? ` (${formatPct(resultGrowth)} mot foregaende ar).` : '.'}` });
-    if (groupRevenueGrowth != null) insights.push({ type: groupRevenueGrowth >= 0 ? 'positive' : 'neutral', icon: '🏟️', text: `Koncernens omsattning ar ${formatSEK(k.revenue)} (${formatPct(groupRevenueGrowth)} mot ${kp.year || 'foregaende ar'}).` });
-    insights.push({ type: shlGap > 0 ? 'warning' : 'positive', icon: shlGap > 0 ? '🟡' : '🟢', text: shlGap > 0 ? `Koncernens egna kapital ar ${formatSEK(k.equity)} och ligger ${formatSEK(shlGap)} under uppskattad SHL-niva.` : `Koncernens egna kapital ar ${formatSEK(k.equity)} och klarar uppskattad SHL-niva.` });
-    if (haGap >= 0) insights.push({ type: 'positive', icon: '🏒', text: `A-lagets egna kapital ar ${formatSEK(d.equity)} och ligger ${formatSEK(haGap)} over uppskattad HA-niva.` });
-    if (k.cash != null) insights.push({ type: cashGrowth != null && cashGrowth >= 0 ? 'positive' : 'neutral', icon: '💰', text: `Kassan i koncernen ar ${formatSEK(k.cash)}${cashGrowth != null ? ` (${formatPct(cashGrowth)} mot foregaende ar).` : '.'}` });
-    if (groupDrop != null && groupDrop <= -50) insights.push({ type: 'warning', icon: '📉', text: `Koncernresultatet efter skatt foll kraftigt fran ${formatSEK(kp.resultAfterTax)} till ${formatSEK(k.resultAfterTax)}.` });
-    if (projection?.revenue != null) insights.push({ type: 'neutral', icon: '🔭', text: `Trendprojektionen pekar mot cirka ${formatSEK(projection.revenue)} i A-lagsomsattning for ${projection.period}.` });
+    if (revGrowth != null) insights.push({ type: revGrowth >= 10 ? 'positive' : 'neutral', icon: '📈', text: `Omsättningen i A-laget är ${formatSEK(d.revenue)} och förändrades ${formatPct(revGrowth)} mot ${p.year || 'föregående år'}.` });
+    if (d.operatingResult != null) insights.push({ type: d.operatingResult > 0 ? 'positive' : 'warning', icon: d.operatingResult > 0 ? '✅' : '⚠️', text: `Rörelseresultatet i A-laget är ${formatSEK(d.operatingResult)}${resultGrowth != null ? ` (${formatPct(resultGrowth)} mot föregående år).` : '.'}` });
+    if (groupRevenueGrowth != null) insights.push({ type: groupRevenueGrowth >= 0 ? 'positive' : 'neutral', icon: '🏟️', text: `Koncernens omsättning är ${formatSEK(k.revenue)} (${formatPct(groupRevenueGrowth)} mot ${kp.year || 'föregående år'}).` });
+    insights.push({ type: shlGap > 0 ? 'warning' : 'positive', icon: shlGap > 0 ? '🟡' : '🟢', text: shlGap > 0 ? `Koncernens egna kapital är ${formatSEK(k.equity)} och ligger ${formatSEK(shlGap)} under uppskattad SHL-nivå.` : `Koncernens egna kapital är ${formatSEK(k.equity)} och klarar uppskattad SHL-nivå.` });
+    if (haGap >= 0) insights.push({ type: 'positive', icon: '🏒', text: `A-lagets egna kapital är ${formatSEK(d.equity)} och ligger ${formatSEK(haGap)} över uppskattad HA-nivå.` });
+    if (k.cash != null) insights.push({ type: cashGrowth != null && cashGrowth >= 0 ? 'positive' : 'neutral', icon: '💰', text: `Kassan i koncernen är ${formatSEK(k.cash)}${cashGrowth != null ? ` (${formatPct(cashGrowth)} mot föregående år).` : '.'}` });
+    if (groupDrop != null && groupDrop <= -50) insights.push({ type: 'warning', icon: '📉', text: `Koncernresultatet efter skatt föll kraftigt från ${formatSEK(kp.resultAfterTax)} till ${formatSEK(k.resultAfterTax)}.` });
+    if (projection?.revenue != null) insights.push({ type: 'neutral', icon: '🔭', text: `Trendprojektionen pekar mot cirka ${formatSEK(projection.revenue)} i A-lagsomsättning för ${projection.period}.` });
 
-    if (shlGap > 0) recommendations.push(`Stark koncernens egna kapital med minst ${formatSEK(shlGap)} om SHL-sparet ska vara ekonomiskt robust.`);
-    if (groupDrop != null && groupDrop <= -50) recommendations.push('Bryt ut kostnadsdrivare i moderforeningen och folj upp dam- och juniorverksamhet separat i kommunikationen.');
-    if (revGrowth != null && revGrowth >= 10) recommendations.push('Sakra intaktstillvaxten med mer aterkommande sponsor- och partnerintakter, inte bara matchdagseffekt.');
-    if (projection?.shlGap != null && projection.shlGap > 0) recommendations.push(`Trendmassigt aterstar ett teoretiskt gap pa ${formatSEK(projection.shlGap)} till uppskattad SHL-niva nasta bokslut.`);
+    if (shlGap > 0) recommendations.push(`Stärk koncernens egna kapital med minst ${formatSEK(shlGap)} om SHL-spåret ska vara ekonomiskt robust.`);
+    if (groupDrop != null && groupDrop <= -50) recommendations.push('Bryt ut kostnadsdrivare i moderföreningen och följ upp dam- och juniorverksamhet separat i kommunikationen.');
+    if (revGrowth != null && revGrowth >= 10) recommendations.push('Säkra intäktstillväxten med mer återkommande sponsor- och partnerintäkter, inte bara matchdagseffekt.');
+    if (projection?.shlGap != null && projection.shlGap > 0) recommendations.push(`Trendmässigt återstår ett teoretiskt gap på ${formatSEK(projection.shlGap)} till uppskattad SHL-nivå nästa bokslut.`);
 
     return { insights: insights.slice(0, 8), recommendations: recommendations.slice(0, 4) };
 }
@@ -393,11 +393,11 @@ function FinancialDashboard() {
     return financialH('div', { className: 'financial-dashboard' },
         status === 'loading' && financialH('div', { className: 'card financial-status-card' },
             financialH('div', { className: 'financial-status-title' }, 'Laddar ekonomisk data...'),
-            financialH('div', { className: 'financial-status-text' }, 'Bygger dashboard fran lokal arsredovisnings-JSON.')
+            financialH('div', { className: 'financial-status-text' }, 'Bygger dashboard från lokal årsredovisnings-JSON.')
         ),
         status === 'error' && financialH('div', { className: 'card financial-status-card financial-status-warning' },
             financialH('div', { className: 'financial-status-title' }, 'JSON-data kunde inte laddas'),
-            financialH('div', { className: 'financial-status-text' }, `Visar lokal reservdata i stallet. Fel: ${loadError}`)
+            financialH('div', { className: 'financial-status-text' }, `Visar lokal reservdata i stället. Fel: ${loadError}`)
         ),
 
         financialH('div', { className: 'card', style: { borderLeft: '4px solid #d4a843' } },
@@ -405,11 +405,11 @@ function FinancialDashboard() {
                 financialH('div', null,
                     financialH('h2', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, '💰 Ekonomisk Intelligens'),
                     financialH('p', { style: { color: '#94a3b8', fontSize: 12, margin: '4px 0 0' } }, `Bokslut ${d.year} | ${d.entity}`),
-                    financialH('p', { className: 'financial-meta-line' }, `Kalla: ${sourceText} | Senast uppdaterad: ${lastUpdated}`)
+                    financialH('p', { className: 'financial-meta-line' }, `Källa: ${sourceText} | Senast uppdaterad: ${lastUpdated}`)
                 ),
                 financialH('div', { style: { textAlign: 'center' } },
                     financialH('div', { style: { fontSize: 28 } }, '🍃'.repeat(healthScore) + '🍂'.repeat(5 - healthScore)),
-                    financialH('div', { style: { fontSize: 11, color: '#94a3b8' } }, `Ekonomiskt halsobetyg: ${healthScore}/5`)
+                    financialH('div', { style: { fontSize: 11, color: '#94a3b8' } }, `Ekonomiskt hälsobetyg: ${healthScore}/5`)
                 )
             ),
             financialH('div', { className: 'financial-controls' },
@@ -424,16 +424,16 @@ function FinancialDashboard() {
         ),
 
         financialH('div', { className: 'financial-kpi-grid' },
-            renderKPI('Omsattning (A-lag)', d.revenue, p.revenue, '#34d399'),
-            renderKPI('Rorelseresultat', d.operatingResult, p.operatingResult, '#60a5fa'),
+            renderKPI('Omsättning (A-lag)', d.revenue, p.revenue, '#34d399'),
+            renderKPI('Rörelseresultat', d.operatingResult, p.operatingResult, '#60a5fa'),
             renderKPI('Eget kapital (A-lag)', d.equity, p.equity, '#d4a843'),
             renderKPI('Kassa (koncern)', k.cash, kp.cash, '#a78bfa')
         ),
 
         financialH('div', { className: 'financial-kpi-grid financial-kpi-grid-secondary' },
-            renderMetricCard('Omsattning (koncern)', formatSEK(k.revenue), formatPct(calcYoY(k.revenue, kp.revenue)), 'Koncernens topline'),
-            renderMetricCard('Resultat efter skatt', formatSEK(k.resultAfterTax), formatPct(calcYoY(k.resultAfterTax, kp.resultAfterTax)), 'Koncernniva'),
-            renderMetricCard('A-lag av koncern', revenueShare == null ? '-' : `${revenueShare}%`, null, 'Andel av total omsattning'),
+            renderMetricCard('Omsättning (koncern)', formatSEK(k.revenue), formatPct(calcYoY(k.revenue, kp.revenue)), 'Koncernens topline'),
+            renderMetricCard('Resultat efter skatt', formatSEK(k.resultAfterTax), formatPct(calcYoY(k.resultAfterTax, kp.resultAfterTax)), 'Koncernnivå'),
+            renderMetricCard('A-lag av koncern', revenueShare == null ? '-' : `${revenueShare}%`, null, 'Andel av total omsättning'),
             renderMetricCard('Likviditet / oms.', cashToRevenue == null ? '-' : `${cashToRevenue}%`, null, 'Kassa som andel av koncernoms.')
         ),
 
@@ -452,7 +452,7 @@ function FinancialDashboard() {
 
         financialH('div', { className: 'card' },
             financialH('div', { className: 'financial-section-head' },
-                financialH('h3', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, 'Utveckling over tid'),
+                financialH('h3', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, 'Utveckling över tid'),
                 financialH('span', { className: 'financial-badge' }, `${financials.periods.length} bokslutsperioder`)
             ),
             financialH('div', { className: 'financial-chart-wrap' },
@@ -478,7 +478,7 @@ function FinancialDashboard() {
                         financialH('div', { className: 'financial-timeline-period' }, row.period),
                         financialH('div', { className: 'financial-timeline-metrics' },
                             renderTimelineStat('A-lag oms.', formatSEK(row.revenue), row.revenueYoY),
-                            renderTimelineStat('Rorelseres.', formatSEK(row.operatingResult), row.resultYoY),
+                            renderTimelineStat('Rörelseres.', formatSEK(row.operatingResult), row.resultYoY),
                             renderTimelineStat('Koncernkassa', formatSEK(row.cash), row.cashYoY),
                             renderTimelineStat('Koncern EK', formatSEK(row.groupEquity), null)
                         )
@@ -492,12 +492,12 @@ function FinancialDashboard() {
                 financialH('h3', { className: 'font-display', style: { color: '#38bdf8', margin: 0 } }, '🔭 Trendprojektion'),
                 financialH('span', { className: 'financial-badge financial-badge-ai' }, 'Enkel modell')
             ),
-            financialH('p', { className: 'financial-footnote', style: { marginTop: 8 } }, `Projektion for ${projection.period}. ${projection.confidence}`),
+            financialH('p', { className: 'financial-footnote', style: { marginTop: 8 } }, `Projektion för ${projection.period}. ${projection.confidence}`),
             financialH('div', { className: 'financial-kpi-grid financial-kpi-grid-secondary' },
                 renderMetricCard('Proj. A-lagsoms.', formatSEK(projection.revenue), null, projection.period),
-                renderMetricCard('Proj. rorelseres.', formatSEK(projection.operatingResult), null, projection.period),
+                renderMetricCard('Proj. rörelseres.', formatSEK(projection.operatingResult), null, projection.period),
                 renderMetricCard('Proj. koncernkassa', formatSEK(projection.cash), null, projection.period),
-                renderMetricCard('Proj. SHL-gap', projection.shlGap == null ? '-' : formatSEK(Math.max(projection.shlGap, 0)), null, projection.shlGap != null && projection.shlGap <= 0 ? 'Over uppskattad niva' : 'Kvar till uppskattad niva')
+                renderMetricCard('Proj. SHL-gap', projection.shlGap == null ? '-' : formatSEK(Math.max(projection.shlGap, 0)), null, projection.shlGap != null && projection.shlGap <= 0 ? 'Över uppskattad nivå' : 'Kvar till uppskattad nivå')
             )
         ),
 
@@ -525,7 +525,7 @@ function FinancialDashboard() {
                 financialH('h3', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, 'Analys'),
                 financialH('span', { className: 'financial-badge' }, 'Regelbaserad fallback')
             ),
-            financialH('p', { className: 'financial-footnote', style: { marginTop: 8 } }, 'Analysen bygger pa nyckeltal, jamforelsear och enkel trendprojektion.'),
+            financialH('p', { className: 'financial-footnote', style: { marginTop: 8 } }, 'Analysen bygger på nyckeltal, jämförelseår och enkel trendprojektion.'),
             financialH('div', { className: 'insights-list' },
                 analysis.insights.map((ins, i) =>
                     financialH('div', { key: i, className: `insight-item insight-${ins.type || 'neutral'}` },
@@ -534,13 +534,13 @@ function FinancialDashboard() {
                     )
                 )
             ),
-            financialH('p', { className: 'financial-footnote', style: { marginTop: 10 } }, 'AI-delen ar nu forberaknad per bokslutsperiod och laddas som statisk JSON, utan runtime-kostnad per besokare.')
+            financialH('p', { className: 'financial-footnote', style: { marginTop: 10 } }, 'AI-delen är nu förberäknad per bokslutsperiod och laddas som statisk JSON, utan runtime-kostnad per besökare.')
         ),
 
         aiStatus === 'ready' && aiCommentary && financialH('div', { className: 'card', style: { borderLeft: '4px solid #60a5fa' } },
             financialH('div', { className: 'financial-section-head' },
                 financialH('h3', { className: 'font-display', style: { color: '#60a5fa', margin: 0 } }, 'AI-kommentar'),
-                financialH('span', { className: 'financial-badge financial-badge-ai' }, 'Forberaknad analys')
+                financialH('span', { className: 'financial-badge financial-badge-ai' }, 'Förberäknad analys')
             ),
             financialH('p', { className: 'financial-ai-summary' }, aiCommentary.summary),
             renderRiskRadar(aiCommentary),
@@ -554,8 +554,8 @@ function FinancialDashboard() {
         ),
 
         aiStatus === 'missing' && financialH('div', { className: 'card financial-status-card financial-status-subtle' },
-            financialH('div', { className: 'financial-status-title' }, 'Ingen forberaknad AI-analys for vald period'),
-            financialH('div', { className: 'financial-status-text' }, 'Basanalysen och nyckeltalen visas fortfarande, men den statiska AI-kommentaren saknas for just den har perioden.')
+            financialH('div', { className: 'financial-status-title' }, 'Ingen förberäknad AI-analys för vald period'),
+            financialH('div', { className: 'financial-status-text' }, 'Basanalysen och nyckeltalen visas fortfarande, men den statiska AI-kommentaren saknas för just den här perioden.')
         ),
 
         analysis.recommendations.length > 0 && financialH('div', { className: 'card', style: { borderLeft: '4px solid #fbbf24' } },
@@ -563,7 +563,7 @@ function FinancialDashboard() {
             financialH('ol', { className: 'recommendations-list' }, analysis.recommendations.map((rec, i) => financialH('li', { key: i }, rec))),
             aiStatus === 'ready' && Array.isArray(aiCommentary?.recommendations) && aiCommentary.recommendations.length > 0 &&
                 financialH('div', { className: 'financial-ai-followup' },
-                    financialH('div', { className: 'financial-followup-title' }, 'AI-forslag'),
+                    financialH('div', { className: 'financial-followup-title' }, 'AI-förslag'),
                     financialH('ul', { className: 'financial-ai-recommendations' }, aiCommentary.recommendations.map((rec, i) => financialH('li', { key: i }, rec)))
                 )
         ),
@@ -578,8 +578,8 @@ function FinancialDashboard() {
         ),
 
         financialH('div', { style: { textAlign: 'center', padding: 16, color: '#64748b', fontSize: 10 } },
-            `Data fran lokal JSON: ${FINANCIALS_JSON_PATH}. `,
-            financialH('span', null, 'AI-analysen ar forberaknad i statisk JSON for att undvika dyra runtime-anrop.')
+            `Data från lokal JSON: ${FINANCIALS_JSON_PATH}. `,
+            financialH('span', null, 'AI-analysen är förberäknad i statisk JSON för att undvika dyra runtime-anrop.')
         )
     );
 }
@@ -691,7 +691,7 @@ function renderAiScenarioSection(aiCommentary) {
 function renderShlAction(aiCommentary) {
     if (typeof aiCommentary?.shl_economy_focus !== 'string' || !aiCommentary.shl_economy_focus.trim()) return null;
     return financialH('div', { className: 'financial-ai-shl-focus' },
-        financialH('div', { className: 'financial-followup-title' }, 'Vad maste forbattras for SHL-ekonomi'),
+        financialH('div', { className: 'financial-followup-title' }, 'Vad måste förbättras för SHL-ekonomi'),
         financialH('p', { className: 'financial-ai-panel-text' }, aiCommentary.shl_economy_focus)
     );
 }
@@ -720,7 +720,7 @@ function renderKPI(label, current, previous, color) {
         financialH('div', { style: { fontSize: 11, color: '#94a3b8', marginBottom: 4 } }, label),
         financialH('div', { style: { fontSize: 22, fontWeight: 700, color, fontFamily: 'Outfit' } }, formatSEK(current)),
         financialH('div', { style: { fontSize: 11, color: isPositive ? '#34d399' : '#f87171', marginTop: 4 } },
-            yoy == null ? 'Ingen jamforelsedata annu' : `${isPositive ? '↑' : '↓'} ${Math.abs(yoy).toFixed(1)}% vs ${formatSEK(previous)}`
+            yoy == null ? 'Ingen jämförelsedata ännu' : `${isPositive ? '↑' : '↓'} ${Math.abs(yoy).toFixed(1)}% vs ${formatSEK(previous)}`
         )
     );
 }
