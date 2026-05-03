@@ -24,6 +24,13 @@
 | `slutspel` | Frontend (old + v2), systemdokumentation | [github.com/samanakbarian/slutspel](https://github.com/samanakbarian/slutspel) |
 | `loven-stats-backend` | API, scrapers, Cloud Functions, dbt, docs | [github.com/samanakbarian/loven-stats-backend](https://github.com/samanakbarian/loven-stats-backend) |
 
+### Repoansvar for financials just nu
+
+- `slutspel` innehaller den nuvarande ekonomi-PoC:n: statiska financial JSON-filer, visualisering och forberaknad AI-kommentar.
+- `loven-stats-backend` ar den framtida permanenta platsen for ingestion, lagring, verifiering, API och produktionssatt financial-logik.
+
+Det betyder att dagens ekonomiflik i `slutspel` ska behandlas som en valideringsyta, inte som slutlig systemdesign.
+
 ---
 
 ## 3. Övergripande Arkitektur
