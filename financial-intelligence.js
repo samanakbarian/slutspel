@@ -7,7 +7,7 @@
 // - Kan visa valfri AI-kommentar via serverless/backend
 // ============================================================
 
-const { useEffect, useState: useFinancialState } = React;
+const { useEffect: useFinancialEffect, useState: useFinancialState } = React;
 const financialH = React.createElement;
 
 const FINANCIALS_JSON_PATH = 'data/financials/bjorkloven_financials_raw.json';
@@ -253,7 +253,7 @@ function FinancialDashboard() {
     const [aiStatus, setAiStatus] = useFinancialState('idle');
     const [aiCommentary, setAiCommentary] = useFinancialState(null);
 
-    useEffect(() => {
+    useFinancialEffect(() => {
         let cancelled = false;
 
         async function loadFinancials() {
@@ -284,7 +284,7 @@ function FinancialDashboard() {
         };
     }, []);
 
-    useEffect(() => {
+    useFinancialEffect(() => {
         let cancelled = false;
         const payload = buildAiPayload(financialData);
 
