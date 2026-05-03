@@ -119,20 +119,39 @@ function buildTrendRows(financials) {
     })).reverse();
 }
 
-function computeProjection(latest, previous, shlRequirements) {
-    if (!latest || !previous) return null;
+function computeProjection(financials, latest, shlRequirements) {
+    if (!latest || financials.snapshots.length < 2) return null;
     const nextStart = Number(latest.period.split('/')[1]);
     const nextPeriod = `${nextStart}/${nextStart + 1}`;
-    const project = (current, prev) => (current == null || prev == null ? null : Math.round(current + (current - prev)));
-    const groupEquity = project(latest.koncern.equity, previous.koncern.equity);
+    const averageDelta = (picker) => {
+        const deltas = [];
+        financials.snapshots.forEach((snapshot) => {
+            const current = picker(snapshot);
+            const prev = snapshot.previous && snapshot.koncernPrev
+                ? picker({
+                    current: snapshot.previous,
+                    koncern: snapshot.koncernPrev
+                })
+                : null;
+            if (current != null && prev != null) deltas.push(current - prev);
+        });
+        if (!deltas.length) return null;
+        return deltas.reduce((sum, value) => sum + value, 0) / deltas.length;
+    };
+    const project = (current, delta) => (current == null || delta == null ? null : Math.round(current + delta));
+    const revenueDelta = averageDelta((snapshot) => snapshot.current.revenue);
+    const operatingDelta = averageDelta((snapshot) => snapshot.current.operatingResult);
+    const cashDelta = averageDelta((snapshot) => snapshot.koncern.cash);
+    const equityDelta = averageDelta((snapshot) => snapshot.koncern.equity);
+    const groupEquity = project(latest.koncern.equity, equityDelta);
     return {
         period: nextPeriod,
-        revenue: project(latest.current.revenue, previous.current.revenue),
-        operatingResult: project(latest.current.operatingResult, previous.current.operatingResult),
-        cash: project(latest.koncern.cash, previous.koncern.cash),
+        revenue: project(latest.current.revenue, revenueDelta),
+        operatingResult: project(latest.current.operatingResult, operatingDelta),
+        cash: project(latest.koncern.cash, cashDelta),
         groupEquity,
         shlGap: groupEquity == null ? null : shlRequirements.minEquity - groupEquity,
-        confidence: 'Lag till medel - enkel trendlinje baserad pa tva bokslutsar.'
+        confidence: `Lag till medel - enkel trendlinje baserad pa ${financials.snapshots.length} bokslutsar.`
     };
 }
 
@@ -240,9 +259,8 @@ function FinancialDashboard() {
 
     const snapshot = getSnapshot(financials, selectedPeriod);
     const latest = financials.snapshots[0];
-    const previousLatest = financials.snapshots[1] || null;
     const trendRows = buildTrendRows(financials);
-    const projection = computeProjection(latest, previousLatest, financials.shlRequirements);
+    const projection = computeProjection(financials, latest, financials.shlRequirements);
 
     useFinancialEffect(() => {
         let cancelled = false;
