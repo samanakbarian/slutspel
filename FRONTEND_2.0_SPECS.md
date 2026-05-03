@@ -1,6 +1,11 @@
 # 🎨 Frontend 2.0: Arkitektur & Kravspecifikation
 
+*Senast uppdaterad: 2026-05-03*
+
 Detta dokument fungerar som en utredning och kravspecifikation för Frontend 2.0, baserat på vår officiella "Master Plan".
+
+> **Kontext:** Björklöven vann HA 25/26 och spelar i SHL från säsongen 26/27.  
+> **Backend-dokumentation:** Se `loven-stats-backend/docs/DATA_WAREHOUSE_DESIGN.md` och `docs/ROADMAP.md`.
 
 ## 1. Funktionalitet (UX/UI Mål)
 
@@ -12,15 +17,16 @@ Vi bygger Frontend 2.0 iterativt. Följande huvudmoduler ska byggas in:
 - **Silly Season-Tempen (AI):** En visuell mätare (0–100 %) på varje rykte baserat på AI-sentimentanalys.
 - **Trupp-KPI:er & Rinken:** Realtidsräknare för kontrakterade spelare uppe i UI:t och en interaktiv rink.
 
-### B. Matchcenter (MVP Fas 1B - Historisk HA-data)
-*Eftersom Sportradar bekräftats stödja HockeyAllsvenskan (comp_id: `sr:competition:416`, season_id: `sr:season:131137`), bygger vi hela Matchcenter-upplevelsen genom att simulera/spela upp data från förra säsongen som ett första steg!*
+### B. Matchcenter (MVP Fas 1B - SHL Live)
+*Björklöven spelar i SHL 26/27. Matchcenter byggas för live-data från Sportradar SHL (rikare coverage än HA: lineups, djupare spelarstatistik, vinstsannolikheter).*
 - **The Live Scoreboard:** Hjärtat under matchdagar. Visar aktuell period, klocka, live-resultat och "On-Ice Situation".
-  - *Data-källa:* `Sport Event Summary` (för historisk testning) / `Live Summaries` (i produktion).
+  - *Data-källa:* `Sport Event Summary` / `Live Summaries` via BigQuery.
 - **The Play-by-Play Timeline & Box Score:** Tolkar Sportradar-eventdata till ett flöde: 
   - Målsammanfattning (Målskytt, assist, tid).
   - Utvisningssammanfattning (Spelare, typ av förseelse, minuter).
   - Lagstatistik (Skott på mål, teknings-%, PP-effektivitet för matchen).
-  - *Data-källa:* `Sport Event Timeline` (play-by-play events) / `Live Timelines Delta` (för blixtsnabba live-uppdateringar).
+  - Avancerat: Corsi, Fenwick, xG (Expected Goals) per match.
+  - *Data-källa:* `fact_match_events` i BigQuery (se `DATA_WAREHOUSE_DESIGN.md`).
 
 ### C. Ligan & Laget
 - **SHL Standings & Schedule:**
@@ -57,3 +63,16 @@ Vi bygger Frontend 2.0 iterativt. Följande huvudmoduler ska byggas in:
 - **Rich Aesthetics:** Mörkt premium-tema med dynamiska "native" sponsorytor från lokala Umeå-företag.
 - **Datadriven UX:** Siffror ska kännas levande (count-ups, färgkodning röd/grön för bra/dåligt impact).
 - **Responsivitet:** Mobile-first, eftersom majoriteten kollar via mobilen.
+
+## 5. Avancerad Analytik (via Data Warehouse)
+
+*Frontenden ska kunna visa följande metriker, som beräknas i BigQuery:*
+
+- **Corsi (CF%):** Skottförsök för/mot vid 5v5 — mäter hur mycket ett lag/spelare dominerar.
+- **Fenwick (FF%):** Som Corsi men exkluderar blockerade skott.
+- **xG (Expected Goals):** AI-beräknad sannolikhet för varje skott baserat på avstånd, vinkel och spelläge.
+- **Game Score:** Composit-metrik för spelarens totala match-impact.
+- **WAR (Wins Above Replacement):** AI-beräknad — hur mycket bättre än en ersättare.
+- **AI Scouting Reports:** Naturlig text genererad av Gemini per spelare.
+
+Se `loven-stats-backend/docs/DATA_WAREHOUSE_DESIGN.md` för fullständigt schema.
