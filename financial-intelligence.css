@@ -130,6 +130,12 @@
     border-color: rgba(96, 165, 250, .18);
 }
 
+.financial-badge-risk {
+    background: rgba(248, 113, 113, .12);
+    color: #fda4af;
+    border-color: rgba(248, 113, 113, .22);
+}
+
 /* KPI Grid */
 .financial-kpi-grid {
     display: grid;
@@ -246,6 +252,106 @@
     font-size: 14px;
     line-height: 1.6;
     margin: 12px 0 0;
+}
+
+.financial-risk-radar {
+    margin-top: 16px;
+}
+
+.financial-risk-warning {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(248, 113, 113, .08);
+    border: 1px solid rgba(248, 113, 113, .18);
+    color: #fecaca;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.financial-risk-warning-icon {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(248, 113, 113, .22);
+    color: #fff;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.financial-risk-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 1.2fr) minmax(220px, 1fr);
+    gap: 16px;
+    margin-top: 14px;
+    align-items: center;
+}
+
+.financial-risk-chart {
+    min-height: 320px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .02);
+    border: 1px solid rgba(255, 255, 255, .06);
+}
+
+.financial-risk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.financial-risk-item {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .02);
+    border: 1px solid rgba(255, 255, 255, .06);
+}
+
+.financial-risk-item.is-critical {
+    border-color: rgba(248, 113, 113, .3);
+    background: rgba(248, 113, 113, .07);
+}
+
+.financial-risk-item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: baseline;
+}
+
+.financial-risk-item-label {
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.financial-risk-item-score {
+    color: #fda4af;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.financial-risk-critical {
+    margin-top: 6px;
+    color: #fca5a5;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.financial-risk-item-detail {
+    margin-top: 6px;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.6;
 }
 
 .financial-ai-grid,
@@ -423,6 +529,10 @@
     }
 
     .financial-timeline-row {
+        grid-template-columns: 1fr;
+    }
+
+    .financial-risk-layout {
         grid-template-columns: 1fr;
     }
 }

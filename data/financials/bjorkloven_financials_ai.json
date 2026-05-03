@@ -23,6 +23,17 @@
         "Skydda resultatforbattringen med mer repetitiva partner- och sponsorintakter.",
         "Prioritera likviditet och eget kapital framfor nya kostnadslyft tills koncernnivan ar starkare."
       ],
+      "risk_radar": {
+        "axes": [
+          { "label": "Likviditet", "score": 92, "detail": "Koncernkassan ar nere pa 0,3 MSEK och ger mycket liten marginal." },
+          { "label": "Publikberoende", "score": 72, "detail": "Stor del av affaren ar fortfarande kanslig for sportslig dipp och svagare hemmamatcher." },
+          { "label": "Personalkostnads-ratio", "score": 66, "detail": "Resultatforbattring finns, men kostnadsbasen ar fortfarande tung relativt trygg lonnsamhet." },
+          { "label": "Sponsring", "score": 43, "detail": "Partnerintakter ar viktiga, men riskbilden ar inte den mest akuta i den har perioden." },
+          { "label": "Eget Kapital", "score": 78, "detail": "Koncernen ligger fortfarande under uppskattad SHL-niva i eget kapital." }
+        ],
+        "highest_risk_label": "Likviditet",
+        "warning": "Hog risk: likviditeten ar den svagaste axeln just nu. Om publiken sviker eller en sportslig dipp kommer finns mycket sma marginaler att absorbera tappet."
+      },
       "scenario_analysis": [
         {
           "label": "Pressad",
@@ -56,6 +67,17 @@
         "Bryt ut vilka kostnadsblock som drev resultatfallet och folj upp dem separat.",
         "Undvik nya fasta kostnader tills lonnsamheten ar tillbaka pa minst nollniva."
       ],
+      "risk_radar": {
+        "axes": [
+          { "label": "Likviditet", "score": 76, "detail": "Kassan sjunker samtidigt som resultaten ar tunga, vilket snavar in handlingsutrymmet." },
+          { "label": "Publikberoende", "score": 74, "detail": "Intaktsmodellen ar kanslig for sportslig svacka och tappad matchdagskraft." },
+          { "label": "Personalkostnads-ratio", "score": 91, "detail": "Det stora resultatfallet tyder pa en kostnadsmassa som blev for tung relativt intakterna." },
+          { "label": "Sponsring", "score": 48, "detail": "Sponsringen ar viktig, men inte den axel som driver den storsta varningssignalen i ar." },
+          { "label": "Eget Kapital", "score": 73, "detail": "Kapitalet ar fortfarande okej men faller snabbt efter ett svagt bokslut." }
+        ],
+        "highest_risk_label": "Personalkostnads-ratio",
+        "warning": "Hog risk: kostnadsmassan ser ut att ha sprungit ifran intaktsbasen. Nar resultaten faller sa hart finns liten buffert for felrekryteringar eller sportslig motvind."
+      },
       "scenario_analysis": [
         {
           "label": "Pressad",
@@ -89,6 +111,17 @@
         "Bygg vidare pa partner- och matchdagsintakter utan att slappa kostnadsdisciplinen.",
         "Anvand starka ar till att oka bufferten, inte bara till att hoja riskaptiten."
       ],
+      "risk_radar": {
+        "axes": [
+          { "label": "Likviditet", "score": 34, "detail": "Kassan ar stark i relation till manga andra perioder i serien." },
+          { "label": "Publikberoende", "score": 61, "detail": "Tillvaxten ar fortfarande starkt kopplad till intakter som kan svanga med sportslig temperatur." },
+          { "label": "Personalkostnads-ratio", "score": 37, "detail": "Resultatnivaan antyder att kostnadsbasen var relativt kontrollerad i perioden." },
+          { "label": "Sponsring", "score": 42, "detail": "Partnerbenet ar viktigt men ser inte ut att vara den huvudsakliga riskaxeln just nu." },
+          { "label": "Eget Kapital", "score": 24, "detail": "Koncernkapitalet ligger over uppskattad SHL-grans och ar en styrka i ar." }
+        ],
+        "highest_risk_label": "Publikberoende",
+        "warning": "Hog risk: trots ett starkt ar ar intaktsmodellen fortfarande ganska publikdriven. En sportslig nedgang kan snabbt trycka ned marginalerna igen."
+      },
       "scenario_analysis": [
         {
           "label": "Pressad",
@@ -122,6 +155,17 @@
         "For over mer av koncernens styrka till varaktig robusthet i A-lagets modell.",
         "Bygg intakter som inte ar lika kansliga for kortsiktiga sportsliga svangningar."
       ],
+      "risk_radar": {
+        "axes": [
+          { "label": "Likviditet", "score": 41, "detail": "Likviditeten ar fungerande och inte den mest pressade axeln i perioden." },
+          { "label": "Publikberoende", "score": 63, "detail": "A-lagets egen modell ar fortfarande kanslig for sportslig temperatur och publikflode." },
+          { "label": "Personalkostnads-ratio", "score": 46, "detail": "Resultatet ar positivt, men utan stor marginal i herrverksamheten." },
+          { "label": "Sponsring", "score": 44, "detail": "Partnerintakter bidrar till stabilitet men ar inte den tydligaste risken i ar." },
+          { "label": "Eget Kapital", "score": 69, "detail": "A-lagets kapitalbas ar klart svagare an koncernens och gor herrsidan mer sarbar." }
+        ],
+        "highest_risk_label": "Eget Kapital",
+        "warning": "Hog risk: A-lagets egna kapital ar fortfarande betydligt tunnare an koncernens. Det gor herrverksamheten mer kanslig om tillvaxten stannar av."
+      },
       "scenario_analysis": [
         {
           "label": "Pressad",
@@ -155,6 +199,17 @@
         "Prioritera att gora A-lagets modell mindre beroende av enskilda intaktsschocker.",
         "Anvand koncernens starkare balans till att bygga stabilare processer, inte till att maskera lopande svaghet."
       ],
+      "risk_radar": {
+        "axes": [
+          { "label": "Likviditet", "score": 39, "detail": "Koncernens kassa ar starkare an aret fore och fungerar som dämpare." },
+          { "label": "Publikberoende", "score": 78, "detail": "A-lagets affar visar hur snabbt herrsidan kan pressas nar intaktsfloden stors." },
+          { "label": "Personalkostnads-ratio", "score": 71, "detail": "A-lagets svaga resultat visar att kostnadsbilden blev tung relativt intakterna." },
+          { "label": "Sponsring", "score": 47, "detail": "Sponsringen ar viktig men inte den tydligaste stresspunkten i datan." },
+          { "label": "Eget Kapital", "score": 67, "detail": "A-lagets kapital urholkas tydligt, aven om koncernen som helhet star starkare." }
+        ],
+        "highest_risk_label": "Publikberoende",
+        "warning": "Hog risk: A-lagets affarsmodell ser mycket kanslig ut for intaktsstorar och publiksvackor. Koncernen bar upp helheten, men herrverksamheten ar klart mer sarbar."
+      },
       "scenario_analysis": [
         {
           "label": "Pressad",
@@ -188,6 +243,17 @@
         "Fortsatt stapla plusar och bygg kapital over flera perioder i rad.",
         "Lat inte ett tidigt trendbrott leda till for snabb kostnadsexpansion."
       ],
+      "risk_radar": {
+        "axes": [
+          { "label": "Likviditet", "score": 49, "detail": "Kassan ar mycket battre an foregaende ar men fortfarande inte pa niva for full trygghet." },
+          { "label": "Publikberoende", "score": 68, "detail": "En stor del av medvinden ar kopplad till matchdag och sportslig temperatur." },
+          { "label": "Personalkostnads-ratio", "score": 42, "detail": "Plusresultatet antyder att kostnadsnivan i ar var mer hanterbar." },
+          { "label": "Sponsring", "score": 46, "detail": "Partnerbasen ar viktig men ser inte ut att vara den skarpaste riskaxeln." },
+          { "label": "Eget Kapital", "score": 71, "detail": "Koncernens kapital ar fortfarande for tunt for att ge riktig SHL-beredskap." }
+        ],
+        "highest_risk_label": "Eget Kapital",
+        "warning": "Hog risk: trots ett starkt plusar ar kapitalbasen fortfarande tunn. Klubben behover flera stabila ar i rad innan balansen blir riktigt robust."
+      },
       "scenario_analysis": [
         {
           "label": "Pressad",
@@ -221,6 +287,17 @@
         "Bygg kapitalforstarkning som overordnat mal innan nya sportsliga risker tas.",
         "Sakra likviditeten for att minska sarbarheten mot kortsiktiga svangningar."
       ],
+      "risk_radar": {
+        "axes": [
+          { "label": "Likviditet", "score": 95, "detail": "Likvida medel ar mycket laga och ger nastan inget spelrum." },
+          { "label": "Publikberoende", "score": 75, "detail": "En redan skakig ekonomi blir extra kanslig for varje publik- eller intaktsmiss." },
+          { "label": "Personalkostnads-ratio", "score": 74, "detail": "Forlustnivan visar att verksamheten inte hade tillracklig marginal mot kostnaderna." },
+          { "label": "Sponsring", "score": 54, "detail": "Sponsring hjalper, men den finansiella skörheten sitter djupare an bara partnerbenet." },
+          { "label": "Eget Kapital", "score": 96, "detail": "Koncernens egna kapital ar nara noll och klart farligast tillsammans med likviditeten." }
+        ],
+        "highest_risk_label": "Eget Kapital",
+        "warning": "Hog risk: eget kapital och likviditet ar pa krisniva. Vid minsta ytterligare bakslag hade klubben haft mycket sma marginaler att absorbera det."
+      },
       "scenario_analysis": [
         {
           "label": "Pressad",

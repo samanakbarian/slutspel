@@ -12,7 +12,12 @@ const {
     YAxis: FinancialYAxis,
     CartesianGrid: FinancialCartesianGrid,
     Tooltip: FinancialTooltip,
-    Legend: FinancialLegend
+    Legend: FinancialLegend,
+    RadarChart: FinancialRadarChart,
+    Radar: FinancialRadar,
+    PolarGrid: FinancialPolarGrid,
+    PolarAngleAxis: FinancialPolarAngleAxis,
+    PolarRadiusAxis: FinancialPolarRadiusAxis
 } = Recharts;
 
 const FINANCIALS_JSON_PATH = 'data/financials/bjorkloven_financials_raw.json';
@@ -239,6 +244,23 @@ function sanitizeAiResponse(parsed) {
             .filter((item) => item.analysis)
             .slice(0, 3)
         : [];
+    const riskRadar = parsed.risk_radar && typeof parsed.risk_radar === 'object'
+        ? {
+            axes: Array.isArray(parsed.risk_radar.axes)
+                ? parsed.risk_radar.axes
+                    .filter((item) => item && typeof item === 'object')
+                    .map((item) => ({
+                        label: asOptionalString(item.label),
+                        score: Math.max(0, Math.min(100, Number(item.score) || 0)),
+                        detail: asOptionalString(item.detail)
+                    }))
+                    .filter((item) => item.label)
+                    .slice(0, 5)
+                : [],
+            highest_risk_label: asOptionalString(parsed.risk_radar.highest_risk_label),
+            warning: asOptionalString(parsed.risk_radar.warning)
+        }
+        : null;
 
     return {
         summary: parsed.summary,
@@ -249,7 +271,8 @@ function sanitizeAiResponse(parsed) {
         bull_points: asStringArray(parsed.bull_points),
         risk_points: asStringArray(parsed.risk_points),
         recommendations: asStringArray(parsed.recommendations),
-        scenario_analysis: scenarioAnalysis
+        scenario_analysis: scenarioAnalysis,
+        risk_radar: riskRadar
     };
 }
 
@@ -520,6 +543,7 @@ function FinancialDashboard() {
                 financialH('span', { className: 'financial-badge financial-badge-ai' }, 'Forberaknad analys')
             ),
             financialH('p', { className: 'financial-ai-summary' }, aiCommentary.summary),
+            renderRiskRadar(aiCommentary),
             renderAiNarrativeGrid(aiCommentary),
             renderAiScenarioSection(aiCommentary),
             renderShlAction(aiCommentary),
@@ -589,6 +613,61 @@ function renderAiNarrativeGrid(aiCommentary) {
             financialH('div', { key: card.title, className: 'financial-ai-panel' },
                 financialH('div', { className: 'financial-followup-title' }, card.title),
                 financialH('p', { className: 'financial-ai-panel-text' }, card.text)
+            )
+        )
+    );
+}
+
+function renderRiskRadar(aiCommentary) {
+    const radar = aiCommentary?.risk_radar;
+    if (!radar || !Array.isArray(radar.axes) || !radar.axes.length) return null;
+    const highlighted = radar.highest_risk_label || (radar.axes[0] && radar.axes[0].label) || '';
+    const chartData = radar.axes.map((axis) => ({
+        axis: axis.label,
+        risk: axis.score,
+        fullMark: 100
+    }));
+
+    return financialH('div', { className: 'financial-risk-radar' },
+        financialH('div', { className: 'financial-section-head' },
+            financialH('h4', { className: 'font-display', style: { color: '#f87171', margin: 0 } }, 'Risk-Radarn'),
+            financialH('span', { className: 'financial-badge financial-badge-risk' }, 'AI:ns varningssystem')
+        ),
+        typeof radar.warning === 'string' && radar.warning && financialH('div', { className: 'financial-risk-warning' },
+            financialH('span', { className: 'financial-risk-warning-icon' }, '!'),
+            financialH('span', null, radar.warning)
+        ),
+        financialH('div', { className: 'financial-risk-layout' },
+            financialH('div', { className: 'financial-risk-chart' },
+                financialH(FinancialResponsiveContainer, { width: '100%', height: 320 },
+                    financialH(FinancialRadarChart, { data: chartData, outerRadius: '72%' },
+                        financialH(FinancialPolarGrid, { stroke: 'rgba(255,255,255,.12)' }),
+                        financialH(FinancialPolarAngleAxis, { dataKey: 'axis', tick: { fill: '#cbd5e1', fontSize: 11 } }),
+                        financialH(FinancialPolarRadiusAxis, { angle: 90, domain: [0, 100], tick: false, axisLine: false }),
+                        financialH(FinancialRadar, {
+                            name: 'Risk',
+                            dataKey: 'risk',
+                            stroke: '#f87171',
+                            fill: 'rgba(248,113,113,.28)',
+                            fillOpacity: 1
+                        })
+                    )
+                )
+            ),
+            financialH('div', { className: 'financial-risk-list' },
+                radar.axes.map((axis) =>
+                    financialH('div', {
+                        key: axis.label,
+                        className: `financial-risk-item ${axis.label === highlighted ? 'is-critical' : ''}`
+                    },
+                        financialH('div', { className: 'financial-risk-item-top' },
+                            financialH('span', { className: 'financial-risk-item-label' }, axis.label),
+                            financialH('span', { className: 'financial-risk-item-score' }, `${axis.score}/100`)
+                        ),
+                        axis.label === highlighted && financialH('div', { className: 'financial-risk-critical' }, 'Hogst risk just nu'),
+                        axis.detail && financialH('div', { className: 'financial-risk-item-detail' }, axis.detail)
+                    )
+                )
             )
         )
     );
