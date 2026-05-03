@@ -8,6 +8,58 @@
     gap: 16px;
 }
 
+.financial-status-card {
+    border-left: 4px solid #60a5fa;
+}
+
+.financial-status-warning {
+    border-left-color: #fbbf24;
+}
+
+.financial-status-subtle {
+    border-left-color: rgba(96, 165, 250, .45);
+}
+
+.financial-status-title {
+    color: #e2e8f0;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.financial-status-text,
+.financial-meta-line,
+.financial-footnote {
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.financial-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.financial-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(212, 168, 67, .12);
+    color: #d4a843;
+    border: 1px solid rgba(212, 168, 67, .18);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.financial-badge-ai {
+    background: rgba(96, 165, 250, .12);
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, .18);
+}
+
 /* KPI Grid */
 .financial-kpi-grid {
     display: grid;
@@ -72,10 +124,75 @@
     border-left: 3px solid rgba(251, 191, 36, .4);
 }
 
+.insight-neutral {
+    background: rgba(148, 163, 184, .08);
+    border-left: 3px solid rgba(148, 163, 184, .28);
+}
+
 .insight-icon {
     font-size: 16px;
     flex-shrink: 0;
     margin-top: 1px;
+}
+
+.financial-ai-summary {
+    color: #e2e8f0;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 12px 0 0;
+}
+
+.financial-ai-grid,
+.financial-context-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.financial-ai-list,
+.financial-context-card {
+    background: rgba(255, 255, 255, .02);
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.financial-ai-positive {
+    border-left: 3px solid rgba(52, 211, 153, .45);
+}
+
+.financial-ai-warning {
+    border-left: 3px solid rgba(251, 191, 36, .45);
+}
+
+.financial-followup-title,
+.financial-context-label {
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.financial-ai-list ul,
+.financial-ai-recommendations {
+    margin: 0;
+    padding-left: 18px;
+    color: #e2e8f0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.financial-ai-followup {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+}
+
+.financial-context-text {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.6;
 }
 
 /* Rekommendationer */
