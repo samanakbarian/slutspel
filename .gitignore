@@ -26,6 +26,7 @@ data/*
 !data/financials/
 data/financials/*
 !data/financials/bjorkloven_financials_raw.json
+!data/financials/bjorkloven_financials_ai.json
 excel_data/
 test_data/
 

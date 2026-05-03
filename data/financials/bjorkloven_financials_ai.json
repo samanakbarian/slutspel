@@ -1,0 +1,240 @@
+{
+  "metadata": {
+    "description": "Forberaknad, kompakt AI-analys per bokslutsperiod for Bjorkloven.",
+    "generated_at": "2026-05-04",
+    "mode": "precomputed_static"
+  },
+  "periods": {
+    "2024/2025": {
+      "summary": "2024/2025 visar tydlig resultatforbattring for bade A-lag och koncern, men likviditeten och koncernens egna kapital ar fortfarande for svaga for en trygg SHL-ekonomi.",
+      "key_drivers": "A-lagets omsattning steg till 59,5 MSEK samtidigt som rorelseresultatet gick fran kraftigt minus till nara noll. Koncernen forbattrade ocksa resultatet, men tappet i kassa och eget kapital visar att forbattringen inte annu har byggt finansiell uthallighet.",
+      "team_vs_group": "A-laget ar narmare balans an koncernen. Koncernens svagare resultat och mycket lagre kassa tyder pa att ovriga verksamheter eller centrala kostnader fortsatter att pressa helheten.",
+      "trend_breaks": "Efter det svaga 2023/2024 ar 2024/2025 ett tydligt trendbrott pa resultatsidan. Trendbrottet ar dock inte fullstandigt, eftersom bade koncernkassa och koncernens egna kapital fortsatt faller.",
+      "shl_economy_focus": "Den viktigaste forbattringen ar att bygga tillbaka koncernens egna kapital over 10 MSEK och samtidigt fa upp kassan fran dagens mycket laga niva. Utan starkare likviditet blir SHL-beredskapen skar, aven om resultatet ror sig at ratt hall.",
+      "bull_points": [
+        "A-laget okade omsattningen och forbattrade resultatet kraftigt mot foregaende ar.",
+        "Koncernens resultat ar fortfarande negativt, men tappet ar klart mindre an 2023/2024."
+      ],
+      "risk_points": [
+        "Koncernens egna kapital ligger fortfarande under uppskattad SHL-niva.",
+        "Kassan i koncernen ar nere pa en mycket lag niva och minskade kraftigt under aret."
+      ],
+      "recommendations": [
+        "Skydda resultatforbattringen med mer repetitiva partner- och sponsorintakter.",
+        "Prioritera likviditet och eget kapital framfor nya kostnadslyft tills koncernnivan ar starkare."
+      ],
+      "scenario_analysis": [
+        {
+          "label": "Pressad",
+          "analysis": "Vid ny intaktsmotvind riskerar bade kassa och eget kapital att hamna pa for svaga nivaer for att ge arbetsro."
+        },
+        {
+          "label": "Bas",
+          "analysis": "Om utvecklingen fortsatter i samma riktning finns en vag mot stabilare drift, men SHL-gapet ar inte stangt."
+        },
+        {
+          "label": "Optimistisk",
+          "analysis": "Med fortsatt tillvaxt och battre kostnadskontroll kan A-laget na tydlig lonnsamhet och ge koncernen utrymme att aterbygga kapital."
+        }
+      ]
+    },
+    "2023/2024": {
+      "summary": "2023/2024 ar seriens tydligaste svacka, med tunga resultatfall i bade A-lag och koncern samt ett tydligt tapp i kapitalstyrka.",
+      "key_drivers": "Omsattningen sjunker samtidigt som bade A-lagets och koncernens resultat rasar kraftigt. Det skapar ett dubbelt tryck: svagare lopande lonnsamhet och urholkning av eget kapital.",
+      "team_vs_group": "A-laget ar svagt, men koncernen ar svagare. Det visar att problemen inte bara ligger i herrverksamheten, utan i den bredare ekonomiska strukturen runt klubben.",
+      "trend_breaks": "Efter starkare nivaer 2022/2023 bryts trenden abrupt. Det ar framfor allt resultatlinjen som gar fran kontrollerbar till tydligt problematisk.",
+      "shl_economy_focus": "For att bygga SHL-beredskap igen maste klubben fa stopp pa resultatfallen och skydda koncernens egna kapital. Det ar inte ett ar for expansion, utan for ekonomisk aterstallning.",
+      "bull_points": [
+        "Koncernens egna kapital ligger fortfarande nara uppskattad SHL-niva trots tappet.",
+        "Historiken visar att klubben tidigare har kunnat vanda utvecklingen efter svaga ar."
+      ],
+      "risk_points": [
+        "Bade A-lag och koncern redovisar stora negativa resultat.",
+        "Kassan och egna kapitalet faller samtidigt, vilket forsamrar handlingsutrymmet snabbt."
+      ],
+      "recommendations": [
+        "Bryt ut vilka kostnadsblock som drev resultatfallet och folj upp dem separat.",
+        "Undvik nya fasta kostnader tills lonnsamheten ar tillbaka pa minst nollniva."
+      ],
+      "scenario_analysis": [
+        {
+          "label": "Pressad",
+          "analysis": "Om nedgangen hade fortsatt ett ar till hade kapitalbasen snabbt blivit ett huvudproblem aven for licensberedskapen."
+        },
+        {
+          "label": "Bas",
+          "analysis": "Det realistiska behovet var att stabilisera kostnadssidan och ta sig tillbaka mot nollresultat snarare an att jaga expansion."
+        },
+        {
+          "label": "Optimistisk",
+          "analysis": "Om intakter och sportsligt momentum snabbt vande fanns utrymme att ta tillbaka en stor del av tappet redan nasta ar."
+        }
+      ]
+    },
+    "2022/2023": {
+      "summary": "2022/2023 ar ett relativt starkt bokslutsar med tillvaxt i A-laget och ett koncernkapital som ligger over den uppskattade SHL-gransen.",
+      "key_drivers": "A-lagets omsattning och rorelseresultat vaxer samtidigt, vilket lyfter eget kapital. Pa koncernniva ar resultatet betydligt tunnare, men kapital- och kassapositionen ar fortfarande stark.",
+      "team_vs_group": "A-laget ser starkare ut i tillvaxt och resultatdriv, medan koncernen mer fungerar som en stabiliserande struktur med hogre kapital och kassa.",
+      "trend_breaks": "Detta ar en tydlig uppgang relativt 2021/2022 for A-laget. Framfor allt visar perioden att herrverksamheten kan skapa positivt momentum nar intaktssidan fungerar.",
+      "shl_economy_focus": "Fokus borde ha varit att lasa in kapitalstyrkan och undvika att nasta ar ata upp den. Med en starkare koncernbalans fanns ett bra lage att bygga buffert snarare an att pressa upp risknivan.",
+      "bull_points": [
+        "A-laget levererar bade omsattningstillvaxt och positivt resultat.",
+        "Koncernens egna kapital ligger over uppskattad SHL-niva och kassan ar stark."
+      ],
+      "risk_points": [
+        "Koncernresultatet ar tunt trots den starka balansrakningen.",
+        "Styrkan ar beroende av att tillvaxten inte bryts i nasta period."
+      ],
+      "recommendations": [
+        "Bygg vidare pa partner- och matchdagsintakter utan att slappa kostnadsdisciplinen.",
+        "Anvand starka ar till att oka bufferten, inte bara till att hoja riskaptiten."
+      ],
+      "scenario_analysis": [
+        {
+          "label": "Pressad",
+          "analysis": "Vid svagare publik eller sportsligt avbrott hade marginalerna snabbt kunnat krympa, trots den starka utgangspunkten."
+        },
+        {
+          "label": "Bas",
+          "analysis": "Den normala tolkningen ar ett ar dar klubben hade kapacitet att befasta en robust allsvensk ekonomi."
+        },
+        {
+          "label": "Optimistisk",
+          "analysis": "Med fortsatt intaktstillvaxt och bibehallen disciplin fanns en realistisk vag mot annu starkare SHL-beredskap."
+        }
+      ]
+    },
+    "2021/2022": {
+      "summary": "2021/2022 ar ett aterhamtningsar dar A-laget ar svagt positivt och koncernen visar klart starkre kapital och resultat an flera ar fore och efter.",
+      "key_drivers": "A-laget atertar intakter och levererar ett mindre overskott. Koncernen sticker ut med starkt resultat efter skatt och ett eget kapital som ger tydlig stabilitet.",
+      "team_vs_group": "A-laget ser forsiktigt positivt ut, men koncernen ar den egentliga styrkan i perioden. Det tyder pa att helheten bar upp klubben battre an herrverksamheten ensam.",
+      "trend_breaks": "Jämfort med 2020/2021 syns en tydlig forbattring i kapitalstyrka och resultat. Perioden blir en brygga mellan pandemi/ar med svagare balans och det starkare laget 2022/2023.",
+      "shl_economy_focus": "Den viktigaste lardomen ar att anvanda starka koncernar till att bygga en mer uthallig struktur runt A-laget. SHL-ekonomi kraver att aven herrverksamheten star stadigare pa egna ben.",
+      "bull_points": [
+        "Koncernen levererar starkt resultat och bra kapitalniva.",
+        "A-laget ar tillbaka pa plus och over uppskattad HA-grans i eget kapital."
+      ],
+      "risk_points": [
+        "A-lagets egna kapital ar fortfarande betydligt svagare an koncernens.",
+        "Utan fortsatt tillvaxt riskerar A-laget att snabbt bli den svagare delen igen."
+      ],
+      "recommendations": [
+        "For over mer av koncernens styrka till varaktig robusthet i A-lagets modell.",
+        "Bygg intakter som inte ar lika kansliga for kortsiktiga sportsliga svangningar."
+      ],
+      "scenario_analysis": [
+        {
+          "label": "Pressad",
+          "analysis": "Om publikaterhamtningen hade stannat av hade A-lagets plus snabbt kunnat forsvinna."
+        },
+        {
+          "label": "Bas",
+          "analysis": "Perioden visar en sund bas for fortsatt tillvaxt, sa lange herrverksamheten fortsatter att forbattras stegvis."
+        },
+        {
+          "label": "Optimistisk",
+          "analysis": "Med bibehallen koncernstyrka och starkare A-lag fanns forutsattningar for att ga in i 2022/2023 med tydligt momentum."
+        }
+      ]
+    },
+    "2020/2021": {
+      "summary": "2020/2021 ar ett splittrat ar dar A-laget pressas hart, medan koncernen som helhet fortfarande lyckas leverera positivt resultat och starkare kassa.",
+      "key_drivers": "A-laget tappar intakter och faller till ett tydligt negativt resultat efter skatt. Samtidigt visar koncernen positivt resultat, starkre eget kapital och betydligt battre kassa an aret fore.",
+      "team_vs_group": "Skillnaden mellan A-lag och koncern ar stor. Herrverksamheten ar svag, medan helheten runt klubben visar motstandskraft och fungerande kapitaluppbyggnad.",
+      "trend_breaks": "Detta ar ett ar dar A-laget bryter negativt, men koncernen inte foljer med hela vagen ned. Det visar att koncernstrukturen faktiskt dambar svangningar i sportsligt nara verksamhet.",
+      "shl_economy_focus": "SHL-beredskap kraver att herrverksamheten inte ar sa mycket svagare an koncernen. Fokus borde ligga pa att minska gapet mellan A-lagets resultatmodell och den bredare organisationens styrka.",
+      "bull_points": [
+        "Koncernen forbattrar bade kassa och eget kapital trots ett stökigt ar.",
+        "Den overgripande strukturen visar att klubben inte star och faller helt med A-lagets bokslut."
+      ],
+      "risk_points": [
+        "A-lagets forlust ar djup och drar ned eget kapital markant.",
+        "Skillnaden mellan A-lag och koncern gor herrverksamheten sarskilt sarbar."
+      ],
+      "recommendations": [
+        "Prioritera att gora A-lagets modell mindre beroende av enskilda intaktsschocker.",
+        "Anvand koncernens starkare balans till att bygga stabilare processer, inte till att maskera lopande svaghet."
+      ],
+      "scenario_analysis": [
+        {
+          "label": "Pressad",
+          "analysis": "Om koncernen inte hade haft motstandskraft kunde A-lagets svaga ar ha slagit betydligt hardare mot hela klubben."
+        },
+        {
+          "label": "Bas",
+          "analysis": "Det rimliga fokuset efter denna period ar att fa A-laget tillbaka till minst nollresultat samtidigt som koncernstyrkan bevaras."
+        },
+        {
+          "label": "Optimistisk",
+          "analysis": "Med normalisering av intakter fanns god chans att A-laget kunde aterhamta mycket redan nasta ar."
+        }
+      ]
+    },
+    "2019/2020": {
+      "summary": "2019/2020 ar ett stabilt plusar dar bade A-lag och koncern visar tillvaxt och positivt resultat, men kapitalnivan i koncernen ar fortfarande begransad.",
+      "key_drivers": "A-laget levererar positivt rorelseresultat och tydligt starkre eget kapital an aret fore. Koncernen visar ocksa positivt resultat och klart battre likviditet, vilket ger en bredare stabilitet.",
+      "team_vs_group": "A-laget star for en viktig del av forbattringen, men koncernen ar fortfarande tunnare i eget kapital an vad en SHL-satsning skulle krava. Det ar en bra utveckling, men inte en fardig balansrakning.",
+      "trend_breaks": "Efter det mycket svaga 2018/2019 ar detta ett tydligt trendbrott uppat. Klubben gar fran skord balans till en betydligt mer kontrollerad situation.",
+      "shl_economy_focus": "Huvudpunkten hade varit att behalla plusresultatet och fortsatta bygga kapital i flera ar i rad. Ett enskilt starkt ar racker inte for att tala om verklig SHL-robusthet.",
+      "bull_points": [
+        "A-laget vander till plus och lyfter eget kapital tydligt.",
+        "Koncernen bygger upp likviditet och visar positivt resultat."
+      ],
+      "risk_points": [
+        "Koncernens egna kapital ar fortfarande klart under uppskattad SHL-niva.",
+        "Forbattringen ar tidig i serien och darfor kanslig om utvecklingen bryts."
+      ],
+      "recommendations": [
+        "Fortsatt stapla plusar och bygg kapital over flera perioder i rad.",
+        "Lat inte ett tidigt trendbrott leda till for snabb kostnadsexpansion."
+      ],
+      "scenario_analysis": [
+        {
+          "label": "Pressad",
+          "analysis": "Vid ett snabbt intaktstapp hade klubben fortfarande haft begransad balansrakningsstyrka att falla tillbaka pa."
+        },
+        {
+          "label": "Bas",
+          "analysis": "Perioden visar en sund vanding, men den ekonomiska resan ar fortfarande i ett uppbyggnadsskede."
+        },
+        {
+          "label": "Optimistisk",
+          "analysis": "Fortsatt disciplin efter detta ar kunde lagga grunden for flera starkare perioder i rad."
+        }
+      ]
+    },
+    "2018/2019": {
+      "summary": "2018/2019 ar den svagaste perioden i serien, med negativa resultat och mycket tunn kapitalbas pa koncernniva.",
+      "key_drivers": "Bade A-lag och koncern redovisar forluster. Koncernens eget kapital och kassa ar nere pa nivaer som ger mycket litet spelrum och hog kanslighet for bakslag.",
+      "team_vs_group": "A-laget ar svagt, men koncernen ar annu tunnare i balansrakningen. Det visar att hela organisationen befinner sig i ett skort lage, inte bara herrverksamheten.",
+      "trend_breaks": "Detta ar utgangslaget fore senare aterhamtning. Nasta periods forbattringar ska lasas mot en mycket svag botten snarare an mot en redan stabil verksamhet.",
+      "shl_economy_focus": "Det som maste forbattras ar allt som bygger kapitalbas: plusresultat, kassa och mindre volatilitet. SHL-ekonomi ar langt borta fran den har nivan.",
+      "bull_points": [
+        "Perioden skapar en tydlig utgangspunkt som senare ar kan jamforas mot.",
+        "A-lagets egna kapital ar svagt men hogre an koncernens mycket tunna niva."
+      ],
+      "risk_points": [
+        "Koncernens egna kapital ar nara noll och likviditeten ar mycket svag.",
+        "Negativa resultat i bade A-lag och koncern ger litet utrymme for misstag."
+      ],
+      "recommendations": [
+        "Bygg kapitalforstarkning som overordnat mal innan nya sportsliga risker tas.",
+        "Sakra likviditeten for att minska sarbarheten mot kortsiktiga svangningar."
+      ],
+      "scenario_analysis": [
+        {
+          "label": "Pressad",
+          "analysis": "Vid ytterligare bakslag hade klubben haft mycket smal ekonomisk marginal att absorbera dem med."
+        },
+        {
+          "label": "Bas",
+          "analysis": "Det ekonomiska huvuduppdraget efter detta ar ar ren ateruppbyggnad, inte expansion."
+        },
+        {
+          "label": "Optimistisk",
+          "analysis": "Om kostnadskontroll och intaktslyft lyckas kan svaga bottenar ibland ge snabb visuell forbattring i nasta steg."
+        }
+      ]
+    }
+  }
+}

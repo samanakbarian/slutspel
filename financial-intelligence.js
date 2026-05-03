@@ -2,7 +2,7 @@
 // EKONOMISK INTELLIGENS - BJORKLOVEN
 // ============================================================
 
-const { useEffect: useFinancialEffect, useState: useFinancialState, useRef: useFinancialRef } = React;
+const { useEffect: useFinancialEffect, useState: useFinancialState } = React;
 const financialH = React.createElement;
 const {
     ResponsiveContainer: FinancialResponsiveContainer,
@@ -16,7 +16,7 @@ const {
 } = Recharts;
 
 const FINANCIALS_JSON_PATH = 'data/financials/bjorkloven_financials_raw.json';
-const FINANCIAL_AI_ENDPOINT = '/.netlify/functions/financial-ai';
+const FINANCIAL_AI_STATIC_PATH = 'data/financials/bjorkloven_financials_ai.json';
 
 const FALLBACK_RAW = {
     metadata: {
@@ -32,6 +32,14 @@ const FALLBACK_RAW = {
         { financial_year: '2021/2022', entity: 'if_bjorkloven_koncern', entity_label: 'IF Bjorkloven (koncern)', revenue_total: 69800000, result_after_tax: 8700000, equity: 13800000, cash: 7300000, notes: '' }
     ],
     shl_requirements: { min_equity_shl: 10000000, min_equity_ha: 3000000, notes: 'Offentligt uppskattade licensnivaer.' }
+};
+
+const FALLBACK_AI_RAW = {
+    metadata: {
+        description: 'Forberaknad ekonomisk analys saknas i fallback-laget.',
+        mode: 'none'
+    },
+    periods: {}
 };
 
 function calcYoY(current, previous) {
@@ -116,6 +124,23 @@ function getSnapshot(financials, period) {
     return financials.snapshots.find((snapshot) => snapshot.period === period) || financials.snapshots[0];
 }
 
+function normalizeAiArchive(raw) {
+    const periods = raw && typeof raw === 'object' && raw.periods && typeof raw.periods === 'object' ? raw.periods : {};
+    const normalizedPeriods = {};
+    Object.keys(periods).forEach((period) => {
+        const safe = sanitizeAiResponse(periods[period]);
+        if (safe) normalizedPeriods[period] = safe;
+    });
+    return {
+        metadata: {
+            description: raw?.metadata?.description || '',
+            generated_at: raw?.metadata?.generated_at || null,
+            mode: raw?.metadata?.mode || 'static'
+        },
+        periods: normalizedPeriods
+    };
+}
+
 function buildTrendRows(financials) {
     return financials.snapshots.map((snapshot) => ({
         period: snapshot.period,
@@ -198,40 +223,6 @@ function buildProjectionScenarios(financials, latest, shlRequirements) {
     };
 }
 
-function buildAiPayload(financials, snapshot, projection) {
-    const trendSeries = buildTrendRows(financials).map((row) => ({
-        period: row.period,
-        revenue: row.revenue,
-        operating_result: row.operatingResult,
-        cash: row.cash,
-        group_equity: row.groupEquity,
-        revenue_yoy_pct: row.revenueYoY,
-        operating_result_yoy_pct: row.resultYoY,
-        cash_yoy_pct: row.cashYoY
-    }));
-    const scenarios = buildProjectionScenarios(financials, financials.snapshots[0], financials.shlRequirements);
-    return {
-        metadata: financials.metadata,
-        selected_period: snapshot.period,
-        current: snapshot.current,
-        previous: snapshot.previous,
-        koncern: snapshot.koncern,
-        koncernPrev: snapshot.koncernPrev,
-        thresholds: financials.shlRequirements,
-        projection,
-        trend_series: trendSeries,
-        scenarios,
-        deltas: {
-            revenue_yoy_pct: calcYoY(snapshot.current.revenue, snapshot.previous?.revenue),
-            operating_result_yoy_pct: calcYoY(snapshot.current.operatingResult, snapshot.previous?.operatingResult),
-            group_equity_yoy_pct: calcYoY(snapshot.koncern.equity, snapshot.koncernPrev?.equity),
-            cash_yoy_pct: calcYoY(snapshot.koncern.cash, snapshot.koncernPrev?.cash),
-            shl_equity_gap_sek: financials.shlRequirements.minEquity - (snapshot.koncern.equity ?? 0),
-            ha_equity_gap_sek: financials.shlRequirements.minEquityHA - (snapshot.current.equity ?? 0)
-        }
-    };
-}
-
 function sanitizeAiResponse(parsed) {
     if (!parsed || typeof parsed !== 'object' || typeof parsed.summary !== 'string') return null;
     const asStringArray = (value) => Array.isArray(value)
@@ -309,13 +300,11 @@ function calcHealthScore(snapshot, shlRequirements) {
 
 function FinancialDashboard() {
     const [financials, setFinancials] = useFinancialState(normalizeFinancials(FALLBACK_RAW));
+    const [financialAi, setFinancialAi] = useFinancialState(normalizeAiArchive(FALLBACK_AI_RAW));
     const [selectedPeriod, setSelectedPeriod] = useFinancialState('2022/2023');
     const [status, setStatus] = useFinancialState('loading');
     const [loadError, setLoadError] = useFinancialState('');
-    const [aiEnabled, setAiEnabled] = useFinancialState(false);
     const [aiStatus, setAiStatus] = useFinancialState('idle');
-    const [aiCommentary, setAiCommentary] = useFinancialState(null);
-    const aiRequestKeyRef = useFinancialRef('');
 
     useFinancialEffect(() => {
         let cancelled = false;
@@ -326,18 +315,33 @@ function FinancialDashboard() {
                 const res = await fetch(getDataUrl(FINANCIALS_JSON_PATH), { cache: 'no-store' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const normalized = normalizeFinancials(await res.json());
+                let aiArchive = normalizeAiArchive(FALLBACK_AI_RAW);
+                let nextAiStatus = 'missing';
+                try {
+                    const aiRes = await fetch(getDataUrl(FINANCIAL_AI_STATIC_PATH), { cache: 'no-store' });
+                    if (aiRes.ok) {
+                        aiArchive = normalizeAiArchive(await aiRes.json());
+                        nextAiStatus = Object.keys(aiArchive.periods).length ? 'ready' : 'missing';
+                    }
+                } catch {
+                    nextAiStatus = 'missing';
+                }
                 if (!cancelled) {
                     setFinancials(normalized);
+                    setFinancialAi(aiArchive);
                     setSelectedPeriod(normalized.periods[0]);
                     setStatus('ready');
+                    setAiStatus(nextAiStatus);
                 }
             } catch (err) {
                 if (!cancelled) {
                     const fallback = normalizeFinancials(FALLBACK_RAW);
                     setFinancials(fallback);
+                    setFinancialAi(normalizeAiArchive(FALLBACK_AI_RAW));
                     setSelectedPeriod(fallback.periods[0]);
                     setStatus('error');
                     setLoadError(err.message || 'Okant fel');
+                    setAiStatus('missing');
                 }
             }
         }
@@ -350,61 +354,8 @@ function FinancialDashboard() {
     const trendRows = buildTrendRows(financials);
     const projection = computeProjection(financials, latest, financials.shlRequirements);
     const scenarios = buildProjectionScenarios(financials, latest, financials.shlRequirements);
-    const aiRequestKey = JSON.stringify({
-        source: financials.metadata?.last_updated || '',
-        period: snapshot?.period || '',
-        projectionPeriod: projection?.period || '',
-        revenue: snapshot?.current?.revenue ?? null,
-        operatingResult: snapshot?.current?.operatingResult ?? null,
-        groupEquity: snapshot?.koncern?.equity ?? null,
-        cash: snapshot?.koncern?.cash ?? null
-    });
-
-    useFinancialEffect(() => {
-        let cancelled = false;
-        if (status === 'loading') {
-            setAiStatus('idle');
-            setAiCommentary(null);
-            aiRequestKeyRef.current = '';
-            return () => { cancelled = true; };
-        }
-        if (!aiEnabled) {
-            setAiStatus('idle');
-            setAiCommentary(null);
-            aiRequestKeyRef.current = '';
-            return () => { cancelled = true; };
-        }
-        if (aiRequestKeyRef.current === aiRequestKey) {
-            return () => { cancelled = true; };
-        }
-        aiRequestKeyRef.current = aiRequestKey;
-        async function loadAiCommentary() {
-            setAiStatus('loading');
-            try {
-                const res = await fetch(FINANCIAL_AI_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(buildAiPayload(financials, snapshot, projection))
-                });
-                if (!res.ok) throw new Error(`AI endpoint unavailable (${res.status})`);
-                const parsed = sanitizeAiResponse(await res.json());
-                if (!parsed) throw new Error('AI-response saknar summary.');
-                if (!cancelled) {
-                    setAiCommentary(parsed);
-                    setAiStatus('ready');
-                }
-            } catch {
-                if (!cancelled) {
-                    setAiCommentary(null);
-                    setAiStatus('error');
-                }
-            }
-        }
-        loadAiCommentary();
-        return () => { cancelled = true; };
-    }, [aiEnabled, aiRequestKey, status]);
-
     const analysis = generateInsights(snapshot, financials.shlRequirements, projection);
+    const aiCommentary = financialAi.periods[snapshot.period] || null;
     const healthScore = calcHealthScore(snapshot, financials.shlRequirements);
     const d = snapshot.current;
     const p = snapshot.previous || {};
@@ -560,23 +511,13 @@ function FinancialDashboard() {
                     )
                 )
             ),
-            financialH('div', { className: 'financial-ai-cta-row' },
-                financialH('button', {
-                    type: 'button',
-                    className: 'financial-ai-trigger',
-                    onClick: () => {
-                        setAiEnabled(true);
-                        aiRequestKeyRef.current = '';
-                    }
-                }, aiStatus === 'loading' ? 'Genererar AI-analys...' : aiCommentary ? 'Uppdatera AI-analys' : 'Generera AI-analys')
-            ),
-            financialH('p', { className: 'financial-footnote', style: { marginTop: 10 } }, 'AI-kommentaren hamtas bara pa begaran for att halla ekonomivyn stabil och undvika onodiga anrop.')
+            financialH('p', { className: 'financial-footnote', style: { marginTop: 10 } }, 'AI-delen ar nu forberaknad per bokslutsperiod och laddas som statisk JSON, utan runtime-kostnad per besokare.')
         ),
 
         aiStatus === 'ready' && aiCommentary && financialH('div', { className: 'card', style: { borderLeft: '4px solid #60a5fa' } },
             financialH('div', { className: 'financial-section-head' },
                 financialH('h3', { className: 'font-display', style: { color: '#60a5fa', margin: 0 } }, 'AI-kommentar'),
-                financialH('span', { className: 'financial-badge financial-badge-ai' }, 'Valfri enhancement')
+                financialH('span', { className: 'financial-badge financial-badge-ai' }, 'Forberaknad analys')
             ),
             financialH('p', { className: 'financial-ai-summary' }, aiCommentary.summary),
             renderAiNarrativeGrid(aiCommentary),
@@ -588,24 +529,9 @@ function FinancialDashboard() {
             )
         ),
 
-        aiStatus === 'loading' && financialH('div', { className: 'card financial-status-card financial-status-subtle' },
-            financialH('div', { className: 'financial-status-title' }, 'Hamtar AI-kommentar...'),
-            financialH('div', { className: 'financial-status-text' }, 'Den lokala analysen visas redan oavsett om AI-svaret lyckas eller inte.')
-        ),
-
-        aiStatus === 'error' && financialH('div', { className: 'card financial-status-card financial-status-warning' },
-            financialH('div', { className: 'financial-status-title' }, 'AI-kommentaren kunde inte laddas'),
-            financialH('div', { className: 'financial-status-text' }, 'Basanalysen fungerar fortfarande. Prova igen nar Netlify-funktionen ar tillganglig.'),
-            financialH('div', { className: 'financial-ai-cta-row' },
-                financialH('button', {
-                    type: 'button',
-                    className: 'financial-ai-trigger',
-                    onClick: () => {
-                        setAiEnabled(true);
-                        aiRequestKeyRef.current = '';
-                    }
-                }, 'Prova igen')
-            )
+        aiStatus === 'missing' && financialH('div', { className: 'card financial-status-card financial-status-subtle' },
+            financialH('div', { className: 'financial-status-title' }, 'Ingen forberaknad AI-analys for vald period'),
+            financialH('div', { className: 'financial-status-text' }, 'Basanalysen och nyckeltalen visas fortfarande, men den statiska AI-kommentaren saknas for just den har perioden.')
         ),
 
         analysis.recommendations.length > 0 && financialH('div', { className: 'card', style: { borderLeft: '4px solid #fbbf24' } },
@@ -629,7 +555,7 @@ function FinancialDashboard() {
 
         financialH('div', { style: { textAlign: 'center', padding: 16, color: '#64748b', fontSize: 10 } },
             `Data fran lokal JSON: ${FINANCIALS_JSON_PATH}. `,
-            financialH('span', null, 'Ekonomivyn hanterar nu flera bokslutsar och enkel trendprojektion.')
+            financialH('span', null, 'AI-analysen ar forberaknad i statisk JSON for att undvika dyra runtime-anrop.')
         )
     );
 }
