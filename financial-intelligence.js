@@ -303,6 +303,7 @@ function FinancialDashboard() {
     const [selectedPeriod, setSelectedPeriod] = useFinancialState('2022/2023');
     const [status, setStatus] = useFinancialState('loading');
     const [loadError, setLoadError] = useFinancialState('');
+    const [aiEnabled, setAiEnabled] = useFinancialState(false);
     const [aiStatus, setAiStatus] = useFinancialState('idle');
     const [aiCommentary, setAiCommentary] = useFinancialState(null);
     const aiRequestKeyRef = useFinancialRef('');
@@ -358,6 +359,12 @@ function FinancialDashboard() {
             aiRequestKeyRef.current = '';
             return () => { cancelled = true; };
         }
+        if (!aiEnabled) {
+            setAiStatus('idle');
+            setAiCommentary(null);
+            aiRequestKeyRef.current = '';
+            return () => { cancelled = true; };
+        }
         if (aiRequestKeyRef.current === aiRequestKey) {
             return () => { cancelled = true; };
         }
@@ -386,7 +393,7 @@ function FinancialDashboard() {
         }
         loadAiCommentary();
         return () => { cancelled = true; };
-    }, [aiRequestKey, status]);
+    }, [aiEnabled, aiRequestKey, status]);
 
     const analysis = generateInsights(snapshot, financials.shlRequirements, projection);
     const healthScore = calcHealthScore(snapshot, financials.shlRequirements);
@@ -543,7 +550,18 @@ function FinancialDashboard() {
                         financialH('span', null, ins.text)
                     )
                 )
-            )
+            ),
+            financialH('div', { className: 'financial-ai-cta-row' },
+                financialH('button', {
+                    type: 'button',
+                    className: 'financial-ai-trigger',
+                    onClick: () => {
+                        setAiEnabled(true);
+                        aiRequestKeyRef.current = '';
+                    }
+                }, aiStatus === 'loading' ? 'Genererar AI-analys...' : aiCommentary ? 'Uppdatera AI-analys' : 'Generera AI-analys')
+            ),
+            financialH('p', { className: 'financial-footnote', style: { marginTop: 10 } }, 'AI-kommentaren hamtas bara pa begaran for att halla ekonomivyn stabil och undvika onodiga anrop.')
         ),
 
         aiStatus === 'ready' && aiCommentary && financialH('div', { className: 'card', style: { borderLeft: '4px solid #60a5fa' } },
@@ -564,6 +582,21 @@ function FinancialDashboard() {
         aiStatus === 'loading' && financialH('div', { className: 'card financial-status-card financial-status-subtle' },
             financialH('div', { className: 'financial-status-title' }, 'Hamtar AI-kommentar...'),
             financialH('div', { className: 'financial-status-text' }, 'Den lokala analysen visas redan oavsett om AI-svaret lyckas eller inte.')
+        ),
+
+        aiStatus === 'error' && financialH('div', { className: 'card financial-status-card financial-status-warning' },
+            financialH('div', { className: 'financial-status-title' }, 'AI-kommentaren kunde inte laddas'),
+            financialH('div', { className: 'financial-status-text' }, 'Basanalysen fungerar fortfarande. Prova igen nar Netlify-funktionen ar tillganglig.'),
+            financialH('div', { className: 'financial-ai-cta-row' },
+                financialH('button', {
+                    type: 'button',
+                    className: 'financial-ai-trigger',
+                    onClick: () => {
+                        setAiEnabled(true);
+                        aiRequestKeyRef.current = '';
+                    }
+                }, 'Prova igen')
+            )
         ),
 
         analysis.recommendations.length > 0 && financialH('div', { className: 'card', style: { borderLeft: '4px solid #fbbf24' } },
