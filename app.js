@@ -1196,6 +1196,7 @@ function App() {
                 React.createElement('button', { className: `tab ${activeTab === 'deep' ? 'active' : ''}`, onClick: () => setActiveTab('deep') }, '🔬 Djupanalys'),
                 React.createElement('button', { className: `tab ${activeTab === 'insights' ? 'active' : ''}`, onClick: () => setActiveTab('insights') }, '💡 Insikter'),
                 React.createElement('button', { className: `tab ${activeTab === 'silly' ? 'active' : ''}`, onClick: () => setActiveTab('silly'), style: activeTab === 'silly' ? {} : { color: '#fb923c' } }, '🔥 Silly Season'),
+                React.createElement('button', { className: `tab ${activeTab === 'financial' ? 'active' : ''}`, onClick: () => setActiveTab('financial'), style: activeTab === 'financial' ? {} : { color: '#d4a843' } }, '💰 Ekonomi'),
             ),
 
             // Content
@@ -1204,6 +1205,7 @@ function App() {
             activeTab === 'deep' && viewMatch && React.createElement(DeepAnalysisView, { match: viewMatch }),
             activeTab === 'insights' && React.createElement(HotColdView, { matches: MATCHES }),
             activeTab === 'silly' && React.createElement(SillySeasonView),
+            activeTab === 'financial' && React.createElement(FinancialDashboard),
         ),
 
         // Footer

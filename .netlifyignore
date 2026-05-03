@@ -1,0 +1,7 @@
+node_modules/
+.git/
+dbt/
+dbt-venv/
+excel_data/
+test_data/
+.netlify/
