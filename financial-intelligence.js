@@ -190,6 +190,17 @@ function buildProjectionScenarios(financials, latest, shlRequirements) {
 }
 
 function buildAiPayload(financials, snapshot, projection) {
+    const trendSeries = buildTrendRows(financials).map((row) => ({
+        period: row.period,
+        revenue: row.revenue,
+        operating_result: row.operatingResult,
+        cash: row.cash,
+        group_equity: row.groupEquity,
+        revenue_yoy_pct: row.revenueYoY,
+        operating_result_yoy_pct: row.resultYoY,
+        cash_yoy_pct: row.cashYoY
+    }));
+    const scenarios = buildProjectionScenarios(financials, financials.snapshots[0], financials.shlRequirements);
     return {
         metadata: financials.metadata,
         selected_period: snapshot.period,
@@ -199,6 +210,8 @@ function buildAiPayload(financials, snapshot, projection) {
         koncernPrev: snapshot.koncernPrev,
         thresholds: financials.shlRequirements,
         projection,
+        trend_series: trendSeries,
+        scenarios,
         deltas: {
             revenue_yoy_pct: calcYoY(snapshot.current.revenue, snapshot.previous?.revenue),
             operating_result_yoy_pct: calcYoY(snapshot.current.operatingResult, snapshot.previous?.operatingResult),
@@ -207,6 +220,36 @@ function buildAiPayload(financials, snapshot, projection) {
             shl_equity_gap_sek: financials.shlRequirements.minEquity - (snapshot.koncern.equity ?? 0),
             ha_equity_gap_sek: financials.shlRequirements.minEquityHA - (snapshot.current.equity ?? 0)
         }
+    };
+}
+
+function sanitizeAiResponse(parsed) {
+    if (!parsed || typeof parsed !== 'object' || typeof parsed.summary !== 'string') return null;
+    const asStringArray = (value) => Array.isArray(value)
+        ? value.filter((item) => typeof item === 'string' && item.trim()).slice(0, 6)
+        : [];
+    const asOptionalString = (value) => typeof value === 'string' && value.trim() ? value : '';
+    const scenarioAnalysis = Array.isArray(parsed.scenario_analysis)
+        ? parsed.scenario_analysis
+            .filter((item) => item && typeof item === 'object')
+            .map((item) => ({
+                label: asOptionalString(item.label) || 'Scenario',
+                analysis: asOptionalString(item.analysis)
+            }))
+            .filter((item) => item.analysis)
+            .slice(0, 3)
+        : [];
+
+    return {
+        summary: parsed.summary,
+        key_drivers: asOptionalString(parsed.key_drivers),
+        team_vs_group: asOptionalString(parsed.team_vs_group),
+        trend_breaks: asOptionalString(parsed.trend_breaks),
+        shl_economy_focus: asOptionalString(parsed.shl_economy_focus),
+        bull_points: asStringArray(parsed.bull_points),
+        risk_points: asStringArray(parsed.risk_points),
+        recommendations: asStringArray(parsed.recommendations),
+        scenario_analysis: scenarioAnalysis
     };
 }
 
@@ -313,8 +356,8 @@ function FinancialDashboard() {
                     body: JSON.stringify(buildAiPayload(financials, snapshot, projection))
                 });
                 if (!res.ok) throw new Error(`AI endpoint unavailable (${res.status})`);
-                const parsed = await res.json();
-                if (!parsed || typeof parsed.summary !== 'string') throw new Error('AI-response saknar summary.');
+                const parsed = sanitizeAiResponse(await res.json());
+                if (!parsed) throw new Error('AI-response saknar summary.');
                 if (!cancelled) {
                     setAiCommentary(parsed);
                     setAiStatus('ready');
@@ -494,6 +537,9 @@ function FinancialDashboard() {
                 financialH('span', { className: 'financial-badge financial-badge-ai' }, 'Valfri enhancement')
             ),
             financialH('p', { className: 'financial-ai-summary' }, aiCommentary.summary),
+            renderAiNarrativeGrid(aiCommentary),
+            renderAiScenarioSection(aiCommentary),
+            renderShlAction(aiCommentary),
             Array.isArray(aiCommentary.bull_points) && aiCommentary.bull_points.length > 0 && financialH('div', { className: 'financial-ai-grid' },
                 renderAiList('Styrkor', aiCommentary.bull_points, 'positive'),
                 renderAiList('Risker', aiCommentary.risk_points || [], 'warning')
@@ -543,6 +589,48 @@ function renderAiList(title, items, tone) {
     return financialH('div', { className: `financial-ai-list financial-ai-${tone}` },
         financialH('div', { className: 'financial-followup-title' }, title),
         financialH('ul', null, items.map((item, index) => financialH('li', { key: index }, item)))
+    );
+}
+
+function renderAiNarrativeGrid(aiCommentary) {
+    const cards = [
+        { title: 'Viktigaste drivare', text: aiCommentary.key_drivers },
+        { title: 'A-lag vs koncern', text: aiCommentary.team_vs_group },
+        { title: 'Trendbrott', text: aiCommentary.trend_breaks }
+    ].filter((item) => typeof item.text === 'string' && item.text.trim());
+
+    if (!cards.length) return null;
+
+    return financialH('div', { className: 'financial-ai-grid financial-ai-narrative-grid' },
+        cards.map((card) =>
+            financialH('div', { key: card.title, className: 'financial-ai-panel' },
+                financialH('div', { className: 'financial-followup-title' }, card.title),
+                financialH('p', { className: 'financial-ai-panel-text' }, card.text)
+            )
+        )
+    );
+}
+
+function renderAiScenarioSection(aiCommentary) {
+    if (!Array.isArray(aiCommentary?.scenario_analysis) || !aiCommentary.scenario_analysis.length) return null;
+    return financialH('div', { className: 'financial-ai-scenario-section' },
+        financialH('div', { className: 'financial-followup-title' }, 'AI-scenarier'),
+        financialH('div', { className: 'financial-ai-scenario-grid' },
+            aiCommentary.scenario_analysis.map((scenario, index) =>
+                financialH('div', { key: `${scenario.label || 'scenario'}-${index}`, className: 'financial-ai-panel financial-ai-scenario-panel' },
+                    financialH('div', { className: 'financial-ai-scenario-label' }, scenario.label || `Scenario ${index + 1}`),
+                    financialH('p', { className: 'financial-ai-panel-text' }, scenario.analysis || '')
+                )
+            )
+        )
+    );
+}
+
+function renderShlAction(aiCommentary) {
+    if (typeof aiCommentary?.shl_economy_focus !== 'string' || !aiCommentary.shl_economy_focus.trim()) return null;
+    return financialH('div', { className: 'financial-ai-shl-focus' },
+        financialH('div', { className: 'financial-followup-title' }, 'Vad maste forbattras for SHL-ekonomi'),
+        financialH('p', { className: 'financial-ai-panel-text' }, aiCommentary.shl_economy_focus)
     );
 }
 

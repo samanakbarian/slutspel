@@ -20,9 +20,13 @@ exports.handler = async function handler(event) {
         const prompt = [
             'Du ar en strikt finansiell analytiker som skriver pa svenska.',
             'Anvand endast siffror och fakta i JSON-underlaget.',
-            'Hitta inte pa historik, framtidsprognoser eller externa antaganden.',
+            'Hitta inte pa historik, framtidsprognoser eller externa antaganden som inte explicit framgar av underlaget.',
+            'Prioritera det som ar viktigast for ekonomisk styrka, trendbrott, skillnaden mellan A-lag och koncern samt SHL-beredskap.',
+            'Scenarioanalysen ska utga fran scenarierna i payloaden och beskriva ekonomisk betydelse, inte hitta pa nya siffror.',
             'Returnera ENDAST JSON med formatet:',
-            '{"summary":"...", "bull_points":["..."], "risk_points":["..."], "recommendations":["..."]}',
+            '{"summary":"...", "key_drivers":"...", "team_vs_group":"...", "trend_breaks":"...", "shl_economy_focus":"...", "bull_points":["..."], "risk_points":["..."], "recommendations":["..."], "scenario_analysis":[{"label":"...", "analysis":"..."}]}',
+            'Hall summary kort men konkret. Hall de narrativa falten till 2-4 meningar vardera.',
+            'Scenarioanalys ska ha upp till 3 objekt och anvanda samma etiketter som i underlaget om de finns.',
             '',
             'Underlag:',
             JSON.stringify(payload)
