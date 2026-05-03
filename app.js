@@ -8,6 +8,7 @@ const GOLD = '#d4a843', GOLD_L = '#e8c56a', BLUE = '#3b82f6', GREEN = '#34d399',
     MUTED = '#94a3b8', SURFACE = '#111827', SURF_L = '#1e293b';
 const COLORS = [GOLD, BLUE, GREEN, '#a78bfa', '#fb923c', '#f472b6'];
 const TT = { contentStyle: { background: SURFACE, border: `1px solid ${GOLD}`, borderRadius: 8, fontSize: 12 }, labelStyle: { color: GOLD } };
+const FEEDBACK_ISSUE_URL = 'https://github.com/samanakbarian/slutspel/issues/new';
 
 // ===== UTILITY FUNCTIONS =====
 function pct(a, b) { return b > 0 ? (a / b * 100) : 0; }
@@ -1103,6 +1104,99 @@ function HotColdView({ matches }) {
     );
 }
 
+function AboutFeedbackView() {
+    const [name, setName] = useState('');
+    const [feedback, setFeedback] = useState('');
+    const [copyState, setCopyState] = useState('idle');
+
+    const trimmedFeedback = feedback.trim();
+    const issueUrl = useMemo(() => {
+        const title = 'Feedback om Loven Stats Hub PoC';
+        const body = [
+            '## Synpunkt',
+            trimmedFeedback || '(fyll i din synpunkt har)',
+            '',
+            `## Avsandare`,
+            name.trim() || 'Anonym besokare',
+            '',
+            '## Sektion',
+            'Om & synpunkter'
+        ].join('\n');
+        return `${FEEDBACK_ISSUE_URL}?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+    }, [name, trimmedFeedback]);
+
+    const copyFeedback = async () => {
+        if (!trimmedFeedback) return;
+        try {
+            await navigator.clipboard.writeText([
+                `Avsandare: ${name.trim() || 'Anonym besokare'}`,
+                '',
+                trimmedFeedback
+            ].join('\n'));
+            setCopyState('copied');
+            window.setTimeout(() => setCopyState('idle'), 2000);
+        } catch {
+            setCopyState('error');
+        }
+    };
+
+    return React.createElement('div', { className: 'grid-2 gap-md' },
+        React.createElement('div', { className: 'card animate-fade about-card' },
+            React.createElement('div', { className: 'about-kicker' }, 'Om sidan'),
+            React.createElement('h2', { className: 'font-display about-title' }, 'En PoC for Bjorkloven-supporters som gillar siffror, storytelling och smart produktutveckling.'),
+            React.createElement('p', { className: 'about-copy' }, 'Det har ar en experimentell yta dar statistik, silly season och ekonomi testas som supporterupplevelse innan delarna flyttas in i det riktiga systemet. Fokus ar att gora komplex data begriplig, visuell och rolig att utforska.'),
+            React.createElement('div', { className: 'about-pill-row' },
+                React.createElement('span', { className: 'about-pill' }, 'PoC i slutspel'),
+                React.createElement('span', { className: 'about-pill' }, 'Frontend-fokuserad'),
+                React.createElement('span', { className: 'about-pill' }, 'Senare flytt till backend')
+            ),
+            React.createElement('div', { className: 'card-sm about-note' },
+                React.createElement('div', { className: 'about-note-title' }, 'Om namn'),
+                React.createElement('div', { className: 'about-note-copy' }, 'Jag har hallit den har sektionen generell i PoC:n i stallet for att namna dig personligen. Det ar latt att byta till ditt namn eller en mer personlig presentation senare om du vill.')
+            )
+        ),
+        React.createElement('div', { className: 'card animate-fade feedback-card' },
+            React.createElement('div', { className: 'about-kicker' }, 'Lamna synpunkt'),
+            React.createElement('h3', { className: 'font-display about-feedback-title' }, 'Vad borde byggas vidare pa?'),
+            React.createElement('p', { className: 'about-copy' }, 'Skriv en kort tanke om funktioner, design, data eller buggar. Eftersom PoC-sajten ar statisk skickas synpunkter vidare via en forifylld GitHub-issue eller kan kopieras manuellt.'),
+            React.createElement('label', { className: 'about-label', htmlFor: 'feedback-name' }, 'Namn eller alias (valfritt)'),
+            React.createElement('input', {
+                id: 'feedback-name',
+                className: 'about-input',
+                type: 'text',
+                value: name,
+                onChange: (e) => setName(e.target.value),
+                placeholder: 't.ex. Loven-supporter'
+            }),
+            React.createElement('label', { className: 'about-label', htmlFor: 'feedback-text' }, 'Din synpunkt'),
+            React.createElement('textarea', {
+                id: 'feedback-text',
+                className: 'about-textarea',
+                value: feedback,
+                onChange: (e) => setFeedback(e.target.value),
+                placeholder: 'Vad saknas, vad ar starkt, vad borde andras?',
+                rows: 7
+            }),
+            React.createElement('div', { className: 'about-actions' },
+                React.createElement('a', {
+                    className: `btn btn-gold ${!trimmedFeedback ? 'btn-disabled' : ''}`,
+                    href: trimmedFeedback ? issueUrl : undefined,
+                    target: '_blank',
+                    rel: 'noreferrer',
+                    onClick: (e) => { if (!trimmedFeedback) e.preventDefault(); }
+                }, 'Skapa issue'),
+                React.createElement('button', {
+                    type: 'button',
+                    className: `btn btn-outline ${!trimmedFeedback ? 'btn-disabled' : ''}`,
+                    onClick: copyFeedback,
+                    disabled: !trimmedFeedback
+                }, copyState === 'copied' ? 'Kopierat' : copyState === 'error' ? 'Kunde inte kopiera' : 'Kopiera text')
+            ),
+            React.createElement('div', { className: 'about-footnote' }, 'Ingen backend kravs for detta flode. Senare i riktiga systemet kan en riktig feedback-endpoint eller formulartjanst kopplas pa.')
+        )
+    );
+}
+
 // ===== MAIN APP =====
 function App() {
     const [selectedMatch, setSelectedMatch] = useState('all');
@@ -1197,6 +1291,7 @@ function App() {
                 React.createElement('button', { className: `tab ${activeTab === 'insights' ? 'active' : ''}`, onClick: () => setActiveTab('insights') }, '💡 Insikter'),
                 React.createElement('button', { className: `tab ${activeTab === 'silly' ? 'active' : ''}`, onClick: () => setActiveTab('silly'), style: activeTab === 'silly' ? {} : { color: '#fb923c' } }, '🔥 Silly Season'),
                 React.createElement('button', { className: `tab ${activeTab === 'financial' ? 'active' : ''}`, onClick: () => setActiveTab('financial'), style: activeTab === 'financial' ? {} : { color: '#d4a843' } }, '💰 Ekonomi'),
+                React.createElement('button', { className: `tab ${activeTab === 'about' ? 'active' : ''}`, onClick: () => setActiveTab('about') }, 'ℹ️ Om & synpunkter'),
             ),
 
             // Content
@@ -1206,6 +1301,7 @@ function App() {
             activeTab === 'insights' && React.createElement(HotColdView, { matches: MATCHES }),
             activeTab === 'silly' && React.createElement(SillySeasonView),
             activeTab === 'financial' && React.createElement(FinancialDashboard),
+            activeTab === 'about' && React.createElement(AboutFeedbackView),
         ),
 
         // Footer
