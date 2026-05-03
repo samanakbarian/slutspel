@@ -13,6 +13,9 @@ frontend_v2/dist/
 .DS_Store
 Thumbs.db
 
+# Netlify
+.netlify/
+
 # Debug/temp files
 *.log
 err.txt
