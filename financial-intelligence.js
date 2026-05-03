@@ -4,6 +4,7 @@
 
 const { useEffect: useFinancialEffect, useState: useFinancialState } = React;
 const financialH = React.createElement;
+const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: FinancialTooltip, Legend: FinancialLegend } = Recharts;
 
 const FINANCIALS_JSON_PATH = 'data/financials/bjorkloven_financials_raw.json';
 const FINANCIAL_AI_ENDPOINT = '/.netlify/functions/financial-ai';
@@ -155,6 +156,39 @@ function computeProjection(financials, latest, shlRequirements) {
     };
 }
 
+function buildProjectionScenarios(financials, latest, shlRequirements) {
+    const base = computeProjection(financials, latest, shlRequirements);
+    if (!base) return null;
+    const scale = (value, factor) => (value == null ? null : Math.round(value * factor));
+    const withGap = (equity) => (equity == null ? null : shlRequirements.minEquity - equity);
+    return {
+        cautious: {
+            label: 'Pressad',
+            revenue: scale(base.revenue, 0.96),
+            operatingResult: scale(base.operatingResult, 0.7),
+            cash: scale(base.cash, 0.8),
+            groupEquity: scale(base.groupEquity, 0.9)
+        },
+        base: {
+            label: 'Bas',
+            revenue: base.revenue,
+            operatingResult: base.operatingResult,
+            cash: base.cash,
+            groupEquity: base.groupEquity
+        },
+        optimistic: {
+            label: 'Optimistisk',
+            revenue: scale(base.revenue, 1.05),
+            operatingResult: scale(base.operatingResult, 1.25),
+            cash: scale(base.cash, 1.2),
+            groupEquity: scale(base.groupEquity, 1.08)
+        },
+        period: base.period,
+        confidence: base.confidence,
+        shlGapBase: withGap(base.groupEquity)
+    };
+}
+
 function buildAiPayload(financials, snapshot, projection) {
     return {
         metadata: financials.metadata,
@@ -261,6 +295,7 @@ function FinancialDashboard() {
     const latest = financials.snapshots[0];
     const trendRows = buildTrendRows(financials);
     const projection = computeProjection(financials, latest, financials.shlRequirements);
+    const scenarios = buildProjectionScenarios(financials, latest, financials.shlRequirements);
 
     useFinancialEffect(() => {
         let cancelled = false;
@@ -372,6 +407,23 @@ function FinancialDashboard() {
                 financialH('h3', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, 'Utveckling over tid'),
                 financialH('span', { className: 'financial-badge' }, `${financials.periods.length} bokslutsperioder`)
             ),
+            financialH('div', { className: 'financial-chart-wrap' },
+                financialH(ResponsiveContainer, { width: '100%', height: 280 },
+                    financialH(LineChart, { data: trendRows },
+                        financialH(CartesianGrid, { stroke: 'rgba(255,255,255,.06)', strokeDasharray: '3 3' }),
+                        financialH(XAxis, { dataKey: 'period', stroke: '#94a3b8', tick: { fill: '#94a3b8', fontSize: 11 } }),
+                        financialH(YAxis, { stroke: '#94a3b8', tick: { fill: '#94a3b8', fontSize: 11 }, tickFormatter: (val) => `${Math.round(val / 1000000)}M` }),
+                        financialH(FinancialTooltip, {
+                            contentStyle: { background: '#0f172a', border: '1px solid rgba(212,168,67,.2)', borderRadius: 8, color: '#e2e8f0' },
+                            formatter: (value) => formatSEK(value)
+                        }),
+                        financialH(FinancialLegend, { wrapperStyle: { fontSize: 12 } }),
+                        financialH(Line, { type: 'monotone', dataKey: 'revenue', name: 'A-lag oms.', stroke: '#34d399', strokeWidth: 3, dot: { r: 3 } }),
+                        financialH(Line, { type: 'monotone', dataKey: 'cash', name: 'Koncernkassa', stroke: '#60a5fa', strokeWidth: 3, dot: { r: 3 } }),
+                        financialH(Line, { type: 'monotone', dataKey: 'groupEquity', name: 'Koncern EK', stroke: '#d4a843', strokeWidth: 3, dot: { r: 3 } })
+                    )
+                )
+            ),
             financialH('div', { className: 'financial-timeline' },
                 trendRows.map((row) =>
                     financialH('div', { key: row.period, className: 'financial-timeline-row' },
@@ -398,6 +450,25 @@ function FinancialDashboard() {
                 renderMetricCard('Proj. rorelseres.', formatSEK(projection.operatingResult), null, projection.period),
                 renderMetricCard('Proj. koncernkassa', formatSEK(projection.cash), null, projection.period),
                 renderMetricCard('Proj. SHL-gap', projection.shlGap == null ? '-' : formatSEK(Math.max(projection.shlGap, 0)), null, projection.shlGap != null && projection.shlGap <= 0 ? 'Over uppskattad niva' : 'Kvar till uppskattad niva')
+            )
+        ),
+
+        scenarios && financialH('div', { className: 'card' },
+            financialH('div', { className: 'financial-section-head' },
+                financialH('h3', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, 'Scenarier'),
+                financialH('span', { className: 'financial-badge' }, scenarios.period)
+            ),
+            financialH('div', { className: 'financial-scenario-grid' },
+                ['cautious', 'base', 'optimistic'].map((key) => {
+                    const item = scenarios[key];
+                    return financialH('div', { key, className: 'financial-scenario-card' },
+                        financialH('div', { className: 'financial-followup-title' }, item.label),
+                        financialH('div', { className: 'financial-scenario-line' }, `Omsättning: ${formatSEK(item.revenue)}`),
+                        financialH('div', { className: 'financial-scenario-line' }, `Resultat: ${formatSEK(item.operatingResult)}`),
+                        financialH('div', { className: 'financial-scenario-line' }, `Kassa: ${formatSEK(item.cash)}`),
+                        financialH('div', { className: 'financial-scenario-line' }, `Koncern EK: ${formatSEK(item.groupEquity)}`)
+                    );
+                })
             )
         ),
 

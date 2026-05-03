@@ -1,9 +1,9 @@
 {
   "metadata": {
     "description": "IF Björklöven — Ekonomisk data extraherad från bokslutskommunikéer och årsredovisningar",
-    "source": "bjorkloven.com bokslutskommunikéer, allabolag.se",
+    "source": "bjorkloven.com bokslutskommunikéer, officiella årsredovisningar, hitta.se/allabolag.se",
     "last_updated": "2025-06-11",
-    "notes": "Björklöven AB = A-lagsverksamheten (herr). IF Björklöven = koncernen (inkl. dam, J20, kansli). Räkenskapsår: 1 maj – 30 april. 2023/2024 och 2024/2025 är kompletterade från officiella bokslutskommunikéer publicerade 2024-06-14 respektive 2025-06-11."
+    "notes": "Björklöven AB = A-lagsverksamheten (herr). IF Björklöven = koncernen (inkl. dam, J20, kansli). Räkenskapsår: 1 maj – 30 april. 2020/2021 är verifierat via OCR ur officiella PDF-årsredovisningar. 2018/2019 och 2019/2020 bygger på officiella bokslutskommunikéer där vissa AB-fält saknar full detaljnivå."
   },
   "years": [
     {
@@ -24,7 +24,8 @@
       "cash_prev": 1700000,
       "source_url": "https://www.bjorkloven.com/article/1eeasxp-2e4ad/view",
       "source_published_at": "2025-06-11",
-      "notes": "Stort publikintresse och tydlig resultatförbättring mot 2023/2024, men fortfarande ett mindre underskott i herrverksamheten."
+      "verification_status": "official_bjorkloven_article",
+      "notes": "Intäkter för perioden 59,5 MSEK. Resultat efter skatt -0,3 MSEK. Eget kapital 2,3 MSEK. Likvida medel 1,4 MSEK."
     },
     {
       "financial_year": "2024/2025",
@@ -44,7 +45,8 @@
       "cash_prev": 3100000,
       "source_url": "https://www.bjorkloven.com/article/1eeasxp-2e4ad/view",
       "source_published_at": "2025-06-11",
-      "notes": "Koncernen visar fortsatt underskott men en tydlig upphämtning jämfört med 2023/2024. Likviditeten är samtidigt svag."
+      "verification_status": "official_bjorkloven_article",
+      "notes": "Intäkter för perioden 69,0 MSEK. Resultat efter skatt -2,3 MSEK. Eget kapital 7,3 MSEK. Likvida medel 0,3 MSEK."
     },
     {
       "financial_year": "2023/2024",
@@ -64,7 +66,8 @@
       "cash_prev": 3200000,
       "source_url": "https://www.bjorkloven.com/article/d59asf2-2e4ad/view",
       "source_published_at": "2024-06-14",
-      "notes": "Sportsligt svagt år för herrlaget med lägre intäkter och betydande underskott. Kostnadskontrollen beskrivs som bristfällig."
+      "verification_status": "official_bjorkloven_article",
+      "notes": "Rörelsens intäkter 51,1 MSEK. Resultat efter skatt -3,1 MSEK. Eget kapital 2,6 MSEK. Likvida medel 1,7 MSEK."
     },
     {
       "financial_year": "2023/2024",
@@ -84,7 +87,8 @@
       "cash_prev": 10100000,
       "source_url": "https://www.bjorkloven.com/article/d59asf2-2e4ad/view",
       "source_published_at": "2024-06-14",
-      "notes": "Betydande underskott i koncernen efter ett sportsligt svagt herrår och högre kostnader. Damlag och J20 bidrog också till kostnadsmassan i moderföreningen."
+      "verification_status": "official_bjorkloven_article",
+      "notes": "Intäkter för perioden 64,5 MSEK. Resultat efter skatt -4,3 MSEK. Eget kapital 9,6 MSEK. Likvida medel 3,1 MSEK."
     },
     {
       "financial_year": "2022/2023",
@@ -92,15 +96,19 @@
       "period_end": "2023-04-30",
       "entity": "bjorkloven_ab",
       "entity_label": "Björklöven AB (A-lag herr)",
-      "revenue_total": 57300000,
+      "revenue_total": 57342000,
       "revenue_total_prev": 49100000,
-      "operating_result": 2300000,
+      "operating_result": 2325000,
       "operating_result_prev": 900000,
-      "result_after_tax": 2300000,
-      "equity": 5700000,
+      "result_after_tax": 2337000,
+      "result_after_tax_prev": 900000,
+      "equity": 5728000,
       "equity_prev": 3400000,
       "cash": 3200000,
-      "notes": "Första hela säsongen utan covid-restriktioner. Högt publikengagemang. Ökade sportsliga satsningar."
+      "source_url": "https://www.hitta.se/företagsinformation/bj%C3%B6rkl%C3%B6ven+ab/5566943279",
+      "source_published_at": "2023-06-01",
+      "verification_status": "verified_hitta_ab",
+      "notes": "Verifierat mot publika bolagssiffror för 2023-04. Tidigare PoC låg mycket nära dessa nivåer."
     },
     {
       "financial_year": "2022/2023",
@@ -117,7 +125,10 @@
       "equity_prev": 13800000,
       "cash": 10100000,
       "cash_prev": 7300000,
-      "notes": "Koncernresultatet sjönk kraftigt pga ökade kostnader i moderföreningen (J20 och damlaget i slutspel). Kassan stärktes."
+      "source_url": "https://www.bjorkloven.com/article/d59asf2-2e4ad/view",
+      "source_published_at": "2024-06-14",
+      "verification_status": "official_bjorkloven_article_previous_values",
+      "notes": "2022/2023 koncernvärden återkommer som jämförelsetal i den officiella bokslutskommunikén 2023/2024."
     },
     {
       "financial_year": "2021/2022",
@@ -129,6 +140,9 @@
       "operating_result": 900000,
       "result_after_tax": 900000,
       "equity": 3400000,
+      "source_url": "https://www.hitta.se/företagsinformation/bj%C3%B6rkl%C3%B6ven+ab/5566943279",
+      "source_published_at": "2022-06-01",
+      "verification_status": "verified_hitta_ab",
       "notes": "Covid-påverkad första del av säsongen. Återhämtning i publik under våren."
     },
     {
@@ -141,7 +155,110 @@
       "result_after_tax": 8700000,
       "equity": 13800000,
       "cash": 7300000,
-      "notes": "Starkt resultat tack vare statliga stöd och återhämtning efter pandemin."
+      "source_url": "https://www.bjorkloven.com/article/d59asf2-2e4ad/view",
+      "source_published_at": "2024-06-14",
+      "verification_status": "official_bjorkloven_article_previous_values",
+      "notes": "2021/2022 koncernvärden återkommer som jämförelsetal i senare officiell bokslutskommuniké."
+    },
+    {
+      "financial_year": "2020/2021",
+      "period_start": "2020-05-01",
+      "period_end": "2021-04-30",
+      "entity": "bjorkloven_ab",
+      "entity_label": "Björklöven AB (A-lag herr)",
+      "revenue_total": 31255000,
+      "revenue_total_prev": 36548000,
+      "operating_result": -3376000,
+      "operating_result_prev": 1978000,
+      "result_after_tax": -8392000,
+      "result_after_tax_prev": 1965000,
+      "equity": 1622000,
+      "equity_prev": 5499000,
+      "cash": 4511000,
+      "cash_prev": 5379000,
+      "source_url": "https://cdn.ramses.nu/files/ifb1_ifb/Arsredovisning-BAB-2021.pdf",
+      "source_published_at": "2021-06-22",
+      "verification_status": "official_pdf_ocr",
+      "notes": "Verifierat via OCR ur officiell årsredovisning för Björklöven AB 2020/2021. Intäkter motsvarar summa rörelseintäkter."
+    },
+    {
+      "financial_year": "2020/2021",
+      "period_start": "2020-05-01",
+      "period_end": "2021-04-30",
+      "entity": "if_bjorkloven_koncern",
+      "entity_label": "IF Björklöven (koncern)",
+      "revenue_total": 48720000,
+      "revenue_total_prev": 45855000,
+      "operating_result": 2174000,
+      "operating_result_prev": 2753000,
+      "result_after_tax": 2062000,
+      "result_after_tax_prev": 2726000,
+      "equity": 5097000,
+      "equity_prev": 2373000,
+      "cash": 9893000,
+      "cash_prev": 5005000,
+      "source_url": "https://cdn.ramses.nu/files/ifb1_ifb/Arsredovisning-IFB-2021.pdf",
+      "source_published_at": "2021-06-22",
+      "verification_status": "official_pdf_ocr",
+      "notes": "Verifierat via OCR ur officiell koncernårsredovisning 2020/2021. Intäkter motsvarar summa rörelseintäkter i koncernresultaträkningen."
+    },
+    {
+      "financial_year": "2019/2020",
+      "period_start": "2019-05-01",
+      "period_end": "2020-04-30",
+      "entity": "bjorkloven_ab",
+      "entity_label": "Björklöven AB (A-lag herr)",
+      "revenue_total": 36500000,
+      "operating_result": 2000000,
+      "equity": 5500000,
+      "source_url": "https://www.bjorkloven.com/artikel/en3bakaf9-2e4ad/bokslutskommunike-2019-20",
+      "source_published_at": "2020-06-12",
+      "verification_status": "official_bjorkloven_article",
+      "notes": "Rörelsens intäkter 36,5 MSEK. Rörelsens resultat 2,0 MSEK. Eget kapital 5,5 MSEK."
+    },
+    {
+      "financial_year": "2019/2020",
+      "period_start": "2019-05-01",
+      "period_end": "2020-04-30",
+      "entity": "if_bjorkloven_koncern",
+      "entity_label": "IF Björklöven (koncern)",
+      "revenue_total": 45900000,
+      "result_after_tax": 2100000,
+      "equity": 2400000,
+      "cash": 5000000,
+      "source_url": "https://www.bjorkloven.com/artikel/en3bakaf9-2e4ad/bokslutskommunike-2019-20",
+      "source_published_at": "2020-06-12",
+      "verification_status": "official_bjorkloven_article",
+      "notes": "Koncernens intäkter 45,9 MSEK. Resultat efter skatt 2,1 MSEK. Eget kapital 2,4 MSEK. Likvida medel 5,0 MSEK."
+    },
+    {
+      "financial_year": "2018/2019",
+      "period_start": "2018-05-01",
+      "period_end": "2019-04-30",
+      "entity": "bjorkloven_ab",
+      "entity_label": "Björklöven AB (A-lag herr)",
+      "revenue_total": 26600000,
+      "operating_result": -3800000,
+      "equity": 3500000,
+      "source_url": "https://www.bjorkloven.com/artikel/56a4ajw8u-2e4ad/bokslutskommunike-2018-2019-if-bjorkloven-koncernen",
+      "source_published_at": "2019-06-13",
+      "verification_status": "official_bjorkloven_article",
+      "notes": "Rörelsens intäkter 26,6 MSEK. Rörelsens resultat -3,8 MSEK. Eget kapital 3,5 MSEK."
+    },
+    {
+      "financial_year": "2018/2019",
+      "period_start": "2018-05-01",
+      "period_end": "2019-04-30",
+      "entity": "if_bjorkloven_koncern",
+      "entity_label": "IF Björklöven (koncern)",
+      "revenue_total": 35800000,
+      "result_after_tax": -4000000,
+      "equity": 300000,
+      "cash": 515000,
+      "source_url": "https://www.bjorkloven.com/artikel/56a4ajw8u-2e4ad/bokslutskommunike-2018-2019-if-bjorkloven-koncernen",
+      "source_published_at": "2019-06-13",
+      "verification_status": "official_bjorkloven_article_and_search_snippet",
+      "notes": "Koncernens intäkter 35,8 MSEK. Resultat efter skatt -4,0 MSEK. Likvida medel 515 KSEK. Eget kapital låg kring 0,3 MSEK enligt officiell publicering."
     }
   ],
   "shl_requirements": {

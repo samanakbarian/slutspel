@@ -240,6 +240,14 @@
     margin-top: 14px;
 }
 
+.financial-chart-wrap {
+    margin-top: 14px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .015);
+}
+
 .financial-timeline-row {
     display: grid;
     grid-template-columns: 120px 1fr;
@@ -261,6 +269,26 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 12px;
+}
+
+.financial-scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.financial-scenario-card {
+    background: rgba(255, 255, 255, .02);
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.financial-scenario-line {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.7;
 }
 
 .financial-ai-list,
