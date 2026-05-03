@@ -2,7 +2,7 @@
 // EKONOMISK INTELLIGENS - BJORKLOVEN
 // ============================================================
 
-const { useEffect: useFinancialEffect, useState: useFinancialState } = React;
+const { useEffect: useFinancialEffect, useState: useFinancialState, useRef: useFinancialRef } = React;
 const financialH = React.createElement;
 const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: FinancialTooltip, Legend: FinancialLegend } = Recharts;
 
@@ -305,6 +305,7 @@ function FinancialDashboard() {
     const [loadError, setLoadError] = useFinancialState('');
     const [aiStatus, setAiStatus] = useFinancialState('idle');
     const [aiCommentary, setAiCommentary] = useFinancialState(null);
+    const aiRequestKeyRef = useFinancialRef('');
 
     useFinancialEffect(() => {
         let cancelled = false;
@@ -339,14 +340,28 @@ function FinancialDashboard() {
     const trendRows = buildTrendRows(financials);
     const projection = computeProjection(financials, latest, financials.shlRequirements);
     const scenarios = buildProjectionScenarios(financials, latest, financials.shlRequirements);
+    const aiRequestKey = JSON.stringify({
+        source: financials.metadata?.last_updated || '',
+        period: snapshot?.period || '',
+        projectionPeriod: projection?.period || '',
+        revenue: snapshot?.current?.revenue ?? null,
+        operatingResult: snapshot?.current?.operatingResult ?? null,
+        groupEquity: snapshot?.koncern?.equity ?? null,
+        cash: snapshot?.koncern?.cash ?? null
+    });
 
     useFinancialEffect(() => {
         let cancelled = false;
         if (status === 'loading') {
             setAiStatus('idle');
             setAiCommentary(null);
+            aiRequestKeyRef.current = '';
             return () => { cancelled = true; };
         }
+        if (aiRequestKeyRef.current === aiRequestKey) {
+            return () => { cancelled = true; };
+        }
+        aiRequestKeyRef.current = aiRequestKey;
         async function loadAiCommentary() {
             setAiStatus('loading');
             try {
@@ -371,7 +386,7 @@ function FinancialDashboard() {
         }
         loadAiCommentary();
         return () => { cancelled = true; };
-    }, [financials, snapshot, projection, status]);
+    }, [aiRequestKey, status]);
 
     const analysis = generateInsights(snapshot, financials.shlRequirements, projection);
     const healthScore = calcHealthScore(snapshot, financials.shlRequirements);
