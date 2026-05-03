@@ -1,66 +1,59 @@
 # 🎨 Frontend 2.0: Arkitektur & Kravspecifikation
 
-Nu när Löven tagit steget upp i SHL och vår backend-infrastruktur (GCP) är på plats, är det dags att planera för **Frontend 2.0**. Den nuvarande koden (byggd specifikt för en finalserie i HockeyAllsvenskan) behöver struktureras om till en skalbar plattform som kan hantera live-matcher, Silly Season, historisk data och avancerad analys från BigQuery.
+Detta dokument fungerar som en utredning och kravspecifikation för Frontend 2.0, baserat på vår officiella "Master Plan".
 
-Detta dokument fungerar som en utredning och kravspecifikation för hur vi bör strukturera den nya webbappen.
+## 1. Funktionalitet (UX/UI Mål)
 
-## ⚠️ User Review Required
+Vi bygger Frontend 2.0 iterativt. Följande huvudmoduler ska byggas in:
 
-Läs igenom de föreslagna vyerna och teknikvalen nedan. Detta är en skiss på hur vi maximerar appens potential för SHL-säsongen. 
-- **Saknar du någon specifik vy?**
-- **Ska vi använda React + Vite?**
-- **Ska vi köra Vanilla CSS (rekommenderas för extrem designflexibilitet) eller vill du explicit använda TailwindCSS?**
+### A. Silly Season Hub (MVP Fas 1A)
+- **Det Smarta Ryktesflödet:** Ett flöde som blandar bekräftade nyheter med skrapade forumrykten, filtrerbart med taggar.
+- **Impact-Kort:** Datadrivna nyhetskort. Visar hur mycket istid/poäng laget tappar vid en förlust.
+- **Silly Season-Tempen (AI):** En visuell mätare (0–100 %) på varje rykte baserat på AI-sentimentanalys.
+- **Trupp-KPI:er & Rinken:** Realtidsräknare för kontrakterade spelare uppe i UI:t och en interaktiv rink.
 
-## 🏗️ Föreslagen Webbplatsstruktur (Sitemap)
+### B. Matchcenter (MVP Fas 1B - Historisk HA-data)
+*Eftersom Sportradar bekräftats stödja HockeyAllsvenskan (comp_id: `sr:competition:416`, season_id: `sr:season:131137`), bygger vi hela Matchcenter-upplevelsen genom att simulera/spela upp data från förra säsongen som ett första steg!*
+- **The Live Scoreboard:** Hjärtat under matchdagar. Visar aktuell period, klocka, live-resultat och "On-Ice Situation".
+  - *Data-källa:* `Sport Event Summary` (för historisk testning) / `Live Summaries` (i produktion).
+- **The Play-by-Play Timeline & Box Score:** Tolkar Sportradar-eventdata till ett flöde: 
+  - Målsammanfattning (Målskytt, assist, tid).
+  - Utvisningssammanfattning (Spelare, typ av förseelse, minuter).
+  - Lagstatistik (Skott på mål, teknings-%, PP-effektivitet för matchen).
+  - *Data-källa:* `Sport Event Timeline` (play-by-play events) / `Live Timelines Delta` (för blixtsnabba live-uppdateringar).
 
-När appen växer behöver vi riktig routing (`react-router-dom`) och en tydlig sidmeny.
+### C. Ligan & Laget
+- **SHL Standings & Schedule:**
+  - *The Table:* Live-uppdaterad SHL-tabell (Poäng, V, F, ÖTV, ÖTF, Målskillnad). Hämtas via `Season Standings`.
+  - *The Schedule:* Ren och snygg kalender med kommande matcher, resultat och TV-kanaler. Hämtas via `Season Summaries` eller `Competitor Summaries`.
+- **Player Profiles & Roster Stats:**
+  - *Roster List:* Trupplista med tröjnummer och positioner. Hämtas via `Competitor Profile`.
+  - *Standard Season Stats:* Mål, Assist, Poäng, +/-, PIM och TOI (Time on Ice). Hämtas via `Seasonal Competitor Statistics`.
+  - *Goalie Stats:* SV%, GAA, och Hållna nollor (Shutouts).
 
-### 1. 🏠 Dashboard (Hem)
-- **Syfte:** Översiktsvy när användaren landar.
-- **Innehåll:** Nästa match, senaste nyheten (Silly Season), snabb titt på tabellen och en "Live nu"-indikator om en match spelas via Sportradar.
+### D. Historik & Tidsmaskinen
+- **Historisk Tidsmaskin:** Möjlighet att gå tillbaka i tiden via en global date-picker och se truppen/statistiken exakt som den såg ut ett tidigare datum (baserat på dbt Snapshots).
 
-### 2. 🏒 Matchcenter (Sportradar Integration)
-- **Syfte:** Hjärtat för pågående och avslutade matcher.
-- **Innehåll:**
-  - Liveuppdaterad resultattavla (Play-by-play från Sportradar).
-  - Skottkartor och Heatmaps.
-  - Vår unika **"Kedja mot Kedja"**-analys.
+## 2. Webbplatsstruktur (Sitemap)
 
-### 3. 🔄 Silly Season Hub
-- **Syfte:** Vår nyskapade dynamiska byggsten.
-- **Innehåll:**
-  - Realtidsflödet från webbskraporna (GCS -> Cloud Run).
-  - Ryktesbarometern.
-  - Interaktiva "Truppbygget" (Rinken).
+- **🏠 Dashboard (Hem):** Nästa match, Trupp-KPI:er, senaste nyheten.
+- **🔄 Silly Season Hub:** Ryktesflödet och truppbygget.
+- **🏒 Matchcenter:** Live Scoreboard, Play-by-play, Box Score, "Kedja mot Kedja".
+- **🏆 SHL Tabell & Spelschema:** The Table & The Schedule.
+- **👥 Trupp & Spelarprofiler:** Roster List, Player Profiles och Player Stats.
+- **📊 Historik & Tidsmaskinen:** Djuplodande analys av tidigare säsonger.
 
-### 4. 📊 Advanced Analytics & Scouting (BigQuery + EliteProspects)
-- **Syfte:** Djuplodande analys av spelare och trender.
-- **Innehåll:**
-  - Historisk spelarstatistik hämtad från BigQuery.
-  - Integration mot EliteProspects API för att se agenturer, kontraktshistorik och spelarsidor.
-  - "Löven-index": En egenutvecklad algoritm för att mäta spelarpåverkan.
+## 3. Teknisk Stack & Arkitektur
 
-## 💻 Teknisk Stack & Arkitektur
+- **Ramverk:** React via **Vite**.
+- **Språk:** **TypeScript** (absolut nödvändigt för de komplexa datamodellerna från EliteProspects och Sportradar).
+- **Routing:** `react-router-dom`.
+- **State Management:** `Zustand`.
+- **Styling:** **Vanilla CSS** med CSS-variabler (Design Tokens) för Dark Mode, glassmorphism och sponsorytor.
+- **Hosting:** Applikationen kommer på sikt hostas på **Firebase Hosting** för att knytas närmare vår GCP-stack.
 
-För att undvika spaghettikod när appen växer föreslår jag en modernisering av frontend-stacken:
+## 4. Design & UX (The "Wow" Factor)
 
-- **Ramverk:** React via **Vite** (för extremt snabba byggtider och modern modulhantering).
-- **Språk:** Javascript eller **TypeScript** (TypeScript rekommenderas starkt när vi hanterar komplexa API-svar från Sportradar och EliteProspects).
-- **Routing:** `react-router-dom` för att bygga en äkta Single Page Application med flera vyer.
-- **State Management:** `Zustand` eller Reacts inbyggda Context för att hantera t.ex. live-data globalt utan "prop drilling".
-- **Styling:** **Vanilla CSS** med CSS-variabler (Design Tokens) för att skapa ett helt unikt, premium och dynamiskt UI (Glassmorphism, mörkt tema, neon-accenter).
-
-## 🎨 Design & UX (The "Wow" Factor)
-
-SHL-nivå kräver SHL-design. Vi kommer frångå statiska tabeller och implementera:
-- **Rich Aesthetics:** Ett mörkt premium-tema (Dark Mode by default) med dynamiska färgaccenter (t.ex. grön/gul) baserat på sidans kontext.
-- **Micro-animationer:** Snygga och snabba övergångar (t.ex. med Framer Motion) när man byter från Matchcenter till Silly Season.
-- **Responsivitet:** Måste fungera helt felfritt i mobilen, eftersom 80% av fans kollar hockey-stats från soffan med mobilen i handen.
-
----
-
-## ❓ Open Questions
-
-1. **Övergångsfasen:** Vill du att vi initierar den nya Vite-plattformen i ett helt nytt repo, eller ska vi skriva över `slutspel`-mappen steg för steg?
-2. **TypeScript:** Känner du dig bekväm med att vi inför TypeScript för att säkra upp datamodellerna för Sportradar-matcherna?
-3. **Design:** Vill du behålla den exakta nuvarande "Löven-looken" eller ska vi passa på att göra en total UX-remake för SHL?
+- **Rich Aesthetics:** Mörkt premium-tema med dynamiska "native" sponsorytor från lokala Umeå-företag.
+- **Datadriven UX:** Siffror ska kännas levande (count-ups, färgkodning röd/grön för bra/dåligt impact).
+- **Responsivitet:** Mobile-first, eftersom majoriteten kollar via mobilen.

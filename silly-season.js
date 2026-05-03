@@ -11,36 +11,41 @@ const TAG_COLORS = {
     HETT_RYKTE: '#fb923c',
     KONTRAKTSFÖRLÄNGNING: '#60a5fa',
     FORUM_RYKTE: '#a78bfa',
+    ÖVRIGT: '#64748b'
 };
 const TAG_LABELS = {
     BEKRÄFTAT_NYFÖRVÄRV: 'BEKRÄFTAT NYFÖRVÄRV',
     BEKRÄFTAD_FÖRLUST: 'BEKRÄFTAD FÖRLUST',
     HETT_RYKTE: 'HETT RYKTE',
     KONTRAKTSFÖRLÄNGNING: 'KONTRAKTSFÖRLÄNGNING',
-    // FORUM_RYKTE: 'FORUMRYKTE', // Dold tillsvidare
+    ÖVRIGT: 'ÖVRIGA NYHETER',
 };
 
 const h = React.createElement;
 
 // ===== 1. LIVE NEWS FEED =====
 function LiveFeed({ news }) {
-    const [filter, setFilter] = useState(null);
+    const [filter, setFilter] = useState('ALL_SILLY');
     const noForum = news.filter(n => n.tag !== 'FORUM_RYKTE');
-    const filtered = filter ? noForum.filter(n => n.tag === filter) : noForum;
+    const filtered = noForum.filter(n => {
+        if (filter === 'ALL_SILLY') return n.tag !== 'ÖVRIGT';
+        if (filter === 'ÖVRIGT') return n.tag === 'ÖVRIGT';
+        return n.tag === filter;
+    });
 
     return h('div', { className: 'card' },
         h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, '📰 Realtidsflödet'),
         // Filter pills
         h('div', { style: { display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' } },
             h('button', {
-                onClick: () => setFilter(null),
+                onClick: () => setFilter('ALL_SILLY'),
                 style: {
                     padding: '5px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
                     fontSize: 11, fontWeight: 700,
-                    background: !filter ? '#d4a843' : 'rgba(255,255,255,.06)',
-                    color: !filter ? '#111' : '#94a3b8', transition: 'all .2s'
+                    background: filter === 'ALL_SILLY' ? '#d4a843' : 'rgba(255,255,255,.06)',
+                    color: filter === 'ALL_SILLY' ? '#111' : '#94a3b8', transition: 'all .2s'
                 }
-            }, 'Alla'),
+            }, 'Silly Season'),
             Object.entries(TAG_LABELS).map(([key, label]) =>
                 h('button', {
                     key, onClick: () => setFilter(key),
@@ -58,19 +63,32 @@ function LiveFeed({ news }) {
         h('div', { className: 'feed-container' },
             filtered.map((item, i) =>
                 h('div', {
-                    key: item.id,
+                    key: item.id || i,
                     className: `feed-item ${item.priority === 'breaking' ? 'breaking' : ''}`,
                     style: { animationDelay: `${i * 60}ms` }
                 },
                     h('div', { className: 'feed-dot', style: { background: TAG_COLORS[item.tag] || '#94a3b8' } }),
                     h('div', { style: { flex: 1 } },
                         h('div', { className: 'feed-meta' },
-                            h('span', { className: `tag tag-${item.tag}` }, TAG_LABELS[item.tag] || item.tag),
-                            h('span', null, `${item.date} ${item.time}`),
+                            h('span', { className: `tag tag-${item.tag}`, style: { background: TAG_COLORS[item.tag] + '33', color: TAG_COLORS[item.tag] } }, TAG_LABELS[item.tag] || item.tag),
+                            h('span', null, item.date ? item.date.replace('T', ' ').substring(0, 16) : ''),
                         ),
                         h('div', { className: 'feed-title' }, item.title),
                         h('div', { className: 'feed-body' }, item.body),
-                        h('div', { className: 'feed-source', style: { color: '#94a3b8' } }, `Källa: ${item.source || 'Okänd'}`),
+                        item.impact && h('div', { style: { marginTop: 8, padding: 8, background: 'rgba(0,0,0,0.2)', borderRadius: 6, borderLeft: item.impact.type === 'positive' ? '3px solid #34d399' : '3px solid #f87171' } },
+                            h('div', { style: { fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 } }, 'AI-Estimerad Impact'),
+                            h('div', { style: { display: 'flex', gap: 12 } },
+                                item.impact.impact_toi && h('div', null,
+                                    h('span', { style: { color: item.impact.type === 'positive' ? '#34d399' : '#f87171', fontWeight: 'bold' } }, item.impact.type === 'positive' ? '+' : '-'),
+                                    h('span', { style: { color: '#e2e8f0', fontSize: 13, marginLeft: 4 } }, item.impact.impact_toi + ' TOI')
+                                ),
+                                item.impact.impact_points && h('div', null,
+                                    h('span', { style: { color: item.impact.type === 'positive' ? '#34d399' : '#f87171', fontWeight: 'bold' } }, item.impact.type === 'positive' ? '+' : '-'),
+                                    h('span', { style: { color: '#e2e8f0', fontSize: 13, marginLeft: 4 } }, item.impact.impact_points + ' Poäng')
+                                )
+                            )
+                        ),
+                        h('div', { className: 'feed-source', style: { color: '#94a3b8', marginTop: 6 } }, `Källa: ${item.source || 'Okänd'}`),
                     )
                 )
             ),
@@ -125,8 +143,21 @@ function RumorMeter({ rumors }) {
                         r.to ? `→ ${r.to}` : `← ${r.from}`,
                     ),
                     h(RumorGauge, { pct: r.rumor_pct }),
-                    h('div', { style: { fontSize: 11, color: '#94a3b8', marginTop: 6 } }, r.note),
-                    h('div', { className: 'rumor-source' },
+                    
+                    r.ai_analysis && h('div', { style: { marginTop: 12, padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', textAlign: 'left' } },
+                        h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 4 } },
+                            h('span', null, 'AI-Sentiment (Fansen)'),
+                            h('span', { style: { color: r.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171' } }, r.ai_analysis.sentiment_pct + '%')
+                        ),
+                        h('div', { style: { height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden', marginBottom: 8 } },
+                            h('div', { style: { height: '100%', width: r.ai_analysis.sentiment_pct + '%', background: r.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171', transition: 'width 1s ease' } })
+                        ),
+                        r.ai_analysis.pros && r.ai_analysis.pros.map((pro, idx) => h('div', { key: 'p'+idx, style: { fontSize: 11, color: '#34d399', marginBottom: 2 } }, '✓ ' + pro)),
+                        r.ai_analysis.cons && r.ai_analysis.cons.map((con, idx) => h('div', { key: 'c'+idx, style: { fontSize: 11, color: '#f87171', marginBottom: 2 } }, '✗ ' + con))
+                    ),
+                    
+                    h('div', { style: { fontSize: 11, color: '#94a3b8', marginTop: 12 } }, r.note),
+                    h('div', { className: 'rumor-source', style: { marginTop: 4 } },
                         h('span', { style: { color: r.rumor_pct >= 80 ? '#34d399' : r.rumor_pct >= 50 ? '#d4a843' : '#fb923c' } }, r.credibility),
                         ' · ', r.source
                     ),
