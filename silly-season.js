@@ -73,8 +73,12 @@ function LiveFeed({ news }) {
                             h('span', { className: `tag tag-${item.tag}`, style: { background: TAG_COLORS[item.tag] + '33', color: TAG_COLORS[item.tag] } }, TAG_LABELS[item.tag] || item.tag),
                             h('span', null, item.date ? item.date.replace('T', ' ').substring(0, 16) : ''),
                         ),
-                        h('div', { className: 'feed-title' }, item.title),
+                        // Clickable title if URL exists
+                        item.url
+                            ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'feed-title feed-title-link' }, item.title, h('span', { className: 'feed-link-icon' }, ' ↗'))
+                            : h('div', { className: 'feed-title' }, item.title),
                         h('div', { className: 'feed-body' }, item.body),
+                        // AI Impact card
                         item.impact && h('div', { style: { marginTop: 8, padding: 8, background: 'rgba(0,0,0,0.2)', borderRadius: 6, borderLeft: item.impact.type === 'positive' ? '3px solid #34d399' : '3px solid #f87171' } },
                             h('div', { style: { fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 } }, 'AI-Estimerad Impact'),
                             h('div', { style: { display: 'flex', gap: 12 } },
@@ -88,7 +92,27 @@ function LiveFeed({ news }) {
                                 )
                             )
                         ),
-                        h('div', { className: 'feed-source', style: { color: '#94a3b8', marginTop: 6 } }, `Källa: ${item.source || 'Okänd'}`),
+                        // AI Sentiment bar (if ai_analysis exists from backend)
+                        item.ai_analysis && item.ai_analysis.sentiment_pct != null && h('div', { className: 'feed-sentiment' },
+                            h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 3 } },
+                                h('span', null, '🤖 AI-Sentiment'),
+                                h('span', { style: { color: item.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171', fontWeight: 700 } }, item.ai_analysis.sentiment_pct + '%')
+                            ),
+                            h('div', { style: { height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden' } },
+                                h('div', { style: { height: '100%', width: item.ai_analysis.sentiment_pct + '%', background: item.ai_analysis.sentiment_pct > 50 ? 'linear-gradient(90deg,#059669,#34d399)' : 'linear-gradient(90deg,#dc2626,#f87171)', transition: 'width .8s ease' } })
+                            ),
+                            (item.ai_analysis.pros || item.ai_analysis.cons) && h('div', { style: { marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' } },
+                                ...(item.ai_analysis.pros || []).map((pro, idx) => h('span', { key: 'p'+idx, style: { fontSize: 10, color: '#34d399' } }, '✓ ' + pro)),
+                                ...(item.ai_analysis.cons || []).map((con, idx) => h('span', { key: 'c'+idx, style: { fontSize: 10, color: '#f87171' } }, '✗ ' + con))
+                            )
+                        ),
+                        // Source with link
+                        h('div', { className: 'feed-source', style: { color: '#94a3b8', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 } },
+                            h('span', null, `Källa: `),
+                            item.url
+                                ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'feed-source-link' }, item.source || 'Okänd')
+                                : h('span', null, item.source || 'Okänd')
+                        ),
                     )
                 )
             ),
@@ -396,6 +420,53 @@ function BreakingToast({ show, news }) {
     );
 }
 
+// ===== 6. SOURCES OVERVIEW =====
+const SILLY_SOURCES = [
+    { name: 'Björklöven.com', url: 'https://www.bjorkloven.com/nyheter', icon: '🟢', desc: 'Officiella nyheter' },
+    { name: 'HockeySverige', url: 'https://www.hockeysverige.se', icon: '🏒', desc: 'Hockeynyheter & transfers' },
+    { name: 'HockeyNews', url: 'https://www.hockeynews.se', icon: '📰', desc: 'Nyheter & rykten' },
+    { name: 'Dagens Hockey', url: 'https://www.dagenshockey.se', icon: '📋', desc: 'Hockeynyheter' },
+    { name: 'Expressen (MrMadhawk)', url: 'https://www.expressen.se/sport/hockey/', icon: '📺', desc: 'Johan Svensson rapporterar' },
+    { name: 'SvenskaFans (Gröngult)', url: 'https://www.svenskafans.com/hockeyzon/bjorkloven/forum', icon: '💬', desc: 'Fans-forum & rykten' },
+    { name: 'VK.se', url: 'https://www.vk.se/sport/hockey', icon: '🗞️', desc: 'Västerbottens-Kuriren' },
+    { name: 'SHL.se', url: 'https://www.shl.se/lag/bjorkloven', icon: '🏆', desc: 'Officiell SHL-sida' },
+];
+
+function SourcesOverview({ meta }) {
+    return h('div', { className: 'card' },
+        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, '🔗 Källor & Direktlänkar'),
+        h('p', { style: { fontSize: 12, color: '#94a3b8', marginBottom: 16 } }, 'Våra nyheter hämtas automatiskt från dessa källor. Klicka för att besöka direkt.'),
+        h('div', { className: 'sources-grid' },
+            SILLY_SOURCES.map((src, i) => {
+                const scraperStatus = meta?.sources?.[src.name.toLowerCase().replace(/[^a-zåäö.]/g, '')] ?? null;
+                return h('a', {
+                    key: i,
+                    href: src.url,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                    className: 'source-card',
+                },
+                    h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                        h('span', { style: { fontSize: 22 } }, src.icon),
+                        h('div', { style: { flex: 1 } },
+                            h('div', { className: 'source-name' }, src.name),
+                            h('div', { className: 'source-desc' }, src.desc),
+                        ),
+                        h('span', { className: 'source-arrow' }, '→'),
+                    ),
+                    scraperStatus != null && h('div', { className: 'source-status' },
+                        h('span', { style: { color: scraperStatus === 'error' ? '#f87171' : '#34d399' } },
+                            scraperStatus === 'error' ? '● Offline' : `● ${scraperStatus} artiklar`)
+                    ),
+                );
+            })
+        ),
+        meta?.lastRefresh && h('div', { style: { marginTop: 12, fontSize: 10, color: '#64748b', textAlign: 'center' } },
+            `Senast skrapad: ${new Date(meta.lastRefresh).toLocaleString('sv-SE')}`
+        ),
+    );
+}
+
 // ===== MAIN: SILLY SEASON VIEW =====
 function SillySeasonView() {
     const [data, setData] = useState(typeof SILLY_SEASON_BASELINE !== 'undefined' ? SILLY_SEASON_BASELINE : null);
@@ -505,6 +576,7 @@ function SillySeasonView() {
         ),
 
         h(LiveFeed, { news: data.news_feed || [] }),
+        h(SourcesOverview, { meta: data._meta }),
         h(RumorMeter, { rumors: allRumors }),
         h(InteractiveRink, { positions: data.rink_positions }),
         h(FanVote, { players: data.roster }),
