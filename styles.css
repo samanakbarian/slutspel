@@ -263,11 +263,6 @@ tr:hover td { background:rgba(255,255,255,.02); }
 .footer a { color:var(--gold); text-decoration:none; }
 
 /* ===== ABOUT / FEEDBACK ===== */
-.about-card,
-.feedback-card {
-  min-height:100%;
-}
-
 .about-kicker {
   color: var(--gold);
   font-size: 11px;
@@ -277,8 +272,7 @@ tr:hover td { background:rgba(255,255,255,.02); }
   margin-bottom: 10px;
 }
 
-.about-title,
-.about-feedback-title {
+.about-title {
   font-size: 1.7rem;
   line-height: 1.15;
   margin-bottom: 12px;
@@ -288,89 +282,6 @@ tr:hover td { background:rgba(255,255,255,.02); }
   color: var(--text-muted);
   font-size: 14px;
   line-height: 1.7;
-}
-
-.about-pill-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.about-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(212,168,67,.1);
-  border: 1px solid rgba(212,168,67,.18);
-  color: var(--gold-light);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.about-note {
-  margin-top: 20px;
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.06);
-}
-
-.about-note-title {
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.about-note-copy,
-.about-footnote {
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.about-label {
-  display: block;
-  margin-top: 16px;
-  margin-bottom: 6px;
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.about-input,
-.about-textarea {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--surface-light);
-  border-radius: 12px;
-  color: var(--text);
-  padding: 12px 14px;
-  font: inherit;
-  transition: border-color .2s ease, box-shadow .2s ease;
-}
-
-.about-input:focus,
-.about-textarea:focus {
-  outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(212,168,67,.12);
-}
-
-.about-textarea {
-  resize: vertical;
-  min-height: 150px;
-}
-
-.about-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.about-footnote {
-  margin-top: 14px;
 }
 
 /* ===== RESPONSIVE ===== */

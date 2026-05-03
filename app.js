@@ -1105,94 +1105,20 @@ function HotColdView({ matches }) {
 }
 
 function AboutFeedbackView() {
-    const [name, setName] = useState('');
-    const [feedback, setFeedback] = useState('');
-    const [copyState, setCopyState] = useState('idle');
-
-    const trimmedFeedback = feedback.trim();
-    const issueUrl = useMemo(() => {
-        const title = 'Feedback om Löven Stats Hub PoC';
-        const body = [
-            '## Synpunkt',
-            trimmedFeedback || '(fyll i din synpunkt här)',
-            '',
-            `## Avsandare`,
-            name.trim() || 'Anonym besokare',
-            '',
-            '## Sektion',
-            'Om & synpunkter'
-        ].join('\n');
-        return `${FEEDBACK_ISSUE_URL}?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
-    }, [name, trimmedFeedback]);
-
-    const copyFeedback = async () => {
-        if (!trimmedFeedback) return;
-        try {
-            await navigator.clipboard.writeText([
-                `Avsandare: ${name.trim() || 'Anonym besokare'}`,
-                '',
-                trimmedFeedback
-            ].join('\n'));
-            setCopyState('copied');
-            window.setTimeout(() => setCopyState('idle'), 2000);
-        } catch {
-            setCopyState('error');
-        }
-    };
-
     return React.createElement('div', { className: 'grid-2 gap-md' },
-        React.createElement('div', { className: 'card animate-fade about-card' },
+        React.createElement('div', { className: 'card animate-fade' },
             React.createElement('div', { className: 'about-kicker' }, 'Om sidan'),
-            React.createElement('h2', { className: 'font-display about-title' }, 'En PoC för Björklöven-supporters som gillar siffror, storytelling och smart produktutveckling.'),
-            React.createElement('p', { className: 'about-copy' }, 'Det här är en experimentell yta där statistik, silly season och ekonomi testas som supporterupplevelse innan delarna flyttas in i det riktiga systemet. Fokus är att göra komplex data begriplig, visuell och rolig att utforska.'),
-            React.createElement('div', { className: 'about-pill-row' },
-                React.createElement('span', { className: 'about-pill' }, 'PoC i slutspel'),
-                React.createElement('span', { className: 'about-pill' }, 'Frontend-fokuserad'),
-                React.createElement('span', { className: 'about-pill' }, 'Senare flytt till backend')
-            ),
-            React.createElement('div', { className: 'card-sm about-note' },
-                React.createElement('div', { className: 'about-note-title' }, 'Om namn'),
-                React.createElement('div', { className: 'about-note-copy' }, 'Jag har hållit den här sektionen generell i PoC:n i stället för att nämna dig personligen. Det är lätt att byta till ditt namn eller en mer personlig presentation senare om du vill.')
-            )
+            React.createElement('h2', { className: 'font-display about-title', style: { fontSize: '1.4rem' } }, 'Byggdes initialt för egen användning men om någon fler känner att sidan tillför något är det bara roligt.'),
+            React.createElement('p', { className: 'about-copy' }, 'Det här är en experimentell yta för statistik, silly season och ekonomi för Björklöven-supporters.')
         ),
-        React.createElement('div', { className: 'card animate-fade feedback-card' },
-            React.createElement('div', { className: 'about-kicker' }, 'Lämna synpunkt'),
-            React.createElement('h3', { className: 'font-display about-feedback-title' }, 'Vad borde byggas vidare på?'),
-            React.createElement('p', { className: 'about-copy' }, 'Skriv en kort tanke om funktioner, design, data eller buggar. Eftersom PoC-sajten är statisk skickas synpunkter vidare via en förifylld GitHub-issue eller kan kopieras manuellt.'),
-            React.createElement('label', { className: 'about-label', htmlFor: 'feedback-name' }, 'Namn eller alias (valfritt)'),
-            React.createElement('input', {
-                id: 'feedback-name',
-                className: 'about-input',
-                type: 'text',
-                value: name,
-                onChange: (e) => setName(e.target.value),
-                placeholder: 't.ex. Löven-supporter'
-            }),
-            React.createElement('label', { className: 'about-label', htmlFor: 'feedback-text' }, 'Din synpunkt'),
-            React.createElement('textarea', {
-                id: 'feedback-text',
-                className: 'about-textarea',
-                value: feedback,
-                onChange: (e) => setFeedback(e.target.value),
-                placeholder: 'Vad saknas, vad är starkt, vad borde ändras?',
-                rows: 7
-            }),
-            React.createElement('div', { className: 'about-actions' },
-                React.createElement('a', {
-                    className: `btn btn-gold ${!trimmedFeedback ? 'btn-disabled' : ''}`,
-                    href: trimmedFeedback ? issueUrl : undefined,
-                    target: '_blank',
-                    rel: 'noreferrer',
-                    onClick: (e) => { if (!trimmedFeedback) e.preventDefault(); }
-                }, 'Skapa issue'),
-                React.createElement('button', {
-                    type: 'button',
-                    className: `btn btn-outline ${!trimmedFeedback ? 'btn-disabled' : ''}`,
-                    onClick: copyFeedback,
-                    disabled: !trimmedFeedback
-                }, copyState === 'copied' ? 'Kopierat' : copyState === 'error' ? 'Kunde inte kopiera' : 'Kopiera text')
-            ),
-            React.createElement('div', { className: 'about-footnote' }, 'Ingen backend krävs för detta flöde. Senare i riktiga systemet kan en riktig feedback-endpoint eller formulärtjänst kopplas på.')
+        React.createElement('div', { className: 'card animate-fade' },
+            React.createElement('div', { className: 'about-kicker' }, 'Synpunkter'),
+            React.createElement('h3', { className: 'font-display about-title', style: { fontSize: '1.4rem' } }, 'Har du tankar eller idéer?'),
+            React.createElement('p', { className: 'about-copy', style: { marginBottom: 20 } }, 'All feedback är välkommen. Klicka på knappen nedan för att skicka ett mail direkt till mig.'),
+            React.createElement('a', {
+                className: 'btn btn-gold',
+                href: 'mailto:saman.akbarian@gmail.com?subject=Feedback: Löven Stats Hub',
+            }, '📧 Skicka mail')
         )
     );
 }
