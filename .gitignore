@@ -1,8 +1,27 @@
+# Dependencies
 node_modules/
+frontend_v2/node_modules/
+
+# Build output
+frontend_v2/dist/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug/temp files
+*.log
+err.txt
+debug_output*.txt
+
+# Data files (loaded separately)
 data/
 excel_data/
-.env
-.DS_Store
+test_data/
 
 # dbt
 dbt-venv/
@@ -11,3 +30,7 @@ dbt/dbt_packages/
 dbt/logs/
 dbt/package-lock.yml
 dbt/profiles.yml
+
+# Python
+__pycache__/
+*.pyc
