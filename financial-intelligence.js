@@ -4,7 +4,16 @@
 
 const { useEffect: useFinancialEffect, useState: useFinancialState, useRef: useFinancialRef } = React;
 const financialH = React.createElement;
-const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip: FinancialTooltip, Legend: FinancialLegend } = Recharts;
+const {
+    ResponsiveContainer: FinancialResponsiveContainer,
+    LineChart: FinancialLineChart,
+    Line: FinancialLine,
+    XAxis: FinancialXAxis,
+    YAxis: FinancialYAxis,
+    CartesianGrid: FinancialCartesianGrid,
+    Tooltip: FinancialTooltip,
+    Legend: FinancialLegend
+} = Recharts;
 
 const FINANCIALS_JSON_PATH = 'data/financials/bjorkloven_financials_raw.json';
 const FINANCIAL_AI_ENDPOINT = '/.netlify/functions/financial-ai';
@@ -473,19 +482,19 @@ function FinancialDashboard() {
                 financialH('span', { className: 'financial-badge' }, `${financials.periods.length} bokslutsperioder`)
             ),
             financialH('div', { className: 'financial-chart-wrap' },
-                financialH(ResponsiveContainer, { width: '100%', height: 280 },
-                    financialH(LineChart, { data: trendRows },
-                        financialH(CartesianGrid, { stroke: 'rgba(255,255,255,.06)', strokeDasharray: '3 3' }),
-                        financialH(XAxis, { dataKey: 'period', stroke: '#94a3b8', tick: { fill: '#94a3b8', fontSize: 11 } }),
-                        financialH(YAxis, { stroke: '#94a3b8', tick: { fill: '#94a3b8', fontSize: 11 }, tickFormatter: (val) => `${Math.round(val / 1000000)}M` }),
+                financialH(FinancialResponsiveContainer, { width: '100%', height: 280 },
+                    financialH(FinancialLineChart, { data: trendRows },
+                        financialH(FinancialCartesianGrid, { stroke: 'rgba(255,255,255,.06)', strokeDasharray: '3 3' }),
+                        financialH(FinancialXAxis, { dataKey: 'period', stroke: '#94a3b8', tick: { fill: '#94a3b8', fontSize: 11 } }),
+                        financialH(FinancialYAxis, { stroke: '#94a3b8', tick: { fill: '#94a3b8', fontSize: 11 }, tickFormatter: (val) => `${Math.round(val / 1000000)}M` }),
                         financialH(FinancialTooltip, {
                             contentStyle: { background: '#0f172a', border: '1px solid rgba(212,168,67,.2)', borderRadius: 8, color: '#e2e8f0' },
                             formatter: (value) => formatSEK(value)
                         }),
                         financialH(FinancialLegend, { wrapperStyle: { fontSize: 12 } }),
-                        financialH(Line, { type: 'monotone', dataKey: 'revenue', name: 'A-lag oms.', stroke: '#34d399', strokeWidth: 3, dot: { r: 3 } }),
-                        financialH(Line, { type: 'monotone', dataKey: 'cash', name: 'Koncernkassa', stroke: '#60a5fa', strokeWidth: 3, dot: { r: 3 } }),
-                        financialH(Line, { type: 'monotone', dataKey: 'groupEquity', name: 'Koncern EK', stroke: '#d4a843', strokeWidth: 3, dot: { r: 3 } })
+                        financialH(FinancialLine, { type: 'monotone', dataKey: 'revenue', name: 'A-lag oms.', stroke: '#34d399', strokeWidth: 3, dot: { r: 3 } }),
+                        financialH(FinancialLine, { type: 'monotone', dataKey: 'cash', name: 'Koncernkassa', stroke: '#60a5fa', strokeWidth: 3, dot: { r: 3 } }),
+                        financialH(FinancialLine, { type: 'monotone', dataKey: 'groupEquity', name: 'Koncern EK', stroke: '#d4a843', strokeWidth: 3, dot: { r: 3 } })
                     )
                 )
             ),
