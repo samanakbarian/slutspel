@@ -22,7 +22,10 @@ err.txt
 debug_output*.txt
 
 # Data files (loaded separately)
-data/
+data/*
+!data/financials/
+data/financials/*
+!data/financials/bjorkloven_financials_raw.json
 excel_data/
 test_data/
 
