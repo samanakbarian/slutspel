@@ -491,11 +491,18 @@ function SillySeasonView() {
         finally { if (manual) setIsRefreshing(false); }
     }, []);
 
-    // Manual refresh via POST
+    // Manual refresh: try backend refresh endpoint, fallback to direct fetch
     const handleRefresh = useCallback(async () => {
         setIsRefreshing(true);
         try {
-            await fetch('https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season/refresh', { method: 'POST' });
+            const refreshRes = await fetch('https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season/refresh', { method: 'POST' });
+            if (!refreshRes.ok) {
+                if (refreshRes.status === 404 || refreshRes.status === 405) {
+                    console.info('[SillySeason] refresh endpoint saknas i denna miljö, fallback till GET.');
+                } else {
+                    console.warn('[SillySeason] refresh endpoint svarade fel:', refreshRes.status);
+                }
+            }
             await fetchData(false);
         } catch (e) { console.warn('[SillySeason] refresh error:', e); }
         finally { setIsRefreshing(false); }
