@@ -1,92 +1,160 @@
-# 🧭 Produktroadmap 2026 — Löven Stats Hub
+# Roadmap Product 2026 - Gemensam Malbild
 
-*Senast uppdaterad: 2026-05-04*
+Senast uppdaterad: 2026-05-04
+Galler for: `slutspel` (PoC + frontend) och `loven-stats-backend` (data + API + drift)
 
-## Roadmap-princip
-Tekniska milstolpar ska översättas till fan-nytta. Exempel:
-- `fact_match_events` => Matchens puls, farliga lägen, AI-periodrapport.
-- `/api/v1/roster` => Truppbygget, SHL Readiness, rollhål.
-- Silly season scraper => Vad betyder ryktet?, tappad produktion, fit score.
+## Varfor denna roadmap
 
-## Fas 1 — Maj–Juni 2026 (Grundläggning)
-**Produktmål:** första versionen av Truppbygget.
+Detta dokument ersatter tidigare splittrade produktspår med en gemensam leveransplan.
+Målet ar att vi ska jobba mot samma resultat, med tydlig repo-fordelning och tydliga beslutspunkter.
 
-### Prioriterat
-- Artikeltyper: tapp, nyförvärv, förlängning, rykte, ekonomi, organisation, skada, kontrakt.
-- Spelar-impact-schema (spelare, position, status, impactnivå, tappad produktion/istid, rollpåverkan).
-- Impact Cards v1 + “Vad betyder detta?”-tolkning.
-- Auto-refresh var 5:e minut.
-- Truppstatus light.
-- SHL Readiness Score v0.
-- Visualisering av truppluckor: 🔴 kritisk, 🟡 bevaka, 🟢 starkt.
+## North Star 2026/27
 
-### Löven Intelligence Layer (datalager)
-Planerade marts:
-- `mart_roster_status`
-- `mart_player_impact`
-- `mart_team_readiness`
-- `mart_silly_season_impact`
-- `mart_economy_scenarios`
+Bygg ett gratis, datadrivet kontrollrum for Bjorkloven-fans som vecka for vecka forklarar:
+1. vad som har hant
+2. varfor det spelar roll
+3. hur det paverkar SHL-etableringen sportsligt och ekonomiskt
 
-## Fas 2 — Juni–Augusti 2026 (Frontend 2.0)
-**Produktmål:** bygga startsidan **Dagens Lövenläge**.
+## Gemensamma mal till SHL-start (september 2026)
 
-### Startsida
-- Hero + Snabba statuskort (Readiness, Truppstatus, Silly Season, Ekonomirisk).
-- Dagens Lövenläge i 3–5 bullets.
-- Truppbygget, Silly Season Radar, Ekonomikollen light, nästa viktiga datum.
+1. Silly Season med tillforlitlig live-feed, impact och tydlig kallsparbarhet.
+2. Matchcenter med stabil matchdata och begriplig periodanalys.
+3. Ekonomikollen med verifierad, flerarsdata och tydliga riskindikatorer.
+4. En gemensam API-kontraktsyta som bade old frontend och frontend v2 kan konsumera.
 
-### Komponenter (designsystem v0)
-`AppShell`, `TopHero`, `DailyBriefing`, `InsightCard`, `ScoreRing`, `StatusBadge`, `ImpactCard`, `RosterGapCard`, `EconomyRiskCard`, `SponsorStrip`, `BottomNav`, `SectionHeader`.
+## Produktprinciper (galler bada repor)
 
-### UX-princip
-Mobil först. UI ska kännas som mörk sportstudio + supporterprodukt, inte admin-dashboard.
+- Fan-forsta: varje vy ska svara pa "sa vad betyder det har for Lovens SHL-chans?"
+- Data-forst: inga centrala siffror far vara hardkodade i UI.
+- Kallsparbarhet: alla kritiska datapunkter ska kunna sparas till kalla/tid.
+- Robust drift: stale data ska visas tydligt i UI, aldrig tyst fail.
+- PoC-disciplin: `slutspel` validerar UX och hypoteser, `loven-stats-backend` blir produktionskallan.
 
-## Fas 3 — September 2026 (SHL Go-Live)
-**Produktmål:** Matchcenter som förklarar matchens puls.
+## UX-styrning (bindande)
 
-- Momentumindikator
-- AI-periodrapport
-- Farliga lägen-vy (inkl. xG paketerat begripligt)
-- Matchens tre nycklar
-- Efter match: “Det här avgjorde”
+UX-riktningen for redesign styrs av:
+- `docs/UX_REBUILD_2026.md`
 
-## Fas 4 — Oktober 2026+
-**Produktmål:** analysplattform för historik, projektioner och ekonomiscenarier.
+Om den konflikterar med aldre beskrivningar i `FRONTEND_2.0_SPECS.md` galler `UX_REBUILD_2026.md`.
 
-- AI-scouting reports
-- Historik & Tidsmaskin
-- Supporter Pulse / sentiment
-- Ekonomiscenarier
+Operativ byggordning for frontend v2:
+- `docs/UX_BUILD_BACKLOG_2026.md`
 
-## Rekommenderad byggordning (nästa 1–2 veckor)
-1. Ny startsida: Dagens Lövenläge
-2. `InsightCard`
-3. `ImpactCard`
-4. Artikeltyp-klassificering
-5. “Vad betyder detta?” för silly season
-6. Truppstatus light
-7. SHL Readiness Score v0
-8. Auto-refresh
+## Leveransfaser
 
+## Fas 0 - Synk och kontrakt (nu)
+Mål: Enas om vad som byggs, i vilken ordning, och var ansvaret ligger.
 
-## Fas 5 — Etablerad SHL-klubb och långsiktig konkurrenskraft
-**Produktmål:** utveckla produkten från etableringskontrollrum till kontrollrum för långsiktig sportslig och ekonomisk konkurrenskraft.
+Exit-kriterier:
+- Gemensam roadmap i bada repor (detta dokument + backend-roadmap) ar synkade.
+- Gemensam API-skiss for `silly`, `matches`, `roster`, `financials` ar beslutad.
+- "Definition of Done" ar dokumenterad per modul.
 
-### Nya huvudfrågor
-- Hur konkurrenskraftigt är laget jämfört med SHL-snittet och SHL-toppen?
-- Vad krävs för att nå och stanna i slutspel?
-- Vilka spelare driver utvecklingen, nu och på 2–3 års sikt?
-- Får klubben ut rätt effekt av spelarbudgeten?
-- Är truppen byggd hållbart över flera säsonger?
+## Fas 1 - Datagrund och stabilisering (maj-juni 2026)
+Mål: Saker datafloden och ta bort kritiska driftluckor.
 
-### Nya produktmoduler
-- **Competitive Index**: mål framåt/bakåt, special teams, farliga lägen/xG, budgeteffektivitet, truppålder, kontraktsstabilitet.
-- **Playoff Push**: sannolikhet för play-in/kvartsfinal/semifinal/final baserat på tabelläge, form och återstående schema.
-- **Value for Money**: poäng/mål/xG i relation till budgetnivå och tabellplacering relativt resurser.
-- **Squad Lifecycle**: peak-age, veteranrisk, utvecklingsspelare, utgående kontrakt, generationsväxling.
-- **Talent Pipeline**: juniorer, utlånade, prospects och lokala spelare som kan bli framtida A-lagskärna.
-- **Dynasty Builder**: gap till topp-6/titelutmaning och vilka investeringar som ger störst effekt.
+Prioriterade resultat:
+- Silly: stabil ingest, metadata for last refresh, fallback i UI, statusindikatorer.
+- Roster: forsta riktiga endpoint och cache-strategi.
+- Matchdata: grundtabeller + API-bas for matchlista och matchdetalj.
+- Financials: verifierad flerarsmodell i backend (minst 3 perioder), tydlig QA-status.
 
-### UI-justering efter etablering
-Startsidan byter huvudfråga från **"Är vi redo för SHL?"** till **"Tar vi nästa steg?"** och prioriterar tabelläge, slutspelschans, form, Competitive Index och ekonomisk hållbarhet.
+Definition of Done:
+- Inga manuella UI-floden kravs for att hamta ny data.
+- Stale/failed data markeras explicit i frontend.
+- Basendpointar returnerar konsekvent schema och versionerad `meta`.
+
+## Fas 2 - Fan-upplevelse v1 (juni-augusti 2026)
+Mål: Leverera sammanhangen upplevelse for supporters.
+
+Prioriterade resultat:
+- "Dagens Lovenlage" med 3-5 tydliga bullets.
+- Silly impactkort: tapp, nyforvarv, forlängning och roll-gap.
+- Matchcenter v1: periodpuls, nyckelhändelser, eftermatchsammanfattning.
+- Ekonomikollen v1: trend, riskradar, SHL-gap, scenario light.
+
+Definition of Done:
+- Minst en tydlig fan-insikt per modul (silly, match, ekonomi).
+- Mobil-forst design ar fungerande pa vanliga viewport-storlekar.
+- Frontend visar datakvalitet och senast uppdaterad tid.
+
+## Fas 3 - SHL Go-Live (september 2026)
+Mål: Produktionsredo for kontinuerlig anvandning under sasong.
+
+Prioriterade resultat:
+- SHL-sasong ingest + uppdateringsintervall under match.
+- Matchcenter live utan kritiska datastopp.
+- Operativ overvakning: fel, sen data, schemafel.
+- Public release-process med rollback-rutin.
+
+Definition of Done:
+- Kritiska endpoints har monitoring + larm.
+- Frontend har fallback-beteenden dokumenterade och testade.
+- Tydlig incidentrutin finns i backend.
+
+## Fas 4 - Konkurrenskraft och analys (oktober 2026+)
+Mål: Ga fran etableringskontrollrum till langsiktig konkurrenskraftsplattform.
+
+Prioriterade resultat:
+- Competitive Index och playoff-relaterade indikatorer.
+- Value-for-money mellan sportslig effekt och ekonomiska resurser.
+- Talent pipeline och trupp-livscykel over flera ar.
+- Djupare AI-stod i backend, men kostnadskontrollerat och auditbart.
+
+## Repoansvar (skarpt)
+
+`slutspel`:
+- UX, visualisering, hypotesvalidering, statisk PoC-publicering.
+- Featureflikar, komponenter, states, fallback-upplevelse.
+- Ska inte vara source of truth for central data pa sikt.
+
+`loven-stats-backend`:
+- Ingestion, QA, lagring, datakontrakt, API, scheduler, monitoring.
+- Kallspårbarhet, datakvalitet, versionshantering av schema.
+- Ska vara source of truth for produktionsdata.
+
+## 90-dagars plan (konkret)
+
+1. Vecka 1-2:
+- Faststall API-kontrakt v1 for `silly`, `matches`, `roster`, `financials`.
+- Definiera gemensam "freshness policy" (ex. stale efter 6h/24h per modul).
+
+2. Vecka 3-6:
+- Bygg/haarda backend-endpointar for roster + financials.
+- Koppla frontend till endpoints med tydliga loading/error/stale-states.
+
+3. Vecka 7-10:
+- Leverera Dagens Lovenlage + Matchcenter v1 + Ekonomikollen v1.
+- Lagg in instrumentering for kvalitet och anvandning.
+
+4. Vecka 11-12:
+- SHL go-live hardening: monitoring, incidentplaybook, release-checklist.
+
+## Beslutsregler
+
+- Om PoC och backend kolliderar: backend-kontrakt vinner.
+- Om feature inte forklarar "varfor det spelar roll": den pausas.
+- Om data inte ar verifierad: visa tydligt att den ar preliminar.
+- Om AI-funktion kostar for mycket i runtime: flytta till forberaknad/offline.
+
+## Mätetal vi styr efter
+
+- Freshness: andel vyer med uppdaterad data inom policy.
+- Tillit: andel nyckeltal med kallreferens och verifieringsstatus.
+- Stabilitet: frontendfel per 1k sidvisningar.
+- Nytta: andel anvandare som interagerar med minst en insiktsmodul per session.
+
+## Direkt nasta arbetsbacklog (start nu)
+
+1. Gemensamt API-kontrakt dokumenterat i backend-docs.
+2. Stale-data indikator i Silly, Match och Ekonomi.
+3. Financials flyttas stegvis fran statisk PoC-kalla till backend endpoint.
+4. Dagens Lovenlage byggs pa samma kontrakt, inte separat dataspår.
+
+## Genomfort (2026-05-04)
+
+- Ny app-shell i `frontend_v2` enligt UX-spec:
+  - topbar med freshness
+  - mobil bottom nav (`Laget | Trupp | Rykten | Ekonomi | Mer`)
+- Startsidan "Laget" ar kopplad till backend endpoint `GET /api/v1/lovenlaget`.
+- Avvikelse med parallell drift (legacy + v2) ar dokumenterad i `SYSTEM_DOCUMENTATION.md` under arkitekturavvikelser.

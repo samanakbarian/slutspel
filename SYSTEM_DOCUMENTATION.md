@@ -29,6 +29,33 @@ Detta dokumenteras i:
 - `docs/PRODUCT_DIRECTION_2026.md` (produktdefinition + långsiktig vision)
 - `docs/ROADMAP_PRODUCT_2026.md` (inklusive **Fas 5** för etablerad SHL-klubb)
 
+## 1.2 Roadmap-synk mellan repos
+
+Roadmapen i `slutspel/docs/ROADMAP_PRODUCT_2026.md` och
+`loven-stats-backend/docs/ROADMAP.md` ska beskriva samma malbild, faser och prioriteringsordning.
+Om de driver isar galler senaste synkade version daterad 2026-05-04 tills ny synk ar gjord.
+
+## 1.3 UX-riktning (frontend)
+
+Styrande UX-spec for ombyggnad av produktupplevelsen:
+- `docs/UX_REBUILD_2026.md`
+
+`FRONTEND_2.0_SPECS.md` ar fortsatt relevant for teknik och implementation,
+men UX-principer, tonalitet, informationshierarki och mobilflode styrs av `UX_REBUILD_2026.md`.
+
+## 1.4 Dokumenterade arkitekturavvikelser (frontend)
+
+### ADV-2026-05-04-03: Frontend v2 byggs parallellt med legacy-siten
+
+- Beslut: ny produktupplevelse implementeras i `frontend_v2` innan full cutover till GCP-hosting.
+- Avvikelse: tidigare lage var en blandning av legacy-UI i root och v2 som separat yta utan ny IA.
+- Motiv: snabb produktvalidering av "Lovenlaget" och mobil first-struktur utan att bryta nuvarande publik yta.
+- Teknik:
+  - ny app-shell i `frontend_v2` (topbar, freshness, bottom nav)
+  - startsida "Laget" kopplad till `GET /api/v1/lovenlaget`
+- Risk: tillfallig dubbel forvaltningskostnad (legacy + v2).
+- Plan for normalisering: v2 blir primar front nar GCP-hosting och endpointkontrakt ar hardade; legacy fryses och avvecklas kontrollerat.
+
 ## 2. Repositories
 
 | Repo | Innehåll | URL |
