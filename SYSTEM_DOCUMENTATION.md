@@ -1,6 +1,6 @@
 # 📚 Löven Stats Hub — Systemdokumentation & Master Plan
 
-*Senast uppdaterad: 2026-05-03*  
+*Senast uppdaterad: 2026-05-04 (inkl. tvålägesvision: etablering + långsiktig konkurrenskraft)*  
 *Detta dokument utgör den officiella tekniska dokumentationen för systemet samt "Master Planen" för hela Löven Stats Hub.*
 
 ---
@@ -16,6 +16,18 @@
   - Relevanta affiliate-länkar (t.ex. boka bord på O'Learys inför match).
 
 ---
+
+
+## 1.1 Produktvision över tid
+
+Produkten har nu två explicita visionslägen:
+
+- **Fas A — Uppflyttning och etablering**: fokus på SHL-readiness, truppbehov och ekonomisk etablering.
+- **Fas B — Långsiktig konkurrenskraft**: fokus på slutspelschans, sportslig utveckling, budgeteffektivitet, talangpipeline och flerårig hållbarhet.
+
+Detta dokumenteras i:
+- `docs/PRODUCT_DIRECTION_2026.md` (produktdefinition + långsiktig vision)
+- `docs/ROADMAP_PRODUCT_2026.md` (inklusive **Fas 5** för etablerad SHL-klubb)
 
 ## 2. Repositories
 
@@ -192,3 +204,5 @@ Det betyder att dagens ekonomiflik i `slutspel` ska behandlas som en validerings
 | Roadmap | `loven-stats-backend/docs/ROADMAP.md` | Fasad plan med milstolpar |
 | Affärsmodell | `loven-stats-backend/docs/BUSINESS_MODEL.md` | Monetisering & intäktsströmmar |
 | Frontend 2.0 Spec | `slutspel/FRONTEND_2.0_SPECS.md` | UX/UI-krav och teknisk stack |
+| Produktdefinition 2026/27 | `docs/PRODUCT_DIRECTION_2026.md` | Etablering + långsiktig produktvision |
+| Produktroadmap 2026 | `docs/ROADMAP_PRODUCT_2026.md` | Fan-centrisk roadmap, inkl. Fas 5 |
