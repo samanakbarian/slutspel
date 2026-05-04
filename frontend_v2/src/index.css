@@ -90,6 +90,166 @@ a:hover {
   animation: fadeUp 0.4s ease-out forwards;
 }
 
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: 260px;
+  background: rgba(15, 23, 42, 0.8);
+  border-right: 1px solid var(--glass-border);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  color: var(--brand-gold);
+}
+
+.app-subtitle {
+  font-size: 0.75rem;
+  color: var(--brand-green-light);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.app-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: var(--text-primary);
+}
+
+.app-nav-link-muted {
+  color: var(--text-secondary);
+}
+
+.app-nav-link:focus-visible {
+  outline: 2px solid var(--brand-gold);
+  outline-offset: 2px;
+}
+
+.app-sponsor {
+  margin-top: auto;
+  padding: 1.5rem;
+  background: var(--sponsor-bg);
+  border: 1px solid var(--sponsor-border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.app-sponsor-caption {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.app-sponsor-name {
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dashboard {
+  padding: 2rem;
+}
+
+.dashboard-title {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  margin-bottom: 1rem;
+}
+
+.dashboard-subtitle {
+  color: var(--text-secondary);
+}
+
+.dashboard-kpi-panel {
+  margin-top: 2rem;
+  padding: 2rem;
+}
+
+.dashboard-kpi-title {
+  font-size: 1.5rem;
+  color: var(--brand-gold);
+}
+
+.dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dashboard-kpi-value {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.dashboard-kpi-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    padding: 1rem;
+    gap: 1rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .app-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .app-nav-link {
+    white-space: nowrap;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .app-sponsor {
+    display: none;
+  }
+
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .dashboard-kpi-panel {
+    padding: 1rem;
+  }
+
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
