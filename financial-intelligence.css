@@ -81,6 +81,28 @@
     line-height: 1.5;
 }
 
+.financial-provenance-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.financial-provenance-badge {
+    font-size: 11px;
+    color: #f8fafc;
+    border: 1px solid rgba(212, 168, 67, 0.4);
+    border-radius: 999px;
+    padding: 2px 8px;
+    background: rgba(212, 168, 67, 0.12);
+}
+
+.financial-provenance-muted {
+    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+}
+
 .financial-ai-cta-row {
     margin-top: 14px;
 }
@@ -423,6 +445,42 @@
     font-size: 13px;
     line-height: 1.7;
 }
+
+.financial-turnaround-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.financial-turnaround-card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px;
+    background: rgba(2, 6, 23, 0.35);
+}
+
+.financial-turnaround-label {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+.financial-turnaround-values {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+}
+
+.financial-turnaround-delta {
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.financial-turnaround-delta.positive { color: #34d399; }
+.financial-turnaround-delta.negative { color: #f87171; }
+.financial-turnaround-delta.neutral { color: #94a3b8; }
 
 .financial-ai-list,
 .financial-context-card {

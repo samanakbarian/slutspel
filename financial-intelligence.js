@@ -78,7 +78,10 @@ function mapRecord(record) {
         resultAfterTax: record.result_after_tax ?? null,
         equity: record.equity ?? null,
         cash: record.cash ?? null,
-        notes: record.notes || ''
+        notes: record.notes || '',
+        sourceUrl: record.source_url || '',
+        sourcePublishedAt: record.source_published_at || null,
+        verificationStatus: record.verification_status || ''
     };
 }
 
@@ -389,6 +392,8 @@ function FinancialDashboard() {
     const lastUpdated = financials.metadata?.last_updated || 'okant datum';
     const revenueShare = d.revenue && k.revenue ? ((d.revenue / k.revenue) * 100).toFixed(1) : null;
     const cashToRevenue = k.cash && k.revenue ? ((k.cash / k.revenue) * 100).toFixed(1) : null;
+    const dataQuality = getDataQuality(snapshot);
+    const turnaround = getTurnaroundRows(snapshot);
 
     return financialH('div', { className: 'financial-dashboard' },
         status === 'loading' && financialH('div', { className: 'card financial-status-card' },
@@ -405,7 +410,12 @@ function FinancialDashboard() {
                 financialH('div', null,
                     financialH('h2', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, '💰 Ekonomisk Intelligens'),
                     financialH('p', { style: { color: '#94a3b8', fontSize: 12, margin: '4px 0 0' } }, `Bokslut ${d.year} | ${d.entity}`),
-                    financialH('p', { className: 'financial-meta-line' }, `Källa: ${sourceText} | Senast uppdaterad: ${lastUpdated}`)
+                    financialH('p', { className: 'financial-meta-line' }, `Källa: ${sourceText} | Senast uppdaterad: ${lastUpdated}`),
+                    financialH('div', { className: 'financial-provenance-row' },
+                        financialH('span', { className: 'financial-provenance-badge' }, `Datakvalitet: ${dataQuality.label}`),
+                        dataQuality.date && financialH('span', { className: 'financial-provenance-badge financial-provenance-muted' }, `Publicerad: ${dataQuality.date}`),
+                        dataQuality.source && financialH('span', { className: 'financial-provenance-badge financial-provenance-muted' }, dataQuality.source)
+                    )
                 ),
                 financialH('div', { style: { textAlign: 'center' } },
                     financialH('div', { style: { fontSize: 28 } }, '🍃'.repeat(healthScore) + '🍂'.repeat(5 - healthScore)),
@@ -435,6 +445,26 @@ function FinancialDashboard() {
             renderMetricCard('Resultat efter skatt', formatSEK(k.resultAfterTax), formatPct(calcYoY(k.resultAfterTax, kp.resultAfterTax)), 'Koncernnivå'),
             renderMetricCard('A-lag av koncern', revenueShare == null ? '-' : `${revenueShare}%`, null, 'Andel av total omsättning'),
             renderMetricCard('Likviditet / oms.', cashToRevenue == null ? '-' : `${cashToRevenue}%`, null, 'Kassa som andel av koncernoms.')
+        ),
+
+        financialH('div', { className: 'card' },
+            financialH('div', { className: 'financial-section-head' },
+                financialH('h3', { className: 'font-display', style: { color: '#d4a843', margin: 0 } }, '📌 Turnaround Tracker'),
+                financialH('span', { className: 'financial-badge' }, 'År mot år')
+            ),
+            financialH('div', { className: 'financial-turnaround-grid' },
+                turnaround.map((item) =>
+                    financialH('div', { key: item.label, className: 'financial-turnaround-card' },
+                        financialH('div', { className: 'financial-turnaround-label' }, item.label),
+                        financialH('div', { className: 'financial-turnaround-values' },
+                            financialH('span', null, item.current),
+                            financialH('span', null, 'vs'),
+                            financialH('span', null, item.previous)
+                        ),
+                        financialH('div', { className: `financial-turnaround-delta ${item.deltaClass}` }, item.deltaLabel)
+                    )
+                )
+            )
         ),
 
         financialH('div', { className: 'card' },
@@ -582,6 +612,48 @@ function FinancialDashboard() {
             financialH('span', null, 'AI-analysen är förberäknad i statisk JSON för att undvika dyra runtime-anrop.')
         )
     );
+}
+
+function getDataQuality(snapshot) {
+    const status = snapshot.current?.verificationStatus || '';
+    const sourceUrl = snapshot.current?.sourceUrl || '';
+    const published = snapshot.current?.sourcePublishedAt || null;
+    if (status.includes('official_pdf')) return { label: 'Verifierad årsredovisning (PDF)', source: hostFromUrl(sourceUrl), date: published };
+    if (status.includes('official_bjorkloven')) return { label: 'Officiell klubbkommuniké', source: hostFromUrl(sourceUrl), date: published };
+    if (status.includes('verified_hitta')) return { label: 'Verifierad bolagskälla', source: hostFromUrl(sourceUrl), date: published };
+    return { label: 'Kuraterad PoC-data', source: hostFromUrl(sourceUrl), date: published };
+}
+
+function getTurnaroundRows(snapshot) {
+    const d = snapshot.current || {};
+    const p = snapshot.previous || {};
+    return [
+        buildTurnaroundRow('A-lag omsättning', d.revenue, p.revenue),
+        buildTurnaroundRow('Rörelseresultat', d.operatingResult, p.operatingResult),
+        buildTurnaroundRow('A-lag eget kapital', d.equity, p.equity),
+        buildTurnaroundRow('Koncernkassa', snapshot.koncern?.cash, snapshot.koncernPrev?.cash),
+    ];
+}
+
+function buildTurnaroundRow(label, current, previous) {
+    const delta = calcYoY(current, previous);
+    const positive = delta != null && delta >= 0;
+    return {
+        label,
+        current: formatSEK(current),
+        previous: formatSEK(previous),
+        deltaLabel: delta == null ? 'Ingen jämförelsedata' : `${positive ? '↑' : '↓'} ${Math.abs(delta).toFixed(1)}%`,
+        deltaClass: delta == null ? 'neutral' : (positive ? 'positive' : 'negative')
+    };
+}
+
+function hostFromUrl(url) {
+    if (!url) return null;
+    try {
+        return new URL(url).hostname;
+    } catch (_e) {
+        return url;
+    }
 }
 
 function renderContextCard(label, text) {
