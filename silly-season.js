@@ -473,14 +473,12 @@ function SillySeasonView() {
     const [showBreaking, setShowBreaking] = useState(false);
     const [breakingNews, setBreakingNews] = useState(null);
     const [lastRefresh, setLastRefresh] = useState(null);
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const breakingShown = useRef(false);
     const POLL_INTERVAL = 5 * 60 * 1000; // 5 min
 
     // Fetch data from API
-    const fetchData = useCallback(async (manual) => {
+    const fetchData = useCallback(async () => {
         try {
-            if (manual) setIsRefreshing(true);
             const res = await fetch('https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season');
             if (res.ok) {
                 const json = await res.json();
@@ -488,30 +486,12 @@ function SillySeasonView() {
                 setLastRefresh(json._meta?.lastRefresh ? new Date(json._meta.lastRefresh) : new Date());
             }
         } catch (e) { console.warn('[SillySeason] fetch error:', e); }
-        finally { if (manual) setIsRefreshing(false); }
     }, []);
-
-    // Manual refresh: try backend refresh endpoint, fallback to direct fetch
-    const handleRefresh = useCallback(async () => {
-        setIsRefreshing(true);
-        try {
-            const refreshRes = await fetch('https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season/refresh', { method: 'POST' });
-            if (!refreshRes.ok) {
-                if (refreshRes.status === 404 || refreshRes.status === 405) {
-                    console.info('[SillySeason] refresh endpoint saknas i denna miljö, fallback till GET.');
-                } else {
-                    console.warn('[SillySeason] refresh endpoint svarade fel:', refreshRes.status);
-                }
-            }
-            await fetchData(false);
-        } catch (e) { console.warn('[SillySeason] refresh error:', e); }
-        finally { setIsRefreshing(false); }
-    }, [fetchData]);
 
     // Initial fetch + polling
     useEffect(() => {
-        fetchData(false);
-        const timer = setInterval(() => fetchData(false), POLL_INTERVAL);
+        fetchData();
+        const timer = setInterval(fetchData, POLL_INTERVAL);
         return () => clearInterval(timer);
     }, [fetchData]);
 
@@ -555,15 +535,6 @@ function SillySeasonView() {
                 data._meta?.scrapedArticles != null && h('span', {
                     style: { fontSize: 10, color: '#34d399', background: 'rgba(52,211,153,.1)', padding: '2px 8px', borderRadius: 10 }
                 }, `${data._meta.newArticles || 0} nya`),
-                h('button', {
-                    onClick: handleRefresh, disabled: isRefreshing,
-                    style: {
-                        background: 'rgba(212,168,67,.15)', border: '1px solid rgba(212,168,67,.3)',
-                        color: '#d4a843', padding: '4px 12px', borderRadius: 12, cursor: 'pointer',
-                        fontSize: 11, fontWeight: 600, transition: 'all .2s',
-                        opacity: isRefreshing ? .5 : 1,
-                    }
-                }, isRefreshing ? '⟳ Hämtar...' : '⟳ Uppdatera nu'),
             ),
         ),
 
@@ -589,3 +560,4 @@ function SillySeasonView() {
         h(FanVote, { players: data.roster }),
     );
 }
+
