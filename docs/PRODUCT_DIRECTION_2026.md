@@ -3,7 +3,7 @@
 *Senast uppdaterad: 2026-05-04*
 
 ## Kort produktdefinition
-Löven Stats Hub är en gratis, oberoende supporterplattform och ett datadrivet kontrollrum för Björklövens SHL-resa 2026/27.
+Lövenläget är en gratis, oberoende supporterplattform och ett datadrivet kontrollrum för Björklövens SHL-resa 2026/27.
 
 Produkten ska hjälpa fans att förstå:
 - vad som händer,
