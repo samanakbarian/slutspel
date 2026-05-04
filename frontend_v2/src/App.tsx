@@ -6,24 +6,24 @@ import { Roster } from './pages/Roster';
 
 function Dashboard() {
   return (
-    <div className="animate-fade-up" style={{ padding: '2rem' }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Välkommen till Löven Hub 2.0</h1>
-      <p style={{ color: 'var(--text-secondary)' }}>Dashboard under konstruktion...</p>
+    <div className="dashboard animate-fade-up">
+      <h1 className="dashboard-title">Välkommen till Löven Hub 2.0</h1>
+      <p className="dashboard-subtitle">Dashboard under konstruktion...</p>
       
-      <div className="glass-panel" style={{ marginTop: '2rem', padding: '2rem' }}>
-        <h2 style={{ fontSize: '1.5rem', color: 'var(--brand-gold)' }}>Trupp-KPI:er</h2>
-        <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
+      <div className="glass-panel dashboard-kpi-panel">
+        <h2 className="dashboard-kpi-title">Trupp-KPI:er</h2>
+        <div className="dashboard-kpi-grid">
           <div>
-            <div style={{ fontSize: '2rem', fontWeight: 800 }}>2/2</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Målvakter</div>
+            <div className="dashboard-kpi-value">2/2</div>
+            <div className="dashboard-kpi-label">Målvakter</div>
           </div>
           <div>
-            <div style={{ fontSize: '2rem', fontWeight: 800 }}>7/8</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Backar</div>
+            <div className="dashboard-kpi-value">7/8</div>
+            <div className="dashboard-kpi-label">Backar</div>
           </div>
           <div>
-            <div style={{ fontSize: '2rem', fontWeight: 800 }}>11/14</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Forwards</div>
+            <div className="dashboard-kpi-value">11/14</div>
+            <div className="dashboard-kpi-label">Forwards</div>
           </div>
         </div>
       </div>
@@ -36,51 +36,41 @@ function Dashboard() {
 function App() {
   return (
     <Router>
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        {/* Sidebar */}
-        <aside style={{
-          width: '260px',
-          background: 'rgba(15, 23, 42, 0.8)',
-          borderRight: '1px solid var(--glass-border)',
-          padding: '2rem 1.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2rem'
-        }}>
+      <div className="app-shell">
+        <aside className="app-sidebar" aria-label="Primär navigation">
           <div>
-            <h1 style={{ fontSize: '1.5rem', color: 'var(--brand-gold)' }}>Löven Stats</h1>
-            <p style={{ fontSize: '0.75rem', color: 'var(--brand-green-light)', fontWeight: 600, letterSpacing: '0.05em' }}>FRONTEND 2.0</p>
+            <h1 className="app-title">Löven Stats</h1>
+            <p className="app-subtitle">FRONTEND 2.0</p>
           </div>
           
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', color: 'var(--text-primary)' }}>
+          <nav className="app-nav">
+            <Link to="/" className="app-nav-link">
               <Home size={20} /> Dashboard
             </Link>
-            <Link to="/silly" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', color: 'var(--text-primary)' }}>
+            <Link to="/silly" className="app-nav-link">
               <Newspaper size={20} /> Silly Season
             </Link>
-            <Link to="/matchcenter" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', color: 'var(--text-primary)' }}>
+            <Link to="/matchcenter" className="app-nav-link">
               <Activity size={20} /> Matchcenter
             </Link>
-            <Link to="/standings" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+            <Link to="/standings" className="app-nav-link app-nav-link-muted">
               <Calendar size={20} /> Spelschema
             </Link>
-            <Link to="/roster" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+            <Link to="/roster" className="app-nav-link app-nav-link-muted">
               <Users size={20} /> Truppen
             </Link>
-            <Link to="/history" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+            <Link to="/history" className="app-nav-link app-nav-link-muted">
               <History size={20} /> Historik
             </Link>
           </nav>
 
-          <div style={{ marginTop: 'auto', padding: '1.5rem', background: 'var(--sponsor-bg)', border: '1px solid var(--sponsor-border)', borderRadius: '12px', textAlign: 'center' }}>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Presenteras av</p>
-            <div style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>LOKAL SPONSOR</div>
+          <div className="app-sponsor">
+            <p className="app-sponsor-caption">Presenteras av</p>
+            <div className="app-sponsor-name">LOKAL SPONSOR</div>
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main style={{ flex: 1, overflowY: 'auto' }}>
+        <main className="app-main">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/silly" element={<SillySeason />} />
