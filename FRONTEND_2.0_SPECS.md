@@ -1,8 +1,10 @@
 # 🎨 Frontend 2.0: Arkitektur & Kravspecifikation
 
-*Senast uppdaterad: 2026-05-03*
+*Senast uppdaterad: 2026-05-04 (uppdaterad med dubbla visionslägen: etablering + långsiktig konkurrenskraft)*
 
 Detta dokument fungerar som en utredning och kravspecifikation för Frontend 2.0, baserat på vår officiella "Master Plan".
+
+> **Produktstyrning:** Frontendarbetet ska följa `docs/PRODUCT_DIRECTION_2026.md` och `docs/ROADMAP_PRODUCT_2026.md`, där varje modul måste översättas till tydlig supporternytta ("vad betyder detta?").
 
 > **Kontext:** Björklöven vann HA 25/26 och spelar i SHL från säsongen 26/27.  
 > **Backend-dokumentation:** Se `loven-stats-backend/docs/DATA_WAREHOUSE_DESIGN.md` och `docs/ROADMAP.md`.
