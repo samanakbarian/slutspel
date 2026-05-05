@@ -22,6 +22,7 @@ const TAG_LABELS = {
 };
 
 const h = React.createElement;
+const OPS_DEBUG_ENABLED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ops') === '1';
 
 // ===== 1. LIVE NEWS FEED =====
 function LiveFeed({ news }) {
@@ -334,6 +335,63 @@ function SourcesOverview({ meta }) {
     );
 }
 
+function OpsPanel() {
+    const [ops, setOps] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!OPS_DEBUG_ENABLED) return;
+        const load = async () => {
+            try {
+                const res = await fetch(`https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season/ops?ts=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                setOps(await res.json());
+            } catch (e) {
+                setError(e?.message || String(e));
+            }
+        };
+        load();
+    }, []);
+
+    if (!OPS_DEBUG_ENABLED) return null;
+
+    return h('div', { className: 'card', style: { borderLeft: '4px solid #38bdf8' } },
+        h('h3', { className: 'font-display', style: { color: '#38bdf8', marginBottom: 8 } }, 'Ops: Silly driftpanel'),
+        error && h('div', { style: { color: '#f87171', fontSize: 12, marginBottom: 8 } }, `Fel: ${error}`),
+        ops && h('div', null,
+            h('div', { style: { color: '#94a3b8', fontSize: 12, marginBottom: 10 } },
+                `Freshness: ${ops.freshness_status || 'unknown'} | Senast: ${ops.latest_updated_at ? new Date(ops.latest_updated_at).toLocaleString('sv-SE') : 'okänt'}`
+            ),
+            h('div', { style: { display: 'grid', gap: 8 } },
+                ...(ops.runs || []).map((run, idx) => {
+                    const topSources = Object.entries(run.source_counts || {})
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([name, count]) => `${name}: ${count}`)
+                        .join(' | ');
+                    return h('div', {
+                        key: run.blob || idx,
+                        style: {
+                            fontSize: 12,
+                            color: '#cbd5e1',
+                            background: 'rgba(15,23,42,.45)',
+                            border: '1px solid rgba(148,163,184,.2)',
+                            borderRadius: 8,
+                            padding: 10
+                        }
+                    },
+                        h('div', { style: { fontWeight: 700, marginBottom: 4 } }, run.updated_at ? new Date(run.updated_at).toLocaleString('sv-SE') : run.blob),
+                        h('div', { style: { color: '#94a3b8' } }, `Artiklar: ${run.articles ?? 'okänt'}`),
+                        topSources && h('div', { style: { color: '#94a3b8', marginTop: 4 } }, topSources),
+                        run.error && h('div', { style: { color: '#f87171', marginTop: 4 } }, `Fel: ${run.error}`)
+                    );
+                })
+            )
+        ),
+        !ops && !error && h('div', { style: { color: '#94a3b8', fontSize: 12 } }, 'Laddar driftdata...')
+    );
+}
+
 // ===== MAIN: SILLY SEASON VIEW =====
 function SillySeasonView() {
     const [data, setData] = useState(typeof SILLY_SEASON_BASELINE !== 'undefined' ? SILLY_SEASON_BASELINE : null);
@@ -440,6 +498,7 @@ function SillySeasonView() {
 
         h(LiveFeed, { news: data.news_feed || [] }),
         h(SourcesOverview, { meta: data._meta }),
+        h(OpsPanel),
         h(InteractiveRink, { positions: data.rink_positions }),
     );
 }
