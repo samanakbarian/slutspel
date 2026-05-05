@@ -23,6 +23,12 @@ const TAG_LABELS = {
 
 const h = React.createElement;
 
+function parseNewsDate(value) {
+    if (!value) return null;
+    const dt = new Date(value);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
 // ===== 1. LIVE NEWS FEED =====
 function LiveFeed({ news }) {
     const [filter, setFilter] = useState('ALL_SILLY');
@@ -405,6 +411,19 @@ function SillySeasonView() {
     const utgaende = data.roster.filter(p => p.status === 'UTGÅENDE').length;
     const lamnar = data.confirmed_departures.length;
     const nyforvarv = data.confirmed_signings.length;
+    const now = new Date();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const twoDaysMs = 48 * 60 * 60 * 1000;
+    const fresh24h = (data.news_feed || []).filter(item => {
+        const d = parseNewsDate(item.date);
+        return d && (now - d) <= oneDayMs;
+    }).length;
+    const refreshBase = lastRefresh
+        || parseNewsDate(data._meta?.lastRefresh)
+        || parseNewsDate((data.news_feed || [])[0]?.date);
+    const ageMs = refreshBase ? (now - refreshBase) : Number.POSITIVE_INFINITY;
+    const isStale48h = ageMs > twoDaysMs;
+    const isAging24h = ageMs > oneDayMs && ageMs <= twoDaysMs;
 
     return h('div', { className: 'silly-season animate-fade' },
         h(BreakingToast, { show: showBreaking, news: breakingNews }),
@@ -420,7 +439,38 @@ function SillySeasonView() {
                 data._meta?.scrapedArticles != null && h('span', {
                     style: { fontSize: 10, color: '#34d399', background: 'rgba(52,211,153,.1)', padding: '2px 8px', borderRadius: 10 }
                 }, `${data._meta.newArticles || 0} nya`),
+                h('span', {
+                    style: {
+                        fontSize: 10,
+                        color: fresh24h > 0 ? '#34d399' : '#94a3b8',
+                        background: fresh24h > 0 ? 'rgba(52,211,153,.12)' : 'rgba(148,163,184,.12)',
+                        padding: '2px 8px',
+                        borderRadius: 10
+                    }
+                }, `${fresh24h} senaste 24h`),
             ),
+            isStale48h && h('div', {
+                style: {
+                    marginTop: 10,
+                    fontSize: 12,
+                    color: '#f87171',
+                    background: 'rgba(248,113,113,.12)',
+                    border: '1px solid rgba(248,113,113,.35)',
+                    borderRadius: 10,
+                    padding: '8px 10px'
+                }
+            }, '⚠️ Flödet är äldre än 48 timmar. Nya silly-nyheter kan saknas just nu.'),
+            !isStale48h && isAging24h && h('div', {
+                style: {
+                    marginTop: 10,
+                    fontSize: 12,
+                    color: '#fbbf24',
+                    background: 'rgba(251,191,36,.10)',
+                    border: '1px solid rgba(251,191,36,.30)',
+                    borderRadius: 10,
+                    padding: '8px 10px'
+                }
+            }, '⏳ Flödet har inte uppdaterats senaste 24 timmarna.'),
         ),
 
         h('div', { className: 'silly-summary' },
