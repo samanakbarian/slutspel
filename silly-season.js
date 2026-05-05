@@ -1,24 +1,24 @@
-// ============================================================
-// SILLY SEASON COMPONENTS — BJÖRKLÖVEN SHL 2026/2027
+﻿// ============================================================
+// SILLY SEASON COMPONENTS â€” BJÃ–RKLÃ–VEN SHL 2026/2027
 // ============================================================
 
 const { useEffect, useCallback, useRef } = React;
 
 // ===== CONSTANTS =====
 const TAG_COLORS = {
-    BEKRÄFTAT_NYFÖRVÄRV: '#34d399',
-    BEKRÄFTAD_FÖRLUST: '#f87171',
-    HETT_RYKTE: '#fb923c',
-    KONTRAKTSFÖRLÄNGNING: '#60a5fa',
-    FORUM_RYKTE: '#a78bfa',
-    ÖVRIGT: '#64748b'
+    'BEKRÃ„FTAT_NYFÃ–RVÃ„RV': '#34d399',
+    'BEKRÃ„FTAD_FÃ–RLUST': '#f87171',
+    'HETT_RYKTE': '#fb923c',
+    'KONTRAKTSFÃ–RLÃ„NGNING': '#60a5fa',
+    'FORUM_RYKTE': '#a78bfa',
+    'Ã–VRIGT': '#64748b'
 };
 const TAG_LABELS = {
-    BEKRÄFTAT_NYFÖRVÄRV: 'BEKRÄFTAT NYFÖRVÄRV',
-    BEKRÄFTAD_FÖRLUST: 'BEKRÄFTAD FÖRLUST',
-    HETT_RYKTE: 'HETT RYKTE',
-    KONTRAKTSFÖRLÄNGNING: 'KONTRAKTSFÖRLÄNGNING',
-    ÖVRIGT: 'ÖVRIGA NYHETER',
+    'BEKRÃ„FTAT_NYFÃ–RVÃ„RV': 'BEKRÃ„FTAT NYFÃ–RVÃ„RV',
+    'BEKRÃ„FTAD_FÃ–RLUST': 'BEKRÃ„FTAD FÃ–RLUST',
+    'HETT_RYKTE': 'HETT RYKTE',
+    'KONTRAKTSFÃ–RLÃ„NGNING': 'KONTRAKTSFÃ–RLÃ„NGNING',
+    'Ã–VRIGT': 'Ã–VRIGA NYHETER',
 };
 
 const h = React.createElement;
@@ -28,13 +28,13 @@ function LiveFeed({ news }) {
     const [filter, setFilter] = useState('ALL_SILLY');
     const noForum = news.filter(n => n.tag !== 'FORUM_RYKTE');
     const filtered = noForum.filter(n => {
-        if (filter === 'ALL_SILLY') return n.tag !== 'ÖVRIGT';
-        if (filter === 'ÖVRIGT') return n.tag === 'ÖVRIGT';
+        if (filter === 'ALL_SILLY') return n.tag !== 'Ã–VRIGT';
+        if (filter === 'Ã–VRIGT') return n.tag === 'Ã–VRIGT';
         return n.tag === filter;
     });
 
     return h('div', { className: 'card' },
-        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, '📰 Realtidsflödet'),
+        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, 'ðŸ“° RealtidsflÃ¶det'),
         // Filter pills
         h('div', { style: { display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' } },
             h('button', {
@@ -75,7 +75,7 @@ function LiveFeed({ news }) {
                         ),
                         // Clickable title if URL exists
                         item.url
-                            ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'feed-title feed-title-link' }, item.title, h('span', { className: 'feed-link-icon' }, ' ↗'))
+                            ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'feed-title feed-title-link' }, item.title, h('span', { className: 'feed-link-icon' }, ' â†—'))
                             : h('div', { className: 'feed-title' }, item.title),
                         h('div', { className: 'feed-body' }, item.body),
                         // AI Impact card
@@ -88,30 +88,30 @@ function LiveFeed({ news }) {
                                 ),
                                 item.impact.impact_points && h('div', null,
                                     h('span', { style: { color: item.impact.type === 'positive' ? '#34d399' : '#f87171', fontWeight: 'bold' } }, item.impact.type === 'positive' ? '+' : '-'),
-                                    h('span', { style: { color: '#e2e8f0', fontSize: 13, marginLeft: 4 } }, item.impact.impact_points + ' Poäng')
+                                    h('span', { style: { color: '#e2e8f0', fontSize: 13, marginLeft: 4 } }, item.impact.impact_points + ' PoÃ¤ng')
                                 )
                             )
                         ),
                         // AI Sentiment bar (if ai_analysis exists from backend)
                         item.ai_analysis && item.ai_analysis.sentiment_pct != null && h('div', { className: 'feed-sentiment' },
                             h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 3 } },
-                                h('span', null, '🤖 AI-Sentiment'),
+                                h('span', null, 'ðŸ¤– AI-Sentiment'),
                                 h('span', { style: { color: item.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171', fontWeight: 700 } }, item.ai_analysis.sentiment_pct + '%')
                             ),
                             h('div', { style: { height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden' } },
                                 h('div', { style: { height: '100%', width: item.ai_analysis.sentiment_pct + '%', background: item.ai_analysis.sentiment_pct > 50 ? 'linear-gradient(90deg,#059669,#34d399)' : 'linear-gradient(90deg,#dc2626,#f87171)', transition: 'width .8s ease' } })
                             ),
                             (item.ai_analysis.pros || item.ai_analysis.cons) && h('div', { style: { marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' } },
-                                ...(item.ai_analysis.pros || []).map((pro, idx) => h('span', { key: 'p'+idx, style: { fontSize: 10, color: '#34d399' } }, '✓ ' + pro)),
-                                ...(item.ai_analysis.cons || []).map((con, idx) => h('span', { key: 'c'+idx, style: { fontSize: 10, color: '#f87171' } }, '✗ ' + con))
+                                ...(item.ai_analysis.pros || []).map((pro, idx) => h('span', { key: 'p'+idx, style: { fontSize: 10, color: '#34d399' } }, 'âœ“ ' + pro)),
+                                ...(item.ai_analysis.cons || []).map((con, idx) => h('span', { key: 'c'+idx, style: { fontSize: 10, color: '#f87171' } }, 'âœ— ' + con))
                             )
                         ),
                         // Source with link
                         h('div', { className: 'feed-source', style: { color: '#94a3b8', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 } },
-                            h('span', null, `Källa: `),
+                            h('span', null, `KÃ¤lla: `),
                             item.url
-                                ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'feed-source-link' }, item.source || 'Okänd')
-                                : h('span', null, item.source || 'Okänd')
+                                ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'feed-source-link' }, item.source || 'OkÃ¤nd')
+                                : h('span', null, item.source || 'OkÃ¤nd')
                         ),
                     )
                 )
@@ -158,13 +158,13 @@ function RumorGauge({ pct, size = 120 }) {
 
 function RumorMeter({ rumors }) {
     return h('div', { className: 'card' },
-        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, '🌡️ Ryktesbarometern'),
+        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, 'ðŸŒ¡ï¸ Ryktesbarometern'),
         h('div', { className: 'rumor-grid' },
             rumors.map((r, i) =>
                 h('div', { key: i, className: 'rumor-card' },
                     h('div', { className: 'rumor-name' }, r.name),
                     h('div', { className: 'rumor-dest' },
-                        r.to ? `→ ${r.to}` : `← ${r.from}`,
+                        r.to ? `â†’ ${r.to}` : `â† ${r.from}`,
                     ),
                     h(RumorGauge, { pct: r.rumor_pct }),
                     
@@ -176,14 +176,14 @@ function RumorMeter({ rumors }) {
                         h('div', { style: { height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden', marginBottom: 8 } },
                             h('div', { style: { height: '100%', width: r.ai_analysis.sentiment_pct + '%', background: r.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171', transition: 'width 1s ease' } })
                         ),
-                        r.ai_analysis.pros && r.ai_analysis.pros.map((pro, idx) => h('div', { key: 'p'+idx, style: { fontSize: 11, color: '#34d399', marginBottom: 2 } }, '✓ ' + pro)),
-                        r.ai_analysis.cons && r.ai_analysis.cons.map((con, idx) => h('div', { key: 'c'+idx, style: { fontSize: 11, color: '#f87171', marginBottom: 2 } }, '✗ ' + con))
+                        r.ai_analysis.pros && r.ai_analysis.pros.map((pro, idx) => h('div', { key: 'p'+idx, style: { fontSize: 11, color: '#34d399', marginBottom: 2 } }, 'âœ“ ' + pro)),
+                        r.ai_analysis.cons && r.ai_analysis.cons.map((con, idx) => h('div', { key: 'c'+idx, style: { fontSize: 11, color: '#f87171', marginBottom: 2 } }, 'âœ— ' + con))
                     ),
                     
                     h('div', { style: { fontSize: 11, color: '#94a3b8', marginTop: 12 } }, r.note),
                     h('div', { className: 'rumor-source', style: { marginTop: 4 } },
                         h('span', { style: { color: r.rumor_pct >= 80 ? '#34d399' : r.rumor_pct >= 50 ? '#d4a843' : '#fb923c' } }, r.credibility),
-                        ' · ', r.source
+                        ' Â· ', r.source
                     ),
                 )
             )
@@ -193,13 +193,13 @@ function RumorMeter({ rumors }) {
 
 // ===== 3. INTERACTIVE RINK =====
 function RinkPlayer({ player, x, y, onClick }) {
-    const status = player.status?.toLowerCase().replace('ö', 'o').replace('ä', 'a') || 'signerad';
+    const status = player.status?.toLowerCase().replace('Ã¶', 'o').replace('Ã¤', 'a') || 'signerad';
     const isVakant = !player.player && player.status === 'VAKANT';
     const circle_cls = isVakant ? 'vakant' :
-        status.includes('nyfö') || status.includes('nyfo') ? 'nyforvärv' :
-            status.includes('förl') || status.includes('forl') ? 'forlangd' :
-                status.includes('lämn') || status.includes('lamn') ? 'lamnar' :
-                    status.includes('utgå') || status.includes('utga') ? 'utgaende' :
+        status.includes('nyfÃ¶') || status.includes('nyfo') ? 'nyforvÃ¤rv' :
+            status.includes('fÃ¶rl') || status.includes('forl') ? 'forlangd' :
+                status.includes('lÃ¤mn') || status.includes('lamn') ? 'lamnar' :
+                    status.includes('utgÃ¥') || status.includes('utga') ? 'utgaende' :
                         'signerad';
 
     return h('div', {
@@ -208,7 +208,7 @@ function RinkPlayer({ player, x, y, onClick }) {
         onClick: isVakant ? onClick : undefined,
     },
         h('div', { className: `rink-player-circle ${circle_cls}` },
-            isVakant ? '?' : (player.number || '★')
+            isVakant ? '?' : (player.number || 'â˜…')
         ),
         h('div', { className: 'rink-player-name' },
             isVakant ? 'VAKANT' : (player.player ? player.player.split(' ').pop() : '')
@@ -216,7 +216,7 @@ function RinkPlayer({ player, x, y, onClick }) {
         !isVakant && h('div', {
             className: 'rink-player-status',
             style: {
-                color: circle_cls === 'nyforvärv' ? '#d4a843' :
+                color: circle_cls === 'nyforvÃ¤rv' ? '#d4a843' :
                     circle_cls === 'forlangd' ? '#60a5fa' :
                         circle_cls === 'lamnar' ? '#f87171' :
                             circle_cls === 'utgaende' ? '#fb923c' : '#34d399'
@@ -251,14 +251,14 @@ function InteractiveRink({ positions }) {
     ];
 
     return h('div', { className: 'card' },
-        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, '🏒 Truppbygget 2026/2027'),
+        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, 'ðŸ’ Truppbygget 2026/2027'),
         h('div', { style: { display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' } },
             ...[
                 { cls: 'signerad', label: 'Signerad' },
-                { cls: 'forlangd', label: 'Förlängd' },
-                { cls: 'nyforvärv', label: 'Nyförvärv' },
-                { cls: 'utgaende', label: 'Utgående' },
-                { cls: 'lamnar', label: 'Lämnar' },
+                { cls: 'forlangd', label: 'FÃ¶rlÃ¤ngd' },
+                { cls: 'nyforvÃ¤rv', label: 'NyfÃ¶rvÃ¤rv' },
+                { cls: 'utgaende', label: 'UtgÃ¥ende' },
+                { cls: 'lamnar', label: 'LÃ¤mnar' },
                 { cls: 'vakant', label: 'Vakant' },
             ].map(l => h('div', { key: l.cls, style: { display: 'flex', alignItems: 'center', gap: 4 } },
                 h('div', { className: `rink-player-circle ${l.cls}`, style: { width: 16, height: 16, fontSize: 8, minWidth: 16 } }),
@@ -287,7 +287,7 @@ function InteractiveRink({ positions }) {
                 // Labels
                 h('text', { x: 350, y: 60, textAnchor: 'middle', fill: '#d4a843', fontSize: 11, fontFamily: 'Outfit', opacity: .5 }, 'FORWARDS'),
                 h('text', { x: 350, y: 255, textAnchor: 'middle', fill: '#3b82f6', fontSize: 11, fontFamily: 'Outfit', opacity: .5 }, 'BACKAR'),
-                h('text', { x: 350, y: 370, textAnchor: 'middle', fill: '#a78bfa', fontSize: 11, fontFamily: 'Outfit', opacity: .5 }, 'MÅLVAKT'),
+                h('text', { x: 350, y: 370, textAnchor: 'middle', fill: '#a78bfa', fontSize: 11, fontFamily: 'Outfit', opacity: .5 }, 'MÃ…LVAKT'),
             ),
 
             // Goalies
@@ -316,11 +316,11 @@ function InteractiveRink({ positions }) {
                 className: 'rink-popup',
                 style: { left: `${popup.x}%`, top: `${popup.y}%`, transform: 'translate(-50%,-100%)' }
             },
-                h('button', { className: 'rink-popup-close', onClick: () => setPopup(null) }, '×'),
+                h('button', { className: 'rink-popup-close', onClick: () => setPopup(null) }, 'Ã—'),
                 h('div', { className: 'rink-popup-title' }, `Vakant ${popup.slot}`),
                 popup.rumors.map((r, i) =>
                     h('div', { key: i, className: 'rink-popup-item' },
-                        h('span', { style: { color: '#e2e8f0' } }, '• '),
+                        h('span', { style: { color: '#e2e8f0' } }, 'â€¢ '),
                         r
                     )
                 )
@@ -329,17 +329,17 @@ function InteractiveRink({ positions }) {
 
         // 4th line separate
         h('div', { style: { marginTop: 16, background: 'rgba(255,255,255,.02)', borderRadius: 12, padding: 16 } },
-            h('div', { style: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: '#64748b', marginBottom: 8 } }, 'Fjärde kedjan'),
+            h('div', { style: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: '#64748b', marginBottom: 8 } }, 'FjÃ¤rde kedjan'),
             h('div', { style: { display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' } },
                 ...[positions.forward_lines[3]?.lw, positions.forward_lines[3]?.ce, positions.forward_lines[3]?.rw].filter(Boolean).map((p, i) => {
                     const isVakant = !p.player && p.status === 'VAKANT';
                     const statusColor = isVakant ? '#f87171' :
                         p.status === 'SIGNERAD' ? '#34d399' :
-                            p.status === 'FÖRLÄNGD' ? '#60a5fa' :
-                                p.status === 'UTGÅENDE' ? '#fb923c' :
-                                    p.status === 'LÄMNAR' ? '#f87171' : '#94a3b8';
+                            p.status === 'FÃ–RLÃ„NGD' ? '#60a5fa' :
+                                p.status === 'UTGÃ…ENDE' ? '#fb923c' :
+                                    p.status === 'LÃ„MNAR' ? '#f87171' : '#94a3b8';
                     return h('div', { key: i, className: 'player-tile', style: { borderColor: `${statusColor}33`, minWidth: 100 } },
-                        h('div', { className: 'player-num', style: { color: statusColor } }, isVakant ? '?' : (p.number || '★')),
+                        h('div', { className: 'player-num', style: { color: statusColor } }, isVakant ? '?' : (p.number || 'â˜…')),
                         h('div', { className: 'player-name' }, isVakant ? 'Vakant' : p.player),
                         h('div', { className: 'player-pos', style: { color: statusColor } }, p.status),
                     );
@@ -349,62 +349,40 @@ function InteractiveRink({ positions }) {
     );
 }
 
-// ===== 4. FAN VOTE =====
-function FanVoteCard({ player }) {
-    const [votes, setVotes] = useState(() => VoteManager.getVotes(player.name));
-    const [hasVoted, setHasVoted] = useState(() => VoteManager.hasVoted(player.name));
-
-    const handleVote = (choice) => {
-        if (hasVoted) return;
-        const updated = VoteManager.vote(player.name, choice);
-        setVotes(updated);
-        setHasVoted(true);
+// ===== 4. LOVENLAGET NU =====
+function SignalPulse({ news }) {
+    const candidates = (news || []).filter(item => item && item.title);
+    const topSignals = candidates.slice(0, 3);
+    const impactLabel = (tag) => {
+        if (tag === 'BEKRÃ„FTAD_FÃ–RLUST') return 'Hog negativ paverkan';
+        if (tag === 'BEKRÃ„FTAT_NYFÃ–RVÃ„RV') return 'Direkt positiv paverkan';
+        if (tag === 'HETT_RYKTE') return 'Kan flytta nalen snabbt';
+        if (tag === 'KONTRAKTSFÃ–RLÃ„NGNING') return 'Stabilitet i truppen';
+        return 'Signal att bevaka';
     };
 
-    const total = votes.extend + votes.release;
-    const extPct = total > 0 ? Math.round(votes.extend / total * 100) : 50;
-    const relPct = 100 - extPct;
-
-    return h('div', { className: 'vote-card' },
-        h('div', { className: 'vote-player-name' }, `#${player.number || '?'} ${player.name}`),
-        h('div', { className: 'vote-player-info' }, `${player.pos} · Kontrakt t.o.m ${player.contractUntil}`),
-        player.note && h('div', { style: { fontSize: 11, color: '#fb923c', marginBottom: 12, fontStyle: 'italic' } }, player.note),
-
-        // Buttons
-        h('div', { className: 'vote-buttons' },
-            h('button', {
-                className: 'vote-btn extend', disabled: hasVoted,
-                onClick: () => handleVote('extend')
-            }, '✅ Förläng'),
-            h('button', {
-                className: 'vote-btn release', disabled: hasVoted,
-                onClick: () => handleVote('release')
-            }, '👋 Tack för allt'),
-        ),
-
-        // Result bar
-        h('div', { className: 'vote-result-bar' },
-            h('div', { className: 'vote-result-fill', style: { width: `${extPct}%`, background: 'linear-gradient(90deg,#059669,#34d399)', color: '#fff' } },
-                extPct > 15 ? `${extPct}%` : ''),
-            h('div', { className: 'vote-result-fill', style: { width: `${relPct}%`, background: 'linear-gradient(90deg,#f87171,#dc2626)', color: '#fff' } },
-                relPct > 15 ? `${relPct}%` : ''),
-        ),
-        h('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: 6 } },
-            h('span', { style: { fontSize: 10, color: '#34d399' } }, `${votes.extend} röster`),
-            h('span', { style: { fontSize: 10, color: '#f87171' } }, `${votes.release} röster`),
-        ),
-        hasVoted && h('div', { style: { fontSize: 10, color: '#64748b', marginTop: 8 } }, '✓ Du har röstat'),
-    );
-}
-
-function FanVote({ players }) {
-    const votePlayers = players.filter(p => p.status === 'UTGÅENDE');
     return h('div', { className: 'card' },
-        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, '🗳️ Förläng eller Släpp'),
-        h('p', { style: { fontSize: 13, color: '#94a3b8', marginBottom: 16 } }, 'Rösta på vilka spelare med utgående kontrakt som borde stanna i Löven!'),
-        h('div', { className: 'vote-grid' },
-            votePlayers.map(p => h(FanVoteCard, { key: p.name, player: p }))
+        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, 'Lovenlaget nu'),
+        h('p', { style: { fontSize: 13, color: '#94a3b8', marginBottom: 14 } }, 'Tre viktigaste signalerna just nu, kort tolkat.'),
+        h('div', { style: { display: 'grid', gap: 10 } },
+            topSignals.map((item, idx) => {
+                const color = TAG_COLORS[item.tag] || '#94a3b8';
+                return h('div', {
+                    key: item.id || idx,
+                    style: {
+                        border: `1px solid ${color}55`,
+                        borderRadius: 10,
+                        padding: 12,
+                        background: 'rgba(2,6,23,.45)'
+                    }
+                },
+                    h('div', { style: { fontSize: 11, color, fontWeight: 700, marginBottom: 6 } }, TAG_LABELS[item.tag] || 'SIGNAL'),
+                    h('div', { style: { color: '#e2e8f0', fontWeight: 700, marginBottom: 6 } }, item.title),
+                    h('div', { style: { fontSize: 12, color: '#94a3b8' } }, `Betyder: ${impactLabel(item.tag)}`)
+                );
+            })
         ),
+        topSignals.length === 0 && h('div', { style: { color: '#64748b', fontSize: 12 } }, 'Inga nya signaler annu.')
     );
 }
 
@@ -413,7 +391,7 @@ function BreakingToast({ show, news }) {
     if (!show || !news) return null;
     return h('div', { className: 'breaking-overlay' },
         h('div', { className: 'breaking-toast' },
-            h('div', { className: 'breaking-label' }, '⚡ BREAKING NEWS ⚡'),
+            h('div', { className: 'breaking-label' }, 'âš¡ BREAKING NEWS âš¡'),
             h('div', { className: 'breaking-title' }, news.title),
             h('div', { className: 'breaking-sub' }, news.body),
         )
@@ -422,23 +400,22 @@ function BreakingToast({ show, news }) {
 
 // ===== 6. SOURCES OVERVIEW =====
 const SILLY_SOURCES = [
-    { name: 'Björklöven.com', url: 'https://www.bjorkloven.com/nyheter', icon: '🟢', desc: 'Auto-scrape aktiv: officiella nyheter' },
-    { name: 'HockeySverige', url: 'https://www.hockeysverige.se', icon: '🏒', desc: 'Auto-scrape aktiv: hockeynyheter & transfers' },
-    { name: 'HockeyNews', url: 'https://www.hockeynews.se', icon: '📰', desc: 'Auto-scrape aktiv: nyheter & rykten' },
-    { name: 'Dagens Hockey', url: 'https://www.dagenshockey.se', icon: '📋', desc: 'Ej auto-scrape: hockeynyheter' },
-    { name: 'Expressen (MrMadhawk)', url: 'https://www.expressen.se/sport/hockey/', icon: '📺', desc: 'Auto-scrape aktiv: Johan Svensson rapporterar' },
-    { name: 'SvenskaFans (Gröngult)', url: 'https://www.svenskafans.com/hockeyzon/bjorkloven/forum', icon: '💬', desc: 'Ej auto-scrape: fans-forum & rykten' },
-    { name: 'VK.se', url: 'https://www.vk.se/sport/hockey', icon: '🗞️', desc: 'Ej auto-scrape: V�sterbottens-Kuriren' },
-    { name: 'SHL.se', url: 'https://www.shl.se/lag/bjorkloven', icon: '🏆', desc: 'Ej auto-scrape: officiell SHL-sida' },
+    { name: 'BjÃ¶rklÃ¶ven.com', url: 'https://www.bjorkloven.com/nyheter', icon: 'ðŸŸ¢', desc: 'Officiella nyheter' },
+    { name: 'HockeySverige', url: 'https://www.hockeysverige.se', icon: 'ðŸ’', desc: 'Hockeynyheter & transfers' },
+    { name: 'HockeyNews', url: 'https://www.hockeynews.se', icon: 'ðŸ“°', desc: 'Nyheter & rykten' },
+    { name: 'Dagens Hockey', url: 'https://www.dagenshockey.se', icon: 'ðŸ“‹', desc: 'Hockeynyheter' },
+    { name: 'Expressen (MrMadhawk)', url: 'https://www.expressen.se/sport/hockey/', icon: 'ðŸ“º', desc: 'Johan Svensson rapporterar' },
+    { name: 'SvenskaFans (GrÃ¶ngult)', url: 'https://www.svenskafans.com/hockeyzon/bjorkloven/forum', icon: 'ðŸ’¬', desc: 'Fansforum & rykten' },
+    { name: 'VK.se', url: 'https://www.vk.se/sport/hockey', icon: 'ðŸ—žï¸', desc: 'Vasterbottens-Kuriren' },
+    { name: 'SHL.se', url: 'https://www.shl.se/lag/bjorkloven', icon: 'ðŸ†', desc: 'Officiell SHL-sida' },
 ];
 
 function SourcesOverview({ meta }) {
     return h('div', { className: 'card' },
-        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, '🔗 Källor & Direktlänkar'),
-        h('p', { style: { fontSize: 12, color: '#94a3b8', marginBottom: 16 } }, 'K�llstatus visas per k�lla: Auto-scrape aktiv eller Ej auto-scrape. Klicka f�r att bes�ka direkt.'),
+        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, 'ðŸ”— KÃ¤llor & DirektlÃ¤nkar'),
+        h('p', { style: { fontSize: 12, color: '#94a3b8', marginBottom: 16 } }, 'Klicka for att ga direkt till respektive kalla.'),
         h('div', { className: 'sources-grid' },
             SILLY_SOURCES.map((src, i) => {
-                const scraperStatus = meta?.sources?.[src.name.toLowerCase().replace(/[^a-zåäö.]/g, '')] ?? null;
                 return h('a', {
                     key: i,
                     href: src.url,
@@ -452,11 +429,7 @@ function SourcesOverview({ meta }) {
                             h('div', { className: 'source-name' }, src.name),
                             h('div', { className: 'source-desc' }, src.desc),
                         ),
-                        h('span', { className: 'source-arrow' }, '→'),
-                    ),
-                    scraperStatus != null && h('div', { className: 'source-status' },
-                        h('span', { style: { color: scraperStatus === 'error' ? '#f87171' : '#34d399' } },
-                            scraperStatus === 'error' ? '● Offline' : `● ${scraperStatus} artiklar`)
+                        h('span', { className: 'source-arrow' }, 'â†’'),
                     ),
                 );
             })
@@ -530,12 +503,12 @@ function SillySeasonView() {
     }, [data]);
 
     if (!data) return h('div', { className: 'card', style: { textAlign: 'center', padding: 48 } },
-        h('div', { style: { fontSize: 32 } }, '⏳'),
+        h('div', { style: { fontSize: 32 } }, 'â³'),
         h('div', { style: { color: '#94a3b8', marginTop: 12 } }, 'Laddar silly season-data...')
     );
 
-    const signerade = data.roster.filter(p => p.status === 'SIGNERAD' || p.status === 'FÖRLÄNGD').length;
-    const utgaende = data.roster.filter(p => p.status === 'UTGÅENDE').length;
+    const signerade = data.roster.filter(p => p.status === 'SIGNERAD' || p.status === 'FÃ–RLÃ„NGD').length;
+    const utgaende = data.roster.filter(p => p.status === 'UTGÃ…ENDE').length;
     const lamnar = data.confirmed_departures.length;
     const nyforvarv = data.confirmed_signings.length;
     const allRumors = [...(data.hot_rumors_out||[]), ...(data.hot_rumors_in||[])].sort((a, b) => b.rumor_pct - a.rumor_pct);
@@ -547,7 +520,7 @@ function SillySeasonView() {
         h('div', { className: 'silly-header' },
             h('div', { className: 'silly-badge' }, 'SILLY SEASON 2026'),
             h('h2', null, data.headline),
-            h('p', null, `Björklöven bygger trupp för ${data.league} ${data.season}`),
+            h('p', null, `BjÃ¶rklÃ¶ven bygger trupp fÃ¶r ${data.league} ${data.season}`),
             h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 10 } },
                 h('span', { style: { fontSize: 11, color: '#64748b' } },
                     lastRefresh ? `Senast uppdaterad: ${lastRefresh.toLocaleTimeString('sv-SE')}` : ''),
@@ -563,21 +536,22 @@ function SillySeasonView() {
                 h('div', { className: 'silly-count-label' }, 'Kontrakterade')),
             h('div', { className: 'silly-count-card' },
                 h('div', { className: 'silly-count', style: { color: '#d4a843' } }, nyforvarv),
-                h('div', { className: 'silly-count-label' }, 'Nyförvärv')),
+                h('div', { className: 'silly-count-label' }, 'NyfÃ¶rvÃ¤rv')),
             h('div', { className: 'silly-count-card' },
                 h('div', { className: 'silly-count', style: { color: '#fb923c' } }, utgaende),
-                h('div', { className: 'silly-count-label' }, 'Utgående')),
+                h('div', { className: 'silly-count-label' }, 'UtgÃ¥ende')),
             h('div', { className: 'silly-count-card' },
                 h('div', { className: 'silly-count', style: { color: '#f87171' } }, lamnar),
-                h('div', { className: 'silly-count-label' }, 'Lämnar')),
+                h('div', { className: 'silly-count-label' }, 'LÃ¤mnar')),
         ),
 
         h(LiveFeed, { news: data.news_feed || [] }),
+        h(SignalPulse, { news: data.news_feed || [] }),
         h(SourcesOverview, { meta: data._meta }),
         h(RumorMeter, { rumors: allRumors }),
         h(InteractiveRink, { positions: data.rink_positions }),
-        h(FanVote, { players: data.roster }),
     );
 }
+
 
 
