@@ -474,12 +474,19 @@ function SillySeasonView() {
     const [breakingNews, setBreakingNews] = useState(null);
     const [lastRefresh, setLastRefresh] = useState(null);
     const breakingShown = useRef(false);
-    const POLL_INTERVAL = 5 * 60 * 1000; // 5 min
+    const POLL_INTERVAL = 60 * 1000; // 1 min
 
     // Fetch data from API
     const fetchData = useCallback(async () => {
         try {
-            const res = await fetch('https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season');
+            const requestUrl = `https://loven-stats-api-324947473206.europe-west1.run.app/api/silly-season?ts=${Date.now()}`;
+            const res = await fetch(requestUrl, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                },
+            });
             if (res.ok) {
                 const json = await res.json();
                 setData(json);
@@ -488,11 +495,23 @@ function SillySeasonView() {
         } catch (e) { console.warn('[SillySeason] fetch error:', e); }
     }, []);
 
-    // Initial fetch + polling
+    // Initial fetch + polling + refresh on focus/visibility
     useEffect(() => {
         fetchData();
         const timer = setInterval(fetchData, POLL_INTERVAL);
-        return () => clearInterval(timer);
+        const onFocus = () => fetchData();
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') fetchData();
+        };
+        window.addEventListener('focus', onFocus);
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('online', onFocus);
+        return () => {
+            clearInterval(timer);
+            window.removeEventListener('focus', onFocus);
+            document.removeEventListener('visibilitychange', onVisibility);
+            window.removeEventListener('online', onFocus);
+        };
     }, [fetchData]);
 
     // Breaking news trigger
