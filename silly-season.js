@@ -422,20 +422,20 @@ function BreakingToast({ show, news }) {
 
 // ===== 6. SOURCES OVERVIEW =====
 const SILLY_SOURCES = [
-    { name: 'Björklöven.com', url: 'https://www.bjorkloven.com/nyheter', icon: '🟢', desc: 'Officiella nyheter' },
-    { name: 'HockeySverige', url: 'https://www.hockeysverige.se', icon: '🏒', desc: 'Hockeynyheter & transfers' },
-    { name: 'HockeyNews', url: 'https://www.hockeynews.se', icon: '📰', desc: 'Nyheter & rykten' },
-    { name: 'Dagens Hockey', url: 'https://www.dagenshockey.se', icon: '📋', desc: 'Hockeynyheter' },
-    { name: 'Expressen (MrMadhawk)', url: 'https://www.expressen.se/sport/hockey/', icon: '📺', desc: 'Johan Svensson rapporterar' },
-    { name: 'SvenskaFans (Gröngult)', url: 'https://www.svenskafans.com/hockeyzon/bjorkloven/forum', icon: '💬', desc: 'Fans-forum & rykten' },
-    { name: 'VK.se', url: 'https://www.vk.se/sport/hockey', icon: '🗞️', desc: 'Västerbottens-Kuriren' },
-    { name: 'SHL.se', url: 'https://www.shl.se/lag/bjorkloven', icon: '🏆', desc: 'Officiell SHL-sida' },
+    { name: 'Björklöven.com', url: 'https://www.bjorkloven.com/nyheter', icon: '🟢', desc: 'Auto-scrape aktiv: officiella nyheter' },
+    { name: 'HockeySverige', url: 'https://www.hockeysverige.se', icon: '🏒', desc: 'Auto-scrape aktiv: hockeynyheter & transfers' },
+    { name: 'HockeyNews', url: 'https://www.hockeynews.se', icon: '📰', desc: 'Auto-scrape aktiv: nyheter & rykten' },
+    { name: 'Dagens Hockey', url: 'https://www.dagenshockey.se', icon: '📋', desc: 'Ej auto-scrape: hockeynyheter' },
+    { name: 'Expressen (MrMadhawk)', url: 'https://www.expressen.se/sport/hockey/', icon: '📺', desc: 'Auto-scrape aktiv: Johan Svensson rapporterar' },
+    { name: 'SvenskaFans (Gröngult)', url: 'https://www.svenskafans.com/hockeyzon/bjorkloven/forum', icon: '💬', desc: 'Ej auto-scrape: fans-forum & rykten' },
+    { name: 'VK.se', url: 'https://www.vk.se/sport/hockey', icon: '🗞️', desc: 'Ej auto-scrape: V�sterbottens-Kuriren' },
+    { name: 'SHL.se', url: 'https://www.shl.se/lag/bjorkloven', icon: '🏆', desc: 'Ej auto-scrape: officiell SHL-sida' },
 ];
 
 function SourcesOverview({ meta }) {
     return h('div', { className: 'card' },
         h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, '🔗 Källor & Direktlänkar'),
-        h('p', { style: { fontSize: 12, color: '#94a3b8', marginBottom: 16 } }, 'Våra nyheter hämtas automatiskt från dessa källor. Klicka för att besöka direkt.'),
+        h('p', { style: { fontSize: 12, color: '#94a3b8', marginBottom: 16 } }, 'K�llstatus visas per k�lla: Auto-scrape aktiv eller Ej auto-scrape. Klicka f�r att bes�ka direkt.'),
         h('div', { className: 'sources-grid' },
             SILLY_SOURCES.map((src, i) => {
                 const scraperStatus = meta?.sources?.[src.name.toLowerCase().replace(/[^a-zåäö.]/g, '')] ?? null;
@@ -579,4 +579,5 @@ function SillySeasonView() {
         h(FanVote, { players: data.roster }),
     );
 }
+
 
