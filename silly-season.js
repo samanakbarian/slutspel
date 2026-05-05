@@ -121,77 +121,7 @@ function LiveFeed({ news }) {
     );
 }
 
-// ===== 2. RUMOR METER =====
-function RumorGauge({ pct, size = 120 }) {
-    const w = size, ht = size * 0.6;
-    const r = w * 0.35;
-    const cx = w / 2, cy = ht - 5;
-    const arcLength = Math.PI * r;
-    const dashOffset = arcLength * (1 - pct / 100);
-    const getColor = (p) => {
-        if (p >= 80) return '#34d399';
-        if (p >= 50) return '#d4a843';
-        if (p >= 30) return '#fb923c';
-        return '#f87171';
-    };
-    return h('div', { className: 'rumor-gauge', style: { width: w, height: ht } },
-        h('svg', { viewBox: `0 0 ${w} ${ht}`, style: { width: w, height: ht } },
-            // Bg arc
-            h('path', {
-                d: `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`,
-                fill: 'none', stroke: '#1e293b', strokeWidth: 10, strokeLinecap: 'round'
-            }),
-            // Fill arc
-            h('path', {
-                d: `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`,
-                fill: 'none', stroke: getColor(pct), strokeWidth: 10, strokeLinecap: 'round',
-                strokeDasharray: arcLength, strokeDashoffset: dashOffset,
-                style: { transition: 'stroke-dashoffset .8s ease, stroke .3s' }
-            }),
-        ),
-        h('div', { style: { position: 'absolute', bottom: 0, width: '100%', textAlign: 'center' } },
-            h('div', { className: 'rumor-pct', style: { color: getColor(pct) } }, pct + '%'),
-            h('div', { className: 'rumor-label' }, 'Sannolikhet')
-        )
-    );
-}
-
-function RumorMeter({ rumors }) {
-    return h('div', { className: 'card' },
-        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 16 } }, '🌡️ Ryktesbarometern'),
-        h('div', { className: 'rumor-grid' },
-            rumors.map((r, i) =>
-                h('div', { key: i, className: 'rumor-card' },
-                    h('div', { className: 'rumor-name' }, r.name),
-                    h('div', { className: 'rumor-dest' },
-                        r.to ? `→ ${r.to}` : `← ${r.from}`,
-                    ),
-                    h(RumorGauge, { pct: r.rumor_pct }),
-                    
-                    r.ai_analysis && h('div', { style: { marginTop: 12, padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', textAlign: 'left' } },
-                        h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 4 } },
-                            h('span', null, 'AI-Sentiment (Fansen)'),
-                            h('span', { style: { color: r.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171' } }, r.ai_analysis.sentiment_pct + '%')
-                        ),
-                        h('div', { style: { height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden', marginBottom: 8 } },
-                            h('div', { style: { height: '100%', width: r.ai_analysis.sentiment_pct + '%', background: r.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171', transition: 'width 1s ease' } })
-                        ),
-                        r.ai_analysis.pros && r.ai_analysis.pros.map((pro, idx) => h('div', { key: 'p'+idx, style: { fontSize: 11, color: '#34d399', marginBottom: 2 } }, '✓ ' + pro)),
-                        r.ai_analysis.cons && r.ai_analysis.cons.map((con, idx) => h('div', { key: 'c'+idx, style: { fontSize: 11, color: '#f87171', marginBottom: 2 } }, '✗ ' + con))
-                    ),
-                    
-                    h('div', { style: { fontSize: 11, color: '#94a3b8', marginTop: 12 } }, r.note),
-                    h('div', { className: 'rumor-source', style: { marginTop: 4 } },
-                        h('span', { style: { color: r.rumor_pct >= 80 ? '#34d399' : r.rumor_pct >= 50 ? '#d4a843' : '#fb923c' } }, r.credibility),
-                        ' · ', r.source
-                    ),
-                )
-            )
-        )
-    );
-}
-
-// ===== 3. INTERACTIVE RINK =====
+// ===== 2. INTERACTIVE RINK =====
 function RinkPlayer({ player, x, y, onClick }) {
     const status = player.status?.toLowerCase().replace('ö', 'o').replace('ä', 'a') || 'signerad';
     const isVakant = !player.player && player.status === 'VAKANT';
@@ -349,44 +279,7 @@ function InteractiveRink({ positions }) {
     );
 }
 
-// ===== 4. LÖVENLÄGET NU =====
-function SignalPulse({ news }) {
-    const topSignals = (news || []).filter(item => item && item.title).slice(0, 3);
-
-    const impactLabel = (tag) => {
-        if (tag === 'BEKRÄFTAD_FÖRLUST') return 'Hög negativ påverkan';
-        if (tag === 'BEKRÄFTAT_NYFÖRVÄRV') return 'Direkt positiv påverkan';
-        if (tag === 'HETT_RYKTE') return 'Kan flytta nålen snabbt';
-        if (tag === 'KONTRAKTSFÖRLÄNGNING') return 'Stabilitet i truppen';
-        return 'Signal att bevaka';
-    };
-
-    return h('div', { className: 'card' },
-        h('h3', { className: 'font-display', style: { color: '#d4a843', marginBottom: 8 } }, '⚡ Lövenläget nu'),
-        h('p', { style: { fontSize: 13, color: '#94a3b8', marginBottom: 14 } }, 'Tre viktigaste signalerna just nu, kort tolkat.'),
-        h('div', { style: { display: 'grid', gap: 10 } },
-            topSignals.map((item, idx) => {
-                const color = TAG_COLORS[item.tag] || '#94a3b8';
-                return h('div', {
-                    key: item.id || idx,
-                    style: {
-                        border: `1px solid ${color}55`,
-                        borderRadius: 10,
-                        padding: 12,
-                        background: 'rgba(2,6,23,.45)'
-                    }
-                },
-                    h('div', { style: { fontSize: 11, color, fontWeight: 700, marginBottom: 6 } }, TAG_LABELS[item.tag] || 'SIGNAL'),
-                    h('div', { style: { color: '#e2e8f0', fontWeight: 700, marginBottom: 6 } }, item.title),
-                    h('div', { style: { fontSize: 12, color: '#94a3b8' } }, `Betyder: ${impactLabel(item.tag)}`)
-                );
-            })
-        ),
-        topSignals.length === 0 && h('div', { style: { color: '#64748b', fontSize: 12 } }, 'Inga nya signaler ännu.')
-    );
-}
-
-// ===== 5. BREAKING NEWS TOAST =====
+// ===== 3. BREAKING NEWS TOAST =====
 function BreakingToast({ show, news }) {
     if (!show || !news) return null;
     return h('div', { className: 'breaking-overlay' },
@@ -398,7 +291,7 @@ function BreakingToast({ show, news }) {
     );
 }
 
-// ===== 6. SOURCES OVERVIEW =====
+// ===== 4. SOURCES OVERVIEW =====
 const SILLY_SOURCES = [
     { name: 'Björklöven.com', url: 'https://www.bjorkloven.com/nyheter', icon: '🟢', desc: 'Officiella nyheter' },
     { name: 'HockeySverige', url: 'https://www.hockeysverige.se', icon: '🏒', desc: 'Hockeynyheter & transfers' },
@@ -512,7 +405,6 @@ function SillySeasonView() {
     const utgaende = data.roster.filter(p => p.status === 'UTGÅENDE').length;
     const lamnar = data.confirmed_departures.length;
     const nyforvarv = data.confirmed_signings.length;
-    const allRumors = [...(data.hot_rumors_out||[]), ...(data.hot_rumors_in||[])].sort((a, b) => b.rumor_pct - a.rumor_pct);
 
     return h('div', { className: 'silly-season animate-fade' },
         h(BreakingToast, { show: showBreaking, news: breakingNews }),
@@ -547,9 +439,7 @@ function SillySeasonView() {
         ),
 
         h(LiveFeed, { news: data.news_feed || [] }),
-        h(SignalPulse, { news: data.news_feed || [] }),
         h(SourcesOverview, { meta: data._meta }),
-        h(RumorMeter, { rumors: allRumors }),
         h(InteractiveRink, { positions: data.rink_positions }),
     );
 }
