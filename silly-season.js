@@ -79,9 +79,9 @@ function LiveFeed({ news }) {
                             ? h('a', { href: item.url, target: '_blank', rel: 'noopener noreferrer', className: 'feed-title feed-title-link' }, item.title, h('span', { className: 'feed-link-icon' }, ' ↗'))
                             : h('div', { className: 'feed-title' }, item.title),
                         h('div', { className: 'feed-body' }, item.body),
-                        // AI Impact card
+                        // Impact card
                         item.impact && h('div', { style: { marginTop: 8, padding: 8, background: 'rgba(0,0,0,0.2)', borderRadius: 6, borderLeft: item.impact.type === 'positive' ? '3px solid #34d399' : '3px solid #f87171' } },
-                            h('div', { style: { fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 } }, 'AI-Estimerad Impact'),
+                            h('div', { style: { fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 } }, 'Estimerad impact'),
                             h('div', { style: { display: 'flex', gap: 12 } },
                                 item.impact.impact_toi && h('div', null,
                                     h('span', { style: { color: item.impact.type === 'positive' ? '#34d399' : '#f87171', fontWeight: 'bold' } }, item.impact.type === 'positive' ? '+' : '-'),
@@ -93,10 +93,10 @@ function LiveFeed({ news }) {
                                 )
                             )
                         ),
-                        // AI Sentiment bar (if ai_analysis exists from backend)
+                        // Sentiment bar (if ai_analysis exists from backend)
                         item.ai_analysis && item.ai_analysis.sentiment_pct != null && h('div', { className: 'feed-sentiment' },
                             h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 3 } },
-                                h('span', null, '🤖 AI-Sentiment'),
+                                h('span', null, '🤖 Sentiment'),
                                 h('span', { style: { color: item.ai_analysis.sentiment_pct > 50 ? '#34d399' : '#f87171', fontWeight: 700 } }, item.ai_analysis.sentiment_pct + '%')
                             ),
                             h('div', { style: { height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden' } },
