@@ -459,10 +459,11 @@ function SillySeasonView() {
         h('div', { style: { color: '#94a3b8', marginTop: 12 } }, 'Laddar silly season-data...')
     );
 
-    const signerade = data.roster.filter(p => p.status === 'SIGNERAD' || p.status === 'FÖRLÄNGD').length;
-    const utgaende = data.roster.filter(p => p.status === 'UTGÅENDE').length;
-    const lamnar = data.confirmed_departures.length;
-    const nyforvarv = data.confirmed_signings.length;
+    const summary = data?._meta?.summary || {};
+    const signerade = summary.contracted ?? data.roster.filter(p => p.status === 'SIGNERAD' || p.status === 'FÖRLÄNGD').length;
+    const utgaende = summary.expiring ?? data.roster.filter(p => p.status === 'UTGÅENDE').length;
+    const lamnar = summary.departures ?? data.confirmed_departures.length;
+    const nyforvarv = summary.signings ?? data.confirmed_signings.length;
 
     return h('div', { className: 'silly-season animate-fade' },
         h(BreakingToast, { show: showBreaking, news: breakingNews }),
