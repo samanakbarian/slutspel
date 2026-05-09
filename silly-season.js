@@ -479,7 +479,6 @@ function SillySeasonView() {
         h(LiveFeed, { news: data.news_feed || [] }),
         h(SourcesOverview, { meta: data._meta }),
         h(OpsPanel),
-        h(InteractiveRink, { positions: data.rink_positions }),
     );
 }
 
