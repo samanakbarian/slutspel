@@ -459,12 +459,6 @@ function SillySeasonView() {
         h('div', { style: { color: '#94a3b8', marginTop: 12 } }, 'Laddar silly season-data...')
     );
 
-    const summary = data?._meta?.summary || {};
-    const signerade = summary.contracted ?? data.roster.filter(p => p.status === 'SIGNERAD' || p.status === 'FÖRLÄNGD').length;
-    const utgaende = summary.expiring ?? data.roster.filter(p => p.status === 'UTGÅENDE').length;
-    const lamnar = summary.departures ?? data.confirmed_departures.length;
-    const nyforvarv = summary.signings ?? data.confirmed_signings.length;
-
     return h('div', { className: 'silly-season animate-fade' },
         h(BreakingToast, { show: showBreaking, news: breakingNews }),
 
@@ -480,21 +474,6 @@ function SillySeasonView() {
                     style: { fontSize: 10, color: '#34d399', background: 'rgba(52,211,153,.1)', padding: '2px 8px', borderRadius: 10 }
                 }, `${data._meta.newArticles || 0} nya`),
             ),
-        ),
-
-        h('div', { className: 'silly-summary' },
-            h('div', { className: 'silly-count-card' },
-                h('div', { className: 'silly-count', style: { color: '#34d399' } }, signerade),
-                h('div', { className: 'silly-count-label' }, 'Kontrakterade')),
-            h('div', { className: 'silly-count-card' },
-                h('div', { className: 'silly-count', style: { color: '#d4a843' } }, nyforvarv),
-                h('div', { className: 'silly-count-label' }, 'Nyförvärv')),
-            h('div', { className: 'silly-count-card' },
-                h('div', { className: 'silly-count', style: { color: '#fb923c' } }, utgaende),
-                h('div', { className: 'silly-count-label' }, 'Utgående')),
-            h('div', { className: 'silly-count-card' },
-                h('div', { className: 'silly-count', style: { color: '#f87171' } }, lamnar),
-                h('div', { className: 'silly-count-label' }, 'Lämnar')),
         ),
 
         h(LiveFeed, { news: data.news_feed || [] }),
