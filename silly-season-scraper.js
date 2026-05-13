@@ -319,20 +319,8 @@ async function fetchAndMerge() {
 
         console.log(`[Scraper] Totalt ${allRaw.length} raw items från Google News RSS`);
 
-        // Load baseline data
-        let baseline;
-        try {
-            delete require.cache[require.resolve('./silly-season-data')];
-            const mod = require('./silly-season-data');
-            baseline = mod.SILLY_SEASON_BASELINE;
-        } catch (e) {
-            console.error('[Scraper] Kunde inte ladda baseline:', e.message);
-            baseline = cachedData || {};
-        }
-
-        // Deduplicate raw articles (between Google News queries + against baseline)
-        const baselineTitles = (baseline.news_feed || []).map(n => n.title);
-        const deduped = deduplicateArticles(allRaw, baselineTitles);
+        // Deduplicate raw articles (between the two Google News queries)
+        const deduped = deduplicateArticles(allRaw, []);
         console.log(`[Scraper] ${deduped.length} unika artiklar efter dedup (borttog ${allRaw.length - deduped.length} dupes)`);
 
         // Classify
@@ -353,11 +341,8 @@ async function fetchAndMerge() {
             scraped: true,
         }));
 
-        // Merge: scraped first, then baseline, sorted by date
-        const mergedNewsFeed = [
-            ...scrapedNewsItems,
-            ...(baseline.news_feed || []),
-        ].sort((a, b) => {
+        // Sort by date descending
+        scrapedNewsItems.sort((a, b) => {
             const dateComp = (b.date || '').localeCompare(a.date || '');
             if (dateComp !== 0) return dateComp;
             return (b.time || '').localeCompare(a.time || '');
@@ -367,10 +352,28 @@ async function fetchAndMerge() {
         const tagCounts = {};
         classified.forEach(a => { tagCounts[a.tag] = (tagCounts[a.tag] || 0) + 1; });
 
-        // Build merged data
+        // Load baseline for structural data only (roster, rink_positions — NOT news_feed)
+        let baseline;
+        try {
+            delete require.cache[require.resolve('./silly-season-data')];
+            const mod = require('./silly-season-data');
+            baseline = mod.SILLY_SEASON_BASELINE;
+        } catch (e) {
+            console.error('[Scraper] Kunde inte ladda baseline:', e.message);
+            baseline = {};
+        }
+
+        // Build data: structural from baseline + only scraped news
         cachedData = {
-            ...baseline,
-            news_feed: mergedNewsFeed,
+            headline: baseline.headline || 'Silly Season',
+            subline: baseline.subline || '',
+            season: baseline.season || '2026/2027',
+            league: baseline.league || 'SHL',
+            roster: baseline.roster || [],
+            rink_positions: baseline.rink_positions || {},
+            hot_rumors_in: baseline.hot_rumors_in || [],
+            hot_rumors_out: baseline.hot_rumors_out || [],
+            news_feed: scrapedNewsItems,
             _meta: {
                 lastRefresh: new Date().toISOString(),
                 scrapedArticles: allRaw.length,
@@ -386,7 +389,7 @@ async function fetchAndMerge() {
         lastFetchTime = new Date();
         saveCacheToFile(cachedData);
 
-        console.log(`[Scraper] ✅ v2 klar! ${mergedNewsFeed.length} nyheter totalt, ${classified.length} nya. Tags: ${JSON.stringify(tagCounts)}`);
+        console.log(`[Scraper] ✅ v2 klar! ${scrapedNewsItems.length} nyheter (enbart skrapade). Tags: ${JSON.stringify(tagCounts)}`);
 
     } catch (err) {
         console.error('[Scraper] Fel vid hämtning:', err.message);

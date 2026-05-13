@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // SILLY SEASON COMPONENTS — BJÖRKLÖVEN SHL 2026/2027
 // ============================================================
 
@@ -394,7 +394,8 @@ function OpsPanel() {
 
 // ===== MAIN: SILLY SEASON VIEW =====
 function SillySeasonView() {
-    const [data, setData] = useState(typeof SILLY_SEASON_BASELINE !== 'undefined' ? SILLY_SEASON_BASELINE : null);
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [showBreaking, setShowBreaking] = useState(false);
     const [breakingNews, setBreakingNews] = useState(null);
     const [lastRefresh, setLastRefresh] = useState(null);
@@ -414,10 +415,14 @@ function SillySeasonView() {
             });
             if (res.ok) {
                 const json = await res.json();
-                setData(json);
-                setLastRefresh(json._meta?.lastRefresh ? new Date(json._meta.lastRefresh) : new Date());
+                // Only use data that has scraped articles (not pure baseline)
+                if (json.news_feed && json.news_feed.length > 0) {
+                    setData(json);
+                    setLastRefresh(json._meta?.lastRefresh ? new Date(json._meta.lastRefresh) : new Date());
+                }
             }
         } catch (e) { console.warn('[SillySeason] fetch error:', e); }
+        finally { setLoading(false); }
     }, []);
 
     // Initial fetch + polling + refresh on focus/visibility
