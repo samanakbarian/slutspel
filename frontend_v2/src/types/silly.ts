@@ -19,45 +19,35 @@ export interface Player {
   age?: number;
 }
 
-export interface AIAnalysis {
-  sentiment_pct: number;
-  pros: string[];
-  cons: string[];
-}
-
-export interface Impact {
-  type: 'positive' | 'negative' | null;
-  impact_toi?: string | null;
-  impact_points?: string | null;
-}
-
 export interface NewsArticle {
+  id?: string;
   title: string;
   body?: string;
   source: string;
-  url: string;
+  url?: string;
   date: string;
+  time?: string;
   tag: NewsTag;
-  ai_analysis?: AIAnalysis | null;
-  impact?: Impact | null;
+  priority?: string;
+  scraped?: boolean;
 }
 
+// Matches the v2 scraper API response format
 export interface SillySeasonData {
   season: string;
   league: string;
   headline: string;
-  last_manual_update: string;
-  confirmed_extensions: Player[];
-  confirmed_signings: Player[];
-  confirmed_departures: Player[];
-  expiring_contracts: Player[];
-  hot_rumors_in: Player[];
-  hot_rumors_out: Player[];
+  subline?: string;
   roster: Player[];
+  rink_positions?: Record<string, unknown>;
+  hot_rumors_in?: Player[];
+  hot_rumors_out?: Player[];
   news_feed: NewsArticle[];
   _meta?: {
+    lastRefresh: string;
     scrapedArticles: number;
     newArticles: number;
-    lastScrape: string;
+    tagCounts?: Record<string, number>;
+    sources?: Record<string, number | string>;
   };
 }

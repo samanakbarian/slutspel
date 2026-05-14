@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { Activity, AlertTriangle, BarChart3, Newspaper, ShieldAlert, Users } from 'lucide-react';
 import { SillySeason } from './pages/SillySeason';
 import { Roster } from './pages/Roster';
+import { EkonomiPage } from './pages/Ekonomi';
 import { useLageStore } from './store/useLageStore';
 import type { LageSnapshot } from './types/lage';
 
@@ -13,6 +14,15 @@ type LagePageProps = {
 };
 
 function LagePage({ isLoading, error, data }: LagePageProps) {
+  const [results, setResults] = useState<any>(null);
+  const [standings, setStandings] = useState<any>(null);
+
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
+    fetch(`${API_URL}/api/v1/sportradar/results`).then(r => r.json()).then(setResults).catch(() => {});
+    fetch(`${API_URL}/api/v1/sportradar/standings`).then(r => r.json()).then(setStandings).catch(() => {});
+  }, []);
+
   if (isLoading) {
     return (
       <div className="page animate-fade-up">
@@ -35,6 +45,8 @@ function LagePage({ isLoading, error, data }: LagePageProps) {
       </div>
     );
   }
+
+  const last5 = results?.results?.slice(0, 5) || [];
 
   return (
     <div className="page page-laget animate-fade-up">
@@ -65,6 +77,51 @@ function LagePage({ isLoading, error, data }: LagePageProps) {
         <p className="card-text">{data.latest_impact.meaning}</p>
       </section>
 
+      {/* Senaste matcher från Sportradar */}
+      {last5.length > 0 && (
+        <section className="signal-card" style={{ padding: '0.8rem' }}>
+          <p className="card-kicker">🏒 Senaste matcherna</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.4rem' }}>
+            {last5.map((m: any, i: number) => {
+              const isWin = m.result === 'W';
+              return (
+                <div key={i} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '28px 1fr auto',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                  padding: '0.35rem 0.5rem',
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '6px',
+                  borderLeft: `3px solid ${isWin ? 'var(--impact-positive)' : 'var(--impact-negative)'}`,
+                }}>
+                  <span style={{
+                    fontSize: '0.7rem',
+                    fontWeight: 900,
+                    color: isWin ? 'var(--impact-positive)' : 'var(--impact-negative)',
+                    textAlign: 'center',
+                  }}>{m.result}</span>
+                  <div style={{ fontSize: '0.78rem' }}>
+                    <span style={{ fontWeight: m.isHome ? 700 : 400 }}>{m.home}</span>
+                    <span style={{ color: 'var(--text-muted)', margin: '0 0.3rem' }}>vs</span>
+                    <span style={{ fontWeight: !m.isHome ? 700 : 400 }}>{m.away}</span>
+                  </div>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
+                    {m.homeScore}–{m.awayScore}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {results?.form && (
+            <div style={{ marginTop: '0.4rem', fontSize: '0.68rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+              Form (senaste 10): <strong style={{ color: 'var(--brand-gold)' }}>{results.form}</strong>
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="signal-grid">
         <div className="signal-card signal-card-ok">
           <p className="card-kicker">Truppbygget</p>
@@ -80,21 +137,53 @@ function LagePage({ isLoading, error, data }: LagePageProps) {
           <p className="compact-line">Fråga: {data.economy_status.next_question}</p>
         </div>
       </section>
+
+      {/* Tabell från Sportradar */}
+      {standings?.table && (
+        <section className="signal-card" style={{ padding: '0.8rem' }}>
+          <p className="card-kicker">🏆 {standings.season} — Slutställning</p>
+          <div style={{ overflowX: 'auto', marginTop: '0.4rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+              <thead>
+                <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--glass-border)' }}>
+                  <th style={{ textAlign: 'left', padding: '0.3rem 0.4rem' }}>#</th>
+                  <th style={{ textAlign: 'left', padding: '0.3rem 0.4rem' }}>Lag</th>
+                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>SM</th>
+                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>V</th>
+                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>F</th>
+                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>P</th>
+                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>+/-</th>
+                </tr>
+              </thead>
+              <tbody>
+                {standings.table.slice(0, 10).map((row: any) => (
+                  <tr key={row.teamId} style={{
+                    background: row.isBjorkloven ? 'rgba(37,163,90,0.1)' : 'transparent',
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    fontWeight: row.isBjorkloven ? 800 : 400,
+                    color: row.isBjorkloven ? 'var(--brand-gold)' : 'var(--text-secondary)',
+                  }}>
+                    <td style={{ padding: '0.3rem 0.4rem' }}>{row.rank}</td>
+                    <td style={{ padding: '0.3rem 0.4rem' }}>{row.team}</td>
+                    <td style={{ textAlign: 'center', padding: '0.3rem' }}>{row.gp}</td>
+                    <td style={{ textAlign: 'center', padding: '0.3rem' }}>{row.w}</td>
+                    <td style={{ textAlign: 'center', padding: '0.3rem' }}>{row.l}</td>
+                    <td style={{ textAlign: 'center', padding: '0.3rem', fontWeight: 700, color: row.isBjorkloven ? 'var(--brand-gold)' : 'var(--text-primary)' }}>{row.pts}</td>
+                    <td style={{ textAlign: 'center', padding: '0.3rem', color: row.diff > 0 ? 'var(--impact-positive)' : 'var(--impact-negative)' }}>
+                      {row.diff > 0 ? '+' : ''}{row.diff}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
-function EkonomiPage() {
-  return (
-    <div className="page animate-fade-up">
-      <section className="signal-card signal-card-warning">
-        <p className="card-kicker">Ekonomi</p>
-        <h2 className="card-title">Ekonomikollen flyttas hit i nästa block</h2>
-        <p className="card-text">Fokus nu är ny app shell, signalhierarki och backend-koppling.</p>
-      </section>
-    </div>
-  );
-}
+// EkonomiPage imported from ./pages/Ekonomi
 
 function MerPage() {
   return (
@@ -111,7 +200,7 @@ function MerPage() {
 const navItems = [
   { to: '/', label: 'Läget', icon: Activity },
   { to: '/trupp', label: 'Trupp', icon: Users },
-  { to: '/rykten', label: 'Rykten', icon: Newspaper },
+  { to: '/silly', label: 'Silly', icon: Newspaper },
   { to: '/ekonomi', label: 'Ekonomi', icon: BarChart3 },
   { to: '/mer', label: 'Mer', icon: ShieldAlert },
 ] as const;
@@ -154,7 +243,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LagePage isLoading={isLoading} error={error} data={data} />} />
             <Route path="/trupp" element={<Roster />} />
-            <Route path="/rykten" element={<SillySeason />} />
+            <Route path="/silly" element={<SillySeason />} />
             <Route path="/ekonomi" element={<EkonomiPage />} />
             <Route path="/mer" element={<MerPage />} />
           </Routes>

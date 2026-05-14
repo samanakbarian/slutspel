@@ -10,6 +10,8 @@ interface SillyStore {
     fetchData: () => Promise<void>;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
+
 export const useSillyStore = create<SillyStore>((set) => ({
     data: null,
     isLoading: false,
@@ -19,20 +21,22 @@ export const useSillyStore = create<SillyStore>((set) => ({
     fetchData: async () => {
         set({ isLoading: true, error: null });
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            const response = await fetch(`${apiUrl}/api/silly-season`);
-            
+            const response = await fetch(`${API_URL}/api/silly-season?ts=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache' },
+            });
+
             if (!response.ok) {
                 throw new Error(`API svarade med status ${response.status}`);
             }
-            
+
             const data: SillySeasonData = await response.json();
             set({ data, isLoading: false });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Kunde inte hämta Silly Season data:', error);
-            set({ 
-                error: 'Kunde inte hämta senaste datan. Vänligen försök igen senare.', 
-                isLoading: false 
+            set({
+                error: 'Kunde inte hämta senaste datan just nu.',
+                isLoading: false
             });
         }
     }

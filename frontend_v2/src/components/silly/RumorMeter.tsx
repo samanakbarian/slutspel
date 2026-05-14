@@ -6,7 +6,7 @@ export function RumorMeter() {
 
     if (!data) return null;
 
-    const allRumors = [...data.hot_rumors_in, ...data.hot_rumors_out].sort((a, b) => (b.rumor_pct || 0) - (a.rumor_pct || 0));
+    const allRumors = [...(data.hot_rumors_in || []), ...(data.hot_rumors_out || [])].sort((a, b) => (b.rumor_pct || 0) - (a.rumor_pct || 0));
 
     if (allRumors.length === 0) return null;
 
@@ -19,7 +19,7 @@ export function RumorMeter() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {allRumors.map((player: Player, idx: number) => {
-                    const isOut = !!player.to || data.hot_rumors_out.some(p => p.name === player.name);
+                    const isOut = !!player.to || (data.hot_rumors_out || []).some(p => p.name === player.name);
                     const pct = player.rumor_pct || 0;
                     
                     return (

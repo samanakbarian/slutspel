@@ -8,6 +8,8 @@ interface LageStore {
   fetchLage: () => Promise<void>;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
+
 export const useLageStore = create<LageStore>((set) => ({
   data: null,
   isLoading: false,
@@ -15,8 +17,7 @@ export const useLageStore = create<LageStore>((set) => ({
   fetchLage: async () => {
     set({ isLoading: true, error: null });
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/v1/lovenlaget`);
+      const response = await fetch(`${API_URL}/api/v1/lovenlaget`);
       if (!response.ok) {
         throw new Error(`API svarade med status ${response.status}`);
       }

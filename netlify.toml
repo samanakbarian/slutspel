@@ -1,5 +1,12 @@
 [build]
-publish = "."
+  base = "frontend_v2"
+  command = "npm run build"
+  publish = "dist"
 
 [functions]
-directory = "netlify/functions"
+  directory = "../netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

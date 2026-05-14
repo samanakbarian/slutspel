@@ -1,93 +1,101 @@
 import { useEffect } from 'react';
 import { useSillyStore } from '../store/useSillyStore';
 import { LiveFeed } from '../components/silly/LiveFeed';
-import { RumorMeter } from '../components/silly/RumorMeter';
-import { SquadRink } from '../components/silly/SquadRink';
 
 export function SillySeason() {
     const { data, isLoading, error, fetchData } = useSillyStore();
 
     useEffect(() => {
-        // Fetch data from GCP backend on mount
         fetchData();
     }, [fetchData]);
 
     if (isLoading) {
         return (
-            <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                <h2>Laddar Silly Season...</h2>
+            <div className="page animate-fade-up">
+                <section className="signal-card">
+                    <p className="card-kicker">Rykten & Nyheter</p>
+                    <h2 className="card-title">Laddar nyhetsflödet...</h2>
+                </section>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--impact-negative)' }}>
-                <h2>Oops! Ett fel uppstod.</h2>
-                <p>{error}</p>
-                <button 
-                    onClick={() => fetchData()}
-                    style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--brand-green)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                    Försök igen
-                </button>
+            <div className="page animate-fade-up">
+                <section className="signal-card signal-card-critical">
+                    <p className="card-kicker">Rykten & Nyheter</p>
+                    <h2 className="card-title">Kunde inte hämta data</h2>
+                    <p className="card-text">{error}</p>
+                    <button
+                        onClick={() => fetchData()}
+                        style={{
+                            marginTop: '0.75rem',
+                            padding: '0.4rem 1rem',
+                            background: 'var(--brand-green)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Försök igen
+                    </button>
+                </section>
             </div>
         );
     }
 
     if (!data) return null;
 
-    const nyforvarv = data.confirmed_signings.length;
-    const forlangda = data.confirmed_extensions.length;
-    const lamnar = data.confirmed_departures.length;
-    const totalTrupp = data.roster.length;
+    const totalArticles = data.news_feed?.length || 0;
+    const tagCounts = data._meta?.tagCounts || {};
 
     return (
-        <div className="animate-fade-up" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '2rem' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--brand-green)', letterSpacing: '0.1em' }}>
-                    SILLY SEASON {data.season}
-                </span>
-                <h1 style={{ fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-                    {data.headline}
-                </h1>
-                <p style={{ color: 'var(--text-secondary)' }}>
-                    Björklöven bygger trupp för {data.league}. Senast uppdaterad: {new Date(data.last_manual_update).toLocaleDateString('sv-SE')}
+        <div className="page animate-fade-up">
+            {/* Header */}
+            <section className="signal-card signal-card-primary">
+                <p className="card-kicker">Silly Season {data.season}</p>
+                <h2 className="card-title">{data.headline || 'Nyhetsflödet'}</h2>
+                <p className="card-text">
+                    {totalArticles} nyheter skrapade
+                    {data._meta?.lastRefresh && (
+                        <> • Senast {new Date(data._meta.lastRefresh).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</>
+                    )}
                 </p>
-            </div>
+            </section>
 
-            {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--brand-gold)' }}>{totalTrupp}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Kontrakterade</div>
-                </div>
-                <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--brand-green)' }}>{nyforvarv}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Nyförvärv</div>
-                </div>
-                <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--impact-neutral)' }}>{forlangda}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Förlängda</div>
-                </div>
-                <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--impact-negative)' }}>{lamnar}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Lämnar</div>
-                </div>
-            </div>
+            {/* Tag Stats */}
+            {Object.keys(tagCounts).length > 0 && (
+                <section className="signal-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
+                    {Object.entries(tagCounts).map(([tag, count]) => {
+                        const colors: Record<string, string> = {
+                            'BEKRÄFTAT_NYFÖRVÄRV': 'var(--impact-positive)',
+                            'KONTRAKTSFÖRLÄNGNING': 'var(--impact-neutral)',
+                            'BEKRÄFTAD_FÖRLUST': 'var(--impact-negative)',
+                            'HETT_RYKTE': 'var(--brand-gold)',
+                        };
+                        const labels: Record<string, string> = {
+                            'BEKRÄFTAT_NYFÖRVÄRV': 'Nyförvärv',
+                            'KONTRAKTSFÖRLÄNGNING': 'Förlängningar',
+                            'BEKRÄFTAD_FÖRLUST': 'Förluster',
+                            'HETT_RYKTE': 'Rykten',
+                        };
+                        return (
+                            <div key={tag} className="signal-card" style={{ borderLeftColor: colors[tag] || 'var(--text-muted)', textAlign: 'center', padding: '0.7rem' }}>
+                                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: colors[tag] || 'var(--text-muted)' }}>{count}</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    {labels[tag] || tag}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </section>
+            )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                {/* Vänster kolumn: Flödet */}
-                <div>
-                    <LiveFeed />
-                </div>
-                
-                {/* Höger kolumn: Barometer & Trupp */}
-                <div>
-                    <RumorMeter />
-                    <SquadRink />
-                </div>
-            </div>
+            {/* Live Feed */}
+            <LiveFeed />
         </div>
     );
 }
