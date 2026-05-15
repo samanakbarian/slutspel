@@ -58,6 +58,30 @@ function LagePage({ isLoading, data }: LagePageProps) {
       {/* 2. SUPPORTERSNACKET */}
       {cs?.supporter_snack && <Supportersnacket snack={cs.supporter_snack} />}
 
+      {/* 2.5 SENASTE 24H */}
+      {data?.meta?.last_24h && (
+        <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
+          <p className="card-kicker">Senaste 24h</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem', marginTop: '0.3rem' }}>
+            <div>
+              <p className="compact-line">+{data.meta.last_24h.new_signals}</p>
+              <p style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>nya signaler</p>
+            </div>
+            <div>
+              <p className="compact-line">{data.meta.last_24h.articles_24h}</p>
+              <p style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>artiklar</p>
+            </div>
+            <div>
+              <p className="compact-line">{data.meta.last_24h.critical_open}</p>
+              <p style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>kritiska luckor</p>
+            </div>
+          </div>
+          <p style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+            Nyförvärv {data.meta.last_24h.signings} · Lämnar {data.meta.last_24h.departures} · Förlängningar {data.meta.last_24h.extensions} · Rykten {data.meta.last_24h.rumors}
+          </p>
+        </section>
+      )}
+
       {/* 3. ATT LÖSA HÄRNÄST */}
       {data && (
         <section className="signal-card signal-card-critical">

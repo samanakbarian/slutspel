@@ -31,5 +31,14 @@ export interface LageSnapshot {
     new_signals: number;
     scraped_articles: number;
     expiring_contracts: number;
+    last_24h?: {
+      new_signals: number;
+      articles_24h: number;
+      signings: number;
+      departures: number;
+      extensions: number;
+      rumors: number;
+      critical_open: number;
+    };
   };
 }
