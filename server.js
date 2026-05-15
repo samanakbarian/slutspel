@@ -5,6 +5,8 @@ const { loadAllMatches, loadMatch, removeMatch, clearAll } = require('./db');
 const { startWatcher } = require('./etl');
 const analytics = require('./analytics');
 const sillyScraper = require('./silly-season-scraper');
+const { generateCurrentState } = require('./services/signalEngine');
+const { getCurrentStateSnapshot, invalidateCache: invalidateAiCache } = require('./services/aiRedactor');
 
 const app = express();
 const PORT = process.env.PORT || 3456;
@@ -527,6 +529,73 @@ app.get('/api/v1/lovenlaget', async (req, res) => {
         res.json(snapshot);
     } catch (e) {
         console.error('[API] Lövenläget error:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ===== CURRENT STATE ENGINE =====
+
+app.get('/api/v1/current-state', async (req, res) => {
+    try {
+        // Load baseline data
+        let baseline;
+        try {
+            delete require.cache[require.resolve('./silly-season-data')];
+            baseline = require('./silly-season-data').SILLY_SEASON_BASELINE;
+        } catch (e) {
+            baseline = {};
+        }
+
+        // Get scraped news
+        const sillyData = await sillyScraper.getSillySeasonData();
+        const newsFeed = [
+            ...(baseline.news_feed || []),
+            ...(sillyData?.news_feed || []),
+        ];
+
+        // Economy data (load from static files)
+        let economyData = null;
+        try {
+            const rawPath = path.join(__dirname, 'data', 'financials', 'bjorkloven_financials_raw.json');
+            const rawJson = require('fs').readFileSync(rawPath, 'utf8');
+            const rawData = JSON.parse(rawJson);
+            const latestYear = rawData.years
+                ?.filter(y => y.entity === 'if_bjorkloven_koncern')
+                ?.sort((a, b) => b.financial_year.localeCompare(a.financial_year))[0];
+            const shlMin = rawData.shl_requirements?.min_equity_shl || 10000000;
+            economyData = {
+                equity: latestYear?.equity || 0,
+                cash: latestYear?.cash || 0,
+                shlGap: Math.max(0, shlMin - (latestYear?.equity || 0)),
+            };
+        } catch (e) {
+            // No economy data available
+        }
+
+        // Run Signal Engine
+        const state = generateCurrentState(baseline, newsFeed, economyData);
+
+        // Generate AI-powered snapshot (cached 1h)
+        const snapshot = await getCurrentStateSnapshot(state.insights, state.rosterSummary);
+
+        // Enrich with raw data for frontend flexibility
+        snapshot.roster_summary = state.rosterSummary;
+        snapshot.vacant_positions = state.vacantPositions;
+        snapshot.shl_season = state.shlSeason;
+
+        res.json(snapshot);
+    } catch (e) {
+        console.error('[API] Current State error:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Force-refresh current state (bypass cache)
+app.post('/api/v1/current-state/refresh', async (req, res) => {
+    try {
+        invalidateAiCache();
+        res.json({ ok: true, message: 'Cache invalidated. Next GET will regenerate.' });
+    } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });

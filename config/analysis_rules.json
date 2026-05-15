@@ -1,0 +1,184 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-05-15",
+  
+  "shl_season": {
+    "premiere_date": "2026-09-14",
+    "team": "IF Björklöven",
+    "league": "SHL",
+    "season_label": "SHL 26/27"
+  },
+
+  "roster_rules": [
+    {
+      "rule_id": "goalkeeper_minimum",
+      "domain": "roster",
+      "entity": "goalkeeper",
+      "positions": ["GK"],
+      "metric": "confirmed_players",
+      "operator": "<",
+      "threshold": 2,
+      "severity": "critical",
+      "severity_score": 0.95,
+      "label_sv": "Målvaktssidan",
+      "enabled": true
+    },
+    {
+      "rule_id": "defense_depth",
+      "domain": "roster",
+      "entity": "defenseman",
+      "positions": ["LD", "RD"],
+      "metric": "confirmed_players",
+      "operator": "<",
+      "threshold": 6,
+      "severity": "critical",
+      "severity_score": 0.82,
+      "label_sv": "Backsidan",
+      "enabled": true
+    },
+    {
+      "rule_id": "defense_strong",
+      "domain": "roster",
+      "entity": "defenseman",
+      "positions": ["LD", "RD"],
+      "metric": "confirmed_players",
+      "operator": "<",
+      "threshold": 8,
+      "severity": "warning",
+      "severity_score": 0.55,
+      "label_sv": "Backsidan",
+      "enabled": true
+    },
+    {
+      "rule_id": "center_depth",
+      "domain": "roster",
+      "entity": "center",
+      "positions": ["CE"],
+      "metric": "confirmed_players",
+      "operator": "<",
+      "threshold": 4,
+      "severity": "warning",
+      "severity_score": 0.60,
+      "label_sv": "Centerdjup",
+      "enabled": true
+    },
+    {
+      "rule_id": "forward_minimum",
+      "domain": "roster",
+      "entity": "forward",
+      "positions": ["CE", "LW", "RW"],
+      "metric": "confirmed_players",
+      "operator": "<",
+      "threshold": 12,
+      "severity": "warning",
+      "severity_score": 0.65,
+      "label_sv": "Forwardssidan",
+      "enabled": true
+    },
+    {
+      "rule_id": "forward_strong",
+      "domain": "roster",
+      "entity": "forward",
+      "positions": ["CE", "LW", "RW"],
+      "metric": "confirmed_players",
+      "operator": "<",
+      "threshold": 14,
+      "severity": "info",
+      "severity_score": 0.35,
+      "label_sv": "Forwardssidan",
+      "enabled": true
+    },
+    {
+      "rule_id": "expiring_contracts_many",
+      "domain": "roster",
+      "entity": "expiring",
+      "metric": "expiring_count",
+      "operator": ">=",
+      "threshold": 3,
+      "severity": "warning",
+      "severity_score": 0.58,
+      "label_sv": "Utgående kontrakt",
+      "enabled": true
+    }
+  ],
+
+  "news_rules": [
+    {
+      "rule_id": "high_impact_signing",
+      "domain": "news",
+      "event_type": "BEKRÄFTAT_NYFÖRVÄRV",
+      "direction": "positive",
+      "severity_score": 0.70,
+      "freshness_decay_hours": 168,
+      "label_sv": "Nyförvärv",
+      "enabled": true
+    },
+    {
+      "rule_id": "high_impact_departure",
+      "domain": "news",
+      "event_type": "BEKRÄFTAD_FÖRLUST",
+      "direction": "negative",
+      "severity_score": 0.65,
+      "freshness_decay_hours": 168,
+      "label_sv": "Spelartapp",
+      "enabled": true
+    },
+    {
+      "rule_id": "contract_extension",
+      "domain": "news",
+      "event_type": "KONTRAKTSFÖRLÄNGNING",
+      "direction": "positive",
+      "severity_score": 0.45,
+      "freshness_decay_hours": 168,
+      "label_sv": "Förlängning",
+      "enabled": true
+    },
+    {
+      "rule_id": "hot_rumor",
+      "domain": "news",
+      "event_type": "HETT_RYKTE",
+      "direction": "neutral",
+      "severity_score": 0.50,
+      "freshness_decay_hours": 72,
+      "label_sv": "Rykte",
+      "enabled": true
+    }
+  ],
+
+  "economy_rules": [
+    {
+      "rule_id": "shl_equity_gap",
+      "domain": "economy",
+      "metric": "equity_below_shl",
+      "severity": "warning",
+      "severity_score": 0.55,
+      "label_sv": "SHL-ekonomikrav",
+      "enabled": true
+    },
+    {
+      "rule_id": "low_cash",
+      "domain": "economy",
+      "metric": "cash_below_threshold",
+      "threshold": 1000000,
+      "severity": "warning",
+      "severity_score": 0.60,
+      "label_sv": "Likviditet",
+      "enabled": true
+    }
+  ],
+
+  "mood_thresholds": {
+    "green": { "min_score": 0, "max_negative_critical": 0, "label": "🟢 Lugnt och lovande", "tone": "confident" },
+    "yellow": { "min_score": 0.3, "max_negative_critical": 2, "label": "🟡 Nervöst men lovande", "tone": "cautious" },
+    "orange": { "min_score": 0.6, "max_negative_critical": 3, "label": "🟠 Mycket att lösa", "tone": "concerned" },
+    "red": { "min_score": 0.8, "max_negative_critical": 99, "label": "🔴 Krisläge", "tone": "alarmed" }
+  },
+
+  "milestones": [
+    { "id": "roster_building", "label": "Truppen byggs", "period": "Nu", "emoji": "🏗️", "depends_on": "roster_gaps" },
+    { "id": "goalkeeper_signed", "label": "Målvakt måste in", "period": "Juni", "emoji": "🔴", "depends_on": "goalkeeper_minimum" },
+    { "id": "defense_reinforced", "label": "Backsidan förstärks", "period": "Juni–Juli", "emoji": "🟡", "depends_on": "defense_depth" },
+    { "id": "preseason", "label": "Försäsongstest", "period": "Augusti", "emoji": "🟡", "depends_on": null },
+    { "id": "shl_premiere", "label": "SHL-premiär", "period": "September", "emoji": "🔥", "depends_on": null }
+  ]
+}

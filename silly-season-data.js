@@ -29,6 +29,7 @@ const SILLY_SEASON_BASELINE = {
     // ===== BEKRÄFTADE NYFÖRVÄRV =====
     confirmed_signings: [
         { name: 'Lucas Wallmark', number: null, pos: 'CE', from: 'HC Fribourg-Gottéron', contractUntil: '2032', years: 6, date: '2026-04-26', source: 'hockeysverige.se', note: 'Moderklubbens stora värvning, 6-årskontrakt', rumor_pct: 100, age: 31 },
+        { name: 'Topi Niemelä', number: null, pos: 'RD', from: 'Malmö Redhawks', contractUntil: '2028', years: 2, date: '2026-05-11', source: 'Expressen', note: 'Nyförvärv till backuppsättningen', rumor_pct: 100, age: 24 },
     ],
 
     // ===== BEKRÄFTADE FÖRLUSTER (9 spelare, 29 april 2026) =====
@@ -90,6 +91,7 @@ const SILLY_SEASON_BASELINE = {
 
         // Nyförvärv
         { name: 'Lucas Wallmark', number: null, pos: 'CE', status: 'NYFÖRVÄRV', contractUntil: '2032', note: '6-årskontrakt, moderklubb' },
+        { name: 'Topi Niemelä', number: null, pos: 'RD', status: 'NYFÖRVÄRV', contractUntil: '2028', note: 'Nyförvärv från Malmö' },
     ],
 
     // ===== NYHETSFLÖDE =====

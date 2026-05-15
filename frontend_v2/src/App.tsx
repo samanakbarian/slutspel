@@ -5,6 +5,11 @@ import { SillySeason } from './pages/SillySeason';
 import { Roster } from './pages/Roster';
 import { EkonomiPage } from './pages/Ekonomi';
 import { useLageStore } from './store/useLageStore';
+import { useCurrentState } from './hooks/useCurrentState';
+import { HeroCard } from './components/lage/HeroCard';
+import { Supportersnacket } from './components/lage/Supportersnacket';
+import { NastaSnackis } from './components/lage/NastaSnackis';
+import { VagenTillShl } from './components/lage/VagenTillShl';
 import type { LageSnapshot } from './types/lage';
 
 type LagePageProps = {
@@ -13,9 +18,10 @@ type LagePageProps = {
   data: LageSnapshot | null;
 };
 
-function LagePage({ isLoading, error, data }: LagePageProps) {
+function LagePage({ isLoading, data }: LagePageProps) {
   const [results, setResults] = useState<any>(null);
   const [standings, setStandings] = useState<any>(null);
+  const currentState = useCurrentState();
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
@@ -23,7 +29,7 @@ function LagePage({ isLoading, error, data }: LagePageProps) {
     fetch(`${API_URL}/api/v1/sportradar/standings`).then(r => r.json()).then(setStandings).catch(() => {});
   }, []);
 
-  if (isLoading) {
+  if (isLoading && currentState.isLoading) {
     return (
       <div className="page animate-fade-up">
         <section className="signal-card">
@@ -34,50 +40,76 @@ function LagePage({ isLoading, error, data }: LagePageProps) {
     );
   }
 
-  if (error || !data) {
-    return (
-      <div className="page animate-fade-up">
-        <section className="signal-card signal-card-critical">
-          <p className="card-kicker">Lövenläget</p>
-          <h2 className="card-title">Kunde inte hämta lägesbild just nu</h2>
-          <p className="card-text">{error || 'Försök igen om en stund.'}</p>
-        </section>
-      </div>
-    );
-  }
-
   const last5 = results?.results?.slice(0, 5) || [];
+  const cs = currentState.data;
 
   return (
     <div className="page page-laget animate-fade-up">
-      <section className="signal-card signal-card-primary">
-        <p className="card-kicker">SHL Readiness</p>
-        <div className="readiness-row">
-          <div className="readiness-value">{data.readiness.score}</div>
-          <div className="readiness-meta">/100</div>
-        </div>
-        <div className="readiness-bar" aria-label={`SHL Readiness ${data.readiness.score} av 100`}>
-          <span className="readiness-fill" style={{ width: `${data.readiness.score}%` }} />
-        </div>
-        <p className="card-text">{data.readiness.summary}</p>
-      </section>
 
-      <section className="signal-card signal-card-critical">
-        <p className="card-kicker">Kritiskt just nu</p>
-        <ul className="critical-list">
-          {data.critical_now.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </section>
+      {/* 1. HERO — Läget Just Nu */}
+      {cs && <HeroCard data={cs} />}
+      {!cs && currentState.error && (
+        <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
+          <p className="card-kicker">Läget Just Nu</p>
+          <p className="card-text">Signalmotorn laddas... {currentState.error}</p>
+        </section>
+      )}
 
-      <section className="signal-card signal-card-warning">
-        <p className="card-kicker">Senaste impact</p>
-        <h2 className="card-title">{data.latest_impact.title}</h2>
-        <p className="card-text">{data.latest_impact.meaning}</p>
-      </section>
+      {/* 2. SUPPORTERSNACKET */}
+      {cs?.supporter_snack && <Supportersnacket snack={cs.supporter_snack} />}
 
-      {/* Senaste matcher från Sportradar */}
+      {/* 3. KRITISKT JUST NU */}
+      {data && (
+        <section className="signal-card signal-card-critical">
+          <p className="card-kicker">⚠️ Kritiskt just nu</p>
+          <ul className="critical-list">
+            {data.critical_now.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* 4. SENASTE IMPACT */}
+      {data && (
+        <section className="signal-card signal-card-warning">
+          <p className="card-kicker">⚡ Senaste impact</p>
+          <h2 className="card-title">{data.latest_impact.title}</h2>
+          <p className="card-text">{data.latest_impact.meaning}</p>
+        </section>
+      )}
+
+      {/* 5. TRUPPBYGGET */}
+      {data && (
+        <section className="signal-card signal-card-ok" style={{ padding: '0.8rem' }}>
+          <p className="card-kicker">🏗️ Truppbygget</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', marginTop: '0.3rem' }}>
+            <p className="compact-line">MV: {data.squad_status.goalies}</p>
+            <p className="compact-line">Backar: {data.squad_status.defense}</p>
+            <p className="compact-line">Center: {data.squad_status.centers}</p>
+            <p className="compact-line">FW: {data.squad_status.forwards}</p>
+          </div>
+          {data.readiness && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                <span>SHL Readiness</span>
+                <span style={{ fontWeight: 800, color: 'var(--brand-gold)' }}>{data.readiness.score}/100</span>
+              </div>
+              <div className="readiness-bar" aria-label={`SHL Readiness ${data.readiness.score} av 100`}>
+                <span className="readiness-fill" style={{ width: `${data.readiness.score}%` }} />
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 6. NÄSTA SNACKIS */}
+      {cs?.next_watch && <NastaSnackis watchList={cs.next_watch} />}
+
+      {/* 7. VÄGEN TILL SHL */}
+      {cs?.milestones && <VagenTillShl milestones={cs.milestones} />}
+
+      {/* 8. SENASTE MATCHER */}
       {last5.length > 0 && (
         <section className="signal-card" style={{ padding: '0.8rem' }}>
           <p className="card-kicker">🏒 Senaste matcherna</p>
@@ -122,23 +154,21 @@ function LagePage({ isLoading, error, data }: LagePageProps) {
         </section>
       )}
 
-      <section className="signal-grid">
-        <div className="signal-card signal-card-ok">
-          <p className="card-kicker">Truppbygget</p>
-          <p className="compact-line">MV: {data.squad_status.goalies}</p>
-          <p className="compact-line">Backar: {data.squad_status.defense}</p>
-          <p className="compact-line">Center: {data.squad_status.centers}</p>
-          <p className="compact-line">FW: {data.squad_status.forwards}</p>
-        </div>
-        <div className="signal-card signal-card-warning">
-          <p className="card-kicker">Ekonomikollen</p>
+      {/* 9. EKONOMIKOLLEN */}
+      {data && (
+        <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
+          <p className="card-kicker">💰 Ekonomikollen</p>
           <p className="compact-line">Risknivå: {data.economy_status.risk_level}</p>
-          <p className="compact-line">Budgettryck: {data.economy_status.budget_pressure}</p>
-          <p className="compact-line">Fråga: {data.economy_status.next_question}</p>
-        </div>
-      </section>
+          <p className="compact-line" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            {data.economy_status.budget_pressure}
+          </p>
+          <p className="compact-line" style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '0.72rem', marginTop: '0.3rem' }}>
+            {data.economy_status.next_question}
+          </p>
+        </section>
+      )}
 
-      {/* Tabell från Sportradar */}
+      {/* 10. TABELL */}
       {standings?.table && (
         <section className="signal-card" style={{ padding: '0.8rem' }}>
           <p className="card-kicker">🏆 {standings.season} — Slutställning</p>

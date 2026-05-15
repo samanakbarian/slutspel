@@ -1,0 +1,7 @@
+node_modules
+frontend_v2
+.git
+.env
+excel_data
+test-results
+test_data

@@ -1,14 +1,20 @@
+functionsDirectory = "C:\\Users\\saman\\slutspel\\netlify\\functions"
+functionsDirectoryOrigin = "config"
+redirectsOrigin = "config"
 plugins = []
 headers = []
-redirects = []
 
 [functions]
 
 [functions."*"]
 
 [build]
-publish = "C:\\Users\\saman\\slutspel"
-publishOrigin = "default"
+publish = "C:\\Users\\saman\\slutspel\\frontend_v2\\dist"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "npm run build"
+base = "C:\\Users\\saman\\slutspel\\frontend_v2"
+functions = "C:\\Users\\saman\\slutspel\\netlify\\functions"
 
 [build.environment]
 
@@ -23,3 +29,15 @@ publishOrigin = "default"
 [build.processing.js]
 
 [build.services]
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
