@@ -58,10 +58,10 @@ function LagePage({ isLoading, data }: LagePageProps) {
       {/* 2. SUPPORTERSNACKET */}
       {cs?.supporter_snack && <Supportersnacket snack={cs.supporter_snack} />}
 
-      {/* 3. KRITISKT JUST NU */}
+      {/* 3. ATT LÖSA HÄRNÄST */}
       {data && (
         <section className="signal-card signal-card-critical">
-          <p className="card-kicker">⚠️ Kritiskt just nu</p>
+          <p className="card-kicker">🧭 Att lösa härnäst</p>
           <ul className="critical-list">
             {data.critical_now.map((item) => (
               <li key={item}>{item}</li>
