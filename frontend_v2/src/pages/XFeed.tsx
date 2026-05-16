@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
+const API_URL = import.meta.env.VITE_API_URL || 'https://loven-stats-api-324947473206.europe-west1.run.app';
 
 type XItem = {
   id: string;
