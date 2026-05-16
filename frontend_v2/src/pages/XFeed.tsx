@@ -53,9 +53,9 @@ type XFeedResponse = {
 };
 
 function sentimentColor(label: Sentiment) {
-  if (label === 'positive') return 'var(--impact-positive)';
-  if (label === 'negative') return 'var(--impact-negative)';
-  return 'var(--impact-warning)';
+  if (label === 'positive') return '#4ade80';
+  if (label === 'negative') return '#f87171';
+  return '#94a3b8';
 }
 
 function impactScore(item: XItem) {
@@ -101,16 +101,16 @@ export function XFeedPage() {
 
   return (
     <div className="page animate-fade-up">
-      <section className="signal-card signal-card-primary">
+      <section className="signal-card x-hero">
         <p className="card-kicker">X-pulsen</p>
         <h2 className="card-title">{data.count} träffar · Live-läge</h2>
         <p className="card-text">
           Uppdaterad {new Date(data.meta.generated_at).toLocaleString('sv-SE')} · Intervall {data.meta.cache_minutes || 60} min · {data.meta.from_cache ? 'cache' : 'ny hämtning'}
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 10 }}>
-          <div><div className="compact-line" style={{ color: 'var(--impact-positive)' }}>{data.sentiment_summary.positive_pct}%</div><p className="card-text">Positiv ton</p></div>
-          <div><div className="compact-line">{data.sentiment_summary.neutral}</div><p className="card-text">Neutrala</p></div>
-          <div><div className="compact-line" style={{ color: 'var(--impact-negative)' }}>{data.sentiment_summary.negative_pct}%</div><p className="card-text">Negativ ton</p></div>
+        <div className="x-stats-grid">
+          <div className="x-stat"><div className="x-stat-value">{data.sentiment_summary.positive_pct}%</div><p className="card-text">Positiv ton</p></div>
+          <div className="x-stat"><div className="x-stat-value">{data.sentiment_summary.neutral}</div><p className="card-text">Neutrala</p></div>
+          <div className="x-stat"><div className="x-stat-value">{data.sentiment_summary.negative_pct}%</div><p className="card-text">Negativ ton</p></div>
         </div>
       </section>
 
@@ -127,38 +127,37 @@ export function XFeedPage() {
         </section>
       )}
 
-      <section className="signal-card">
+      <section className="signal-card x-controls">
         <p className="card-kicker">Kontroller</p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-          <button onClick={() => setSortMode('latest')} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: sortMode === 'latest' ? 'rgba(37,163,90,.2)' : 'transparent', color: 'var(--text-primary)' }}>Senaste</button>
-          <button onClick={() => setSortMode('impact')} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: sortMode === 'impact' ? 'rgba(37,163,90,.2)' : 'transparent', color: 'var(--text-primary)' }}>Högst impact</button>
-          <button onClick={() => setFilter('all')} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: filter === 'all' ? 'rgba(37,163,90,.2)' : 'transparent', color: 'var(--text-primary)' }}>Alla</button>
-          <button onClick={() => setFilter('positive')} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: filter === 'positive' ? 'rgba(37,163,90,.2)' : 'transparent', color: 'var(--text-primary)' }}>Positiva</button>
-          <button onClick={() => setFilter('negative')} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--glass-border)', background: filter === 'negative' ? 'rgba(37,163,90,.2)' : 'transparent', color: 'var(--text-primary)' }}>Negativa</button>
+        <div className="x-chip-row">
+          <button className={`x-chip ${sortMode === 'latest' ? 'active' : ''}`} onClick={() => setSortMode('latest')}>Senaste</button>
+          <button className={`x-chip ${sortMode === 'impact' ? 'active' : ''}`} onClick={() => setSortMode('impact')}>Högst impact</button>
+          <button className={`x-chip ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>Alla</button>
+          <button className={`x-chip ${filter === 'positive' ? 'active' : ''}`} onClick={() => setFilter('positive')}>Positiva</button>
+          <button className={`x-chip ${filter === 'negative' ? 'active' : ''}`} onClick={() => setFilter('negative')}>Negativa</button>
         </div>
       </section>
 
-      <section className="signal-card">
+      <section className="signal-card x-top-signals">
         <p className="card-kicker">Toppsignaler</p>
         {topSignals.map((item) => (
-          <div key={`top-${item.id}`} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-            <p className="card-text" style={{ color: sentimentColor(item.sentiment_label), fontWeight: 700 }}>@{item.author_username || item.author_name} · score {Math.round(impactScore(item))}</p>
-            <p className="card-text">{item.text.slice(0, 180)}{item.text.length > 180 ? '…' : ''}</p>
+          <div key={`top-${item.id}`} className="x-top-item">
+            <p className="card-text x-top-meta" style={{ color: sentimentColor(item.sentiment_label) }}>@{item.author_username || item.author_name} · score {Math.round(impactScore(item))}</p>
+            <p className="card-text x-top-text">{item.text.slice(0, 180)}{item.text.length > 180 ? '…' : ''}</p>
           </div>
         ))}
       </section>
 
       {filteredItems.map((item) => (
-        <section key={item.id} className="signal-card" style={{ borderLeftColor: sentimentColor(item.sentiment_label), padding: '0.75rem' }}>
-          <p className="card-kicker">@{item.author_username || item.author_name}</p>
-          <p className="card-text" style={{ color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>{item.text}</p>
-          <p className="card-text" style={{ marginTop: 6 }}>
+        <section key={item.id} className="signal-card x-feed-item" style={{ borderLeftColor: sentimentColor(item.sentiment_label) }}>
+          <p className="card-kicker x-feed-author">@{item.author_username || item.author_name}</p>
+          <p className="card-text x-feed-text">{item.text}</p>
+          <p className="card-text x-feed-meta">
             {new Date(item.created_at).toLocaleString('sv-SE')} · ❤️ {item.public_metrics?.like_count || 0} · 🔁 {item.public_metrics?.retweet_count || 0} · 💬 {item.public_metrics?.reply_count || 0}
           </p>
-          {item.url && <a href={item.url} target="_blank" rel="noreferrer" style={{ marginTop: 6, display: 'inline-block', color: 'var(--brand-gold)' }}>Öppna på X</a>}
+          {item.url && <a href={item.url} target="_blank" rel="noreferrer" className="x-link">Öppna på X</a>}
         </section>
       ))}
     </div>
   );
 }
-

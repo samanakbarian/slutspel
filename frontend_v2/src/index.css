@@ -262,6 +262,93 @@ a {
   border: 1px solid rgba(66, 216, 131, 0.35);
 }
 
+.x-hero {
+  border-left-color: #64748b;
+}
+
+.x-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.x-stat {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.x-stat-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.x-chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.x-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.x-chip.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.x-top-item {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.x-top-meta {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.x-top-text {
+  margin-top: 2px;
+}
+
+.x-feed-item {
+  padding: 0.85rem;
+}
+
+.x-feed-author {
+  color: #cbd5e1;
+}
+
+.x-feed-text {
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.x-feed-meta {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.x-link {
+  margin-top: 7px;
+  display: inline-block;
+  color: #e2e8f0;
+  text-decoration: underline;
+}
+
 @keyframes fadeUp {
   from {
     opacity: 0;
