@@ -69,7 +69,21 @@ export function XFeedPage() {
     return <div className="page animate-fade-up"><section className="signal-card"><p className="card-kicker">X-flöde</p><h2 className="card-title">Laddar inlägg...</h2></section></div>;
   }
   if (error || !data) {
-    return <div className="page animate-fade-up"><section className="signal-card signal-card-critical"><p className="card-kicker">X-flöde</p><h2 className="card-title">Kunde inte ladda</h2><p className="card-text">{error || 'Okänt fel'}</p></section></div>;
+    const isMissingEndpoint = (error || '').includes('404');
+    return (
+      <div className="page animate-fade-up">
+        <section className="signal-card signal-card-critical">
+          <p className="card-kicker">X-flöde</p>
+          <h2 className="card-title">Kunde inte ladda</h2>
+          <p className="card-text">{error || 'Okänt fel'}</p>
+          {isMissingEndpoint && (
+            <p className="card-text" style={{ marginTop: 8 }}>
+              Endpoint saknas i backend: `/api/v1/x-feed`. Kontrollera deploy av API och `VITE_API_URL`.
+            </p>
+          )}
+        </section>
+      </div>
+    );
   }
 
   return (
