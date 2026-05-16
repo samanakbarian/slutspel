@@ -81,6 +81,9 @@ export function XFeedPage() {
               Endpoint saknas i backend: `/api/v1/x-feed`. Kontrollera deploy av API och `VITE_API_URL`.
             </p>
           )}
+          <p className="card-text" style={{ marginTop: 8, opacity: 0.8 }}>
+            API_URL i denna build: <code>{API_URL}</code>
+          </p>
         </section>
       </div>
     );
