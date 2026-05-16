@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://loven-stats-api-324947473206.europe-west1.run.app';
+const RAW_API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = (!RAW_API_URL || RAW_API_URL.includes('localhost'))
+  ? 'https://loven-stats-api-324947473206.europe-west1.run.app'
+  : RAW_API_URL;
 
 type XItem = {
   id: string;
