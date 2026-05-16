@@ -29,8 +29,16 @@ type XFeedResponse = {
     positive_pct: number;
     negative_pct: number;
   };
+  ai_summary?: {
+    enabled: boolean;
+    summary: string;
+    model: string | null;
+    error: string | null;
+  };
   meta: {
     generated_at: string;
+    from_cache?: boolean;
+    cache_minutes?: number;
     error?: string | null;
   };
 };
@@ -70,8 +78,32 @@ export function XFeedPage() {
         <p className="card-kicker">X-samling (Björklöven)</p>
         <h2 className="card-title">{data.count} träffar</h2>
         <p className="card-text">Positiv {data.sentiment_summary.positive} · Neutral {data.sentiment_summary.neutral} · Negativ {data.sentiment_summary.negative}</p>
+        <p className="card-text" style={{ marginTop: 6 }}>
+          Uppdaterad: {new Date(data.meta.generated_at).toLocaleString('sv-SE')} · Intervall: {data.meta.cache_minutes || 60} min · {data.meta.from_cache ? 'Cache' : 'Ny hämtning'}
+        </p>
         {data.meta.error && <p className="card-text" style={{ color: 'var(--impact-warning)', marginTop: 6 }}>API-varning: {data.meta.error}</p>}
       </section>
+
+      {data.ai_summary?.summary && (
+        <section className="signal-card signal-card-primary">
+          <p className="card-kicker">Tolkning just nu</p>
+          <p className="card-text" style={{ color: 'var(--text-primary)' }}>{data.ai_summary.summary}</p>
+          <p className="card-text" style={{ marginTop: 6 }}>
+            Modell: {data.ai_summary.model || '—'}
+          </p>
+        </section>
+      )}
+
+      {data.items.length > 0 && (
+        <section className="signal-card">
+          <p className="card-kicker">Pulsen</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 6 }}>
+            <div><div className="compact-line" style={{ color: 'var(--impact-positive)' }}>{data.sentiment_summary.positive_pct}%</div><p className="card-text">Positiv ton</p></div>
+            <div><div className="compact-line">{data.sentiment_summary.neutral}</div><p className="card-text">Neutrala inlägg</p></div>
+            <div><div className="compact-line" style={{ color: 'var(--impact-negative)' }}>{data.sentiment_summary.negative_pct}%</div><p className="card-text">Negativ ton</p></div>
+          </div>
+        </section>
+      )}
 
       {data.items.map((item) => (
         <section key={item.id} className="signal-card" style={{ borderLeftColor: colorForSentiment(item.sentiment_label) }}>
@@ -93,4 +125,3 @@ export function XFeedPage() {
     </div>
   );
 }
-

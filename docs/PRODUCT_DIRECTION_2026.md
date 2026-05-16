@@ -30,6 +30,19 @@ Varje feature ska svara på minst en fråga:
 1. **Truppbygget** (maj–september): roster, kontrakt, luckor, SHL Readiness.
 2. **Matchpulsen** (från SHL-premiär): matchens puls, momentum, periodanalys.
 3. **Klubbkollen**: ekonomi, publik, sponsorläge, hållbar SHL-etablering.
+4. **X-pulsen**: supporter- och mediaton i realtid runt Björklöven.
+
+## X-pulsen (ny modul)
+
+Syfte:
+- fånga signaler snabbare än traditionella nyhetssidor
+- visualisera tonläget bland supporters och hockeymedia
+- ge en kort tolkning av vad snacket betyder just nu
+
+Kostnadskontroll:
+- backend-cache i GCS används för att undvika API-anrop per sidvisning
+- standardintervall är 60 minuter (kan höjas/sänkas via env)
+- AI-sammanfattning körs högst en gång per refreshfönster
 
 ## Monetization-princip
 Ingen paywall för vanliga supportrar. Finansiering via sponsrade format, partnerskap, frivilligt stöd, aggregerade B2B-insikter och framtida white-label.
