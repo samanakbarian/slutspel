@@ -234,7 +234,7 @@ a {
   bottom: 0;
   z-index: 35;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.2rem;
   border-top: 1px solid var(--glass-border);
   background: rgba(4, 8, 7, 0.96);

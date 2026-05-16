@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Activity, AlertTriangle, BarChart3, Newspaper, ShieldAlert, Users } from 'lucide-react';
+import { Activity, AlertTriangle, BarChart3, Newspaper, ShieldAlert, Users, MessageSquare } from 'lucide-react';
 import { SillySeason } from './pages/SillySeason';
 import { Roster } from './pages/Roster';
 import { EkonomiPage } from './pages/Ekonomi';
+import { XFeedPage } from './pages/XFeed';
 import { useLageStore } from './store/useLageStore';
 import { useCurrentState } from './hooks/useCurrentState';
 import { HeroCard } from './components/lage/HeroCard';
@@ -256,6 +257,7 @@ const navItems = [
   { to: '/trupp', label: 'Trupp', icon: Users },
   { to: '/silly', label: 'Silly', icon: Newspaper },
   { to: '/ekonomi', label: 'Ekonomi', icon: BarChart3 },
+  { to: '/x', label: 'X-flöde', icon: MessageSquare },
   { to: '/mer', label: 'Mer', icon: ShieldAlert },
 ] as const;
 
@@ -299,6 +301,7 @@ function App() {
             <Route path="/trupp" element={<Roster />} />
             <Route path="/silly" element={<SillySeason />} />
             <Route path="/ekonomi" element={<EkonomiPage />} />
+            <Route path="/x" element={<XFeedPage />} />
             <Route path="/mer" element={<MerPage />} />
           </Routes>
         </main>
