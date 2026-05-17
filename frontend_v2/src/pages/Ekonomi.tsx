@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { API_URL } from '../config/api';
 
 interface FinancialYear {
   financial_year: string;
@@ -99,9 +98,11 @@ export function EkonomiPage() {
   useEffect(() => {
     async function load() {
       try {
+        const rawPath = '/data/financials/bjorkloven_financials_raw.json';
+        const aiPath = '/data/financials/bjorkloven_financials_ai.json';
         const [rawRes, aiRes] = await Promise.all([
-          fetch(`${API_URL}/data/financials/bjorkloven_financials_raw.json`, { cache: 'no-store' }),
-          fetch(`${API_URL}/data/financials/bjorkloven_financials_ai.json`, { cache: 'no-store' }).catch(() => null),
+          fetch(rawPath, { cache: 'no-store' }),
+          fetch(aiPath, { cache: 'no-store' }).catch(() => null),
         ]);
 
         if (rawRes.ok) {
