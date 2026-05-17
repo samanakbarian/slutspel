@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_URL } from '../config/api';
 
 interface RosterPlayer {
   name: string;
@@ -15,8 +16,6 @@ interface RosterData {
   confirmed_signings: { name: string; pos: string; from: string; contractUntil: string; date: string; note: string }[];
   confirmed_departures: { name: string; pos: string; to: string; date: string; note: string }[];
 }
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
 
 const STATUS_COLORS: Record<string, string> = {
   'SIGNERAD': 'var(--impact-positive)',

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { LageSnapshot } from '../types/lage';
+import { API_URL } from '../config/api';
 
 interface LageStore {
   data: LageSnapshot | null;
@@ -7,8 +8,6 @@ interface LageStore {
   error: string | null;
   fetchLage: () => Promise<void>;
 }
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
 
 export const useLageStore = create<LageStore>((set) => ({
   data: null,

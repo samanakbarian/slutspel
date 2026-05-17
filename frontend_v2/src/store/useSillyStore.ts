@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { SillySeasonData, NewsTag } from '../types/silly';
+import { API_URL } from '../config/api';
 
 interface SillyStore {
     data: SillySeasonData | null;
@@ -9,8 +10,6 @@ interface SillyStore {
     setNewsFilter: (filter: NewsTag | 'ALL_SILLY') => void;
     fetchData: () => Promise<void>;
 }
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
 
 export const useSillyStore = create<SillyStore>((set) => ({
     data: null,

@@ -12,6 +12,7 @@ import { Supportersnacket } from './components/lage/Supportersnacket';
 import { NastaSnackis } from './components/lage/NastaSnackis';
 import { VagenTillShl } from './components/lage/VagenTillShl';
 import type { LageSnapshot } from './types/lage';
+import { API_URL } from './config/api';
 
 type LagePageProps = {
   isLoading: boolean;
@@ -24,7 +25,6 @@ function LagePage({ isLoading, data }: LagePageProps) {
   const currentState = useCurrentState();
 
   useEffect(() => {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
     fetch(`${API_URL}/api/v1/sportradar/results`).then(r => r.json()).then(setResults).catch(() => {});
   }, []);
 
@@ -59,7 +59,7 @@ function LagePage({ isLoading, data }: LagePageProps) {
       {cs?.supporter_snack && <Supportersnacket snack={cs.supporter_snack} />}
 
       {/* 2.5 LOVENPULSEN 24H */}
-      {pulse24h && (
+      {pulse24h ? (
         <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
           <p className="card-kicker">Lövenpulsen 24h</p>
           <p className="card-text" style={{ marginBottom: '0.45rem' }}>
@@ -82,6 +82,11 @@ function LagePage({ isLoading, data }: LagePageProps) {
           <p style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
             Nyförvärv {pulse24h.signings} · Lämnar {pulse24h.departures} · Förlängningar {pulse24h.extensions} · Rykten {pulse24h.rumors}
           </p>
+        </section>
+      ) : (
+        <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
+          <p className="card-kicker">Lövenpulsen 24h</p>
+          <p className="card-text">24h-data är tillfälligt inte tillgänglig i detta API-svar.</p>
         </section>
       )}
 
