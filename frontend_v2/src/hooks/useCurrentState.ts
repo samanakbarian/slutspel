@@ -25,10 +25,19 @@ export function useCurrentState() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch(`${API_URL}/api/v1/current-state`, { cache: 'no-store' })
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
+        const FALLBACK_CURRENT_STATE_API = 'https://loven-api-324947473206.europe-north1.run.app';
+        const tryFetch = async (baseUrl: string) => {
+            const r = await fetch(`${baseUrl}/api/v1/current-state`, { cache: 'no-store' });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        };
+
+        tryFetch(API_URL)
+            .catch(async (primaryError) => {
+                if (String(primaryError?.message || '').includes('404')) {
+                    return tryFetch(FALLBACK_CURRENT_STATE_API);
+                }
+                throw primaryError;
             })
             .then(setData)
             .catch(e => setError(e.message))
