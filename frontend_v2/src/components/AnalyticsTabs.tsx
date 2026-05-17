@@ -24,6 +24,18 @@ type PenaltyBreakdown = {
   most_penalized: { name: string; count: number; minutes: number }[];
 };
 
+type EloPoint = { date: string; elo: number };
+type NextGame = { opponent: string; is_home: boolean; date: string; win_prob: number; bjk_elo: number; opp_elo: number };
+type ProjectedStanding = { team: string; current_points: number; projected_points: number; current_rank: number; projected_rank: number; is_bjk: boolean };
+type GameStateRecord = { w: number; l: number; otl: number };
+type GameState = { lead_after_1: GameStateRecord; trail_after_1: GameStateRecord; tied_after_1: GameStateRecord; lead_after_2: GameStateRecord; trail_after_2: GameStateRecord; tied_after_2: GameStateRecord };
+
+type Predictions = {
+  elo_history: EloPoint[];
+  next_game: NextGame | null;
+  projected_standings: ProjectedStanding[];
+};
+
 type AnalyticsData = {
   modules: {
     timeline: TimelinePoint[];
@@ -37,10 +49,12 @@ type AnalyticsData = {
     special_teams: SpecialTeams;
     attendance: Attendance;
     penalty_breakdown: PenaltyBreakdown;
+    predictions: Predictions;
+    game_state: GameState;
   };
 };
 
-type AnalyticsTab = 'season' | 'splits' | 'players';
+type AnalyticsTab = 'season' | 'splits' | 'players' | 'predictions';
 
 const GREEN = '#22c55e';
 const RED = '#ef4444';
@@ -102,6 +116,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
     { key: 'season', label: 'Säsong', icon: '📈' },
     { key: 'splits', label: 'Splits', icon: '🏠' },
     { key: 'players', label: 'Impact', icon: '⭐' },
+    { key: 'predictions', label: 'Prediktioner', icon: '🔮' },
   ];
 
   return (
@@ -123,6 +138,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
       {tab === 'season' && <SeasonTab timeline={m.timeline} form={m.form} streaks={m.streaks} special={m.special_teams} attendance={m.attendance} />}
       {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} />}
       {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} />}
+      {tab === 'predictions' && <PredictionsTab predictions={m.predictions} gameState={m.game_state} />}
     </div>
   );
 }
@@ -460,6 +476,135 @@ function PlayersTab({ players, goalies }: { players: PlayerImpact[]; goalies: Go
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════
+   TAB 4: PREDICTIONS
+   ════════════════════════════════════════════════════════ */
+function PredictionsTab({ predictions, gameState }: { predictions: Predictions; gameState: GameState }) {
+  const ng = predictions.next_game;
+  
+  const stateData = [
+    { name: 'Leder efter P1', ...gameState.lead_after_1 },
+    { name: 'Lika efter P1', ...gameState.tied_after_1 },
+    { name: 'Underläge P1', ...gameState.trail_after_1 },
+    { name: 'Leder efter P2', ...gameState.lead_after_2 },
+    { name: 'Lika efter P2', ...gameState.tied_after_2 },
+    { name: 'Underläge P2', ...gameState.trail_after_2 },
+  ].map(d => ({ ...d, gp: d.w + d.l + d.otl, win_pct: (d.w + d.l + d.otl) > 0 ? (d.w / (d.w + d.l + d.otl) * 100).toFixed(0) : 0 }));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Elo & Next Game */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 2, minWidth: 280, background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            The Prediction Engine (Elo-Rating)
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={predictions.elo_history} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+              <defs>
+                <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={PURPLE} stopOpacity={0.4} />
+                  <stop offset="100%" stopColor={PURPLE} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: chartTheme.text }} tickFormatter={(v: string) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 10, fill: chartTheme.text }} domain={['auto', 'auto']} />
+              <Tooltip content={<ChartTooltip />} />
+              <Area type="monotone" dataKey="elo" stroke={PURPLE} fill="url(#purpleGrad)" strokeWidth={2} name="Elo-rating" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        
+        {ng && (
+          <div style={{ flex: 1, minWidth: 200, background: chartTheme.bg, borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ fontSize: 12, color: chartTheme.text, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Nästa Match (Modell)</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#e2e8f0', marginBottom: 24 }}>
+              IFB <span style={{ color: chartTheme.text, fontWeight: 400 }}>{ng.is_home ? 'vs' : '@'}</span> {ng.opponent}
+            </div>
+            
+            <div style={{ position: 'relative', width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: `conic-gradient(${GREEN} ${ng.win_prob}%, ${RED} 0)` }}>
+              <div style={{ position: 'absolute', width: 106, height: 106, background: chartTheme.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                <span style={{ fontSize: 28, fontWeight: 800, color: GREEN }}>{ng.win_prob}%</span>
+                <span style={{ fontSize: 9, color: chartTheme.text, textTransform: 'uppercase' }}>Vinstchans</span>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: 24, fontSize: 11, color: chartTheme.text }}>
+              <span>BJK Elo: <b style={{ color: '#e2e8f0' }}>{ng.bjk_elo}</b></span>
+              <span>Opp Elo: <b style={{ color: '#e2e8f0' }}>{ng.opp_elo}</b></span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Projected Standings & Clutch Factor */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 280, background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: BLUE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Simulerad Sluttabell
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text, textAlign: 'left' }}>
+                <th style={{ padding: '6px 4px' }}>#</th>
+                <th style={{ padding: '6px 4px' }}>Lag</th>
+                <th style={{ padding: '6px 4px', textAlign: 'right' }}>Akt. PTS</th>
+                <th style={{ padding: '6px 4px', textAlign: 'right', color: GREEN }}>Proj. PTS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {predictions.projected_standings.map((p) => (
+                <tr key={p.team} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)', background: p.is_bjk ? 'rgba(34,197,94,0.1)' : 'transparent' }}>
+                  <td style={{ padding: '6px 4px', fontWeight: p.is_bjk ? 700 : 400, color: p.projected_rank <= 6 ? GREEN : p.projected_rank <= 10 ? AMBER : chartTheme.text }}>{p.projected_rank}</td>
+                  <td style={{ padding: '6px 4px', fontWeight: p.is_bjk ? 700 : 400, color: '#e2e8f0' }}>
+                    {p.team}
+                    {p.current_rank > p.projected_rank && <span style={{ color: GREEN, fontSize: 10, marginLeft: 4 }}>↑</span>}
+                    {p.current_rank < p.projected_rank && <span style={{ color: RED, fontSize: 10, marginLeft: 4 }}>↓</span>}
+                  </td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right', color: chartTheme.text }}>{p.current_points}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right', fontWeight: 700, color: GREEN }}>{p.projected_points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 280, background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: AMBER, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Game State / Clutch-faktor
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'center' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
+                <th style={{ padding: '6px 4px', textAlign: 'left' }}>Situation</th>
+                <th style={{ padding: '6px 4px' }}>GP</th>
+                <th style={{ padding: '6px 4px', color: GREEN }}>W</th>
+                <th style={{ padding: '6px 4px', color: RED }}>L</th>
+                <th style={{ padding: '6px 4px', color: AMBER }}>Win%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stateData.map((d, i) => (
+                <tr key={d.name} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                  <td style={{ padding: '8px 4px', textAlign: 'left', color: '#e2e8f0', fontWeight: 600 }}>{d.name}</td>
+                  <td style={{ padding: '8px 4px', color: chartTheme.text }}>{d.gp}</td>
+                  <td style={{ padding: '8px 4px', color: GREEN }}>{d.w}</td>
+                  <td style={{ padding: '8px 4px', color: RED }}>{d.l}</td>
+                  <td style={{ padding: '8px 4px', fontWeight: 700, color: Number(d.win_pct) >= 50 ? GREEN : RED }}>{d.win_pct}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ marginTop: 16, fontSize: 11, color: chartTheme.text, lineHeight: 1.5 }}>
+            Tabellen visar lagets förmåga att hålla en ledning eller vända underläge. En hög Win% vid underläge tyder på en stark "clutch"-faktor.
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
