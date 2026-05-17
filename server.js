@@ -600,7 +600,133 @@ app.post('/api/v1/current-state/refresh', async (req, res) => {
     }
 });
 
-// ===== STARTUP =====
+// ===== SWEHOCKEY STATISTICS (local JSON from scraper) =====
+const swehockeyDataDir = path.join(__dirname, 'data', 'swehockey');
+
+app.get('/api/v1/statistics', (req, res) => {
+    try {
+        const fs = require('fs');
+        
+        // Load scraped data
+        const seasonFile = path.join(swehockeyDataDir, 'bjorkloven_season_2526.json');
+        const regularStatsFile = path.join(swehockeyDataDir, 'player_stats_ha_regular_2526.json');
+        const playoffStatsFile = path.join(swehockeyDataDir, 'player_stats_ha_playoff_2526.json');
+        
+        if (!fs.existsSync(seasonFile)) {
+            return res.json({ status: 'error', error: 'Ingen scrapad data. Kör scrapers/swehockey/scraper.py först.' });
+        }
+
+        const season = JSON.parse(fs.readFileSync(seasonFile, 'utf-8'));
+        const regularStats = fs.existsSync(regularStatsFile) 
+            ? JSON.parse(fs.readFileSync(regularStatsFile, 'utf-8')) : null;
+        const playoffStats = fs.existsSync(playoffStatsFile)
+            ? JSON.parse(fs.readFileSync(playoffStatsFile, 'utf-8')) : null;
+
+        // Combine Björklöven skaters from regular + playoff
+        const bjkSkatersRegular = regularStats?.bjorkloven_skaters || [];
+        const bjkSkatersPlayoff = playoffStats?.bjorkloven_skaters || [];
+        const bjkGoaliesRegular = regularStats?.bjorkloven_goalies || [];
+        const bjkGoaliesPlayoff = playoffStats?.bjorkloven_goalies || [];
+        
+        // All skaters from the league (for context)
+        const allSkatersRegular = regularStats?.skaters || [];
+        const allSkatersPlayoff = playoffStats?.skaters || [];
+        const allGoaliesRegular = regularStats?.goalies || [];
+        const allGoaliesPlayoff = playoffStats?.goalies || [];
+
+        // Process games for W/L/OTL record
+        const games = season.games || [];
+        let wins = 0, losses = 0, otl = 0, gf = 0, ga = 0;
+        const processedGames = games.map(g => {
+            const isBjkHome = (g.home_team || '').toLowerCase().includes('björklöven');
+            const resultParts = (g.result || '').replace(/\xa0/g, '').match(/(\d+)\s*-\s*(\d+)/);
+            let homeGoals = 0, awayGoals = 0, bjkResult = '';
+            
+            if (resultParts) {
+                homeGoals = parseInt(resultParts[1]);
+                awayGoals = parseInt(resultParts[2]);
+                const bjkGoals = isBjkHome ? homeGoals : awayGoals;
+                const oppGoals = isBjkHome ? awayGoals : homeGoals;
+                gf += bjkGoals;
+                ga += oppGoals;
+                
+                if (bjkGoals > oppGoals) { wins++; bjkResult = 'W'; }
+                else if (bjkGoals < oppGoals) {
+                    // Check for OT/SO loss
+                    const hasOt = (g.period_results || '').includes('ÖT') || 
+                                  (g.period_results || '').includes('OT') ||
+                                  (g.period_results || '').includes('SO') ||
+                                  (g.period_results || '').includes('GWS');
+                    if (hasOt) { otl++; bjkResult = 'OTL'; }
+                    else { losses++; bjkResult = 'L'; }
+                }
+                else { bjkResult = 'D'; }
+            }
+
+            return {
+                game_id: g.game_id,
+                date: g.date,
+                time: g.time,
+                home_team: g.home_team,
+                away_team: g.away_team,
+                result: g.result,
+                period_results: g.period_results,
+                spectators: g.spectators,
+                venue: g.venue,
+                bjk_is_home: isBjkHome,
+                bjk_result: bjkResult,
+                home_goals: homeGoals,
+                away_goals: awayGoals,
+            };
+        });
+
+        // Sort games by date descending
+        processedGames.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+        // Load individual game event files for stats
+        const gamesDir = path.join(swehockeyDataDir, 'games');
+        let gameEventFiles = [];
+        if (fs.existsSync(gamesDir)) {
+            gameEventFiles = fs.readdirSync(gamesDir).filter(f => f.endsWith('.json'));
+        }
+
+        const record = { wins, losses, otl, gf, ga, gp: games.length };
+        const points = wins * 3 + otl * 1; // Swedish hockey point system
+
+        res.json({
+            status: 'ok',
+            source: 'swehockey_local',
+            scope: 'team',
+            season: '2025/26',
+            league: 'HockeyAllsvenskan',
+            snapshot_scraped_at: season.scraped_at || null,
+            team: 'IF Björklöven',
+            record: { ...record, points },
+            top_scorers: allSkatersRegular.sort((a, b) => (b.points || 0) - (a.points || 0)).slice(0, 30),
+            top_goalies: allGoaliesRegular.sort((a, b) => parseFloat(b.svs_pct || 0) - parseFloat(a.svs_pct || 0)).slice(0, 10),
+            bjorkloven_skaters: {
+                regular: bjkSkatersRegular,
+                playoff: bjkSkatersPlayoff,
+            },
+            bjorkloven_goalies: {
+                regular: bjkGoaliesRegular,
+                playoff: bjkGoaliesPlayoff,
+            },
+            games: processedGames,
+            game_events_count: gameEventFiles.length,
+            counts: {
+                players_total: allSkatersRegular.length,
+                goalies_total: allGoaliesRegular.length,
+                team_players: bjkSkatersRegular.length + bjkSkatersPlayoff.length,
+                team_goalies: bjkGoaliesRegular.length + bjkGoaliesPlayoff.length,
+                team_games: games.length,
+            },
+        });
+    } catch (err) {
+        console.error('Statistics endpoint error:', err);
+        res.json({ status: 'error', error: err.message });
+    }
+});
 // Start ETL watcher
 startWatcher(EXCEL_DIR);
 
