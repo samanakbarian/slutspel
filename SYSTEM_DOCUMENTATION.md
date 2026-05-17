@@ -1,6 +1,6 @@
 # 📚 Löven Stats Hub — Systemdokumentation & Master Plan
 
-*Senast uppdaterad: 2026-05-04 (inkl. tvålägesvision: etablering + långsiktig konkurrenskraft)*  
+*Senast uppdaterad: 2026-05-17 (inkl. tvålägesvision: etablering + långsiktig konkurrenskraft)*  
 *Detta dokument utgör den officiella tekniska dokumentationen för systemet samt "Master Planen" för hela Löven Stats Hub.*
 
 ---
@@ -189,6 +189,17 @@ Det betyder att dagens ekonomiflik i `slutspel` ska behandlas som en validerings
 | `GET /api/v1/roster` | Trupp (planerad) |
 | `GET /api/v1/matches` | Matcher (planerad) |
 | `GET /api/v1/standings` | Tabell (planerad) |
+
+### Driftnoter 2026-05-17
+
+- Frontend v2 anvander nu central API-konfig (`frontend_v2/src/config/api.ts`) med skydd mot fel host i prod.
+- `useCurrentState` har fallback till legacy `current-state` endpoint om primar API svarar 404.
+- Ekonomisidan laser finansiell JSON fran statiska assets pa samma doman:
+  - `/data/financials/bjorkloven_financials_raw.json`
+  - `/data/financials/bjorkloven_financials_ai.json`
+- Lagesidan:
+  - tabellblocket ar borttaget
+  - ny modul `Lovenpulsen 24h` visas (eller fallback-text om `last_24h` saknas).
 
 ---
 
