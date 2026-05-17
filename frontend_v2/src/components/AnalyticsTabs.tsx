@@ -207,7 +207,7 @@ function SeasonTab({ timeline, form, streaks, special, attendance }: {
         <StatCard label="Snittpublik (hemma)" value={attendance.avg.toLocaleString()} sub={`${attendance.home_games} hemmamatcher`} accent="#e2e8f0" />
         <StatCard label="Högsta publik" value={attendance.max.toLocaleString()} accent={GREEN} />
         <StatCard label="Lägsta publik" value={attendance.min.toLocaleString()} accent={DIM} />
-        <StatCard label="PIM/match" value={special.avg_pim_per_game} sub={`${special.total_pim} totalt`} accent={AMBER} />
+        <StatCard label="Special Teams Index" value={special.special_teams_index ? special.special_teams_index.toFixed(1) : 0} sub="100-regeln (PP% + PK%)" accent={special.special_teams_index >= 100 ? GREEN : RED} />
       </div>
       {/* Attendance AreaChart */}
       {attendance.trend && attendance.trend.length > 0 && (
@@ -295,6 +295,46 @@ function SplitsTab({ splits, periods, h2h, penalty }: { splits: { home: Split; a
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Game Types (1-måls DNA) */}
+      {gameState?.game_types && (
+        <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Vinnarkultur (Game Types)
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'center' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
+                <th style={{ padding: '8px 4px', textAlign: 'left' }}>Typ av match</th>
+                <th style={{ padding: '8px 4px', color: GREEN }}>W</th>
+                <th style={{ padding: '8px 4px', color: RED }}>L</th>
+                <th style={{ padding: '8px 4px', color: AMBER }}>Win%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { label: "Uddamåls-matcher (1 mål)", data: gameState.game_types.one_goal },
+                { label: "Kontrollerade (2 mål)", data: gameState.game_types.two_goals },
+                { label: "Kross (+3 mål)", data: gameState.game_types.three_plus_goals }
+              ].map(r => {
+                const total = r.data.w + r.data.l;
+                const winPct = total > 0 ? ((r.data.w / total) * 100).toFixed(0) : 0;
+                return (
+                  <tr key={r.label} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                    <td style={{ padding: '12px 4px', textAlign: 'left', color: '#e2e8f0', fontWeight: 600 }}>{r.label}</td>
+                    <td style={{ padding: '12px 4px', color: GREEN }}>{r.data.w}</td>
+                    <td style={{ padding: '12px 4px', color: RED }}>{r.data.l}</td>
+                    <td style={{ padding: '12px 4px', fontWeight: 700, color: Number(winPct) >= 50 ? GREEN : RED }}>{winPct}%</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ marginTop: 12, fontSize: 11, color: chartTheme.text, lineHeight: 1.4 }}>
+            Ett högt Win% i uddamåls-matcher indikerar en extremt stark defensiv ryggrad och hög stress-tolerans.
+          </div>
+        </div>
+      )}
 
       {/* H2H Table */}
       <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
