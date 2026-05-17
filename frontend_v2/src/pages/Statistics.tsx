@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 
 /* ── types ── */
-type PlayerStat = { rank?: number; number?: number; name?: string; player_name?: string; team?: string; team_code?: string; position?: string; gp?: number; games_played?: number; goals?: number; assists?: number; points?: number; avg?: string; pim?: number; plus_minus?: string | number };
-type GoalieStat = { rank?: number; number?: number; name?: string; goalie_name?: string; team?: string; team_code?: string; gp?: number; games_played?: number; ga?: number; goals_against?: number; gaa?: string | number; svs?: number; svs_pct?: string | number; save_pct?: string | number; so?: number; wins?: number; losses?: number };
-type GameResult = { game_id?: number; date?: string; match_date?: string; home_team?: string; away_team?: string; result?: string; spectators?: number | null; venue?: string; bjk_is_home?: boolean; bjk_result?: string; home_goals?: number; away_goals?: number; status?: string };
+type PlayerStat = { rank?: number; number?: number; jersey_number?: number; name?: string; player_name?: string; team?: string; team_code?: string; position?: string; gp?: number; games_played?: number; goals?: number; assists?: number; points?: number; avg?: string; avg_ppg?: number; pim?: number; plus_minus?: string | number };
+type GoalieStat = { rank?: number; number?: number; jersey_number?: number; name?: string; goalie_name?: string; team?: string; team_code?: string; gp?: number; games_played?: number; ga?: number; goals_against?: number; gaa?: string | number; svs?: number; svs_pct?: string | number; save_pct?: string | number; so?: number; shutouts?: number; wins?: number; losses?: number; win_pct?: number; toi_minutes?: string; shots_against?: number; saves?: number };
+type GameResult = { game_id?: number; date?: string; match_date?: string; match_time?: string; home_team?: string; away_team?: string; result?: string; period_results?: string; spectators?: number | null; venue?: string; bjk_is_home?: boolean; bjk_result?: string; home_goals?: number; away_goals?: number; status?: string };
 type Standing = { team_name?: string; games_played?: number; wins?: number; losses?: number; ot_wins?: number; ot_losses?: number; points?: number; goal_diff?: number; rank?: number };
 type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string } & GameResult;
 type Tab = 'overview' | 'scorers' | 'goalies' | 'results';
 
 /* normalizers — handle both local server.js and production BQ API response shapes */
-function normPlayer(p: any): PlayerStat & { _name: string; _team: string; _gp: number; _g: number; _a: number; _p: number; _pim: number; _pm: string } {
-  return { ...p, _name: p.name || p.player_name || '', _team: p.team || p.team_code || '', _gp: p.gp ?? p.games_played ?? 0, _g: p.goals ?? 0, _a: p.assists ?? 0, _p: p.points ?? 0, _pim: p.pim ?? 0, _pm: String(p.plus_minus ?? '') };
+function normPlayer(p: any): PlayerStat & { _name: string; _team: string; _pos: string; _num: number; _gp: number; _g: number; _a: number; _p: number; _ppg: string; _pim: number; _pm: string } {
+  const gp = p.gp ?? p.games_played ?? 0;
+  const pts = p.points ?? 0;
+  const ppg = p.avg_ppg ?? p.avg ?? (gp > 0 ? (pts / gp).toFixed(2) : '0.00');
+  return { ...p, _name: p.name || p.player_name || '', _team: p.team || p.team_code || '', _pos: p.position || '', _num: p.jersey_number ?? p.number ?? 0, _gp: gp, _g: p.goals ?? 0, _a: p.assists ?? 0, _p: pts, _ppg: String(ppg), _pim: p.pim ?? 0, _pm: String(p.plus_minus ?? '') };
 }
-function normGoalie(g: any): GoalieStat & { _name: string; _team: string; _gp: number; _ga: number; _gaa: string; _svp: string; _so: number; _w: number; _l: number } {
-  return { ...g, _name: g.name || g.goalie_name || '', _team: g.team || g.team_code || '', _gp: g.gp ?? g.games_played ?? 0, _ga: g.ga ?? g.goals_against ?? 0, _gaa: String(g.gaa ?? ''), _svp: String(g.svs_pct ?? g.save_pct ?? ''), _so: g.so ?? 0, _w: g.wins ?? 0, _l: g.losses ?? 0 };
+function normGoalie(g: any): GoalieStat & { _name: string; _team: string; _gp: number; _ga: number; _gaa: string; _svp: string; _so: number; _w: number; _l: number; _wpct: string; _svs: number; _toi: string } {
+  return { ...g, _name: g.name || g.goalie_name || '', _team: g.team || g.team_code || '', _gp: g.gp ?? g.games_played ?? 0, _ga: g.ga ?? g.goals_against ?? 0, _gaa: String(g.gaa ?? ''), _svp: String(g.svs_pct ?? g.save_pct ?? ''), _so: g.so ?? g.shutouts ?? 0, _w: g.wins ?? 0, _l: g.losses ?? 0, _wpct: g.win_pct ? String(Number(g.win_pct).toFixed(1)) : '', _svs: g.svs ?? g.saves ?? 0, _toi: g.toi_minutes ?? g.mip ?? '' };
 }
 function normGame(g: any): NormGame {
   const d = g.date || g.match_date || '';
@@ -131,26 +134,31 @@ export function StatisticsPage() {
   ];
 
   const skaterCols = [
+    { key: '_num', label: '#', width: 32 },
     { key: '_name', label: 'Spelare', align: 'left' },
     { key: '_team', label: 'Lag', width: 48 },
-    { key: '_gp', label: 'GP', width: 40 },
-    { key: '_g', label: 'G', width: 36 },
-    { key: '_a', label: 'A', width: 36 },
-    { key: '_p', label: 'P', width: 36, accent: true },
-    { key: '_pim', label: 'PIM', width: 42 },
+    { key: '_pos', label: 'Pos', width: 38 },
+    { key: '_gp', label: 'GP', width: 36 },
+    { key: '_g', label: 'G', width: 34 },
+    { key: '_a', label: 'A', width: 34 },
+    { key: '_p', label: 'P', width: 34, accent: true },
+    { key: '_ppg', label: 'PPG', width: 42 },
+    { key: '_pim', label: 'PIM', width: 38 },
     { key: '_pm', label: '+/-', width: 42 },
   ];
   const bjkCols = skaterCols.filter(c => c.key !== '_team');
   const goalieCols = [
     { key: '_name', label: 'Målvakt', align: 'left' },
-    { key: '_team', label: 'Lag', width: 48 },
-    { key: '_gp', label: 'GP', width: 40 },
-    { key: '_ga', label: 'GA', width: 40 },
-    { key: '_gaa', label: 'GAA', width: 48 },
-    { key: '_svp', label: 'SV%', width: 52, accent: true },
-    { key: '_so', label: 'SO', width: 36 },
-    { key: '_w', label: 'V', width: 36 },
-    { key: '_l', label: 'F', width: 36 },
+    { key: '_team', label: 'Lag', width: 44 },
+    { key: '_gp', label: 'GP', width: 36 },
+    { key: '_ga', label: 'GA', width: 36 },
+    { key: '_gaa', label: 'GAA', width: 44 },
+    { key: '_svp', label: 'SV%', width: 48, accent: true },
+    { key: '_svs', label: 'SVS', width: 40 },
+    { key: '_so', label: 'SO', width: 32 },
+    { key: '_w', label: 'V', width: 32 },
+    { key: '_l', label: 'F', width: 32 },
+    { key: '_wpct', label: 'V%', width: 40 },
   ];
 
   const winPct = rec.gp > 0 ? ((rec.wins / rec.gp) * 100).toFixed(0) : '–';
