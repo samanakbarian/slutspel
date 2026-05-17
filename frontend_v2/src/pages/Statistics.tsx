@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
+import AnalyticsTabs from '../components/AnalyticsTabs';
 
 /* ── types ── */
 type PlayerStat = { rank?: number; number?: number; jersey_number?: number; name?: string; player_name?: string; team?: string; team_code?: string; position?: string; gp?: number; games_played?: number; goals?: number; assists?: number; points?: number; avg?: string; avg_ppg?: number; pim?: number; plus_minus?: string | number };
@@ -7,7 +8,7 @@ type GoalieStat = { rank?: number; number?: number; jersey_number?: number; name
 type GameResult = { game_id?: number; date?: string; match_date?: string; match_time?: string; home_team?: string; away_team?: string; result?: string; period_results?: string; spectators?: number | null; venue?: string; bjk_is_home?: boolean; bjk_result?: string; home_goals?: number; away_goals?: number; status?: string };
 type Standing = { team_name?: string; games_played?: number; wins?: number; losses?: number; ot_wins?: number; ot_losses?: number; points?: number; goal_diff?: number; rank?: number };
 type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string } & GameResult;
-type Tab = 'overview' | 'scorers' | 'goalies' | 'results';
+type Tab = 'overview' | 'scorers' | 'goalies' | 'results' | 'analys';
 
 /* normalizers — handle both local server.js and production BQ API response shapes */
 function normPlayer(p: any): PlayerStat & { _name: string; _team: string; _pos: string; _num: number; _gp: number; _g: number; _a: number; _p: number; _ppg: string; _pim: number; _pm: string } {
@@ -131,6 +132,7 @@ export function StatisticsPage() {
     { key: 'scorers', label: 'Poängliga', icon: '🏅' },
     { key: 'goalies', label: 'Målvakter', icon: '🧤' },
     { key: 'results', label: 'Matcher', icon: '📅' },
+    { key: 'analys', label: 'Analys', icon: '📈' },
   ];
 
   const skaterCols = [
@@ -238,6 +240,7 @@ export function StatisticsPage() {
           </span>
         </div>))}
       </Card>}
+      {tab === 'analys' && <Card kicker="Avancerad analys — Björklöven"><AnalyticsTabs /></Card>}
     </div>
   );
 }
