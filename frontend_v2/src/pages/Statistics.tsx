@@ -89,15 +89,27 @@ export function StatisticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
+  const [seasons, setSeasons] = useState<{key: string; name: string; is_active: boolean}[]>([]);
+  const [selectedSeason, setSelectedSeason] = useState<string>('');
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/seasons`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.seasons) setSeasons(d.seasons);
+        if (d.active) setSelectedSeason(d.active);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_URL}/api/v1/statistics`, { cache: 'no-store' })
+    fetch(`${API_URL}/api/v1/statistics${selectedSeason ? `?season=${selectedSeason}` : ''}`, { cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(j => setRaw(j))
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedSeason]);
 
   if (loading) return (<div className="page animate-fade-up"><Card kicker="Statistik"><h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--brand-green-light)' }}>Laddar Swehockey-data...</h2><div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>{[0,1,2,3].map(i => <Shimmer key={i} />)}</div></Card></div>);
   if (error || raw?.status === 'error') return (<div className="page animate-fade-up"><Card kicker="Statistik" glow="var(--impact-negative)"><h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem' }}>Kunde inte ladda statistik</h2><p style={{ color: 'var(--text-secondary)', marginTop: 6 }}>{error || raw?.error}</p></Card></div>);
@@ -182,7 +194,15 @@ export function StatisticsPage() {
             <p style={{ fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--brand-green)', marginBottom: 4 }}>{season}</p>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', margin: 0, background: 'linear-gradient(135deg, var(--text-primary), var(--brand-green-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Säsongsstatistik</h2>
           </div>
-          {scrapedAt && <div style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(37,163,90,.1)', border: '1px solid rgba(37,163,90,.2)', fontSize: '.68rem', color: 'var(--brand-green-light)' }}>{new Date(scrapedAt).toLocaleDateString('sv-SE')}</div>}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {seasons.length > 1 && (
+              <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
+                style={{ background: 'rgba(15,23,42,0.8)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.2)', borderRadius: 6, padding: '4px 8px', fontSize: 12 }}>
+                {seasons.map(s => <option key={s.key} value={s.key}>{s.name}</option>)}
+              </select>
+            )}
+            {scrapedAt && <div style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(37,163,90,.1)', border: '1px solid rgba(37,163,90,.2)', fontSize: '.68rem', color: 'var(--brand-green-light)' }}>{new Date(scrapedAt).toLocaleDateString('sv-SE')}</div>}
+          </div>
         </div>
       </Card>
 
@@ -240,7 +260,7 @@ export function StatisticsPage() {
           </span>
         </div>))}
       </Card>}
-      {tab === 'analys' && <Card kicker="Avancerad analys — Björklöven"><AnalyticsTabs /></Card>}
+      {tab === 'analys' && <Card kicker="Avancerad analys — Björklöven"><AnalyticsTabs season={selectedSeason} /></Card>}
     </div>
   );
 }

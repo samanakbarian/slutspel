@@ -17,7 +17,12 @@ type StreakData = { longest_win: { type: string; length: number; start: string; 
 type PlayerImpact = { name: string; position: string; number: number; gp: number; goals: number; assists: number; points: number; g_per_gp: number; a_per_gp: number; p_per_gp: number; pim_per_gp: number; plus_minus: string; vs_league: { ppg_diff: number; gpg_diff: number } };
 type GoalieRadar = { name: string; gp: number; sv_pct: number; gaa: number; shutouts: number; wins: number; losses: number; win_pct: number; saves_per_gp: number; percentiles: { sv_pct: number; gaa: number; win_pct: number } };
 type SpecialTeams = { pp_goals: number; pp_opportunities: number; pp_pct: number; pk_goals_against: number; pk_times: number; pk_pct: number; total_pim: number; avg_pim_per_game: number };
-type Attendance = { avg: number; max: number; min: number; total: number; home_games: number };
+type Attendance = { avg: number; max: number; min: number; total: number; home_games: number; trend?: { date: string; opponent: string; spectators: number }[] };
+type PenaltyBreakdown = {
+  by_type: { type: string; count: number }[];
+  by_period: { period: number; count: number }[];
+  most_penalized: { name: string; count: number; minutes: number }[];
+};
 
 type AnalyticsData = {
   modules: {
@@ -31,6 +36,7 @@ type AnalyticsData = {
     goalie_radar: GoalieRadar[];
     special_teams: SpecialTeams;
     attendance: Attendance;
+    penalty_breakdown: PenaltyBreakdown;
   };
 };
 
@@ -75,18 +81,18 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
-export default function AnalyticsTabs() {
+export default function AnalyticsTabs({ season }: { season?: string }) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<AnalyticsTab>('season');
 
   useEffect(() => {
-    fetch(`${API_URL}/api/v1/analytics`)
+    fetch(`${API_URL}/api/v1/analytics${season ? `?season=${season}` : ''}`)
       .then(r => r.json())
       .then(d => { if (d.status === 'ok') setData(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [season]);
 
   if (loading) return <div style={{ textAlign: 'center', padding: 40, color: chartTheme.text }}>Laddar analys...</div>;
   if (!data) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Kunde inte ladda analysdata</div>;
@@ -115,7 +121,7 @@ export default function AnalyticsTabs() {
       </div>
 
       {tab === 'season' && <SeasonTab timeline={m.timeline} form={m.form} streaks={m.streaks} special={m.special_teams} attendance={m.attendance} />}
-      {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} />}
+      {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} />}
       {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} />}
     </div>
   );
@@ -182,6 +188,23 @@ function SeasonTab({ timeline, form, streaks, special, attendance }: {
         <StatCard label="Lägsta publik" value={attendance.min.toLocaleString()} accent={DIM} />
         <StatCard label="PIM/match" value={special.avg_pim_per_game} sub={`${special.total_pim} totalt`} accent={AMBER} />
       </div>
+      {/* Attendance AreaChart */}
+      {attendance.trend && attendance.trend.length > 0 && (
+        <div style={{ background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Publiktrend (Hemmamatcher)
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={attendance.trend} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: chartTheme.text }} tickFormatter={(v: string) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 10, fill: chartTheme.text }} domain={['auto', 'auto']} />
+              <Tooltip content={<ChartTooltip />} />
+              <Area type="step" dataKey="spectators" stroke="#e2e8f0" fill="#e2e8f0" fillOpacity={0.15} strokeWidth={2} name="Publik" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }
@@ -189,7 +212,7 @@ function SeasonTab({ timeline, form, streaks, special, attendance }: {
 /* ════════════════════════════════════════════════════════
    TAB 2: SPLITS
    ════════════════════════════════════════════════════════ */
-function SplitsTab({ splits, periods, h2h }: { splits: { home: Split; away: Split }; periods: PeriodStat[]; h2h: H2H[] }) {
+function SplitsTab({ splits, periods, h2h, penalty }: { splits: { home: Split; away: Split }; periods: PeriodStat[]; h2h: H2H[]; penalty: PenaltyBreakdown }) {
   const splitData = [
     { label: 'Hemma', ...splits.home, ppg: splits.home.gp > 0 ? (splits.home.pts / splits.home.gp).toFixed(2) : '0' },
     { label: 'Borta', ...splits.away, ppg: splits.away.gp > 0 ? (splits.away.pts / splits.away.gp).toFixed(2) : '0' },
@@ -217,21 +240,39 @@ function SplitsTab({ splits, periods, h2h }: { splits: { home: Split; away: Spli
       </div>
 
       {/* Period Analysis */}
-      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
-          Målfördelning per period
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 280, background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Målfördelning per period
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={periods} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" />
+              <XAxis dataKey="label" tick={{ fontSize: 12, fill: chartTheme.text }} />
+              <YAxis tick={{ fontSize: 10, fill: chartTheme.text }} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="gf" name="Mål för" radius={[4, 4, 0, 0]} fill={GREEN} />
+              <Bar dataKey="ga" name="Mål mot" radius={[4, 4, 0, 0]} fill={RED} fillOpacity={0.7} />
+              <Legend wrapperStyle={{ fontSize: 11, color: chartTheme.text }} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={periods} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
-            <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" />
-            <XAxis dataKey="label" tick={{ fontSize: 12, fill: chartTheme.text }} />
-            <YAxis tick={{ fontSize: 10, fill: chartTheme.text }} />
-            <Tooltip content={<ChartTooltip />} />
-            <Bar dataKey="gf" name="Mål för" radius={[4, 4, 0, 0]} fill={GREEN} />
-            <Bar dataKey="ga" name="Mål mot" radius={[4, 4, 0, 0]} fill={RED} fillOpacity={0.7} />
-            <Legend wrapperStyle={{ fontSize: 11, color: chartTheme.text }} />
-          </BarChart>
-        </ResponsiveContainer>
+
+        {/* Penalty Breakdown */}
+        <div style={{ flex: 1, minWidth: 280, background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Vanligaste utvisningarna
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart layout="vertical" data={penalty.by_type} margin={{ top: 5, right: 10, left: 20, bottom: 0 }}>
+              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: chartTheme.text }} />
+              <YAxis type="category" dataKey="type" tick={{ fontSize: 10, fill: chartTheme.text }} width={80} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="count" name="Antal utv." radius={[0, 4, 4, 0]} fill={RED} fillOpacity={0.8} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* H2H Table */}
@@ -378,6 +419,45 @@ function PlayersTab({ players, goalies }: { players: PlayerImpact[]; goalies: Go
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Sida-vid-sida Goalie Comparison */}
+      {goalies.length >= 2 && (
+        <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: BLUE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Målvaktsduell
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'center' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)' }}>
+                <th style={{ width: '33%', padding: 8 }}>{goalies[0].name.split(',')[0]}</th>
+                <th style={{ width: '33%', padding: 8, color: chartTheme.text, fontSize: 10, textTransform: 'uppercase' }}>Statistik</th>
+                <th style={{ width: '33%', padding: 8 }}>{goalies[1].name.split(',')[0]}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { label: 'Matcher', k: 'gp', isBetter: (a:number,b:number)=>a>b },
+                { label: 'Räddningsprocent', k: 'sv_pct', isBetter: (a:number,b:number)=>a>b, fmt: (v:number)=>`${v}%` },
+                { label: 'Insläppta/Match', k: 'gaa', isBetter: (a:number,b:number)=>a<b, fmt: (v:number)=>v.toFixed(2) },
+                { label: 'Nollor', k: 'shutouts', isBetter: (a:number,b:number)=>a>b },
+                { label: 'Vinstprocent', k: 'win_pct', isBetter: (a:number,b:number)=>a>b, fmt: (v:number)=>`${v}%` },
+              ].map(stat => {
+                const valA = (goalies[0] as any)[stat.k];
+                const valB = (goalies[1] as any)[stat.k];
+                const aIsBetter = stat.isBetter(valA, valB);
+                const bIsBetter = stat.isBetter(valB, valA);
+                return (
+                  <tr key={stat.k} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                    <td style={{ padding: 8, color: aIsBetter ? GREEN : '#e2e8f0', fontWeight: aIsBetter ? 700 : 400 }}>{stat.fmt ? stat.fmt(valA) : valA}</td>
+                    <td style={{ padding: 8, color: chartTheme.text, fontSize: 11 }}>{stat.label}</td>
+                    <td style={{ padding: 8, color: bIsBetter ? GREEN : '#e2e8f0', fontWeight: bIsBetter ? 700 : 400 }}>{stat.fmt ? stat.fmt(valB) : valB}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
