@@ -6,6 +6,7 @@ type PlayerStat = { rank?: number; number?: number; name?: string; player_name?:
 type GoalieStat = { rank?: number; number?: number; name?: string; goalie_name?: string; team?: string; team_code?: string; gp?: number; games_played?: number; ga?: number; goals_against?: number; gaa?: string | number; svs?: number; svs_pct?: string | number; save_pct?: string | number; so?: number; wins?: number; losses?: number };
 type GameResult = { game_id?: number; date?: string; match_date?: string; home_team?: string; away_team?: string; result?: string; spectators?: number | null; venue?: string; bjk_is_home?: boolean; bjk_result?: string; home_goals?: number; away_goals?: number; status?: string };
 type Standing = { team_name?: string; games_played?: number; wins?: number; losses?: number; ot_wins?: number; ot_losses?: number; points?: number; goal_diff?: number; rank?: number };
+type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string } & GameResult;
 type Tab = 'overview' | 'scorers' | 'goalies' | 'results';
 
 /* normalizers — handle both local server.js and production BQ API response shapes */
@@ -15,7 +16,7 @@ function normPlayer(p: any): PlayerStat & { _name: string; _team: string; _gp: n
 function normGoalie(g: any): GoalieStat & { _name: string; _team: string; _gp: number; _ga: number; _gaa: string; _svp: string; _so: number; _w: number; _l: number } {
   return { ...g, _name: g.name || g.goalie_name || '', _team: g.team || g.team_code || '', _gp: g.gp ?? g.games_played ?? 0, _ga: g.ga ?? g.goals_against ?? 0, _gaa: String(g.gaa ?? ''), _svp: String(g.svs_pct ?? g.save_pct ?? ''), _so: g.so ?? 0, _w: g.wins ?? 0, _l: g.losses ?? 0 };
 }
-function normGame(g: any): GameResult & { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string } {
+function normGame(g: any): NormGame {
   const d = g.date || g.match_date || '';
   const h = g.home_team || '';
   const a = g.away_team || '';
@@ -204,7 +205,7 @@ export function StatisticsPage() {
         {bjkGReg.length === 0 && goalies.length > 0 && <Card kicker="Målvakter"><StatsTable columns={goalieCols} rows={goalies} highlightTeam="ifb" /></Card>}
 
         {games.length > 0 && <Card kicker="Senaste matcherna">
-          {games.slice(0, 6).map((g, i) => (<div key={i} className="game-row">
+          {games.slice(0, 6).map((g: NormGame, i: number) => (<div key={i} className="game-row">
             <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
             <Badge r={g._bjkRes} />
             <span style={{ flex: 1 }}>
@@ -219,7 +220,7 @@ export function StatisticsPage() {
       {tab === 'scorers' && <Card kicker="Poängliga — Hela HockeyAllsvenskan"><StatsTable columns={skaterCols} rows={scorers} highlightTeam="ifb" /></Card>}
       {tab === 'goalies' && <Card kicker="Målvaktsstatistik — Hela HockeyAllsvenskan"><StatsTable columns={goalieCols} rows={goalies} highlightTeam="ifb" /></Card>}
       {tab === 'results' && <Card kicker={`Alla Björklöven-matcher (${games.length})`}>
-        {games.map((g, i) => (<div key={i} className="game-row">
+        {games.map((g: NormGame, i: number) => (<div key={i} className="game-row">
           <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
           <Badge r={g._bjkRes} />
           <span style={{ flex: 1 }}>
