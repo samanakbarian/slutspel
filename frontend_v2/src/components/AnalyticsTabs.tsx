@@ -34,6 +34,11 @@ type Predictions = {
   elo_history: EloPoint[];
   next_game: NextGame | null;
   projected_standings: ProjectedStanding[];
+  scoring_timeline: { interval: string; gf: number; ga: number }[];
+  chemistry: { player1: string; player2: string; goals_created: number }[];
+  first_goal_impact: { scored_first: GameStateRecord; conceded_first: GameStateRecord };
+  pythagorean: { team: string; gp: number; pts: number; exp_pts: number; diff: number; is_bjk: boolean }[];
+  ai_coach: string;
 };
 
 type AnalyticsData = {
@@ -497,6 +502,16 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* AI Coachen */}
+      <div style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.15), rgba(15,23,42,0.8))', borderRadius: 12, padding: 20, borderLeft: `4px solid ${TEAL}`, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: TEAL, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>🤖</span> Analytikern (AI-Scouting)
+        </div>
+        <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.6, fontStyle: 'italic' }}>
+          "{predictions.ai_coach}"
+        </div>
+      </div>
+
       {/* Elo & Next Game */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ flex: 2, minWidth: 280, background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
@@ -518,6 +533,9 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
               <Area type="monotone" dataKey="elo" stroke={PURPLE} fill="url(#purpleGrad)" strokeWidth={2} name="Elo-rating" />
             </AreaChart>
           </ResponsiveContainer>
+          <div style={{ marginTop: 8, fontSize: 11, color: chartTheme.text, lineHeight: 1.4 }}>
+            <b>Vad är Elo?</b> Ett dynamiskt styrkesystem där lag vinner poäng baserat på motståndarens svårighetsgrad. Filtrerar bort spelschemats ojämnheter för att visa lagets "sanna" form.
+          </div>
         </div>
         
         {ng && (
@@ -603,6 +621,110 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
           <div style={{ marginTop: 16, fontSize: 11, color: chartTheme.text, lineHeight: 1.5 }}>
             Tabellen visar lagets förmåga att hålla en ledning eller vända underläge. En hög Win% vid underläge tyder på en stark "clutch"-faktor.
           </div>
+        </div>
+      </div>
+
+      {/* Målklockan */}
+      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+          Målklockan (Intensitet över tid)
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={predictions.scoring_timeline} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+            <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="interval" tick={{ fontSize: 10, fill: chartTheme.text }} />
+            <YAxis tick={{ fontSize: 10, fill: chartTheme.text }} />
+            <Tooltip content={<ChartTooltip />} />
+            <Legend wrapperStyle={{ fontSize: 11, color: chartTheme.text }} />
+            <Bar dataKey="gf" name="Gjorda Mål" fill={GREEN} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="ga" name="Insläppta Mål" fill={RED} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Taktiska tabeller (Tre kolumner) */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 200, background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: PURPLE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Första Målet Impact
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'center' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
+                <th style={{ padding: '4px', textAlign: 'left' }}>Scenario</th>
+                <th style={{ padding: '4px' }}>W</th>
+                <th style={{ padding: '4px' }}>L</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                const sf = predictions.first_goal_impact.scored_first;
+                const cf = predictions.first_goal_impact.conceded_first;
+                return (
+                  <>
+                    <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                      <td style={{ padding: '6px 4px', textAlign: 'left', color: '#e2e8f0' }}>Gör 1:a målet</td>
+                      <td style={{ padding: '6px 4px', color: GREEN }}>{sf.w}</td>
+                      <td style={{ padding: '6px 4px', color: RED }}>{sf.l}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '6px 4px', textAlign: 'left', color: '#e2e8f0' }}>Släpper in 1:a målet</td>
+                      <td style={{ padding: '6px 4px', color: GREEN }}>{cf.w}</td>
+                      <td style={{ padding: '6px 4px', color: RED }}>{cf.l}</td>
+                    </tr>
+                  </>
+                );
+              })()}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 200, background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: AMBER, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Tur/Otur-index (Pythagoras)
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text, textAlign: 'left' }}>
+                <th style={{ padding: '4px' }}>Lag</th>
+                <th style={{ padding: '4px', textAlign: 'right' }}>Akt. P</th>
+                <th style={{ padding: '4px', textAlign: 'right' }}>Tur-index</th>
+              </tr>
+            </thead>
+            <tbody>
+              {predictions.pythagorean.slice(0, 5).map(p => (
+                <tr key={p.team} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                  <td style={{ padding: '6px 4px', color: p.is_bjk ? GREEN : '#e2e8f0', fontWeight: p.is_bjk ? 700 : 400 }}>{p.team}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right', color: chartTheme.text }}>{p.pts}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right', fontWeight: 700, color: p.diff > 0 ? GREEN : RED }}>
+                    {p.diff > 0 ? '+' : ''}{p.diff}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 200, background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: BLUE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            Kemimätaren (Radarpar)
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text, textAlign: 'left' }}>
+                <th style={{ padding: '4px' }}>Duo</th>
+                <th style={{ padding: '4px', textAlign: 'right' }}>Mål ihopa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {predictions.chemistry.map((c, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                  <td style={{ padding: '6px 4px', color: '#e2e8f0' }}>{c.player1} + {c.player2}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right', fontWeight: 700, color: GREEN }}>{c.goals_created}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
