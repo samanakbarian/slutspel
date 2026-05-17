@@ -21,13 +21,11 @@ type LagePageProps = {
 
 function LagePage({ isLoading, data }: LagePageProps) {
   const [results, setResults] = useState<any>(null);
-  const [standings, setStandings] = useState<any>(null);
   const currentState = useCurrentState();
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3456';
     fetch(`${API_URL}/api/v1/sportradar/results`).then(r => r.json()).then(setResults).catch(() => {});
-    fetch(`${API_URL}/api/v1/sportradar/standings`).then(r => r.json()).then(setStandings).catch(() => {});
   }, []);
 
   if (isLoading && currentState.isLoading) {
@@ -197,47 +195,6 @@ function LagePage({ isLoading, data }: LagePageProps) {
         </section>
       )}
 
-      {/* 10. TABELL */}
-      {standings?.table && (
-        <section className="signal-card" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">🏆 {standings.season} — Slutställning</p>
-          <div style={{ overflowX: 'auto', marginTop: '0.4rem' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
-              <thead>
-                <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--glass-border)' }}>
-                  <th style={{ textAlign: 'left', padding: '0.3rem 0.4rem' }}>#</th>
-                  <th style={{ textAlign: 'left', padding: '0.3rem 0.4rem' }}>Lag</th>
-                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>SM</th>
-                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>V</th>
-                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>F</th>
-                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>P</th>
-                  <th style={{ textAlign: 'center', padding: '0.3rem' }}>+/-</th>
-                </tr>
-              </thead>
-              <tbody>
-                {standings.table.slice(0, 10).map((row: any) => (
-                  <tr key={row.teamId} style={{
-                    background: row.isBjorkloven ? 'rgba(37,163,90,0.1)' : 'transparent',
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    fontWeight: row.isBjorkloven ? 800 : 400,
-                    color: row.isBjorkloven ? 'var(--brand-gold)' : 'var(--text-secondary)',
-                  }}>
-                    <td style={{ padding: '0.3rem 0.4rem' }}>{row.rank}</td>
-                    <td style={{ padding: '0.3rem 0.4rem' }}>{row.team}</td>
-                    <td style={{ textAlign: 'center', padding: '0.3rem' }}>{row.gp}</td>
-                    <td style={{ textAlign: 'center', padding: '0.3rem' }}>{row.w}</td>
-                    <td style={{ textAlign: 'center', padding: '0.3rem' }}>{row.l}</td>
-                    <td style={{ textAlign: 'center', padding: '0.3rem', fontWeight: 700, color: row.isBjorkloven ? 'var(--brand-gold)' : 'var(--text-primary)' }}>{row.pts}</td>
-                    <td style={{ textAlign: 'center', padding: '0.3rem', color: row.diff > 0 ? 'var(--impact-positive)' : 'var(--impact-negative)' }}>
-                      {row.diff > 0 ? '+' : ''}{row.diff}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
     </div>
   );
 }
