@@ -589,7 +589,7 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
               </tr>
             </thead>
             <tbody>
-              {stateData.map((d, i) => (
+              {stateData.map((d) => (
                 <tr key={d.name} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
                   <td style={{ padding: '8px 4px', textAlign: 'left', color: '#e2e8f0', fontWeight: 600 }}>{d.name}</td>
                   <td style={{ padding: '8px 4px', color: chartTheme.text }}>{d.gp}</td>
