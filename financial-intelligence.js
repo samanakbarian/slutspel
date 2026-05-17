@@ -324,6 +324,74 @@ function calcHealthScore(snapshot, shlRequirements) {
     return Math.max(1, Math.min(5, Math.round(score)));
 }
 
+function calcRunwayMonths(cash, annualRevenueProxy) {
+    if (cash == null || annualRevenueProxy == null || annualRevenueProxy <= 0) return null;
+    const monthlyBase = annualRevenueProxy / 12;
+    if (monthlyBase <= 0) return null;
+    return Number((cash / monthlyBase).toFixed(1));
+}
+
+function getLiquidityRisk(runwayMonths) {
+    if (runwayMonths == null) return { label: 'Okänd', color: '#94a3b8' };
+    if (runwayMonths < 1) return { label: 'Kritisk', color: '#f87171' };
+    if (runwayMonths < 3) return { label: 'Hög', color: '#f59e0b' };
+    if (runwayMonths < 6) return { label: 'Medel', color: '#fbbf24' };
+    return { label: 'Låg', color: '#34d399' };
+}
+
+function calcShlEconomyReadiness(snapshot, shlRequirements) {
+    const d = snapshot?.current || {};
+    const k = snapshot?.koncern || {};
+    const revenue = Number(k.revenue || d.revenue || 0);
+    const equity = Number(k.equity || 0);
+    const cash = Number(k.cash || 0);
+    const operatingResult = Number(d.operatingResult || 0);
+    const minEquity = Number(shlRequirements?.minEquity || 10000000);
+    const runway = calcRunwayMonths(cash, revenue);
+
+    const revenueScore = Math.max(0, Math.min(100, Math.round((revenue / 80000000) * 100)));
+    const equityScore = Math.max(0, Math.min(100, Math.round((equity / minEquity) * 100)));
+    const liquidityScore = Math.max(0, Math.min(100, Math.round(((runway || 0) / 6) * 100)));
+    const resultScore = operatingResult >= 0 ? 70 : Math.max(0, 60 - Math.round(Math.abs(operatingResult) / 250000));
+    const score = Math.round((revenueScore * 0.2) + (equityScore * 0.3) + (liquidityScore * 0.3) + (resultScore * 0.2));
+
+    const blockers = [
+        { key: 'likviditet', score: liquidityScore, text: 'För låg kassa på kort sikt.' },
+        { key: 'eget_kapital', score: equityScore, text: 'För lågt eget kapital mot uppskattad SHL-nivå.' },
+        { key: 'omsättning', score: revenueScore, text: 'Omsättningen är under typisk SHL-nivå.' },
+        { key: 'resultat', score: resultScore, text: 'Resultatstabiliteten är för svag.' }
+    ].sort((a, b) => a.score - b.score).slice(0, 3);
+
+    return {
+        score,
+        label: score >= 70 ? 'Redo' : score >= 50 ? 'Nära men sårbar' : 'Ej redo',
+        blockers,
+        components: { revenueScore, equityScore, liquidityScore, resultScore }
+    };
+}
+
+function computeScenarioSnapshot(snapshot, attendancePct, sponsorPct, salaryDeltaMsek) {
+    const d = snapshot?.current || {};
+    const k = snapshot?.koncern || {};
+    const revenueBase = Number(d.revenue || 0);
+    const resultBase = Number(d.operatingResult || 0);
+    const cashBase = Number(k.cash || 0);
+    const equityBase = Number(k.equity || 0);
+
+    const revenueDelta = revenueBase * ((Number(attendancePct || 0) + Number(sponsorPct || 0)) / 100);
+    const costDelta = Number(salaryDeltaMsek || 0) * 1000000;
+    const operatingResult = Math.round(resultBase + revenueDelta - costDelta);
+    const cash = Math.round(cashBase + (operatingResult * 0.35));
+    const groupEquity = Math.round(equityBase + operatingResult);
+
+    return {
+        revenue: Math.round(revenueBase + revenueDelta),
+        operatingResult,
+        cash,
+        groupEquity
+    };
+}
+
 function FinancialDashboard() {
     const [financials, setFinancials] = useFinancialState(normalizeFinancials(FALLBACK_RAW));
     const [financialAi, setFinancialAi] = useFinancialState(normalizeAiArchive(FALLBACK_AI_RAW));
@@ -331,6 +399,9 @@ function FinancialDashboard() {
     const [status, setStatus] = useFinancialState('loading');
     const [loadError, setLoadError] = useFinancialState('');
     const [aiStatus, setAiStatus] = useFinancialState('idle');
+    const [attendancePct, setAttendancePct] = useFinancialState(0);
+    const [sponsorPct, setSponsorPct] = useFinancialState(0);
+    const [salaryDeltaMsek, setSalaryDeltaMsek] = useFinancialState(0);
 
     useFinancialEffect(() => {
         let cancelled = false;
@@ -392,6 +463,11 @@ function FinancialDashboard() {
     const lastUpdated = financials.metadata?.last_updated || 'okant datum';
     const revenueShare = d.revenue && k.revenue ? ((d.revenue / k.revenue) * 100).toFixed(1) : null;
     const cashToRevenue = k.cash && k.revenue ? ((k.cash / k.revenue) * 100).toFixed(1) : null;
+    const runwayMonths = calcRunwayMonths(k.cash, k.revenue || d.revenue);
+    const liquidityRisk = getLiquidityRisk(runwayMonths);
+    const shlReadiness = calcShlEconomyReadiness(snapshot, financials.shlRequirements);
+    const scenarioNow = computeScenarioSnapshot(snapshot, attendancePct, sponsorPct, salaryDeltaMsek);
+    const scenarioShlGap = Math.max(0, (shl.minEquity || 0) - (scenarioNow.groupEquity || 0));
     const dataQuality = getDataQuality(snapshot);
     const turnaround = getTurnaroundRows(snapshot);
 
@@ -445,6 +521,61 @@ function FinancialDashboard() {
             renderMetricCard('Resultat efter skatt', formatSEK(k.resultAfterTax), formatPct(calcYoY(k.resultAfterTax, kp.resultAfterTax)), 'Koncernnivå'),
             renderMetricCard('A-lag av koncern', revenueShare == null ? '-' : `${revenueShare}%`, null, 'Andel av total omsättning'),
             renderMetricCard('Likviditet / oms.', cashToRevenue == null ? '-' : `${cashToRevenue}%`, null, 'Kassa som andel av koncernoms.')
+        ),
+
+        financialH('div', { className: 'card', style: { borderLeft: `4px solid ${liquidityRisk.color}` } },
+            financialH('div', { className: 'financial-section-head' },
+                financialH('h3', { className: 'font-display', style: { color: liquidityRisk.color, margin: 0 } }, 'Ekonomiskt nulÃ¤ge'),
+                financialH('span', { className: 'financial-badge' }, `Likviditetsrisk: ${liquidityRisk.label}`)
+            ),
+            financialH('div', { className: 'financial-kpi-grid financial-kpi-grid-secondary' },
+                renderMetricCard('Runway', runwayMonths == null ? '-' : `${runwayMonths} mÃ¥nader`, null, 'Kassa i relation till intÃ¤ktsnivÃ¥'),
+                renderMetricCard('SHL-gap (EK koncern)', formatSEK(Math.max(0, shl.minEquity - (k.equity || 0))), null, 'Kvar till uppskattad SHL-nivÃ¥'),
+                renderMetricCard('Trendpil', (calcYoY(d.revenue, p.revenue) || 0) >= 0 ? 'BÃ¤ttre' : 'SÃ¤mre', null, 'Mot fÃ¶regÃ¥ende Ã¥r'),
+                renderMetricCard('Datakvalitet', dataQuality.label, null, dataQuality.source || '')
+            ),
+            financialH('p', { className: 'financial-footnote' }, `Kassa: ${formatSEK(k.cash)} | Runway: ${runwayMonths == null ? '-' : `${runwayMonths} mÃ¥nader`} | Risk: ${liquidityRisk.label}.`)
+        ),
+
+        financialH('div', { className: 'card', style: { borderLeft: '4px solid #22d3ee' } },
+            financialH('div', { className: 'financial-section-head' },
+                financialH('h3', { className: 'font-display', style: { color: '#22d3ee', margin: 0 } }, 'SHL-beredskap (Ekonomi)'),
+                financialH('span', { className: 'financial-badge financial-badge-ai' }, `${shlReadiness.score}/100 â€” ${shlReadiness.label}`)
+            ),
+            financialH('div', { className: 'financial-kpi-grid financial-kpi-grid-secondary' },
+                renderMetricCard('OmsÃ¤ttning', `${shlReadiness.components.revenueScore}/100`),
+                renderMetricCard('Eget kapital', `${shlReadiness.components.equityScore}/100`),
+                renderMetricCard('Likviditet', `${shlReadiness.components.liquidityScore}/100`),
+                renderMetricCard('Resultatstabilitet', `${shlReadiness.components.resultScore}/100`)
+            ),
+            financialH('div', { className: 'financial-ai-followup' },
+                financialH('div', { className: 'financial-followup-title' }, 'StÃ¶rsta blockerare'),
+                financialH('ol', { className: 'financial-ai-recommendations' },
+                    shlReadiness.blockers.map((item) => financialH('li', { key: item.key }, item.text))
+                )
+            )
+        ),
+
+        financialH('div', { className: 'card', style: { borderLeft: '4px solid #a78bfa' } },
+            financialH('div', { className: 'financial-section-head' },
+                financialH('h3', { className: 'font-display', style: { color: '#a78bfa', margin: 0 } }, 'Scenariomodul: Vad hÃ¤nder om...'),
+                financialH('span', { className: 'financial-badge' }, snapshot.period)
+            ),
+            financialH('div', { className: 'financial-scenario-controls' },
+                financialH('label', null, `PublikpÃ¥verkan: ${attendancePct >= 0 ? '+' : ''}${attendancePct}%`),
+                financialH('input', { type: 'range', min: -20, max: 20, step: 1, value: attendancePct, onChange: (e) => setAttendancePct(Number(e.target.value)) }),
+                financialH('label', null, `Sponsring: ${sponsorPct >= 0 ? '+' : ''}${sponsorPct}%`),
+                financialH('input', { type: 'range', min: -20, max: 20, step: 1, value: sponsorPct, onChange: (e) => setSponsorPct(Number(e.target.value)) }),
+                financialH('label', null, `Personalkostnad: ${salaryDeltaMsek >= 0 ? '+' : ''}${salaryDeltaMsek} MSEK`),
+                financialH('input', { type: 'range', min: -10, max: 20, step: 1, value: salaryDeltaMsek, onChange: (e) => setSalaryDeltaMsek(Number(e.target.value)) })
+            ),
+            financialH('div', { className: 'financial-kpi-grid financial-kpi-grid-secondary' },
+                renderMetricCard('Scenario omsÃ¤ttning', formatSEK(scenarioNow.revenue)),
+                renderMetricCard('Scenario resultat', formatSEK(scenarioNow.operatingResult)),
+                renderMetricCard('Scenario koncernkassa', formatSEK(scenarioNow.cash)),
+                renderMetricCard('Scenario SHL-gap', formatSEK(scenarioShlGap))
+            ),
+            financialH('p', { className: 'financial-footnote' }, 'FÃ¶renklad simulering fÃ¶r riktning, inte en full bokslutsprognos.')
         ),
 
         financialH('div', { className: 'card' },
