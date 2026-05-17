@@ -66,7 +66,6 @@ function impactScore(item: XItem) {
 export function XFeedPage() {
   const [data, setData] = useState<XFeedResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('latest');
   const [filter, setFilter] = useState<FilterMode>('all');
@@ -83,11 +82,9 @@ export function XFeedPage() {
     return `Flödet innehåller ${payload.count} inlägg. Tonläget är ${positive >= negative ? 'övervägande positivt' : 'övervägande negativt'} (${positive}% positivt, ${negative}% negativt). Mest aktivitet just nu: ${top || 'inga tydliga toppkonton'}.`;
   };
 
-  const loadFeed = (forceRefresh = false) => {
-    const query = forceRefresh ? '?force_refresh=true' : '';
-    if (!isLoading) setIsRefreshing(true);
+  const loadFeed = () => {
     setError(null);
-    fetch(`${API_URL}/api/v1/x-feed${query}`, { cache: 'no-store' })
+    fetch(`${API_URL}/api/v1/x-feed`, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -107,13 +104,12 @@ export function XFeedPage() {
       .catch((e) => setError(e.message))
       .finally(() => {
         setIsLoading(false);
-        setIsRefreshing(false);
       });
   };
 
   useEffect(() => {
-    loadFeed(false);
-    const id = window.setInterval(() => loadFeed(false), 120000);
+    loadFeed();
+    const id = window.setInterval(() => loadFeed(), 120000);
     return () => window.clearInterval(id);
   }, []);
 
@@ -143,11 +139,6 @@ export function XFeedPage() {
         <p className="card-text">
           Uppdaterad {new Date(data.meta.generated_at).toLocaleString('sv-SE')} · Intervall {data.meta.cache_minutes || 60} min · {data.meta.from_cache ? 'cache' : 'ny hämtning'}
         </p>
-        <div className="x-chip-row" style={{ marginTop: 10 }}>
-          <button className="x-chip" onClick={() => loadFeed(true)} disabled={isRefreshing}>
-            {isRefreshing ? 'Uppdaterar…' : 'Uppdatera nu'}
-          </button>
-        </div>
         <div className="x-stats-grid">
           <div className="x-stat"><div className="x-stat-value">{data.sentiment_summary.positive_pct}%</div><p className="card-text">Positiv ton</p></div>
           <div className="x-stat"><div className="x-stat-value">{data.sentiment_summary.neutral}</div><p className="card-text">Neutrala</p></div>
