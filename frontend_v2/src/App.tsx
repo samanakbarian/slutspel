@@ -43,6 +43,7 @@ function LagePage({ isLoading, data }: LagePageProps) {
 
   const last5 = results?.results?.slice(0, 5) || [];
   const cs = currentState.data;
+  const pulse24h = data?.meta?.last_24h;
 
   return (
     <div className="page page-laget animate-fade-up">
@@ -59,26 +60,29 @@ function LagePage({ isLoading, data }: LagePageProps) {
       {/* 2. SUPPORTERSNACKET */}
       {cs?.supporter_snack && <Supportersnacket snack={cs.supporter_snack} />}
 
-      {/* 2.5 SENASTE 24H */}
-      {data?.meta?.last_24h && (
+      {/* 2.5 LOVENPULSEN 24H */}
+      {pulse24h && (
         <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">Senaste 24h</p>
+          <p className="card-kicker">Lövenpulsen 24h</p>
+          <p className="card-text" style={{ marginBottom: '0.45rem' }}>
+            {pulse24h.new_signals > 0 ? `+${pulse24h.new_signals} nya signaler senaste dygnet.` : 'Lugnt dygn i flödet.'}
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem', marginTop: '0.3rem' }}>
             <div>
-              <p className="compact-line">+{data.meta.last_24h.new_signals}</p>
+              <p className="compact-line">+{pulse24h.new_signals}</p>
               <p style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>nya signaler</p>
             </div>
             <div>
-              <p className="compact-line">{data.meta.last_24h.articles_24h}</p>
+              <p className="compact-line">{pulse24h.articles_24h}</p>
               <p style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>artiklar</p>
             </div>
             <div>
-              <p className="compact-line">{data.meta.last_24h.critical_open}</p>
+              <p className="compact-line">{pulse24h.critical_open}</p>
               <p style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>kritiska luckor</p>
             </div>
           </div>
           <p style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-            Nyförvärv {data.meta.last_24h.signings} · Lämnar {data.meta.last_24h.departures} · Förlängningar {data.meta.last_24h.extensions} · Rykten {data.meta.last_24h.rumors}
+            Nyförvärv {pulse24h.signings} · Lämnar {pulse24h.departures} · Förlängningar {pulse24h.extensions} · Rykten {pulse24h.rumors}
           </p>
         </section>
       )}
