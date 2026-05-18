@@ -96,7 +96,10 @@ export function StatisticsPage() {
     fetch(`${API_URL}/api/v1/seasons`)
       .then(r => r.json())
       .then(d => {
-        if (d.seasons) setSeasons(d.seasons);
+        if (d.seasons) {
+          const filtered = d.seasons.filter((s: { key: string; name: string }) => s.key !== 'shl_2526');
+          setSeasons(filtered);
+        }
         if (d.active) setSelectedSeason(d.active);
       })
       .catch(() => {});
