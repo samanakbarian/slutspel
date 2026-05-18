@@ -158,9 +158,36 @@ export default function AnalyticsTabs({
   const [tab, setTab] = useState<AnalyticsTab>('season');
 
   useEffect(() => {
+    const key = `analytics_cache_${season || 'default'}`;
+    const now = Date.now();
+    const ttlMs = 10 * 60 * 1000; // 10 min
+
+    try {
+      const cached = sessionStorage.getItem(key);
+      if (cached) {
+        const parsed = JSON.parse(cached) as { ts: number; payload: any };
+        if (parsed?.ts && now - parsed.ts < ttlMs && parsed?.payload?.status === 'ok') {
+          setData(parsed.payload);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch {
+      // ignore cache parsing failures and continue with network fetch
+    }
+
     fetch(`${API_URL}/api/v1/analytics${season ? `?season=${season}` : ''}`)
       .then(r => r.json())
-      .then(d => { if (d.status === 'ok') setData(d); })
+      .then(d => {
+        if (d.status === 'ok') {
+          setData(d);
+          try {
+            sessionStorage.setItem(key, JSON.stringify({ ts: now, payload: d }));
+          } catch {
+            // ignore storage errors
+          }
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [season]);
