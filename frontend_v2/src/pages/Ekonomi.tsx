@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_URL } from '../config/api';
 
 interface FinancialYear {
   financial_year: string;
@@ -98,6 +99,30 @@ export function EkonomiPage() {
   useEffect(() => {
     async function load() {
       try {
+        let hasApiData = false;
+        // 1) Try backend API first (BigQuery-backed)
+        const apiRes = await fetch(`${API_URL}/api/v1/financials`, { cache: 'no-store' }).catch(() => null);
+        if (apiRes?.ok) {
+          const apiJson = await apiRes.json();
+          const apiItems: FinancialYear[] = Array.isArray(apiJson?.items) ? apiJson.items : [];
+          const validYears = apiItems.filter((y) => y?.financial_year && y?.entity);
+          if (validYears.length > 0) {
+            const model = {
+              years: validYears,
+              shl_requirements: { min_equity_shl: 10000000, min_equity_ha: 3000000 },
+              metadata: {
+                source: String(apiJson?.table || 'api_v1_financials'),
+                last_updated: new Date().toISOString().slice(0, 10),
+              },
+            };
+            setRaw(model);
+            const periods = [...new Set<string>(model.years.map((y) => y.financial_year))].sort().reverse();
+            setSelectedPeriod(periods[0] || '');
+            hasApiData = true;
+          }
+        }
+
+        // 2) Local static fallback (or supplement for AI commentary)
         const rawPath = '/data/financials/bjorkloven_financials_raw.json';
         const aiPath = '/data/financials/bjorkloven_financials_ai.json';
         const [rawRes, aiRes] = await Promise.all([
@@ -105,7 +130,7 @@ export function EkonomiPage() {
           fetch(aiPath, { cache: 'no-store' }).catch(() => null),
         ]);
 
-        if (rawRes.ok) {
+        if (rawRes.ok && !hasApiData) {
           const rawData = await rawRes.json();
           setRaw(rawData);
           // Find latest period
