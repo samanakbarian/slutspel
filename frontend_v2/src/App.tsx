@@ -27,15 +27,15 @@ function LagePage({ isLoading, data }: LagePageProps) {
   const currentState = useCurrentState();
 
   useEffect(() => {
-    fetch(`${API_URL}/api/v1/sportradar/results`).then(r => r.json()).then(setResults).catch(() => {});
+    fetch(`${API_URL}/api/v1/sportradar/results`).then((r) => r.json()).then(setResults).catch(() => {});
   }, []);
 
   if (isLoading && currentState.isLoading) {
     return (
       <div className="page animate-fade-up">
         <section className="signal-card">
-          <p className="card-kicker">LÃ¶venlÃ¤get</p>
-          <h2 className="card-title">Laddar lÃ¤gesbild...</h2>
+          <p className="card-kicker">Lövenläget</p>
+          <h2 className="card-title">Laddar lägesbild...</h2>
         </section>
       </div>
     );
@@ -47,25 +47,21 @@ function LagePage({ isLoading, data }: LagePageProps) {
 
   return (
     <div className="page page-laget animate-fade-up">
-
-      {/* 1. HERO â€” LÃ¤get Just Nu */}
       {cs && <HeroCard data={cs} />}
       {!cs && currentState.error && (
         <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">LÃ¤get Just Nu</p>
+          <p className="card-kicker">Läget Just Nu</p>
           <p className="card-text">Signalmotorn laddas... {currentState.error}</p>
         </section>
       )}
 
-      {/* 2. SUPPORTERSNACKET */}
       {cs?.supporter_snack && <Supportersnacket snack={cs.supporter_snack} />}
 
-      {/* 2.5 LOVENPULSEN 24H */}
       {pulse24h ? (
         <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">LÃ¶venpulsen 24h</p>
+          <p className="card-kicker">Lövenpulsen 24h</p>
           <p className="card-text" style={{ marginBottom: '0.45rem' }}>
-            {pulse24h.new_signals > 0 ? `+${pulse24h.new_signals} nya signaler senaste dygnet.` : 'Lugnt dygn i flÃ¶det.'}
+            {pulse24h.new_signals > 0 ? `+${pulse24h.new_signals} nya signaler senaste dygnet.` : 'Lugnt dygn i flödet.'}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem', marginTop: '0.3rem' }}>
             <div>
@@ -82,20 +78,19 @@ function LagePage({ isLoading, data }: LagePageProps) {
             </div>
           </div>
           <p style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-            NyfÃ¶rvÃ¤rv {pulse24h.signings} Â· LÃ¤mnar {pulse24h.departures} Â· FÃ¶rlÃ¤ngningar {pulse24h.extensions} Â· Rykten {pulse24h.rumors}
+            Nyförvärv {pulse24h.signings} · Lämnar {pulse24h.departures} · Förlängningar {pulse24h.extensions} · Rykten {pulse24h.rumors}
           </p>
         </section>
       ) : (
         <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">LÃ¶venpulsen 24h</p>
-          <p className="card-text">24h-data Ã¤r tillfÃ¤lligt inte tillgÃ¤nglig i detta API-svar.</p>
+          <p className="card-kicker">Lövenpulsen 24h</p>
+          <p className="card-text">24h-data är tillfälligt inte tillgänglig i detta API-svar.</p>
         </section>
       )}
 
-      {/* 3. ATT LÃ–SA HÃ„RNÃ„ST */}
       {data && (
         <section className="signal-card signal-card-critical">
-          <p className="card-kicker">ðŸ§­ Att lÃ¶sa hÃ¤rnÃ¤st</p>
+          <p className="card-kicker">Att lösa härnäst</p>
           <ul className="critical-list">
             {data.critical_now.map((item) => (
               <li key={item}>{item}</li>
@@ -104,19 +99,17 @@ function LagePage({ isLoading, data }: LagePageProps) {
         </section>
       )}
 
-      {/* 4. SENASTE IMPACT */}
       {data && (
         <section className="signal-card signal-card-warning">
-          <p className="card-kicker">âš¡ Senaste impact</p>
+          <p className="card-kicker">Senaste impact</p>
           <h2 className="card-title">{data.latest_impact.title}</h2>
           <p className="card-text">{data.latest_impact.meaning}</p>
         </section>
       )}
 
-      {/* 5. TRUPPBYGGET */}
       {data && (
         <section className="signal-card signal-card-ok" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">ðŸ—ï¸ Truppbygget</p>
+          <p className="card-kicker">Truppbygget</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', marginTop: '0.3rem' }}>
             <p className="compact-line">MV: {data.squad_status.goalies}</p>
             <p className="compact-line">Backar: {data.squad_status.defense}</p>
@@ -137,44 +130,47 @@ function LagePage({ isLoading, data }: LagePageProps) {
         </section>
       )}
 
-      {/* 6. NÃ„STA SNACKIS */}
       {cs?.next_watch && <NastaSnackis watchList={cs.next_watch} />}
-
-      {/* 7. VÃ„GEN TILL SHL */}
       {cs?.milestones && <VagenTillShl milestones={cs.milestones} />}
 
-      {/* 8. SENASTE MATCHER */}
       {last5.length > 0 && (
         <section className="signal-card" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">ðŸ’ Senaste matcherna</p>
+          <p className="card-kicker">Senaste matcherna</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.4rem' }}>
             {last5.map((m: any, i: number) => {
               const isWin = m.result === 'W';
               return (
-                <div key={i} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '28px 1fr auto',
-                  gap: '0.5rem',
-                  alignItems: 'center',
-                  padding: '0.35rem 0.5rem',
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid var(--glass-border)',
-                  borderRadius: '6px',
-                  borderLeft: `3px solid ${isWin ? 'var(--impact-positive)' : 'var(--impact-negative)'}`,
-                }}>
-                  <span style={{
-                    fontSize: '0.7rem',
-                    fontWeight: 900,
-                    color: isWin ? 'var(--impact-positive)' : 'var(--impact-negative)',
-                    textAlign: 'center',
-                  }}>{m.result}</span>
+                <div
+                  key={i}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '28px 1fr auto',
+                    gap: '0.5rem',
+                    alignItems: 'center',
+                    padding: '0.35rem 0.5rem',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '6px',
+                    borderLeft: `3px solid ${isWin ? 'var(--impact-positive)' : 'var(--impact-negative)'}`,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      fontWeight: 900,
+                      color: isWin ? 'var(--impact-positive)' : 'var(--impact-negative)',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {m.result}
+                  </span>
                   <div style={{ fontSize: '0.78rem' }}>
                     <span style={{ fontWeight: m.isHome ? 700 : 400 }}>{m.home}</span>
                     <span style={{ color: 'var(--text-muted)', margin: '0 0.3rem' }}>vs</span>
                     <span style={{ fontWeight: !m.isHome ? 700 : 400 }}>{m.away}</span>
                   </div>
                   <span style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
-                    {m.homeScore}â€“{m.awayScore}
+                    {m.homeScore}-{m.awayScore}
                   </span>
                 </div>
               );
@@ -188,11 +184,10 @@ function LagePage({ isLoading, data }: LagePageProps) {
         </section>
       )}
 
-      {/* 9. EKONOMIKOLLEN */}
       {data && (
         <section className="signal-card signal-card-warning" style={{ padding: '0.8rem' }}>
-          <p className="card-kicker">ðŸ’° Ekonomikollen</p>
-          <p className="compact-line">RisknivÃ¥: {data.economy_status.risk_level}</p>
+          <p className="card-kicker">Ekonomikollen</p>
+          <p className="compact-line">Risknivå: {data.economy_status.risk_level}</p>
           <p className="compact-line" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
             {data.economy_status.budget_pressure}
           </p>
@@ -201,33 +196,38 @@ function LagePage({ isLoading, data }: LagePageProps) {
           </p>
         </section>
       )}
-
     </div>
   );
 }
-
-// EkonomiPage imported from ./pages/Ekonomi
 
 function MerPage() {
   return (
     <div className="page animate-fade-up">
       <section className="signal-card">
-        <p className="card-kicker">Mer</p>
-        <h2 className="card-title">Historik, metod och instÃ¤llningar</h2>
-        <p className="card-text">Kommer i senare block enligt UX-backloggen.</p>
+        <p className="card-kicker">Om projektet</p>
+        <h2 className="card-title">Teamet bakom Lövenläget</h2>
+        <p className="card-text">
+          Plattformen drivs av en hybridmodell: produktledning och arkitektur av människa,
+          med AI-agenter som implementerar, validerar och itererar kod snabbt.
+        </p>
+        <div style={{ marginTop: '0.6rem', display: 'grid', gap: '0.35rem' }}>
+          <p className="compact-line"><strong>Huvudarkitekt:</strong> Saman Akbarian</p>
+          <p className="compact-line"><strong>AI-utvecklingsagenter:</strong> GPT-5.3 Codex, Claude Opus 4.6, Gemini 3.1 Pro</p>
+          <p className="compact-line"><strong>Ansvarsfördelning:</strong> Arkitektur, prioritering och kvalitetssäkring av människa. Kodproduktion och snabb iteration med AI-stöd.</p>
+        </div>
       </section>
     </div>
   );
 }
 
 const navItems = [
-  { to: '/', label: 'LÃ¤get', icon: Activity },
+  { to: '/', label: 'Läget', icon: Activity },
   { to: '/preseason-shl', label: 'Preseason', icon: Trophy },
   { to: '/trupp', label: 'Trupp', icon: Users },
   { to: '/silly', label: 'Silly', icon: Newspaper },
   { to: '/statistik', label: 'Statistik', icon: LineChart },
   { to: '/ekonomi', label: 'Ekonomi', icon: BarChart3 },
-  { to: '/x', label: 'X-flÃ¶de', icon: MessageSquare },
+  { to: '/x', label: 'X-flöde', icon: MessageSquare },
   { to: '/mer', label: 'Om', icon: ShieldAlert },
 ] as const;
 
@@ -243,12 +243,12 @@ function App() {
     data?.meta?.freshness_status === 'fresh'
       ? 'Live'
       : data?.meta?.freshness_status === 'stale'
-        ? 'FÃ¶rdrÃ¶jd'
+        ? 'Fördröjd'
         : data?.meta?.freshness_status === 'critical'
           ? 'Gammal data'
           : 'Status oklar';
   const freshnessLabel = sourceUpdatedAt
-    ? `${freshnessPrefix} â€¢ ${new Date(sourceUpdatedAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}`
+    ? `${freshnessPrefix} • ${new Date(sourceUpdatedAt).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}`
     : freshnessPrefix;
 
   return (
@@ -256,7 +256,7 @@ function App() {
       <div className="controlroom-shell">
         <header className="topbar">
           <div>
-            <p className="topbar-kicker">LÃ¶venlÃ¤get</p>
+            <p className="topbar-kicker">Lövenläget</p>
             <h1 className="topbar-title">SHL 26/27</h1>
           </div>
           <div className="freshness">
@@ -278,7 +278,7 @@ function App() {
           </Routes>
         </main>
 
-        <nav className="bottom-nav" aria-label="PrimÃ¤r navigation">
+        <nav className="bottom-nav" aria-label="Primär navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -300,4 +300,3 @@ function App() {
 }
 
 export default App;
-
