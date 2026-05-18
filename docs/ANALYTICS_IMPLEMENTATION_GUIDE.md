@@ -21,7 +21,7 @@
 ### Befintliga API-endpoints
 ```
 GET /api/v1/statistics    → Spelarstatistik, målvakter, standings, matcher
-GET /api/v1/analytics     → 10 analysmoduler (se nedan)
+GET /api/v1/analytics     → Analysmoduler inkl SHL-projektion (se nedan)
 GET /api/v1/lovenlaget    → Lövenläget-snapshot
 GET /api/silly-season     → Silly Season-data
 ```
@@ -40,10 +40,39 @@ GET /api/silly-season     → Silly Season-data
     "player_impact":  [{"name":"Dower Nilsson, Liam", "position":"RW", "p_per_gp":1.12, "vs_league":{"ppg_diff":0.5}, ...}],
     "goalie_radar":   [{"name":"Eriksson Ek, Olle", "sv_pct":92.08, "percentiles":{"sv_pct":87, "gaa":93, "win_pct":80}}, ...],
     "special_teams":  {"pp_pct":23.0, "pk_pct":88.8, "pp_goals":12, "pk_goals_against":8, ...},
-    "attendance":     {"avg":4558, "max":6200, "min":2800, ...}
+    "attendance":     {"avg":4558, "max":6200, "min":2800, ...},
+    "age_curve":      {"skaters":[...], "goalies":[...]},
+    "shl_projected_table": {
+      "season":"SHL 2026/27 (preseason)",
+      "data_quality":"ok",
+      "table":[
+        {
+          "projected_rank":11,
+          "projected_rank_p10":9,
+          "projected_rank_p50":11,
+          "projected_rank_p90":14,
+          "team":"IF Björklöven",
+          "projected_points":68,
+          "projected_points_p10":60,
+          "projected_points_p50":68,
+          "projected_points_p90":76,
+          "top6_chance_pct":28,
+          "playout_risk_pct":42
+        }
+      ]
+    }
   }
 }
 ```
+
+### SHL-projektion: datakvalitet och dynamik
+
+- `modules.shl_projected_table` är preseason-prognos och räknas om vid varje API-kall (med endpoint-cache).
+- Prognosen uppdateras dynamiskt när:
+  - SHL-källdata i `raw_sports.swehockey_*` uppdateras.
+  - `SILLY_SEASON_BASELINE` uppdateras (nyförvärv, förluster, utgående kontrakt).
+- Ingen statisk fallback-tabell används längre.
+  - Om SHL-källa saknas returneras `data_quality: "missing_shl_source"` och `table: []`.
 
 ### Befintliga frontend-filer
 ```
@@ -559,4 +588,3 @@ Under maj 2026 implementerades följande avancerade logik i backend (`api/main.p
 ### 5. Stenhård Ligasegregering
 - **Problem:** SHL-lag läckte in i simulerings- och slutspelstabellerna för HockeyAllsvenskan.
 - **Lösning:** Alla BQ-frågor i analytics-funktionen är nu strikt parametriserade med `season_group_id` och filtrerar enbart på den allsvenska grundserien (`ha_2526`), vilket säkerställer 100 % renlighet.
-

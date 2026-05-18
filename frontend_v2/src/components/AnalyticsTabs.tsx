@@ -55,14 +55,21 @@ type SHLBenchmarks = { pp_pct: SHLBenchmark; pk_pct: SHLBenchmark; goalie_sv: SH
 type SHLTransition = { skaters: SHLSkaters[]; goalies: SHLGoalies[]; benchmarks: SHLBenchmarks };
 type SHLProjectedRow = {
   projected_rank: number; team: string; projected_points: number; tier: string;
+  projected_rank_p10: number; projected_rank_p50: number; projected_rank_p90: number;
+  projected_points_p10: number; projected_points_p50: number; projected_points_p90: number;
   top6_chance_pct: number; playout_risk_pct: number; is_bjk: boolean;
 };
 type SHLProjectedTable = {
   season: string;
   last_updated: string;
   method: string;
+  data_quality?: 'ok' | 'missing_shl_source';
   table: SHLProjectedRow[];
-  bjk_summary: { projected_rank: number | null; projected_points: number | null; top6_chance_pct: number | null; playout_risk_pct: number | null };
+  bjk_summary: {
+    projected_rank: number | null; projected_points: number | null; top6_chance_pct: number | null; playout_risk_pct: number | null;
+    projected_points_p10: number | null; projected_points_p50: number | null; projected_points_p90: number | null;
+    projected_rank_p10: number | null; projected_rank_p50: number | null; projected_rank_p90: number | null;
+  };
 };
 type AgeTrajectory = 'UTVECKLING' | 'TILLVÄXT' | 'PEAK PRIME' | 'RUTINERAD' | 'VETERANRISK';
 type AgeCurveSkater = {
@@ -960,7 +967,16 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
         </div>
       </div>
 
-      {projectedTable?.table?.length ? (
+      {projectedTable?.data_quality === 'missing_shl_source' ? (
+        <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: AMBER, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            Predikterad SHL-tabell
+          </div>
+          <div style={{ fontSize: 12, color: chartTheme.text }}>
+            Väntar på SHL-källdata i BigQuery för att generera prognos utan fallback.
+          </div>
+        </div>
+      ) : projectedTable?.table?.length ? (
         <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
             Predikterad SHL-tabell
@@ -974,7 +990,9 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
                 <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
                   <th style={{ padding: '8px 4px', textAlign: 'center' }}>#</th>
                   <th style={{ padding: '8px 4px', textAlign: 'left' }}>Lag</th>
-                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>Proj. P</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>Proj. P (P50)</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>P10-P90 Pts</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>Rank P10-P90</th>
                   <th style={{ padding: '8px 4px', textAlign: 'center' }}>Tier</th>
                   <th style={{ padding: '8px 4px', textAlign: 'center' }}>Top-6%</th>
                   <th style={{ padding: '8px 4px', textAlign: 'center' }}>Playoutrisk%</th>
@@ -986,6 +1004,8 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
                     <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: 700, color: r.projected_rank <= 6 ? GREEN : r.projected_rank >= 12 ? RED : '#e2e8f0' }}>{r.projected_rank}</td>
                     <td style={{ padding: '8px 4px', color: '#e2e8f0', fontWeight: r.is_bjk ? 800 : 500 }}>{r.team}</td>
                     <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: 700 }}>{r.projected_points}</td>
+                    <td style={{ padding: '8px 4px', textAlign: 'center', color: chartTheme.text }}>{r.projected_points_p10}-{r.projected_points_p90}</td>
+                    <td style={{ padding: '8px 4px', textAlign: 'center', color: chartTheme.text }}>{r.projected_rank_p10}-{r.projected_rank_p90}</td>
                     <td style={{ padding: '8px 4px', textAlign: 'center', color: r.tier === 'Topplag' ? GREEN : r.tier === 'Riskzon' ? RED : AMBER }}>{r.tier}</td>
                     <td style={{ padding: '8px 4px', textAlign: 'center', color: GREEN }}>{r.top6_chance_pct}%</td>
                     <td style={{ padding: '8px 4px', textAlign: 'center', color: r.playout_risk_pct >= 35 ? RED : AMBER }}>{r.playout_risk_pct}%</td>
