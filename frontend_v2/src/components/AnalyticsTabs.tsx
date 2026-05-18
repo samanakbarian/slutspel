@@ -15,8 +15,8 @@ type H2H = { opponent: string; gp: number; w: number; l: number; otl: number; gf
 type FormPoint = { date: string; matchNum: number; w: number; l: number; pts: number; gf_avg: number; ga_avg: number; window: number };
 type StreakData = { longest_win: { type: string; length: number; start: string; end: string } | null; longest_loss: { type: string; length: number; start: string; end: string } | null; current: { type: string; length: number } | null };
 type PlayerImpact = { name: string; position: string; number: number; gp: number; goals: number; assists: number; points: number; g_per_gp: number; a_per_gp: number; p_per_gp: number; pim_per_gp: number; plus_minus: string; vs_league: { ppg_diff: number; gpg_diff: number } };
-type GoalieRadar = { name: string; gp: number; sv_pct: number; gaa: number; shutouts: number; wins: number; losses: number; win_pct: number; saves_per_gp: number; percentiles: { sv_pct: number; gaa: number; win_pct: number } };
-type SpecialTeams = { pp_goals: number; pp_opportunities: number; pp_pct: number; pk_goals_against: number; pk_times: number; pk_pct: number; total_pim: number; avg_pim_per_game: number };
+type GoalieRadar = { name: string; gp: number; sv_pct: number; gaa: number; shutouts: number; wins: number; losses: number; win_pct: number; saves_per_gp: number; gsaa: number; percentiles: { sv_pct: number; gaa: number; win_pct: number } };
+type SpecialTeams = { pp_goals: number; pp_opportunities: number; pp_pct: number; pk_goals_against: number; pk_times: number; pk_pct: number; total_pim: number; avg_pim_per_game: number; special_teams_index: number };
 type Attendance = { avg: number; max: number; min: number; total: number; home_games: number; trend?: { date: string; opponent: string; spectators: number }[] };
 type PenaltyBreakdown = {
   by_type: { type: string; count: number }[];
@@ -28,7 +28,14 @@ type EloPoint = { date: string; elo: number };
 type NextGame = { opponent: string; is_home: boolean; date: string; win_prob: number; bjk_elo: number; opp_elo: number };
 type ProjectedStanding = { team: string; current_points: number; projected_points: number; current_rank: number; projected_rank: number; is_bjk: boolean };
 type GameStateRecord = { w: number; l: number; otl: number };
-type GameState = { lead_after_1: GameStateRecord; trail_after_1: GameStateRecord; tied_after_1: GameStateRecord; lead_after_2: GameStateRecord; trail_after_2: GameStateRecord; tied_after_2: GameStateRecord };
+type GameTypes = { one_goal: GameStateRecord; two_goals: GameStateRecord; three_plus_goals: GameStateRecord };
+type GameState = { 
+  lead_after_1: GameStateRecord; trail_after_1: GameStateRecord; tied_after_1: GameStateRecord; 
+  lead_after_2: GameStateRecord; trail_after_2: GameStateRecord; tied_after_2: GameStateRecord;
+  game_types?: GameTypes;
+};
+
+type AICoachData = { taktik: string; sasong_form: string; spelar_impact: string };
 
 type Predictions = {
   elo_history: EloPoint[];
@@ -38,7 +45,7 @@ type Predictions = {
   chemistry: { player1: string; player2: string; goals_created: number }[];
   first_goal_impact: { scored_first: GameStateRecord; conceded_first: GameStateRecord };
   pythagorean: { team: string; gp: number; pts: number; exp_pts: number; diff: number; is_bjk: boolean }[];
-  ai_coach: string;
+  ai_coach: AICoachData;
 };
 
 type AnalyticsData = {
@@ -140,10 +147,27 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
         ))}
       </div>
 
-      {tab === 'season' && <SeasonTab timeline={m.timeline} form={m.form} streaks={m.streaks} special={m.special_teams} attendance={m.attendance} />}
-      {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} />}
-      {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} />}
+      {tab === 'season' && <SeasonTab timeline={m.timeline} form={m.form} streaks={m.streaks} special={m.special_teams} attendance={m.attendance} aiCoach={m.predictions?.ai_coach?.sasong_form} />}
+      {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} gameState={m.game_state} />}
+      {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} aiCoach={m.predictions?.ai_coach?.spelar_impact} />}
       {tab === 'predictions' && <PredictionsTab predictions={m.predictions} gameState={m.game_state} />}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════
+   REUSABLE AI COACH COMPONENT
+   ════════════════════════════════════════════════════════ */
+function AICoachCard({ title, text }: { title: string; text?: string }) {
+  if (!text) return null;
+  return (
+    <div style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.1), rgba(15,23,42,0.6))', borderRadius: 12, padding: 16, borderLeft: `3px solid ${TEAL}`, marginBottom: 20 }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: TEAL, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span>🤖</span> {title}
+      </div>
+      <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5, fontStyle: 'italic' }}>
+        "{text}"
+      </div>
     </div>
   );
 }
@@ -151,11 +175,12 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
 /* ════════════════════════════════════════════════════════
    TAB 1: SEASON
    ════════════════════════════════════════════════════════ */
-function SeasonTab({ timeline, form, streaks, special, attendance }: {
-  timeline: TimelinePoint[]; form: FormPoint[]; streaks: StreakData; special: SpecialTeams; attendance: Attendance;
+function SeasonTab({ timeline, form, streaks, special, attendance, aiCoach }: {
+  timeline: TimelinePoint[]; form: FormPoint[]; streaks: StreakData; special: SpecialTeams; attendance: Attendance; aiCoach?: string;
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <AICoachCard title="Analytikern (Form & Säsong)" text={aiCoach} />
       {/* Season Timeline Chart */}
       <div style={{ background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
@@ -233,7 +258,7 @@ function SeasonTab({ timeline, form, streaks, special, attendance }: {
 /* ════════════════════════════════════════════════════════
    TAB 2: SPLITS
    ════════════════════════════════════════════════════════ */
-function SplitsTab({ splits, periods, h2h, penalty }: { splits: { home: Split; away: Split }; periods: PeriodStat[]; h2h: H2H[]; penalty: PenaltyBreakdown }) {
+function SplitsTab({ splits, periods, h2h, penalty, gameState }: { splits: { home: Split; away: Split }; periods: PeriodStat[]; h2h: H2H[]; penalty: PenaltyBreakdown; gameState: GameState }) {
   const splitData = [
     { label: 'Hemma', ...splits.home, ppg: splits.home.gp > 0 ? (splits.home.pts / splits.home.gp).toFixed(2) : '0' },
     { label: 'Borta', ...splits.away, ppg: splits.away.gp > 0 ? (splits.away.pts / splits.away.gp).toFixed(2) : '0' },
@@ -376,7 +401,7 @@ function SplitsTab({ splits, periods, h2h, penalty }: { splits: { home: Split; a
 /* ════════════════════════════════════════════════════════
    TAB 3: PLAYER IMPACT
    ════════════════════════════════════════════════════════ */
-function PlayersTab({ players, goalies }: { players: PlayerImpact[]; goalies: GoalieRadar[] }) {
+function PlayersTab({ players, goalies, aiCoach }: { players: PlayerImpact[]; goalies: GoalieRadar[]; aiCoach?: string }) {
   // Radar data for goalies
   const radarData = goalies.map(g => ({
     name: g.name.split(',')[0],
@@ -389,6 +414,7 @@ function PlayersTab({ players, goalies }: { players: PlayerImpact[]; goalies: Go
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <AICoachCard title="Analytikern (Spelarscouting)" text={aiCoach} />
       {/* Player Impact Scatter */}
       <div style={{ background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
