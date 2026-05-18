@@ -89,7 +89,6 @@ export function StatisticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
-  const [seasons, setSeasons] = useState<{key: string; name: string; is_active: boolean}[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
 
   useEffect(() => {
@@ -97,7 +96,6 @@ export function StatisticsPage() {
       .then(r => r.json())
       .then(d => {
         const seasonList = Array.isArray(d.seasons) ? d.seasons : [];
-        setSeasons(seasonList);
         if (d.active && seasonList.some((s: { key: string }) => s.key === d.active)) {
           setSelectedSeason(d.active);
         } else if (seasonList.length > 0) {
