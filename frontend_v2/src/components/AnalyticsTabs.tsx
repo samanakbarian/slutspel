@@ -548,7 +548,7 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
           <span>🤖</span> Analytikern (AI-Scouting)
         </div>
         <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.6, fontStyle: 'italic' }}>
-          "{predictions.ai_coach}"
+          "{predictions.ai_coach?.taktik || "Analytikern är för tillfället offline."}"
         </div>
       </div>
 
