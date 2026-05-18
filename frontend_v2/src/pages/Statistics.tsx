@@ -224,12 +224,7 @@ export function StatisticsPage() {
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', margin: 0, background: 'linear-gradient(135deg, var(--text-primary), var(--brand-green-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Säsongsstatistik</h2>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {seasons.length > 1 && (
-              <select value={selectedSeason} onChange={e => setSelectedSeason(e.target.value)}
-                style={{ background: 'rgba(15,23,42,0.8)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.2)', borderRadius: 6, padding: '4px 8px', fontSize: 12 }}>
-                {seasons.map(s => <option key={s.key} value={s.key}>{s.name}</option>)}
-              </select>
-            )}
+            {/* Season selector intentionally hidden; season is resolved automatically. */}
             {scrapedAt && <div style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(37,163,90,.1)', border: '1px solid rgba(37,163,90,.2)', fontSize: '.68rem', color: 'var(--brand-green-light)' }}>{new Date(scrapedAt).toLocaleDateString('sv-SE')}</div>}
           </div>
         </div>
