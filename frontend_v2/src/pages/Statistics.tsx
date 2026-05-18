@@ -269,7 +269,7 @@ export function StatisticsPage() {
           </span>
         </div>))}
       </Card>}
-      {tab === 'analys' && <Card kicker="Avancerad analys — Björklöven"><AnalyticsTabs season={selectedSeason} /></Card>}
+      {tab === 'analys' && <Card kicker="Avancerad analys — Björklöven"><AnalyticsTabs season={selectedSeason} hideShlTab /></Card>}
     </div>
   );
 }

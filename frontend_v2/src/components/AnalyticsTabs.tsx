@@ -144,7 +144,15 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
-export default function AnalyticsTabs({ season }: { season?: string }) {
+export default function AnalyticsTabs({
+  season,
+  mode = 'full',
+  hideShlTab = false,
+}: {
+  season?: string;
+  mode?: 'full' | 'shl_only';
+  hideShlTab?: boolean;
+}) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<AnalyticsTab>('season');
@@ -162,7 +170,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
 
   const m = data.modules;
   const seasonKey = (season || '').toLowerCase();
-  const showShlTab = seasonKey === 'ha_2526' || seasonKey === 'shl_2627';
+  const showShlTab = !hideShlTab && (seasonKey === 'ha_2526' || seasonKey === 'shl_2627');
   const shlTabLabel = seasonKey === 'ha_2526' ? 'Preseason SHL' : 'SHL-Säkring';
   const tabs: { key: AnalyticsTab; label: string; icon: string }[] = [
     { key: 'season', label: 'Säsong', icon: '📈' },
@@ -171,6 +179,13 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
     { key: 'predictions', label: 'Prediktioner', icon: '🔮' },
   ];
   if (showShlTab) tabs.push({ key: 'shl', label: shlTabLabel, icon: '🏆' });
+
+  if (mode === 'shl_only') {
+    if (!showShlTab) {
+      return <div style={{ textAlign: 'center', padding: 30, color: chartTheme.text }}>SHL-preseasondata är inte tillgänglig för vald säsong.</div>;
+    }
+    return <SHLTransitionTab transition={m.shl_transition} ageCurve={m.age_curve} projectedTable={m.shl_projected_table} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />;
+  }
 
   return (
     <div>

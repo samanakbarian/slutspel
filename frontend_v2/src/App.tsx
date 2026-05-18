@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Activity, AlertTriangle, BarChart3, Newspaper, ShieldAlert, Users, MessageSquare, LineChart } from 'lucide-react';
+import { Activity, AlertTriangle, BarChart3, Newspaper, ShieldAlert, Users, MessageSquare, LineChart, Trophy } from 'lucide-react';
 import { SillySeason } from './pages/SillySeason';
 import { Roster } from './pages/Roster';
 import { EkonomiPage } from './pages/Ekonomi';
 import { XFeedPage } from './pages/XFeed';
 import { StatisticsPage } from './pages/Statistics';
+import { PreseasonShlPage } from './pages/PreseasonShl';
 import { useLageStore } from './store/useLageStore';
 import { useCurrentState } from './hooks/useCurrentState';
 import { HeroCard } from './components/lage/HeroCard';
@@ -221,6 +222,7 @@ function MerPage() {
 
 const navItems = [
   { to: '/', label: 'Läget', icon: Activity },
+  { to: '/preseason-shl', label: 'Preseason', icon: Trophy },
   { to: '/trupp', label: 'Trupp', icon: Users },
   { to: '/silly', label: 'Silly', icon: Newspaper },
   { to: '/statistik', label: 'Statistik', icon: LineChart },
@@ -266,6 +268,7 @@ function App() {
         <main className="content-area">
           <Routes>
             <Route path="/" element={<LagePage isLoading={isLoading} error={error} data={data} />} />
+            <Route path="/preseason-shl" element={<PreseasonShlPage />} />
             <Route path="/trupp" element={<Roster />} />
             <Route path="/silly" element={<SillySeason />} />
             <Route path="/statistik" element={<StatisticsPage />} />
