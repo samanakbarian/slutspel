@@ -35,7 +35,7 @@ type GameState = {
   game_types?: GameTypes;
 };
 
-type AICoachData = { taktik: string; sasong_form: string; spelar_impact: string };
+type AICoachData = { taktik: string; sasong_form: string; spelar_impact: string; shl_sportchef?: string };
 
 type Predictions = {
   elo_history: EloPoint[];
@@ -47,6 +47,12 @@ type Predictions = {
   pythagorean: { team: string; gp: number; pts: number; exp_pts: number; diff: number; is_bjk: boolean }[];
   ai_coach: AICoachData;
 };
+
+type SHLSkaters = { name: string; position: string; ha_ppg: number; proj_ppg: number; readiness: 'GREEN' | 'AMBER' | 'RED' };
+type SHLGoalies = { name: string; ha_sv_pct: number; proj_sv_pct: number; proj_gaa: number; readiness: 'GREEN' | 'AMBER' | 'RED' };
+type SHLBenchmark = { current: number; target: number; diff: number };
+type SHLBenchmarks = { pp_pct: SHLBenchmark; pk_pct: SHLBenchmark; goalie_sv: SHLBenchmark; special_teams_index: SHLBenchmark };
+type SHLTransition = { skaters: SHLSkaters[]; goalies: SHLGoalies[]; benchmarks: SHLBenchmarks };
 
 type AnalyticsData = {
   modules: {
@@ -63,10 +69,11 @@ type AnalyticsData = {
     penalty_breakdown: PenaltyBreakdown;
     predictions: Predictions;
     game_state: GameState;
+    shl_transition: SHLTransition;
   };
 };
 
-type AnalyticsTab = 'season' | 'splits' | 'players' | 'predictions';
+type AnalyticsTab = 'season' | 'splits' | 'players' | 'predictions' | 'shl';
 
 const GREEN = '#22c55e';
 const RED = '#ef4444';
@@ -129,6 +136,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
     { key: 'splits', label: 'Splits', icon: '🏠' },
     { key: 'players', label: 'Impact', icon: '⭐' },
     { key: 'predictions', label: 'Prediktioner', icon: '🔮' },
+    { key: 'shl', label: 'SHL-Säkring', icon: '🏆' },
   ];
 
   return (
@@ -151,6 +159,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
       {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} gameState={m.game_state} />}
       {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} aiCoach={m.predictions?.ai_coach?.spelar_impact} />}
       {tab === 'predictions' && <PredictionsTab predictions={m.predictions} gameState={m.game_state} />}
+      {tab === 'shl' && <SHLTransitionTab transition={m.shl_transition} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />}
     </div>
   );
 }
@@ -792,6 +801,135 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════
+   TAB 5: SHL TRANSITION & SURVIVAL SCOUTING
+   ════════════════════════════════════════════════════════ */
+function SHLTransitionTab({ transition, aiCoach }: { transition: SHLTransition; aiCoach?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* AI Sportchefen */}
+      <div style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(15,23,42,0.8))', borderRadius: 12, padding: 20, borderLeft: '4px solid #ec4899', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#ec4899', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>💼</span> AI-Sportchefen (SHL-Scouting)
+        </div>
+        <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.6, fontStyle: 'italic' }}>
+          "{aiCoach || "Analytikern håller på att förbereda SHL-rapporten..."}"
+        </div>
+      </div>
+
+      {/* SHL Survival Benchmarks */}
+      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
+          SHL Survival Benchmarks (Överlevnadskrav)
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+          {[
+            { label: "Powerplay (PP%)", cur: transition.benchmarks.pp_pct.current, target: transition.benchmarks.pp_pct.target, diff: transition.benchmarks.pp_pct.diff, fmt: (v:number)=>`${v}%` },
+            { label: "Penalty Kill (PK%)", cur: transition.benchmarks.pk_pct.current, target: transition.benchmarks.pk_pct.target, diff: transition.benchmarks.pk_pct.diff, fmt: (v:number)=>`${v}%` },
+            { label: "Målvakts-SV%", cur: transition.benchmarks.goalie_sv.current, target: transition.benchmarks.goalie_sv.target, diff: transition.benchmarks.goalie_sv.diff, fmt: (v:number)=>`${v}%` },
+            { label: "Special Teams Index", cur: transition.benchmarks.special_teams_index.current, target: transition.benchmarks.special_teams_index.target, diff: transition.benchmarks.special_teams_index.diff, fmt: (v:number)=>v.toFixed(1) }
+          ].map(b => {
+            const isAhead = b.diff >= 0;
+            return (
+              <div key={b.label} style={{ background: 'rgba(15,23,42,0.4)', border: '1px solid rgba(148,163,184,0.08)', borderRadius: 10, padding: 12, position: 'relative' }}>
+                <div style={{ fontSize: 10, color: chartTheme.text, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{b.label}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: '#e2e8f0' }}>{b.fmt(b.cur)}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: isAhead ? GREEN : RED }}>
+                    {isAhead ? '+' : ''}{b.diff.toFixed(1)}%
+                  </span>
+                </div>
+                <div style={{ fontSize: 10, color: chartTheme.text, marginTop: 4 }}>
+                  SHL-krav: <span style={{ color: '#cbd5e1', fontWeight: 600 }}>{b.fmt(b.target)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ marginTop: 12, fontSize: 11, color: chartTheme.text, lineHeight: 1.4 }}>
+          * Siffrorna visar hur vårt allsvenska guldlag presterar jämfört med det historiska genomsnittet för de lag som slutade på plats 11-12 i SHL.
+        </div>
+      </div>
+
+      {/* Skater Reality Check */}
+      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+          Spelar-projektering: Reality Check (Utespelare)
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
+                <th style={{ padding: '8px 4px' }}>Spelare</th>
+                <th style={{ padding: '8px 4px' }}>Pos</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>HA PPG</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>Proj. SHL PPG</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>SHL Readiness</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transition.skaters.map(s => {
+                const badgeColor = s.readiness === 'GREEN' ? GREEN : s.readiness === 'AMBER' ? AMBER : RED;
+                const badgeText = s.readiness === 'GREEN' ? 'SHL-Elit' : s.readiness === 'AMBER' ? 'SHL-Bredd' : 'Kvalitetsrisk';
+                return (
+                  <tr key={s.name} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                    <td style={{ padding: '10px 4px', fontWeight: 600, color: '#e2e8f0' }}>{s.name}</td>
+                    <td style={{ padding: '10px 4px', color: chartTheme.text }}>{s.position}</td>
+                    <td style={{ padding: '10px 4px', textAlign: 'center' }}>{s.ha_ppg.toFixed(2)}</td>
+                    <td style={{ padding: '10px 4px', textAlign: 'center', fontWeight: 700, color: badgeColor }}>{s.proj_ppg.toFixed(2)}</td>
+                    <td style={{ padding: '10px 4px', textAlign: 'center' }}>
+                      <span style={{ display: 'inline-block', padding: '2px 6px', borderRadius: 4, fontSize: 9, fontWeight: 800, background: `${badgeColor}20`, color: badgeColor, border: `1px solid ${badgeColor}40` }}>
+                        {badgeText}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Goalie Reality Check */}
+      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: BLUE, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+          Målvakts-projektering: Reality Check
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
+              <th style={{ padding: '8px 4px' }}>Målvakt</th>
+              <th style={{ padding: '8px 4px', textAlign: 'center' }}>HA SV%</th>
+              <th style={{ padding: '8px 4px', textAlign: 'center' }}>Proj. SHL SV%</th>
+              <th style={{ padding: '8px 4px', textAlign: 'center' }}>Proj. SHL GAA</th>
+              <th style={{ padding: '8px 4px', textAlign: 'center' }}>SHL Readiness</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transition.goalies.map(g => {
+              const badgeColor = g.readiness === 'GREEN' ? GREEN : g.readiness === 'AMBER' ? AMBER : RED;
+              const badgeText = g.readiness === 'GREEN' ? 'SHL-Elit' : g.readiness === 'AMBER' ? 'SHL-Bredd' : 'Kvalitetsrisk';
+              return (
+                <tr key={g.name} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                  <td style={{ padding: '10px 4px', fontWeight: 600, color: '#e2e8f0' }}>{g.name}</td>
+                  <td style={{ padding: '10px 4px', textAlign: 'center' }}>{g.ha_sv_pct}%</td>
+                  <td style={{ padding: '10px 4px', textAlign: 'center', fontWeight: 700, color: badgeColor }}>{g.proj_sv_pct}%</td>
+                  <td style={{ padding: '10px 4px', textAlign: 'center' }}>{g.proj_gaa.toFixed(2)}</td>
+                  <td style={{ padding: '10px 4px', textAlign: 'center' }}>
+                    <span style={{ display: 'inline-block', padding: '2px 6px', borderRadius: 4, fontSize: 9, fontWeight: 800, background: `${badgeColor}20`, color: badgeColor, border: `1px solid ${badgeColor}40` }}>
+                      {badgeText}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
