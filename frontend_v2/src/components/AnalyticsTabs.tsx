@@ -161,13 +161,14 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
   if (!data) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Kunde inte ladda analysdata</div>;
 
   const m = data.modules;
+  const showShlTab = (season || '').toLowerCase().startsWith('shl_');
   const tabs: { key: AnalyticsTab; label: string; icon: string }[] = [
     { key: 'season', label: 'Säsong', icon: '📈' },
     { key: 'splits', label: 'Splits', icon: '🏠' },
     { key: 'players', label: 'Impact', icon: '⭐' },
     { key: 'predictions', label: 'Prediktioner', icon: '🔮' },
-    { key: 'shl', label: 'SHL-Säkring', icon: '🏆' },
   ];
+  if (showShlTab) tabs.push({ key: 'shl', label: 'SHL-Säkring', icon: '🏆' });
 
   return (
     <div>
@@ -189,7 +190,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
       {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} gameState={m.game_state} />}
       {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} aiCoach={m.predictions?.ai_coach?.spelar_impact} />}
       {tab === 'predictions' && <PredictionsTab predictions={m.predictions} gameState={m.game_state} />}
-      {tab === 'shl' && <SHLTransitionTab transition={m.shl_transition} ageCurve={m.age_curve} projectedTable={m.shl_projected_table} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />}
+      {showShlTab && tab === 'shl' && <SHLTransitionTab transition={m.shl_transition} ageCurve={m.age_curve} projectedTable={m.shl_projected_table} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />}
     </div>
   );
 }
