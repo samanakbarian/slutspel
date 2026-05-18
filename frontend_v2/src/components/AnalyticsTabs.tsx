@@ -867,6 +867,7 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
    ════════════════════════════════════════════════════════ */
 function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { transition: SHLTransition; ageCurve: AgeCurveModule; projectedTable?: SHLProjectedTable; aiCoach?: string }) {
   const [showReadinessInfo, setShowReadinessInfo] = useState(false);
+  const [showTableModelInfo, setShowTableModelInfo] = useState(false);
   const allAges = [...(ageCurve?.skaters || []).map(s => s.age), ...(ageCurve?.goalies || []).map(g => g.age)];
   const avgAge = allAges.length ? (allAges.reduce((a, b) => a + b, 0) / allAges.length) : 0;
   const veteranRiskCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'VETERANRISK').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'VETERANRISK').length;
@@ -1036,6 +1037,32 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
           </div>
           <div style={{ fontSize: 11, color: chartTheme.text, marginBottom: 12 }}>
             {projectedTable.season} • Uppdaterad: {projectedTable.last_updated?.slice(0, 10)} • {projectedTable.method}
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              onClick={() => setShowTableModelInfo(v => !v)}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(148,163,184,0.35)',
+                color: chartTheme.text,
+                borderRadius: 8,
+                padding: '6px 10px',
+                fontSize: 11,
+                cursor: 'pointer',
+              }}
+            >
+              {showTableModelInfo ? 'Dölj modellinfo' : 'Visa hur tabellen beräknas'}
+            </button>
+            {showTableModelInfo && (
+              <div style={{ marginTop: 10, fontSize: 11, color: chartTheme.text, lineHeight: 1.5 }}>
+                <div><b>Baspoäng per lag:</b> 75% poängtempo (PPG x 52) + 25% rank-baserad seed.</div>
+                <div><b>Laguppsättning:</b> degraderade lag filtreras bort och Björklöven seedas in inför SHL 26/27.</div>
+                <div><b>Björklöven-justering:</b> påverkas av roster-readiness, målvaktsnivå, special teams och silly-rörelser.</div>
+                <div><b>Osäkerhet:</b> P10/P90 är heuristiska intervall, inte full simulering match-för-match.</div>
+                <div><b>Svagheter:</b> känslig för fel i rådata och använder fasta koefficienter, inte full historisk kalibrering.</div>
+              </div>
+            )}
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
