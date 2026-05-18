@@ -9,11 +9,11 @@ Målarkitekturen står fast. Sedan senaste granskningen har **Swehockey-datalagr
 Senaste förändringar:
 
 - **raw_sports fullständigt ifyllt:** 5 tabeller med komplett spelar-, målvakts-, schema-, tabell- och per-match-eventdata
-- **Analytics API:** Ny `/api/v1/analytics` med 10 beräknade analysmoduler (timeline, splits, H2H, PP/PK, etc.)
+- **Analytics API:** `/api/v1/analytics` utökad med SHL-preseasonmoduler (`age_curve`, `shl_projected_table` inkl P10/P50/P90-intervall och `data_quality`).
 - **Frontend Analytics:** Ny "Analys"-tab med Recharts-baserade visualiseringar (poängkurva, periodstaplar, scatter, radar)
 - **Data Integrity:** SHL-kontaminering rensad, standings omberäknade, all data verifierad mot källa
 
-**Känd arkitekturlucka:** Multi-season-stöd saknas. Alla season-IDs (18266/19979) är hardkodade i API och loader. Se separat plan: `MULTI_SEASON_PLAN.md`.
+**Känd arkitekturlucka:** Multi-season finns men behöver fortsatt härdning för fler SHL-säsonger och automatiserad säsongsmappning. Se separat plan: `MULTI_SEASON_PLAN.md`.
 
 Detta dokument är styrande målbild. Faktisk implementation och status finns i:
 
@@ -119,7 +119,7 @@ Alla tabeller har `season_group_id` för säsongsfiltrering. Aktuella IDs:
 | Endpoint | Källa | Caching | Beskrivning |
 |----------|-------|---------|-------------|
 | `/api/v1/statistics` | raw_sports.* | Ingen | Tabell, spelare, målvakter, matcher |
-| `/api/v1/analytics` | raw_sports.* | Ingen | 10 analysmoduler (beräknas vid request) |
+| `/api/v1/analytics` | raw_sports.* + silly baseline | Ingen | Flera analysmoduler inkl `age_curve` + `shl_projected_table` (preseason) |
 | `/api/v1/lovenlaget` | Heuristik + raw_content | GCS | Lövenläget-snapshot |
 | `/api/silly-season` | GCS + baseline | GCS | Silly Season-data |
 | `/api/v1/x-feed` | GCS-cache | 30min | X/Twitter-integration |
