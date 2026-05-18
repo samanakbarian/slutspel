@@ -161,14 +161,16 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
   if (!data) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Kunde inte ladda analysdata</div>;
 
   const m = data.modules;
-  const showShlTab = (season || '').toLowerCase() === 'shl_2627';
+  const seasonKey = (season || '').toLowerCase();
+  const showShlTab = seasonKey === 'ha_2526' || seasonKey === 'shl_2627';
+  const shlTabLabel = seasonKey === 'ha_2526' ? 'Preseason SHL' : 'SHL-Säkring';
   const tabs: { key: AnalyticsTab; label: string; icon: string }[] = [
     { key: 'season', label: 'Säsong', icon: '📈' },
     { key: 'splits', label: 'Splits', icon: '🏠' },
     { key: 'players', label: 'Impact', icon: '⭐' },
     { key: 'predictions', label: 'Prediktioner', icon: '🔮' },
   ];
-  if (showShlTab) tabs.push({ key: 'shl', label: 'SHL-Säkring', icon: '🏆' });
+  if (showShlTab) tabs.push({ key: 'shl', label: shlTabLabel, icon: '🏆' });
 
   return (
     <div>
