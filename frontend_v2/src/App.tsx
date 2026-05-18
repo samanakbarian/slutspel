@@ -207,13 +207,16 @@ function MerPage() {
         <p className="card-kicker">Om projektet</p>
         <h2 className="card-title">Teamet bakom Lövenläget</h2>
         <p className="card-text">
-          Plattformen drivs av en hybridmodell: produktledning och arkitektur av människa,
-          med AI-agenter som implementerar, validerar och itererar kod snabbt.
+          Lövenläget byggs av ett litet team med tydlig ansvarsfördelning: mänsklig styrning och
+          AI-stöd i genomförandet. Målet är enkelhet, transparens och snabb förbättringstakt.
         </p>
         <div style={{ marginTop: '0.6rem', display: 'grid', gap: '0.35rem' }}>
-          <p className="compact-line"><strong>Huvudarkitekt:</strong> Saman Akbarian</p>
+          <p className="compact-line">
+            <strong>Huvudarkitekt:</strong>{' '}
+            <a href="mailto:saman.akbarian@gmail.com">Saman Akbarian</a>
+          </p>
           <p className="compact-line"><strong>AI-utvecklingsagenter:</strong> GPT-5.3 Codex, Claude Opus 4.6, Gemini 3.1 Pro</p>
-          <p className="compact-line"><strong>Ansvarsfördelning:</strong> Arkitektur, prioritering och kvalitetssäkring av människa. Kodproduktion och snabb iteration med AI-stöd.</p>
+          <p className="compact-line"><strong>Så jobbar vi:</strong> Saman sätter riktning, prioriterar och kvalitetssäkrar. AI-agenterna hjälper till att bygga, testa och iterera snabbt.</p>
         </div>
       </section>
     </div>
