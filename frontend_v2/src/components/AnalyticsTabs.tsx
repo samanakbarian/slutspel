@@ -825,6 +825,14 @@ function SHLTransitionTab({ transition, ageCurve, aiCoach }: { transition: SHLTr
   const avgAge = allAges.length ? (allAges.reduce((a, b) => a + b, 0) / allAges.length) : 0;
   const veteranRiskCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'VETERANRISK').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'VETERANRISK').length;
   const developmentCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'UTVECKLING' || s.trajectory === 'TILLVÄXT').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'UTVECKLING' || g.trajectory === 'TILLVÄXT').length;
+  const readinessToScore = (value: 'GREEN' | 'AMBER' | 'RED') => value === 'GREEN' ? 100 : value === 'AMBER' ? 65 : 35;
+  const skaterReadiness = (transition.skaters || []).length ? (transition.skaters.reduce((a, s) => a + readinessToScore(s.readiness), 0) / transition.skaters.length) : 0;
+  const goalieReadiness = (transition.goalies || []).length ? (transition.goalies.reduce((a, g) => a + readinessToScore(g.readiness), 0) / transition.goalies.length) : 0;
+  const specialTeamsScore = Math.max(0, Math.min(100, transition.benchmarks.special_teams_index.current));
+  const ageRiskScore = Math.max(0, 100 - (veteranRiskCount * 12));
+  const overallReadiness = Math.round((skaterReadiness * 0.35) + (goalieReadiness * 0.25) + (specialTeamsScore * 0.25) + (ageRiskScore * 0.15));
+  const scoreColor = (score: number) => score >= 75 ? GREEN : score >= 55 ? AMBER : RED;
+  const readinessState = overallReadiness >= 75 ? 'GOD SHL-BEREDSKAP' : overallReadiness >= 55 ? 'OSÄKER SHL-BEREDSKAP' : 'HÖG SHL-RISK';
   const trajectoryBadge = (trajectory: AgeTrajectory) => {
     if (trajectory === 'UTVECKLING' || trajectory === 'TILLVÄXT') return { color: GREEN, icon: '↑' };
     if (trajectory === 'PEAK PRIME') return { color: TEAL, icon: '★' };
@@ -834,13 +842,40 @@ function SHLTransitionTab({ transition, ageCurve, aiCoach }: { transition: SHLTr
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(15,23,42,0.75))', borderRadius: 12, padding: 16, border: '1px solid rgba(20,184,166,0.25)' }}>
+        <div style={{ fontSize: 11, color: chartTheme.text, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+          Preseason Decision Cockpit
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#e2e8f0', marginBottom: 6 }}>
+          Inför SHL 2026/27 - inga SHL-matcher spelade ännu
+        </div>
+        <div style={{ fontSize: 12, color: chartTheme.text }}>
+          Denna vy visar prognos, truppprofil och beslutsstöd inför premiären - inte SHL-form.
+        </div>
+      </div>
+
       {/* AI Sportchefen */}
       <div style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(15,23,42,0.8))', borderRadius: 12, padding: 20, borderLeft: '4px solid #ec4899', position: 'relative', overflow: 'hidden' }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: '#ec4899', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>💼</span> AI-Sportchefen (SHL-Scouting)
+          <span>💼</span> AI-Sportchefen (Preseason SHL-Scouting)
         </div>
         <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.6, fontStyle: 'italic' }}>
           "{aiCoach || "Analytikern håller på att förbereda SHL-rapporten..."}"
+        </div>
+      </div>
+
+      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+          SHL Readiness Scorecard
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+          <StatCard label="Total readiness" value={overallReadiness} sub={readinessState} accent={scoreColor(overallReadiness)} />
+          <StatCard label="Utespelare" value={Math.round(skaterReadiness)} sub="Rollbärighet" accent={scoreColor(skaterReadiness)} />
+          <StatCard label="Målvakter" value={Math.round(goalieReadiness)} sub="Starter + 1B" accent={scoreColor(goalieReadiness)} />
+          <StatCard label="Special Teams" value={Math.round(specialTeamsScore)} sub="PP/PK survival" accent={scoreColor(specialTeamsScore)} />
+        </div>
+        <div style={{ fontSize: 12, color: chartTheme.text }}>
+          Viktning: Utespelare 35%, Målvakt 25%, Special Teams 25%, Åldersrisk 15%.
         </div>
       </div>
 
@@ -899,6 +934,17 @@ function SHLTransitionTab({ transition, ageCurve, aiCoach }: { transition: SHLTr
               })}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: AMBER, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+          Preseason Action Board
+        </div>
+        <div style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.6 }}>
+          1. Prioritera värvning av topp-4 back om total readiness ligger under 70.<br />
+          2. Skydda veteranprofiler med belastningsplan första 10 omgångarna.<br />
+          3. Lås PP/PK-enheter tidigt i camp för att säkra special teams-index.
         </div>
       </div>
 
