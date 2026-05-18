@@ -53,6 +53,16 @@ type SHLGoalies = { name: string; ha_sv_pct: number; proj_sv_pct: number; proj_g
 type SHLBenchmark = { current: number; target: number; diff: number };
 type SHLBenchmarks = { pp_pct: SHLBenchmark; pk_pct: SHLBenchmark; goalie_sv: SHLBenchmark; special_teams_index: SHLBenchmark };
 type SHLTransition = { skaters: SHLSkaters[]; goalies: SHLGoalies[]; benchmarks: SHLBenchmarks };
+type AgeTrajectory = 'UTVECKLING' | 'TILLVÄXT' | 'PEAK PRIME' | 'RUTINERAD' | 'VETERANRISK';
+type AgeCurveSkater = {
+  name: string; position: string; age: number; ha_ppg: number; base_proj_ppg: number; adj_proj_ppg: number;
+  multiplier_pct: number; trajectory: AgeTrajectory; readiness: 'GREEN' | 'AMBER' | 'RED';
+};
+type AgeCurveGoalie = {
+  name: string; age: number; ha_sv_pct: number; base_proj_sv_pct: number; adj_proj_sv_pct: number;
+  base_proj_gaa: number; adj_proj_gaa: number; multiplier_pct: number; trajectory: AgeTrajectory; readiness: 'GREEN' | 'AMBER' | 'RED';
+};
+type AgeCurveModule = { skaters: AgeCurveSkater[]; goalies: AgeCurveGoalie[] };
 
 type AnalyticsData = {
   modules: {
@@ -70,6 +80,7 @@ type AnalyticsData = {
     predictions: Predictions;
     game_state: GameState;
     shl_transition: SHLTransition;
+    age_curve: AgeCurveModule;
   };
 };
 
@@ -159,7 +170,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
       {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} gameState={m.game_state} />}
       {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} aiCoach={m.predictions?.ai_coach?.spelar_impact} />}
       {tab === 'predictions' && <PredictionsTab predictions={m.predictions} gameState={m.game_state} />}
-      {tab === 'shl' && <SHLTransitionTab transition={m.shl_transition} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />}
+      {tab === 'shl' && <SHLTransitionTab transition={m.shl_transition} ageCurve={m.age_curve} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />}
     </div>
   );
 }
@@ -809,7 +820,18 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
 /* ════════════════════════════════════════════════════════
    TAB 5: SHL TRANSITION & SURVIVAL SCOUTING
    ════════════════════════════════════════════════════════ */
-function SHLTransitionTab({ transition, aiCoach }: { transition: SHLTransition; aiCoach?: string }) {
+function SHLTransitionTab({ transition, ageCurve, aiCoach }: { transition: SHLTransition; ageCurve: AgeCurveModule; aiCoach?: string }) {
+  const allAges = [...(ageCurve?.skaters || []).map(s => s.age), ...(ageCurve?.goalies || []).map(g => g.age)];
+  const avgAge = allAges.length ? (allAges.reduce((a, b) => a + b, 0) / allAges.length) : 0;
+  const veteranRiskCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'VETERANRISK').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'VETERANRISK').length;
+  const developmentCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'UTVECKLING' || s.trajectory === 'TILLVÄXT').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'UTVECKLING' || g.trajectory === 'TILLVÄXT').length;
+  const trajectoryBadge = (trajectory: AgeTrajectory) => {
+    if (trajectory === 'UTVECKLING' || trajectory === 'TILLVÄXT') return { color: GREEN, icon: '↑' };
+    if (trajectory === 'PEAK PRIME') return { color: TEAL, icon: '★' };
+    if (trajectory === 'RUTINERAD') return { color: AMBER, icon: '↓' };
+    return { color: RED, icon: '⚠' };
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* AI Sportchefen */}
@@ -819,6 +841,64 @@ function SHLTransitionTab({ transition, aiCoach }: { transition: SHLTransition; 
         </div>
         <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.6, fontStyle: 'italic' }}>
           "{aiCoach || "Analytikern håller på att förbereda SHL-rapporten..."}"
+        </div>
+      </div>
+
+      {/* Age Curve & Trajectory */}
+      <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+          SHL Survival Age Curve & Career Trajectory
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+          <StatCard label="Snittålder trupp" value={avgAge.toFixed(1)} sub="Skaters + Målvakter" accent="#e2e8f0" />
+          <StatCard label="Utveckling/Tillväxt" value={developmentCount} sub="Framtidsdrivna profiler" accent={GREEN} />
+          <StatCard label="Veteranrisk" value={veteranRiskCount} sub="Tempo/skaderisk i SHL" accent={RED} />
+        </div>
+        <div style={{ fontSize: 12, color: chartTheme.text, marginBottom: 12 }}>
+          Strategisk AI-brief: Åldersprofilen lutar mot {avgAge >= 30 ? 'erfarenhet' : 'balanserad prime'} med {veteranRiskCount} veteranrisk-profiler och {developmentCount} utvecklingsprofiler.
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
+                <th style={{ padding: '8px 4px', textAlign: 'left' }}>Spelare</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>Ålder</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>Pos</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>Trajectory</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>Bas</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>Justerad</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center' }}>Progression</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(ageCurve?.skaters || []).map((s) => {
+                const t = trajectoryBadge(s.trajectory);
+                const delta = s.adj_proj_ppg - s.base_proj_ppg;
+                const pct = Math.max(0, Math.min(100, 50 + s.multiplier_pct));
+                return (
+                  <tr key={s.name} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)' }}>
+                    <td style={{ padding: '9px 4px', fontWeight: 600, color: '#e2e8f0' }}>
+                      {s.name.includes('🆕') ? s.name : s.name}
+                    </td>
+                    <td style={{ padding: '9px 4px', textAlign: 'center' }}>{s.age}</td>
+                    <td style={{ padding: '9px 4px', textAlign: 'center', color: chartTheme.text }}>{s.position}</td>
+                    <td style={{ padding: '9px 4px', textAlign: 'center' }}>
+                      <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 999, border: `1px solid ${t.color}50`, color: t.color, background: `${t.color}1A`, fontSize: 10, fontWeight: 800 }}>
+                        {t.icon} {s.trajectory}
+                      </span>
+                    </td>
+                    <td style={{ padding: '9px 4px', textAlign: 'center' }}>{s.base_proj_ppg.toFixed(2)}</td>
+                    <td style={{ padding: '9px 4px', textAlign: 'center', color: delta >= 0 ? GREEN : RED, fontWeight: 700 }}>{s.adj_proj_ppg.toFixed(2)}</td>
+                    <td style={{ padding: '9px 4px', minWidth: 140 }}>
+                      <div style={{ height: 6, borderRadius: 999, background: 'rgba(148,163,184,0.15)', overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: `linear-gradient(90deg, ${t.color}, ${t.color}80)` }} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
