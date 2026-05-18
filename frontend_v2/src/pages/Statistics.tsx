@@ -96,20 +96,40 @@ export function StatisticsPage() {
     fetch(`${API_URL}/api/v1/seasons`)
       .then(r => r.json())
       .then(d => {
-        if (d.seasons) {
-          const filtered = d.seasons.filter((s: { key: string; name: string }) => s.key !== 'shl_2526');
-          setSeasons(filtered);
+        const seasonList = Array.isArray(d.seasons) ? d.seasons : [];
+        setSeasons(seasonList);
+        if (d.active && seasonList.some((s: { key: string }) => s.key === d.active)) {
+          setSelectedSeason(d.active);
+        } else if (seasonList.length > 0) {
+          setSelectedSeason(seasonList[0].key);
         }
-        if (d.active) setSelectedSeason(d.active);
       })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     fetch(`${API_URL}/api/v1/statistics${selectedSeason ? `?season=${selectedSeason}` : ''}`, { cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(j => setRaw(j))
+      .then(async (j) => {
+        const noTeamData =
+          (j?.counts?.team_games ?? 0) === 0 &&
+          (j?.counts?.team_players_regular ?? 0) === 0 &&
+          (j?.counts?.team_goalies ?? 0) === 0;
+
+        // If active season has no populated stats yet, fall back to known populated season.
+        if (selectedSeason && noTeamData && selectedSeason !== 'ha_2526') {
+          const fallbackRes = await fetch(`${API_URL}/api/v1/statistics?season=ha_2526`, { cache: 'no-store' });
+          if (fallbackRes.ok) {
+            const fallbackJson = await fallbackRes.json();
+            setSelectedSeason('ha_2526');
+            setRaw(fallbackJson);
+            return;
+          }
+        }
+        setRaw(j);
+      })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [selectedSeason]);
