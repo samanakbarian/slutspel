@@ -174,14 +174,22 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px){
+          .analytics-tabbar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+          .analytics-tabbar::-webkit-scrollbar{display:none}
+          .analytics-tabbtn{flex:0 0 auto;min-width:124px;white-space:nowrap}
+        }
+      `}</style>
       {/* Tab bar */}
-      <div style={{ display: 'flex', gap: 4, background: 'rgba(15,23,42,0.4)', borderRadius: 10, padding: 4, marginBottom: 20 }}>
+      <div className="analytics-tabbar" style={{ display: 'flex', gap: 4, background: 'rgba(15,23,42,0.4)', borderRadius: 10, padding: 4, marginBottom: 20 }}>
         {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+          <button key={t.key} className="analytics-tabbtn" onClick={() => setTab(t.key)} style={{
+            flex: 1, padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
             background: tab === t.key ? 'linear-gradient(135deg, #16a34a, #15803d)' : 'transparent',
             color: tab === t.key ? '#fff' : chartTheme.text,
             transition: 'all 0.2s',
+            whiteSpace: 'nowrap',
           }}>
             {t.icon} {t.label}
           </button>

@@ -189,6 +189,12 @@ export function StatisticsPage() {
         .stat-tab.active{background:linear-gradient(135deg,var(--brand-green),#1a8a4a);color:#fff;box-shadow:0 4px 16px rgba(37,163,90,.25)}
         .game-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(172,199,186,.06);font-size:.82rem;transition:background .15s}
         .game-row:hover{background:rgba(255,255,255,.03);border-radius:6px}
+        @media (max-width: 768px){
+          .stat-tabbar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+          .stat-tabbar::-webkit-scrollbar{display:none}
+          .stat-tab{flex:0 0 auto;min-width:108px;white-space:nowrap}
+          .game-row{font-size:.75rem}
+        }
       `}</style>
 
       <Card glow="var(--brand-green)">
@@ -209,7 +215,7 @@ export function StatisticsPage() {
         </div>
       </Card>
 
-      <div style={{ display: 'flex', gap: 4, padding: 4, background: 'rgba(14,24,20,.7)', borderRadius: 12, border: '1px solid rgba(172,199,186,.08)', marginBottom: 14 }}>
+      <div className="stat-tabbar" style={{ display: 'flex', gap: 4, padding: 4, background: 'rgba(14,24,20,.7)', borderRadius: 12, border: '1px solid rgba(172,199,186,.08)', marginBottom: 14 }}>
         {tabs.map(t => (<button key={t.key} className={`stat-tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}><span style={{ marginRight: 5 }}>{t.icon}</span>{t.label}</button>))}
       </div>
 
