@@ -73,6 +73,12 @@ GET /api/silly-season     → Silly Season-data
   - `SILLY_SEASON_BASELINE` uppdateras (nyförvärv, förluster, utgående kontrakt).
 - Ingen statisk fallback-tabell används längre.
   - Om SHL-källa saknas returneras `data_quality: "missing_shl_source"` och `table: []`.
+- Frontend-visning:
+  - SHL-fliken i Analytics visas endast för säsongsnyckeln `shl_2627`.
+  - För HA-säsong (`ha_2526`) är SHL-fliken dold.
+- Laguppsättning i projektion:
+  - Baseras på senaste SHL-standings för styrkenivå.
+  - Mappas till kommande SHL 26/27-lagset (Björklöven in, MODO och Leksand ut).
 
 ### Befintliga frontend-filer
 ```

@@ -161,7 +161,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
   if (!data) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Kunde inte ladda analysdata</div>;
 
   const m = data.modules;
-  const showShlTab = (season || '').toLowerCase().startsWith('shl_');
+  const showShlTab = (season || '').toLowerCase() === 'shl_2627';
   const tabs: { key: AnalyticsTab; label: string; icon: string }[] = [
     { key: 'season', label: 'Säsong', icon: '📈' },
     { key: 'splits', label: 'Splits', icon: '🏠' },
