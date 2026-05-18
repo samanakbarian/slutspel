@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
+import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'recharts';
 
 interface FinancialYear {
   financial_year: string;
@@ -28,7 +29,7 @@ interface AiPeriod {
 }
 
 function formatSEK(val: number | null | undefined): string {
-  if (val == null || isNaN(val)) return '—';
+  if (val == null || isNaN(val)) return 'â€”';
   if (Math.abs(val) >= 1000000) return (val / 1000000).toFixed(1) + ' MSEK';
   if (Math.abs(val) >= 1000) return (val / 1000).toFixed(0) + ' TSEK';
   return val + ' SEK';
@@ -40,7 +41,7 @@ function calcYoY(curr: number | undefined, prev: number | undefined): number | n
 }
 
 function formatPct(val: number | null): string {
-  if (val == null) return '—';
+  if (val == null) return 'â€”';
   return `${val >= 0 ? '+' : ''}${val.toFixed(1)}%`;
 }
 
@@ -50,19 +51,19 @@ function KPICard({ label, value, delta, color }: { label: string; value: string;
     <div className="signal-card" style={{ padding: '0.7rem', borderLeftColor: color }}>
       <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>{label}</div>
       <div style={{ fontSize: '1.4rem', fontWeight: 900, fontFamily: 'var(--font-display)', color }}>{value}</div>
-      {delta && <div style={{ fontSize: '0.7rem', color: isPos ? 'var(--impact-positive)' : 'var(--impact-negative)', marginTop: '0.15rem' }}>{isPos ? '↑' : '↓'} {delta}</div>}
+      {delta && <div style={{ fontSize: '0.7rem', color: isPos ? 'var(--impact-positive)' : 'var(--impact-negative)', marginTop: '0.15rem' }}>{isPos ? 'â†‘' : 'â†“'} {delta}</div>}
     </div>
   );
 }
 
 function HealthMeter({ score }: { score: number }) {
-  const leaves = '🍃'.repeat(score) + '🍂'.repeat(5 - score);
-  const labels = ['', 'Kritisk', 'Svag', 'Stabil', 'Stark', 'Utmärkt'];
+  const leaves = 'ðŸƒ'.repeat(score) + 'ðŸ‚'.repeat(5 - score);
+  const labels = ['', 'Kritisk', 'Svag', 'Stabil', 'Stark', 'UtmÃ¤rkt'];
   return (
     <div className="signal-card signal-card-primary" style={{ textAlign: 'center', padding: '1rem' }}>
-      <p className="card-kicker">Ekonomiskt hälsobetyg</p>
+      <p className="card-kicker">Ekonomiskt hÃ¤lsobetyg</p>
       <div style={{ fontSize: '2rem', margin: '0.4rem 0' }}>{leaves}</div>
-      <div style={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'var(--font-display)', color: 'var(--brand-gold)' }}>{score}/5 — {labels[score]}</div>
+      <div style={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'var(--font-display)', color: 'var(--brand-gold)' }}>{score}/5 â€” {labels[score]}</div>
     </div>
   );
 }
@@ -88,6 +89,12 @@ function ShlMeter({ label, current, threshold, passes }: { label: string; curren
       </div>
     </div>
   );
+}
+
+
+
+function num(v: number | undefined | null): number {
+  return typeof v === 'number' && !isNaN(v) ? v : 0;
 }
 
 export function EkonomiPage() {
@@ -167,7 +174,7 @@ export function EkonomiPage() {
       <div className="page animate-fade-up">
         <section className="signal-card signal-card-critical">
           <p className="card-kicker">Ekonomi</p>
-          <h2 className="card-title">Ingen ekonomisk data tillgänglig</h2>
+          <h2 className="card-title">Ingen ekonomisk data tillgÃ¤nglig</h2>
         </section>
       </div>
     );
@@ -201,6 +208,27 @@ export function EkonomiPage() {
   const resultYoY = calcYoY(curr?.operating_result, prev?.operating_result);
   const cashYoY = calcYoY(currG?.cash, prevG?.cash);
   const shlGap = shl.min_equity_shl - (currG?.equity ?? 0);
+  const history = periods.slice().reverse().map((period) => {
+    const e = getEntity(period);
+    const g = getGroup(period);
+    const rev = num(e?.revenue_total);
+    const op = num(e?.operating_result);
+    const eq = num(g?.equity);
+    return {
+      period,
+      revenueM: Number((rev / 1000000).toFixed(2)),
+      opM: Number((op / 1000000).toFixed(2)),
+      cashM: Number((num(g?.cash) / 1000000).toFixed(2)),
+      marginPct: rev > 0 ? Number(((op / rev) * 100).toFixed(1)) : 0,
+      equityRatioPct: rev > 0 ? Number(((eq / rev) * 100).toFixed(1)) : 0,
+    };
+  });
+
+  const monthlyBurn = Math.max(0, -num(curr?.operating_result) / 12);
+  const runwayMonths = monthlyBurn > 0 ? Math.floor(num(currG?.cash) / monthlyBurn) : null;
+  const targetDate = runwayMonths != null ? new Date(Date.now() + runwayMonths * 30 * 24 * 3600 * 1000) : null;
+  const yearlyGapCloseRate = prevG && currG ? Math.max(0, num(currG.equity) - num(prevG.equity)) : 0;
+  const yearsToShl = shlGap > 0 && yearlyGapCloseRate > 0 ? (shlGap / yearlyGapCloseRate) : null;
 
   return (
     <div className="page animate-fade-up">
@@ -208,9 +236,9 @@ export function EkonomiPage() {
       <section className="signal-card" style={{ padding: '0.7rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p className="card-kicker">💰 Ekonomisk Intelligens</p>
+            <p className="card-kicker">ðŸ’° Ekonomisk Intelligens</p>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-              Bokslut {selectedPeriod} • {curr?.entity_label || 'A-lag'}
+              Bokslut {selectedPeriod} â€¢ {curr?.entity_label || 'A-lag'}
             </p>
           </div>
           <select
@@ -235,29 +263,29 @@ export function EkonomiPage() {
       <HealthMeter score={healthScore} />
 
       <section className="signal-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
-        <KPICard label="Omsättning (A-lag)" value={formatSEK(curr?.revenue_total ?? null)} delta={revYoY != null ? formatPct(revYoY) : undefined} color="var(--impact-positive)" />
-        <KPICard label="Rörelseresultat" value={formatSEK(curr?.operating_result ?? null)} delta={resultYoY != null ? formatPct(resultYoY) : undefined} color="var(--impact-neutral)" />
+        <KPICard label="OmsÃ¤ttning (A-lag)" value={formatSEK(curr?.revenue_total ?? null)} delta={revYoY != null ? formatPct(revYoY) : undefined} color="var(--impact-positive)" />
+        <KPICard label="RÃ¶relseresultat" value={formatSEK(curr?.operating_result ?? null)} delta={resultYoY != null ? formatPct(resultYoY) : undefined} color="var(--impact-neutral)" />
         <KPICard label="Eget kapital (A-lag)" value={formatSEK(curr?.equity ?? null)} color="var(--brand-gold)" />
         <KPICard label="Kassa (koncern)" value={formatSEK(currG?.cash ?? null)} delta={cashYoY != null ? formatPct(cashYoY) : undefined} color="#a78bfa" />
       </section>
 
       {/* SHL meter */}
       <section className="signal-card" style={{ padding: '0.9rem' }}>
-        <p className="card-kicker">📊 SHL-mätaren</p>
+        <p className="card-kicker">ðŸ“Š SHL-mÃ¤taren</p>
         <div style={{ marginTop: '0.5rem' }}>
           <ShlMeter label="Eget kapital (koncern)" current={currG?.equity ?? 0} threshold={shl.min_equity_shl} passes={(currG?.equity ?? 0) >= shl.min_equity_shl} />
           <ShlMeter label="Eget kapital (A-lag)" current={curr?.equity ?? 0} threshold={shl.min_equity_ha} passes={(curr?.equity ?? 0) >= shl.min_equity_ha} />
         </div>
         {shlGap > 0 && (
           <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(251,191,36,0.08)', borderRadius: '6px', fontSize: '0.78rem', color: 'var(--impact-warning)' }}>
-            <strong>Gap-analys:</strong> Saknar {formatSEK(shlGap)} i eget kapital för uppskattad SHL-nivå.
+            <strong>Gap-analys:</strong> Saknar {formatSEK(shlGap)} i eget kapital fÃ¶r uppskattad SHL-nivÃ¥.
           </div>
         )}
       </section>
 
       {/* Trend */}
       <section className="signal-card" style={{ padding: '0.9rem' }}>
-        <p className="card-kicker">📈 Utveckling över tid</p>
+        <p className="card-kicker">ðŸ“ˆ Utveckling Ã¶ver tid</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.5rem' }}>
           {periods.slice().reverse().map(period => {
             const e = getEntity(period);
@@ -285,11 +313,73 @@ export function EkonomiPage() {
           })}
         </div>
       </section>
+      <section className="signal-card" style={{ padding: '0.9rem' }}>
+        <p className="card-kicker">Finansiell cockpit</p>
+        <div style={{ height: 290, marginTop: '0.4rem' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={history}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+              <XAxis dataKey="period" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+              <Tooltip contentStyle={{ background: 'rgba(16,24,20,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }} formatter={(value: any, name: any) => [`${value} MSEK`, name]} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar yAxisId="left" dataKey="revenueM" name="Omsättning" fill="rgba(66,216,131,0.55)" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="opM" name="Rörelseresultat" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 3 }} />
+              <Line yAxisId="right" type="monotone" dataKey="cashM" name="Kassa" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+      <section className="signal-card" style={{ padding: '0.9rem' }}>
+        <p className="card-kicker">Lönsamhet och bärkraft</p>
+        <div style={{ height: 250, marginTop: '0.4rem' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={history}>
+              <defs>
+                <linearGradient id="marginGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+              <XAxis dataKey="period" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+              <Tooltip contentStyle={{ background: 'rgba(16,24,20,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }} formatter={(value: any, name: any) => [`${value}%`, name]} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Area type="monotone" dataKey="marginPct" name="Rörelsemarginal" stroke="#38bdf8" fill="url(#marginGrad)" strokeWidth={2} />
+              <Line type="monotone" dataKey="equityRatioPct" name="Soliditet vs omsättning" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+      <section className="signal-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+        <section className="signal-card" style={{ padding: '0.9rem' }}>
+          <p className="card-kicker">Likviditets-runway</p>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--brand-gold)', fontFamily: 'var(--font-display)' }}>
+            {runwayMonths == null ? 'Stabil' : `${runwayMonths} mån`}
+          </div>
+          <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            {runwayMonths == null ? 'Nuvarande resultat antyder ingen negativ burn-rate.' : `Vid nuvarande burn-rate räcker kassan ungefär till ${targetDate?.toLocaleDateString('sv-SE')}.`}
+          </p>
+        </section>
+        <section className="signal-card" style={{ padding: '0.9rem' }}>
+          <p className="card-kicker">SHL-gap takt</p>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--impact-neutral)', fontFamily: 'var(--font-display)' }}>
+            {yearsToShl == null ? 'Ingen prognos' : `${yearsToShl.toFixed(1)} år`}
+          </div>
+          <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            {yearsToShl == null ? 'Behöver positiv årlig kapitalökning för att stänga gapet.' : `Om kapitalökningen fortsätter i samma takt stängs SHL-gapet på cirka ${yearsToShl.toFixed(1)} år.`}
+          </p>
+        </section>
+      </section>
 
       {/* AI analysis */}
       {aiPeriod && (
         <section className="signal-card" style={{ padding: '0.9rem', borderLeftColor: 'var(--impact-neutral)' }}>
-          <p className="card-kicker">🤖 AI-kommentar — {selectedPeriod}</p>
+          <p className="card-kicker">ðŸ¤– AI-kommentar â€” {selectedPeriod}</p>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginTop: '0.5rem' }}>
             {aiPeriod.summary}
           </p>
@@ -307,7 +397,7 @@ export function EkonomiPage() {
               <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--impact-negative)', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Risk-Radarn</div>
               {aiPeriod.risk_radar.warning && (
                 <div style={{ fontSize: '0.75rem', color: 'var(--impact-warning)', marginBottom: '0.4rem', padding: '0.4rem', background: 'rgba(255,194,71,0.06)', borderRadius: '6px' }}>
-                  ⚠️ {aiPeriod.risk_radar.warning}
+                  âš ï¸ {aiPeriod.risk_radar.warning}
                 </div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
@@ -356,7 +446,7 @@ export function EkonomiPage() {
                 <div style={{ padding: '0.5rem', background: 'rgba(248,113,113,0.06)', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.2)' }}>
                   <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--impact-negative)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Risker</div>
                   {aiPeriod.risk_points?.map((p, i) => (
-                    <div key={i} style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>• {p}</div>
+                    <div key={i} style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>â€¢ {p}</div>
                   ))}
                 </div>
               )}
@@ -366,7 +456,7 @@ export function EkonomiPage() {
           {/* SHL economy focus */}
           {aiPeriod.shl_economy_focus && (
             <div style={{ marginTop: '0.7rem', padding: '0.6rem', background: 'rgba(56,189,248,0.06)', borderRadius: '8px', border: '1px solid rgba(56,189,248,0.2)' }}>
-              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--impact-neutral)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Vad måste förbättras för SHL-ekonomi</div>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--impact-neutral)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Vad mÃ¥ste fÃ¶rbÃ¤ttras fÃ¶r SHL-ekonomi</div>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{aiPeriod.shl_economy_focus}</p>
             </div>
           )}
@@ -385,14 +475,16 @@ export function EkonomiPage() {
 
       {!aiPeriod && (
         <section className="signal-card" style={{ padding: '0.9rem' }}>
-          <p className="card-kicker">🤖 AI-analys</p>
-          <p className="card-text">Ingen förberäknad AI-analys för {selectedPeriod}. Grundanalys visas ovan.</p>
+          <p className="card-kicker">ðŸ¤– AI-analys</p>
+          <p className="card-text">Ingen fÃ¶rberÃ¤knad AI-analys fÃ¶r {selectedPeriod}. Grundanalys visas ovan.</p>
         </section>
       )}
 
       <div style={{ textAlign: 'center', padding: '0.8rem', color: 'var(--text-muted)', fontSize: '0.6rem' }}>
-        Data från årsredovisningar • AI-analysen är förberäknad (ingen runtime-kostnad)
+        Data frÃ¥n Ã¥rsredovisningar â€¢ AI-analysen Ã¤r fÃ¶rberÃ¤knad (ingen runtime-kostnad)
       </div>
     </div>
   );
 }
+
+
