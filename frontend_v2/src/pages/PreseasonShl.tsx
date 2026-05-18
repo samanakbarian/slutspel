@@ -1,4 +1,6 @@
-﻿import AnalyticsTabs from '../components/AnalyticsTabs';
+﻿import { Suspense, lazy } from 'react';
+
+const AnalyticsTabs = lazy(() => import('../components/AnalyticsTabs'));
 
 export function PreseasonShlPage() {
   return (
@@ -9,7 +11,9 @@ export function PreseasonShlPage() {
         <p className="card-text" style={{ marginBottom: 12 }}>
           Prognos, readiness och truppprofil inför SHL 2026/27.
         </p>
-        <AnalyticsTabs season="ha_2526" mode="shl_only" />
+        <Suspense fallback={<p className="card-text">Laddar analysmodul...</p>}>
+          <AnalyticsTabs season="ha_2526" mode="shl_only" />
+        </Suspense>
       </section>
     </div>
   );

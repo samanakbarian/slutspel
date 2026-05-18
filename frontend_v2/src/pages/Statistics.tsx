@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
-import AnalyticsTabs from '../components/AnalyticsTabs';
+const AnalyticsTabs = lazy(() => import('../components/AnalyticsTabs'));
 
 /* ── types ── */
 type PlayerStat = { rank?: number; number?: number; jersey_number?: number; name?: string; player_name?: string; team?: string; team_code?: string; position?: string; gp?: number; games_played?: number; goals?: number; assists?: number; points?: number; avg?: string; avg_ppg?: number; pim?: number; plus_minus?: string | number };
@@ -269,7 +269,13 @@ export function StatisticsPage() {
           </span>
         </div>))}
       </Card>}
-      {tab === 'analys' && <Card kicker="Avancerad analys — Björklöven"><AnalyticsTabs season={selectedSeason} hideShlTab /></Card>}
+      {tab === 'analys' && (
+        <Card kicker="Avancerad analys — Björklöven">
+          <Suspense fallback={<p style={{ color: 'var(--text-muted)' }}>Laddar analysmodul...</p>}>
+            <AnalyticsTabs season={selectedSeason} hideShlTab />
+          </Suspense>
+        </Card>
+      )}
     </div>
   );
 }
