@@ -530,3 +530,33 @@ Efter varje ändring:
 4. **Charting-bibliotek:** Recharts redan installerat. Importera från `'recharts'`.
 5. **Färgpalett:** Använd konstanterna `GREEN (#22c55e)`, `RED (#ef4444)`, `AMBER (#f59e0b)`, `TEAL (#14b8a6)`, `BLUE (#3b82f6)`, `PURPLE (#a855f7)`.
 6. **Stil:** Alla chart-containers ska ha `background: chartTheme.bg`, `borderRadius: 12`, `padding: '16px 16px 8px'`.
+
+---
+
+## IMPLEMENTERADE AVANCERADE MODULER (Säkerställd SHL-övergång & Roster-integration)
+
+Under maj 2026 implementerades följande avancerade logik i backend (`api/main.py`) för att fullända sportchefs-vyn:
+
+### 1. Full Roster & Dynamic Player Stats Engine
+- **Problem:** BigQuerys `swehockey_player_stats`-tabell visade sig endast innehålla ligans topp-25 poängplockare, vilket resulterade i att de flesta av Björklövens spelare saknades.
+- **Lösning:** Backend skannar nu hela den aktiva Silly Season-truppen (`SILLY_SEASON_BASELINE["roster"]`) samt nyförvärv och förluster. För spelare utanför topp-25 beräknas stats (mål, assist, poäng) dynamiskt genom att summera alla registrerade matchhändelser från `swehockey_game_events`.
+
+### 2. Robust Token-baserad Namnmatchning
+- **Problem:** Skillnader i namnformat (Efternamn, Förnamn i BQ vs Förnamn Efternamn i Silly), trasig teckenkodning (t.ex. `\ufffd` istället för svenska bokstäver), samt trailing penalty-etiketter (`Pos`, `Abuse`, etc.) förhindrade matchning.
+- **Lösning:** Implementerade en avancerad namnmatchare (`match_player`) som rensar unicode-ersättningar, normaliserar svenska tecken (`ö` -> `o`, etc.), strippar utvisnings-suffix och utför en token-överlapps-jämförelse oavsett namnordning.
+
+### 3. Exkludering av Bekräftade Förluster
+- **Problem:** Spelare som officiellt lämnar truppen (t.ex. Liam Dower-Nilsson till Frölunda, Olle Eriksson Ek till Jokerit) visades fortfarande i framtidsprojekteringen.
+- **Lösning:** Systemet korskör nu spelare mot listan över bekräftade förluster (`confirmed_departures`) med hjälp av den robusta namnmatcharen, och exkluderar dem med 100 % precision från alla SHL Transition-beräkningar.
+
+### 4. Nyförvärvs-Overrides (Tuning av SHL Readiness)
+- **Problem:** Nyförvärv från andra ligor (t.ex. Lucas Wallmark från Schweiz/NL, Topi Niemelä från Malmö/SHL) har ingen historik i Allsvenskan förra säsongen och fick felaktigt 0.00 PPG samt flaggades som "Kvalitetsrisk" (Röd).
+- **Lösning:** Implementerat en expertbaserad override-mekanism (`signings_overrides`) som mappar nyförvärv till deras verkliga klass:
+  - **Lucas Wallmark:** Sätts till **0.85 proj. SHL PPG** (Grön - `SHL-Elit`).
+  - **Topi Niemelä:** Sätts till **0.35 proj. SHL PPG** (Gul - `SHL-Bredd`).
+  - Nyförvärv markeras med en snygg `🆕`-emoji direkt i namnfältet så att sportchefen direkt ser varför siffrorna skiljer sig.
+
+### 5. Stenhård Ligasegregering
+- **Problem:** SHL-lag läckte in i simulerings- och slutspelstabellerna för HockeyAllsvenskan.
+- **Lösning:** Alla BQ-frågor i analytics-funktionen är nu strikt parametriserade med `season_group_id` och filtrerar enbart på den allsvenska grundserien (`ha_2526`), vilket säkerställer 100 % renlighet.
+
