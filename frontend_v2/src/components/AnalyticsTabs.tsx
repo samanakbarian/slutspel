@@ -851,6 +851,7 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
    TAB 5: SHL TRANSITION & SURVIVAL SCOUTING
    ════════════════════════════════════════════════════════ */
 function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { transition: SHLTransition; ageCurve: AgeCurveModule; projectedTable?: SHLProjectedTable; aiCoach?: string }) {
+  const [showReadinessInfo, setShowReadinessInfo] = useState(false);
   const allAges = [...(ageCurve?.skaters || []).map(s => s.age), ...(ageCurve?.goalies || []).map(g => g.age)];
   const avgAge = allAges.length ? (allAges.reduce((a, b) => a + b, 0) / allAges.length) : 0;
   const veteranRiskCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'VETERANRISK').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'VETERANRISK').length;
@@ -906,6 +907,32 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
         </div>
         <div style={{ fontSize: 12, color: chartTheme.text }}>
           Viktning: Utespelare 35%, Målvakt 25%, Special Teams 25%, Åldersrisk 15%.
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <button
+            type="button"
+            onClick={() => setShowReadinessInfo(v => !v)}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(148,163,184,0.35)',
+              color: chartTheme.text,
+              borderRadius: 8,
+              padding: '6px 10px',
+              fontSize: 11,
+              cursor: 'pointer',
+            }}
+          >
+            {showReadinessInfo ? 'Dölj beräkningsinfo' : 'Visa hur SHL Readiness beräknas'}
+          </button>
+          {showReadinessInfo && (
+            <div style={{ marginTop: 10, fontSize: 11, color: chartTheme.text, lineHeight: 1.5 }}>
+              <div><b>Total readiness:</b> viktat medel av Utespelare (35%), Målvakt (25%), Special Teams (25%) och Åldersrisk (15%).</div>
+              <div><b>Utespelare:</b> snitt av spelarnas readiness där GREEN=100, AMBER=65, RED=35.</div>
+              <div><b>Målvakter:</b> samma metod som utespelare, men på målvaktsgruppen.</div>
+              <div><b>Special Teams:</b> använder special-teams-index direkt, klampat till 0–100.</div>
+              <div><b>Åldersrisk:</b> 100 minus 12 poäng per profil med trajectory = VETERANRISK.</div>
+            </div>
+          )}
         </div>
       </div>
 
