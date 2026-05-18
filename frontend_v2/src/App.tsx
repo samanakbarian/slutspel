@@ -207,7 +207,7 @@ function MerPage() {
         <p className="card-kicker">Om</p>
         <h2 className="card-title">Frågor eller synpunkter?</h2>
         <p className="card-text">
-          Hör gärna av dig på <a href="mailto:saman.akbarian@gmail.com">saman.akbarian@gmail.com</a>.
+          <a href="mailto:saman.akbarian@gmail.com">Skicka e-post</a>.
         </p>
       </section>
     </div>
