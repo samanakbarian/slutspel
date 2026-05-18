@@ -53,6 +53,17 @@ type SHLGoalies = { name: string; ha_sv_pct: number; proj_sv_pct: number; proj_g
 type SHLBenchmark = { current: number; target: number; diff: number };
 type SHLBenchmarks = { pp_pct: SHLBenchmark; pk_pct: SHLBenchmark; goalie_sv: SHLBenchmark; special_teams_index: SHLBenchmark };
 type SHLTransition = { skaters: SHLSkaters[]; goalies: SHLGoalies[]; benchmarks: SHLBenchmarks };
+type SHLProjectedRow = {
+  projected_rank: number; team: string; projected_points: number; tier: string;
+  top6_chance_pct: number; playout_risk_pct: number; is_bjk: boolean;
+};
+type SHLProjectedTable = {
+  season: string;
+  last_updated: string;
+  method: string;
+  table: SHLProjectedRow[];
+  bjk_summary: { projected_rank: number | null; projected_points: number | null; top6_chance_pct: number | null; playout_risk_pct: number | null };
+};
 type AgeTrajectory = 'UTVECKLING' | 'TILLVÄXT' | 'PEAK PRIME' | 'RUTINERAD' | 'VETERANRISK';
 type AgeCurveSkater = {
   name: string; position: string; age: number; ha_ppg: number; base_proj_ppg: number; adj_proj_ppg: number;
@@ -81,6 +92,7 @@ type AnalyticsData = {
     game_state: GameState;
     shl_transition: SHLTransition;
     age_curve: AgeCurveModule;
+    shl_projected_table: SHLProjectedTable;
   };
 };
 
@@ -170,7 +182,7 @@ export default function AnalyticsTabs({ season }: { season?: string }) {
       {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} gameState={m.game_state} />}
       {tab === 'players' && <PlayersTab players={m.player_impact} goalies={m.goalie_radar} aiCoach={m.predictions?.ai_coach?.spelar_impact} />}
       {tab === 'predictions' && <PredictionsTab predictions={m.predictions} gameState={m.game_state} />}
-      {tab === 'shl' && <SHLTransitionTab transition={m.shl_transition} ageCurve={m.age_curve} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />}
+      {tab === 'shl' && <SHLTransitionTab transition={m.shl_transition} ageCurve={m.age_curve} projectedTable={m.shl_projected_table} aiCoach={m.predictions?.ai_coach?.shl_sportchef} />}
     </div>
   );
 }
@@ -820,7 +832,7 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
 /* ════════════════════════════════════════════════════════
    TAB 5: SHL TRANSITION & SURVIVAL SCOUTING
    ════════════════════════════════════════════════════════ */
-function SHLTransitionTab({ transition, ageCurve, aiCoach }: { transition: SHLTransition; ageCurve: AgeCurveModule; aiCoach?: string }) {
+function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { transition: SHLTransition; ageCurve: AgeCurveModule; projectedTable?: SHLProjectedTable; aiCoach?: string }) {
   const allAges = [...(ageCurve?.skaters || []).map(s => s.age), ...(ageCurve?.goalies || []).map(g => g.age)];
   const avgAge = allAges.length ? (allAges.reduce((a, b) => a + b, 0) / allAges.length) : 0;
   const veteranRiskCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'VETERANRISK').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'VETERANRISK').length;
@@ -947,6 +959,43 @@ function SHLTransitionTab({ transition, ageCurve, aiCoach }: { transition: SHLTr
           3. Lås PP/PK-enheter tidigt i camp för att säkra special teams-index.
         </div>
       </div>
+
+      {projectedTable?.table?.length ? (
+        <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            Predikterad SHL-tabell
+          </div>
+          <div style={{ fontSize: 11, color: chartTheme.text, marginBottom: 12 }}>
+            {projectedTable.season} • Uppdaterad: {projectedTable.last_updated?.slice(0, 10)} • {projectedTable.method}
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.15)', color: chartTheme.text }}>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>#</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'left' }}>Lag</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>Proj. P</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>Tier</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>Top-6%</th>
+                  <th style={{ padding: '8px 4px', textAlign: 'center' }}>Playoutrisk%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projectedTable.table.map((r) => (
+                  <tr key={r.team} style={{ borderBottom: '1px solid rgba(148,163,184,0.06)', background: r.is_bjk ? 'rgba(34,197,94,0.11)' : 'transparent' }}>
+                    <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: 700, color: r.projected_rank <= 6 ? GREEN : r.projected_rank >= 12 ? RED : '#e2e8f0' }}>{r.projected_rank}</td>
+                    <td style={{ padding: '8px 4px', color: '#e2e8f0', fontWeight: r.is_bjk ? 800 : 500 }}>{r.team}</td>
+                    <td style={{ padding: '8px 4px', textAlign: 'center', fontWeight: 700 }}>{r.projected_points}</td>
+                    <td style={{ padding: '8px 4px', textAlign: 'center', color: r.tier === 'Topplag' ? GREEN : r.tier === 'Riskzon' ? RED : AMBER }}>{r.tier}</td>
+                    <td style={{ padding: '8px 4px', textAlign: 'center', color: GREEN }}>{r.top6_chance_pct}%</td>
+                    <td style={{ padding: '8px 4px', textAlign: 'center', color: r.playout_risk_pct >= 35 ? RED : AMBER }}>{r.playout_risk_pct}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
 
       {/* SHL Survival Benchmarks */}
       <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
