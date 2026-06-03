@@ -204,6 +204,8 @@ export default function AnalyticsTabs({
   const m = data?.modules;
   if (!m) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Ingen data hittades för vald säsong.</div>;
 
+  const hasUsableData = m && Array.isArray(m.timeline) && m.timeline.length > 0;
+
   const seasonKey = (season || '').toLowerCase();
   const showShlTab = !hideShlTab && (seasonKey === 'ha_2526' || seasonKey === 'shl_2627');
   const shlTabLabel = seasonKey === 'ha_2526' ? 'Preseason SHL' : 'SHL-Säkring';
@@ -281,7 +283,7 @@ function AICoachCard({ title, text }: { title: string; text?: string }) {
 /* ════════════════════════════════════════════════════════
    TAB 1: SEASON
    ════════════════════════════════════════════════════════ */
-function SeasonTab({ timeline, form, streaks, special, attendance, aiCoach }: {
+function SeasonTab({ timeline = [], form = [], streaks = {} as StreakData, special = {} as SpecialTeams, attendance = { avg: 0, max: 0, min: 0, total: 0, home_games: 0 } as Attendance, aiCoach }: {
   timeline: TimelinePoint[]; form: FormPoint[]; streaks: StreakData; special: SpecialTeams; attendance: Attendance; aiCoach?: string;
 }) {
   return (
