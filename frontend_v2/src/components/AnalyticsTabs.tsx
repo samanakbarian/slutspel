@@ -201,7 +201,9 @@ export default function AnalyticsTabs({
   if (loading) return <div style={{ textAlign: 'center', padding: 40, color: chartTheme.text }}>Laddar analys...</div>;
   if (!data) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Kunde inte ladda analysdata</div>;
 
-  const m = data.modules;
+  const m = data?.modules;
+  if (!m) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Ingen data hittades för vald säsong.</div>;
+
   const seasonKey = (season || '').toLowerCase();
   const showShlTab = !hideShlTab && (seasonKey === 'ha_2526' || seasonKey === 'shl_2627');
   const shlTabLabel = seasonKey === 'ha_2526' ? 'Preseason SHL' : 'SHL-Säkring';
@@ -243,6 +245,12 @@ export default function AnalyticsTabs({
           </button>
         ))}
       </div>
+
+      {(!hasUsableData || season === 'ha_2324') && (
+        <div style={{ padding: 16, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: '#fca5a5', marginBottom: 20, fontSize: 14 }}>
+          ⚠️ <strong>Begränsad analysdata:</strong> Detaljerad skottdata samlades inte in för HockeyAllsvenskan denna säsong. Vissa flikar eller grafer kan därför vara tomma.
+        </div>
+      )}
 
       {tab === 'season' && <SeasonTab timeline={m.timeline} form={m.form} streaks={m.streaks} special={m.special_teams} attendance={m.attendance} aiCoach={m.predictions?.ai_coach?.sasong_form} />}
       {tab === 'splits' && <SplitsTab splits={m.splits} periods={m.periods} h2h={m.h2h} penalty={m.penalty_breakdown} gameState={m.game_state} />}

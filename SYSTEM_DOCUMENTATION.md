@@ -1,33 +1,33 @@
-# 📚 Löven Stats Hub — Systemdokumentation & Master Plan
+﻿# ðŸ“š LÃ¶ven Stats Hub â€” Systemdokumentation & Master Plan
 
-*Senast uppdaterad: 2026-05-17 (inkl. tvålägesvision: etablering + långsiktig konkurrenskraft)*  
-*Detta dokument utgör den officiella tekniska dokumentationen för systemet samt "Master Planen" för hela Löven Stats Hub.*
+*Senast uppdaterad: 2026-05-18 (inkl. tvÃ¥lÃ¤gesvision: etablering + lÃ¥ngsiktig konkurrenskraft)*  
+*Detta dokument utgÃ¶r den officiella tekniska dokumentationen fÃ¶r systemet samt "Master Planen" fÃ¶r hela LÃ¶ven Stats Hub.*
 
 ---
 
-## 1. Vision & Affärsmodell
+## 1. Vision & AffÃ¤rsmodell
 
-- **Kärnsyfte:** Att bygga Sveriges smartaste och snyggaste community-plattform för IF Björklövens supportrar.
-- **Användarlöfte:** Alltid 100 % gratis för fansen.
-- **Kontext:** Björklöven vann HockeyAllsvenskan 25/26 och spelar i SHL från säsongen 26/27.
-- **Monetisering (på sikt):** 
-  - "Native" sponsring från lokala Umeå-företag (snyggt integrerat i Dark Mode-UI:t).
+- **KÃ¤rnsyfte:** Att bygga Sveriges smartaste och snyggaste community-plattform fÃ¶r IF BjÃ¶rklÃ¶vens supportrar.
+- **AnvÃ¤ndarlÃ¶fte:** Alltid 100 % gratis fÃ¶r fansen.
+- **Kontext:** BjÃ¶rklÃ¶ven vann HockeyAllsvenskan 25/26 och spelar i SHL frÃ¥n sÃ¤songen 26/27.
+- **Monetisering (pÃ¥ sikt):** 
+  - "Native" sponsring frÃ¥n lokala UmeÃ¥-fÃ¶retag (snyggt integrerat i Dark Mode-UI:t).
   - B2B-licensiering av datadrivna widgets till lokalmedia (ex. VK).
-  - Relevanta affiliate-länkar (t.ex. boka bord på O'Learys inför match).
+  - Relevanta affiliate-lÃ¤nkar (t.ex. boka bord pÃ¥ O'Learys infÃ¶r match).
 
 ---
 
 
-## 1.1 Produktvision över tid
+## 1.1 Produktvision Ã¶ver tid
 
-Produkten har nu två explicita visionslägen:
+Produkten har nu tvÃ¥ explicita visionslÃ¤gen:
 
-- **Fas A — Uppflyttning och etablering**: fokus på SHL-readiness, truppbehov och ekonomisk etablering.
-- **Fas B — Långsiktig konkurrenskraft**: fokus på slutspelschans, sportslig utveckling, budgeteffektivitet, talangpipeline och flerårig hållbarhet.
+- **Fas A â€” Uppflyttning och etablering**: fokus pÃ¥ SHL-readiness, truppbehov och ekonomisk etablering.
+- **Fas B â€” LÃ¥ngsiktig konkurrenskraft**: fokus pÃ¥ slutspelschans, sportslig utveckling, budgeteffektivitet, talangpipeline och flerÃ¥rig hÃ¥llbarhet.
 
 Detta dokumenteras i:
-- `docs/PRODUCT_DIRECTION_2026.md` (produktdefinition + långsiktig vision)
-- `docs/ROADMAP_PRODUCT_2026.md` (inklusive **Fas 5** för etablerad SHL-klubb)
+- `docs/PRODUCT_DIRECTION_2026.md` (produktdefinition + lÃ¥ngsiktig vision)
+- `docs/ROADMAP_PRODUCT_2026.md` (inklusive **Fas 5** fÃ¶r etablerad SHL-klubb)
 
 ## 1.2 Roadmap-synk mellan repos
 
@@ -58,7 +58,7 @@ men UX-principer, tonalitet, informationshierarki och mobilflode styrs av `UX_RE
 
 ## 2. Repositories
 
-| Repo | Innehåll | URL |
+| Repo | InnehÃ¥ll | URL |
 |------|---------|-----|
 | `slutspel` | Frontend (old + v2), systemdokumentation | [github.com/samanakbarian/slutspel](https://github.com/samanakbarian/slutspel) |
 | `loven-stats-backend` | API, scrapers, Cloud Functions, dbt, docs | [github.com/samanakbarian/loven-stats-backend](https://github.com/samanakbarian/loven-stats-backend) |
@@ -72,64 +72,64 @@ Det betyder att dagens ekonomiflik i `slutspel` ska behandlas som en validerings
 
 ---
 
-## 3. Övergripande Arkitektur
+## 3. Ã–vergripande Arkitektur
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         DATAKÄLLOR                                   │
-├──────────────┬──────────────┬──────────────┬────────────────────────┤
-│ Sportradar   │ EliteProsp.  │ Web Scrapers │ Manuell Baseline       │
-│ (live events)│ (kontrakt)   │ (nyheter)    │ (silly season)         │
-└──────┬───────┴──────┬───────┴──────┬───────┴──────┬─────────────────┘
-       │              │              │              │
-       ▼              ▼              ▼              ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                    GCS DATA LAKE (raw JSON)                          │
-│  raw/sportradar/  raw/eliteprospects/  raw/silly_season/  raw/...  │
-│  Bucket: loven-stats-raw-data-prod                                  │
-└──────────────────────────────┬───────────────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                        BIGQUERY                                      │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐         │
-│  │ raw_sportradar │  │ raw_content    │  │ raw_elite...   │ DATASETS│
-│  └───────┬────────┘  └───────┬────────┘  └───────┬────────┘         │
-│          │                   │                   │                   │
-│          ▼                   ▼                   ▼                   │
-│  ┌──────────────────────────────────────────────────────────┐       │
-│  │              loven_staging (dbt views)                    │       │
-│  │  stg_sr_matches, stg_sr_events, stg_articles, ...       │       │
-│  └──────────────────────────┬───────────────────────────────┘       │
-│                             │                                       │
-│                             ▼                                       │
-│  ┌──────────────────────────────────────────────────────────┐       │
-│  │         loven_marts (dbt tables, star schema)            │       │
-│  │  fact_match_events, fact_player_game_stats,              │       │
-│  │  dim_matches, dim_players, dim_teams, dim_contracts, ... │       │
-│  └──────────────────────────┬───────────────────────────────┘       │
-│                             │                                       │
-│                             ▼                                       │
-│  ┌──────────────────────────────────────────────────────────┐       │
-│  │              loven_ai (BigQuery ML + Gemini)             │       │
-│  │  xg_model, ai_article_sentiment, ai_player_impact       │       │
-│  └──────────────────────────────────────────────────────────┘       │
-└──────────────────────────────┬───────────────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                      CLOUD RUN (FastAPI)                             │
-│  /api/silly-season  /api/v1/matches  /api/v1/roster  /api/v1/...   │
-│  URL: https://loven-stats-api-324947473206.europe-west1.run.app    │
-└──────────────────────────────┬───────────────────────────────────────┘
-                               │
-                    ┌──────────┴──────────┐
-                    ▼                     ▼
-         ┌──────────────────┐  ┌──────────────────┐
-         │  Frontend (old)  │  │  Frontend 2.0    │
-         │  Netlify         │  │  React/Vite/TS   │
-         │  Vanilla JS      │  │  Firebase Hosting│
-         └──────────────────┘  └──────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                         DATAKÃ„LLOR                                   â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚ Sportradar   â”‚ EliteProsp.  â”‚ Web Scrapers â”‚ Manuell Baseline       â”‚
+â”‚ (live events)â”‚ (kontrakt)   â”‚ (nyheter)    â”‚ (silly season)         â”‚
+â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+       â”‚              â”‚              â”‚              â”‚
+       â–¼              â–¼              â–¼              â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                    GCS DATA LAKE (raw JSON)                          â”‚
+â”‚  raw/sportradar/  raw/eliteprospects/  raw/silly_season/  raw/...  â”‚
+â”‚  Bucket: loven-stats-raw-data-prod                                  â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                               â”‚
+                               â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                        BIGQUERY                                      â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”         â”‚
+â”‚  â”‚ raw_sportradar â”‚  â”‚ raw_content    â”‚  â”‚ raw_elite...   â”‚ DATASETSâ”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”˜         â”‚
+â”‚          â”‚                   â”‚                   â”‚                   â”‚
+â”‚          â–¼                   â–¼                   â–¼                   â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”‚
+â”‚  â”‚              loven_staging (dbt views)                    â”‚       â”‚
+â”‚  â”‚  stg_sr_matches, stg_sr_events, stg_articles, ...       â”‚       â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â”‚
+â”‚                             â”‚                                       â”‚
+â”‚                             â–¼                                       â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”‚
+â”‚  â”‚         loven_marts (dbt tables, star schema)            â”‚       â”‚
+â”‚  â”‚  fact_match_events, fact_player_game_stats,              â”‚       â”‚
+â”‚  â”‚  dim_matches, dim_players, dim_teams, dim_contracts, ... â”‚       â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â”‚
+â”‚                             â”‚                                       â”‚
+â”‚                             â–¼                                       â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”‚
+â”‚  â”‚              loven_ai (BigQuery ML + Gemini)             â”‚       â”‚
+â”‚  â”‚  xg_model, ai_article_sentiment, ai_player_impact       â”‚       â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                               â”‚
+                               â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                      CLOUD RUN (FastAPI)                             â”‚
+â”‚  /api/silly-season  /api/v1/matches  /api/v1/roster  /api/v1/...   â”‚
+â”‚  URL: https://loven-stats-api-324947473206.europe-west1.run.app    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                               â”‚
+                    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                    â–¼                     â–¼
+         â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+         â”‚  Frontend (old)  â”‚  â”‚  Frontend 2.0    â”‚
+         â”‚  Netlify         â”‚  â”‚  React/Vite/TS   â”‚
+         â”‚  Vanilla JS      â”‚  â”‚  Firebase Hostingâ”‚
+         â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Teknologier
@@ -142,30 +142,30 @@ Det betyder att dagens ekonomiflik i `slutspel` ska behandlas som en validerings
 | **Data Warehouse** | BigQuery | `granskaren-d51a1` |
 | **Transformation** | dbt (dbt-bigquery) | `dbt/` |
 | **AI/ML** | BigQuery ML + Gemini (Vertex AI) | BigQuery |
-| **API** | FastAPI (Python) på Cloud Run | `api/` |
+| **API** | FastAPI (Python) pÃ¥ Cloud Run | `api/` |
 | **Frontend** | React/Vite/TypeScript + Zustand | `slutspel/frontend_v2/` |
 | **Styling** | Vanilla CSS med Design Tokens | Dark Mode, glassmorphism |
 
 ---
 
-## 4. Datakällor
+## 4. DatakÃ¤llor
 
-| Källa | Typ | Status | Data |
+| KÃ¤lla | Typ | Status | Data |
 |-------|-----|--------|------|
-| **Sportradar** | REST API | ✅ Trial-nyckel | Live-matcher, resultat, tabeller, trupper |
-| **EliteProspects** | REST API | ⏳ Behöver nyckel | Spelarprofiler, kontrakt, löner, karriärhistorik |
-| **Web Scrapers** | Cloud Functions | ✅ Live (var 30 min) | Nyheter från Björklöven.com, Expressen, HockeySverige, EP |
-| **Manuell Baseline** | JSON i GCS | ✅ | Silly Season-data, kända kontrakt |
+| **Sportradar** | REST API | âœ… Trial-nyckel | Live-matcher, resultat, tabeller, trupper |
+| **EliteProspects** | REST API | â³ BehÃ¶ver nyckel | Spelarprofiler, kontrakt, lÃ¶ner, karriÃ¤rhistorik |
+| **Web Scrapers** | Cloud Functions | âœ… Live (var 30 min) | Nyheter frÃ¥n BjÃ¶rklÃ¶ven.com, Expressen, HockeySverige, EP |
+| **Manuell Baseline** | JSON i GCS | âœ… | Silly Season-data, kÃ¤nda kontrakt |
 
 ### Sportradar-detaljer
 
-| ID | Värde |
+| ID | VÃ¤rde |
 |----|-------|
 | Competition (HA) | `sr:competition:416` |
 | Season (HA 25/26) | `sr:season:131137` |
-| Björklöven Team ID | `sr:competitor:3747` |
+| BjÃ¶rklÃ¶ven Team ID | `sr:competitor:3747` |
 | API-nyckel | Env var `SPORTRADAR_API_KEY` |
-| Trial-begränsning | 1 req/sek, 1000 req/30 dagar |
+| Trial-begrÃ¤nsning | 1 req/sek, 1000 req/30 dagar |
 
 ---
 
@@ -205,37 +205,84 @@ Det betyder att dagens ekonomiflik i `slutspel` ska behandlas som en validerings
 
 ## 6. Implementationslogg
 
-### 6.1. Silly Season Scraper & Feed (Maj 2026) ✅
-- Scraper i Cloud Functions hämtar nyheter från 4 källor var 30:e minut
-- Gemini AI klassificerar artiklar (BEKRÄFTAT_NYFÖRVÄRV, BEKRÄFTAD_FÖRLUST, etc.)
+### 6.1. Silly Season Scraper & Feed (Maj 2026) âœ…
+- Scraper i Cloud Functions hÃ¤mtar nyheter frÃ¥n 4 kÃ¤llor var 30:e minut
+- Gemini AI klassificerar artiklar (BEKRÃ„FTAT_NYFÃ–RVÃ„RV, BEKRÃ„FTAD_FÃ–RLUST, etc.)
 - Konservativ keyword-baserad fallback i API (titelmatchning, ej body)
-- GCS-filer namnges med `%Y%m%d_%H%M%S`, sorteras på `blob.updated` timestamp
+- GCS-filer namnges med `%Y%m%d_%H%M%S`, sorteras pÃ¥ `blob.updated` timestamp
 - Frontend (old + v2) visar live-data
 
-### 6.2. Data Warehouse & dbt (Maj 2026) ✅
+### 6.2. Data Warehouse & dbt (Maj 2026) âœ…
 - 6 BigQuery-datasets skapade (`raw_sportradar`, `raw_eliteprospects`, `raw_content`, `loven_staging`, `loven_marts`, `loven_ai`)
-- Stjärnschema designat i `docs/DATA_WAREHOUSE_DESIGN.md`
-- Stödjer: Basic stats → Corsi/Fenwick → xG → AI (Gemini)
+- StjÃ¤rnschema designat i `docs/DATA_WAREHOUSE_DESIGN.md`
+- StÃ¶djer: Basic stats â†’ Corsi/Fenwick â†’ xG â†’ AI (Gemini)
 - Multi-source: Sportradar + EliteProspects + Scrapers
 - Multi-league: SHL + HA + J20
-- Player ID Crosswalk löser matchning Sportradar ↔ EP
+- Player ID Crosswalk lÃ¶ser matchning Sportradar â†” EP
 - dbt-projekt med Python 3.12 venv (`slutspel/dbt/`)
   - 3 staging-modeller: `stg_sr_matches`, `stg_sr_events`, `stg_sr_standings`
   - 3 mart-modeller: `dim_matches` (199 matcher), `dim_teams` (14 lag), `dim_seasons`
   - 6/6 modeller PASS, 6/6 tester PASS
-- Rådata laddad: 200 summaries + 1 timeline + standings → BigQuery
+- RÃ¥data laddad: 200 summaries + 1 timeline + standings â†’ BigQuery
 
-### 6.3. Frontend 2.0 (Pågående)
+### 6.3. Frontend 2.0 (PÃ¥gÃ¥ende)
 - React/Vite/TypeScript med Zustand state management
 - Sidor klara: Silly Season (live), Matchcenter (mock), Roster (mock)
 - Sidor ej klara: Dashboard, Standings, History
-- Se `slutspel/FRONTEND_2.0_SPECS.md` för fullständig kravspec
+- Se `slutspel/FRONTEND_2.0_SPECS.md` fÃ¶r fullstÃ¤ndig kravspec
 
-### 6.4. Roster-integration & SHL Readiness (Maj 2026) ✅
-- Byggt om spelarmotorn i backend för att beräkna spelarstatistik helt dynamiskt utifrån den fulla truppen via matchhändelser (`swehockey_game_events`).
-- Utvecklat en robust token-baserad namnmatchare med unicode-rensning för full kompatibilitet med trasiga tecken i Swehockey-databasen.
-- Filtrerat bort alla bekräftade förluster (t.ex. Liam Dower-Nilsson) från SHL-framtidsprojekteringar.
-- Skapat en expertbaserad override-mekanism för nyförvärv (t.ex. Lucas Wallmark, Topi Niemelä) för korrekt SHL Readiness-klassificering.
+### 6.4. Roster-integration & SHL Readiness (Maj 2026) âœ…
+- Byggt om spelarmotorn i backend fÃ¶r att berÃ¤kna spelarstatistik helt dynamiskt utifrÃ¥n den fulla truppen via matchhÃ¤ndelser (`swehockey_game_events`).
+- Utvecklat en robust token-baserad namnmatchare med unicode-rensning fÃ¶r full kompatibilitet med trasiga tecken i Swehockey-databasen.
+- Filtrerat bort alla bekrÃ¤ftade fÃ¶rluster (t.ex. Liam Dower-Nilsson) frÃ¥n SHL-framtidsprojekteringar.
+- Skapat en expertbaserad override-mekanism fÃ¶r nyfÃ¶rvÃ¤rv (t.ex. Lucas Wallmark, Topi NiemelÃ¤) fÃ¶r korrekt SHL Readiness-klassificering.
+
+
+
+### 6.5. Produktionsincident: tom Statistik/Analys + roster-avvikelser (2026-05-18) ✅
+
+**Symptom i prod**
+- Statistik-fliken visade tom oversikt/grundserie/matcher.
+- Analys-fliken visade tomma moduler (sasong, impacts, splits, prediktioner).
+- Roster-status driftade (ex. Mustonen stod inte som forlangd i vissa vyer).
+
+**Rotorsaker**
+- Backend-revision i Cloud Run laggade efter pushad kod (deploy drift).
+- Team-matchning i statistik byggde for mycket pa text/token-matchning (kansligt for teckenkodning/namnformat).
+- Frontend-cache (`sessionStorage`) kunde ateranvanda ett tidigare "ok men tomt" analytics-svar.
+- Sasongsupplosning i statistik-UI gav forvirrande fallback-beteende nar aktiv sasong saknade komplett data.
+
+**Genomforda fixar**
+- Backend (`loven-stats-backend`):
+  - Forstarkt matchning i `/api/v1/statistics` med `team_id`-baserad filtrering som primar signal.
+  - Hardare normalisering av lagstrangar (unicode/mojibake-hantering) som fallback.
+  - Fallback-berakning av `record` fran matcher om standings saknas.
+  - Uppdaterad baseline for silly/roster:
+    - Philip Hemyr tillagd i roster.
+    - Joel Mustonen satt till `FORLANGD` med kontrakt t.o.m. 2027.
+- Frontend (`slutspel/frontend_v2`):
+  - Sasongsväljaren dold igen i statistik-vyn.
+  - Statistik-sidan har robust fallback till sasong med faktisk data.
+  - Analytics-cache hardad:
+    - ny cache-nyckelversion
+    - cache ignoreras om payload ar "ok men tom"
+    - `no-store` vid analytics-fetch.
+
+**Operativ atgard**
+- Manuell redeploy av `loven-stats-api` till Cloud Run (revision `loven-stats-api-00068-crq`) och verifikation mot live-endpoints.
+
+**Verifierat utfall efter fix**
+- `/api/v1/statistics`: `team_games` > 0, `record` ifylld, `team_standing` finns.
+- `/api/v1/analytics`: `timeline`, `form`, `h2h` fyllda.
+- `/api/silly-season`: Mustonen visas som `FORLANGD`.
+
+**Preventiva guardrails framover**
+- Infor release-checklista med live-smoke-test av:
+  - `/api/v1/statistics`
+  - `/api/v1/analytics`
+  - `/api/silly-season`
+- Larma pa "tom men status=ok" (ex. `team_games == 0` eller `timeline.length == 0`).
+- Prioritera stabila nycklar (`team_id`) over textmatchning i alla pipeline-led.
 
 ---
 
@@ -243,10 +290,31 @@ Det betyder att dagens ekonomiflik i `slutspel` ska behandlas som en validerings
 
 | Dokument | Plats | Beskrivning |
 |----------|-------|-------------|
-| Systemdokumentation | `SYSTEM_DOCUMENTATION.md` (båda repos) | Detta dokument |
-| Data Warehouse Design | `loven-stats-backend/docs/DATA_WAREHOUSE_DESIGN.md` | Fullständigt stjärnschema |
+| Systemdokumentation | `SYSTEM_DOCUMENTATION.md` (bÃ¥da repos) | Detta dokument |
+| Data Warehouse Design | `loven-stats-backend/docs/DATA_WAREHOUSE_DESIGN.md` | FullstÃ¤ndigt stjÃ¤rnschema |
 | Roadmap | `loven-stats-backend/docs/ROADMAP.md` | Fasad plan med milstolpar |
-| Affärsmodell | `loven-stats-backend/docs/BUSINESS_MODEL.md` | Monetisering & intäktsströmmar |
+| AffÃ¤rsmodell | `loven-stats-backend/docs/BUSINESS_MODEL.md` | Monetisering & intÃ¤ktsstrÃ¶mmar |
 | Frontend 2.0 Spec | `slutspel/FRONTEND_2.0_SPECS.md` | UX/UI-krav och teknisk stack |
-| Produktdefinition 2026/27 | `docs/PRODUCT_DIRECTION_2026.md` | Etablering + långsiktig produktvision |
+| Produktdefinition 2026/27 | `docs/PRODUCT_DIRECTION_2026.md` | Etablering + lÃ¥ngsiktig produktvision |
 | Produktroadmap 2026 | `docs/ROADMAP_PRODUCT_2026.md` | Fan-centrisk roadmap, inkl. Fas 5 |
+
+
+
+
+## 7.1 Swehockey Coverage (komplement)
+
+Detaljerad kartläggning finns i `docs/SWEHOCKEY_DATA_COVERAGE_MATRIX.md`.
+
+Nuvarande live-källor i pipeline:
+- spelarstatistik
+- målvaktsstatistik
+- tabell
+- schema/matchresultat
+- game events
+- säsongskonfiguration
+
+Prioriterad utbyggnad:
+1. special teams per lag (PP/PK)
+2. komplett matchmetadata (arena/publik/periodresultat/tid)
+3. fler historiska säsonger (HA + SHL)
+4. utökad disciplin/eventklassning

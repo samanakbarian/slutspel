@@ -6,8 +6,8 @@ const AnalyticsTabs = lazy(() => import('../components/AnalyticsTabs'));
 type PlayerStat = { rank?: number; number?: number; jersey_number?: number; name?: string; player_name?: string; team?: string; team_code?: string; position?: string; gp?: number; games_played?: number; goals?: number; assists?: number; points?: number; avg?: string; avg_ppg?: number; pim?: number; plus_minus?: string | number };
 type GoalieStat = { rank?: number; number?: number; jersey_number?: number; name?: string; goalie_name?: string; team?: string; team_code?: string; gp?: number; games_played?: number; ga?: number; goals_against?: number; gaa?: string | number; svs?: number; svs_pct?: string | number; save_pct?: string | number; so?: number; shutouts?: number; wins?: number; losses?: number; win_pct?: number; toi_minutes?: string; shots_against?: number; saves?: number };
 type GameResult = { game_id?: number; date?: string; match_date?: string; match_time?: string; home_team?: string; away_team?: string; result?: string; period_results?: string; spectators?: number | null; venue?: string; bjk_is_home?: boolean; bjk_result?: string; home_goals?: number; away_goals?: number; status?: string };
-type Standing = { team_name?: string; games_played?: number; wins?: number; losses?: number; ot_wins?: number; ot_losses?: number; points?: number; goal_diff?: number; rank?: number };
-type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string } & GameResult;
+type Standing = { team_name?: string; games_played?: number; wins?: number; losses?: number; ot_wins?: number; ot_losses?: number; points?: number; goal_diff?: number; rank?: number; pp_pct?: number; pk_pct?: number };
+type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string; _periods: string; _spectators: number | null; _venue: string } & GameResult;
 type Tab = 'overview' | 'scorers' | 'goalies' | 'results' | 'analys';
 
 /* normalizers — handle both local server.js and production BQ API response shapes */
@@ -34,7 +34,13 @@ function normGame(g: any): NormGame {
     const bjkG = isBjk ? hg : ag; const oppG = isBjk ? ag : hg;
     res = bjkG > oppG ? 'W' : bjkG < oppG ? 'L' : 'D';
   }
-  return { ...g, _date: d, _home: h, _away: a, _result: r, _hg: hg, _ag: ag, _bjkHome: g.bjk_is_home ?? isBjk, _bjkRes: res };
+  return {
+    ...g, _date: d, _home: h, _away: a, _result: r, _hg: hg, _ag: ag,
+    _bjkHome: g.bjk_is_home ?? isBjk, _bjkRes: res,
+    _periods: g.period_results || '',
+    _spectators: g.spectators ?? null,
+    _venue: g.venue || ''
+  };
 }
 
 /* ── small helpers ── */
@@ -90,12 +96,14 @@ export function StatisticsPage() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
   const [selectedSeason, setSelectedSeason] = useState<string>('');
+  const [seasonsList, setSeasonsList] = useState<{key: string, name?: string}[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/v1/seasons`)
       .then(r => r.json())
       .then(d => {
         const seasonList = Array.isArray(d.seasons) ? d.seasons : [];
+        setSeasonsList(seasonList);
         if (d.active && seasonList.some((s: { key: string }) => s.key === d.active)) {
           setSelectedSeason(d.active);
         } else if (seasonList.length > 0) {
@@ -148,6 +156,8 @@ export function StatisticsPage() {
     points: standing.points ?? (raw.record?.points ?? 0),
     goalDiff: standing.goal_diff ?? 0,
     rank: standing.rank ?? 0,
+    ppPct: raw.record?.pp_pct ?? standing.pp_pct,
+    pkPct: raw.record?.pk_pct ?? standing.pk_pct,
   };
 
   const scorers = (raw.top_scorers || []).map(normPlayer);
@@ -157,7 +167,6 @@ export function StatisticsPage() {
   const bjkPlay = (raw.bjorkloven_skaters?.playoff || []).map(normPlayer);
   const bjkGReg = (raw.bjorkloven_goalies?.regular || []).map(normGoalie);
 
-  const season = raw.season || raw.league || 'HockeyAllsvenskan 2025/26';
   const scrapedAt = raw.snapshot_scraped_at;
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
@@ -218,11 +227,32 @@ export function StatisticsPage() {
       <Card glow="var(--brand-green)">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
           <div>
-            <p style={{ fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--brand-green)', marginBottom: 4 }}>{season}</p>
+            <select 
+              value={selectedSeason} 
+              onChange={(e) => setSelectedSeason(e.target.value)}
+              style={{
+                background: 'rgba(37,163,90,.1)',
+                border: '1px solid rgba(37,163,90,.3)',
+                color: 'var(--brand-green-light)',
+                borderRadius: '6px',
+                padding: '2px 8px',
+                fontSize: '.7rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                outline: 'none',
+                cursor: 'pointer',
+                marginBottom: '4px'
+              }}
+            >
+              {seasonsList.map(s => (
+                <option key={s.key} value={s.key} style={{ background: '#0e1814' }}>
+                  {s.name || s.key.replace('_', ' ').toUpperCase()}
+                </option>
+              ))}
+            </select>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', margin: 0, background: 'linear-gradient(135deg, var(--text-primary), var(--brand-green-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Säsongsstatistik</h2>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {/* Season selector intentionally hidden; season is resolved automatically. */}
             {scrapedAt && <div style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(37,163,90,.1)', border: '1px solid rgba(37,163,90,.2)', fontSize: '.68rem', color: 'var(--brand-green-light)' }}>{new Date(scrapedAt).toLocaleDateString('sv-SE')}</div>}
           </div>
         </div>
@@ -243,6 +273,8 @@ export function StatisticsPage() {
             {rec.ga > 0 && <StatPill label="GA" value={rec.ga} />}
             <StatPill label="Poäng" value={rec.points} accent="var(--brand-gold)" />
             <StatPill label="V%" value={`${winPct}%`} accent="var(--brand-green-light)" />
+            {rec.ppPct != null && <StatPill label="PP%" value={`${rec.ppPct}%`} />}
+            {rec.pkPct != null && <StatPill label="PK%" value={`${rec.pkPct}%`} />}
           </div>
           {games.length > 0 && <FormStreak games={games} />}
         </Card>
