@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { Activity, AlertTriangle, BarChart3, Newspaper, ShieldAlert, Users, MessageSquare, LineChart, Trophy } from 'lucide-react';
 import { SillySeason } from './pages/SillySeason';
 import { Roster } from './pages/Roster';
@@ -215,7 +215,6 @@ function MerPage() {
 }
 
 const navItems = [
-  { to: '/', label: 'Läget', icon: Activity },
   { to: '/preseason-shl', label: 'Preseason', icon: Trophy },
   { to: '/trupp', label: 'Trupp', icon: Users },
   { to: '/silly', label: 'Silly', icon: Newspaper },
@@ -261,7 +260,7 @@ function App() {
 
         <main className="content-area">
           <Routes>
-            <Route path="/" element={<LagePage isLoading={isLoading} error={error} data={data} />} />
+            <Route path="/" element={<Navigate to="/preseason-shl" replace />} />
             <Route path="/preseason-shl" element={<PreseasonShlPage />} />
             <Route path="/trupp" element={<Roster />} />
             <Route path="/silly" element={<SillySeason />} />
