@@ -292,7 +292,7 @@ function SeasonTab({ timeline = [], form = [], streaks = {} as StreakData, speci
       {/* Season Timeline Chart */}
       <div style={{ background: chartTheme.bg, borderRadius: 12, padding: '16px 16px 8px' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
-          Poängkurva — Säsongen 25/26
+          Poängkurva — Kumulativ
         </div>
         <ResponsiveContainer width="100%" height={260}>
           <AreaChart data={timeline} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
