@@ -916,9 +916,9 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
   const veteranRiskCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'VETERANRISK').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'VETERANRISK').length;
   const developmentCount = (ageCurve?.skaters || []).filter(s => s.trajectory === 'UTVECKLING' || s.trajectory === 'TILLVÄXT').length + (ageCurve?.goalies || []).filter(g => g.trajectory === 'UTVECKLING' || g.trajectory === 'TILLVÄXT').length;
   const readinessToScore = (value: 'GREEN' | 'AMBER' | 'RED') => value === 'GREEN' ? 100 : value === 'AMBER' ? 65 : 35;
-  const skaterReadiness = (transition.skaters || []).length ? (transition.skaters.reduce((a, s) => a + readinessToScore(s.readiness), 0) / transition.skaters.length) : 0;
-  const goalieReadiness = (transition.goalies || []).length ? (transition.goalies.reduce((a, g) => a + readinessToScore(g.readiness), 0) / transition.goalies.length) : 0;
-  const specialTeamsScore = Math.max(0, Math.min(100, transition.benchmarks.special_teams_index.current));
+  const skaterReadiness = (transition?.skaters || []).length ? (transition.skaters.reduce((a, s) => a + readinessToScore(s.readiness), 0) / transition.skaters.length) : 0;
+  const goalieReadiness = (transition?.goalies || []).length ? (transition.goalies.reduce((a, g) => a + readinessToScore(g.readiness), 0) / transition.goalies.length) : 0;
+  const specialTeamsScore = Math.max(0, Math.min(100, transition?.benchmarks?.special_teams_index?.current || 0));
   const ageRiskScore = Math.max(0, 100 - (veteranRiskCount * 12));
   const overallReadiness = Math.round((skaterReadiness * 0.35) + (goalieReadiness * 0.25) + (specialTeamsScore * 0.25) + (ageRiskScore * 0.15));
   const scoreColor = (score: number) => score >= 75 ? GREEN : score >= 55 ? AMBER : RED;
@@ -1147,10 +1147,10 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           {[
-            { label: "Powerplay (PP%)", cur: transition.benchmarks.pp_pct.current, target: transition.benchmarks.pp_pct.target, diff: transition.benchmarks.pp_pct.diff, fmt: (v:number)=>`${v}%` },
-            { label: "Penalty Kill (PK%)", cur: transition.benchmarks.pk_pct.current, target: transition.benchmarks.pk_pct.target, diff: transition.benchmarks.pk_pct.diff, fmt: (v:number)=>`${v}%` },
-            { label: "Målvakts-SV%", cur: transition.benchmarks.goalie_sv.current, target: transition.benchmarks.goalie_sv.target, diff: transition.benchmarks.goalie_sv.diff, fmt: (v:number)=>`${v}%` },
-            { label: "Special Teams Index", cur: transition.benchmarks.special_teams_index.current, target: transition.benchmarks.special_teams_index.target, diff: transition.benchmarks.special_teams_index.diff, fmt: (v:number)=>v.toFixed(1) }
+            { label: "Powerplay (PP%)", cur: transition?.benchmarks?.pp_pct?.current ?? 0, target: transition?.benchmarks?.pp_pct?.target ?? 0, diff: transition?.benchmarks?.pp_pct?.diff ?? 0, fmt: (v:number)=>`${v}%` },
+            { label: "Penalty Kill (PK%)", cur: transition?.benchmarks?.pk_pct?.current ?? 0, target: transition?.benchmarks?.pk_pct?.target ?? 0, diff: transition?.benchmarks?.pk_pct?.diff ?? 0, fmt: (v:number)=>`${v}%` },
+            { label: "Målvakts-SV%", cur: transition?.benchmarks?.goalie_sv?.current ?? 0, target: transition?.benchmarks?.goalie_sv?.target ?? 0, diff: transition?.benchmarks?.goalie_sv?.diff ?? 0, fmt: (v:number)=>`${v}%` },
+            { label: "Special Teams Index", cur: transition?.benchmarks?.special_teams_index?.current ?? 0, target: transition?.benchmarks?.special_teams_index?.target ?? 0, diff: transition?.benchmarks?.special_teams_index?.diff ?? 0, fmt: (v:number)=>v.toFixed(1) }
           ].map(b => {
             const isAhead = b.diff >= 0;
             return (
@@ -1191,7 +1191,7 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
               </tr>
             </thead>
             <tbody>
-              {transition.skaters.map(s => {
+              {(transition?.skaters || []).map(s => {
                 const badgeColor = s.readiness === 'GREEN' ? GREEN : s.readiness === 'AMBER' ? AMBER : RED;
                 const badgeText = s.readiness === 'GREEN' ? 'SHL-Elit' : s.readiness === 'AMBER' ? 'SHL-Bredd' : 'Kvalitetsrisk';
                 return (
@@ -1229,7 +1229,7 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
             </tr>
           </thead>
           <tbody>
-            {transition.goalies.map(g => {
+            {(transition?.goalies || []).map(g => {
               const badgeColor = g.readiness === 'GREEN' ? GREEN : g.readiness === 'AMBER' ? AMBER : RED;
               const badgeText = g.readiness === 'GREEN' ? 'SHL-Elit' : g.readiness === 'AMBER' ? 'SHL-Bredd' : 'Kvalitetsrisk';
               return (
