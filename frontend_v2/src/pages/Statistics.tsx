@@ -71,6 +71,19 @@ type OnIce = {
   top_pairs: { numbers: number[]; names: (string | null)[]; goals_for: number }[];
 };
 
+type ProjTeam = {
+  team: string; is_bjk: boolean; elo: number; current_points: number;
+  expected_points: number; points_p10: number; points_p50: number; points_p90: number;
+  expected_rank: number; rank_p10: number; rank_p90: number;
+  top6_pct: number; top10_pct: number; bottom2_pct: number; win_league_pct: number;
+};
+
+type Projection = {
+  status: string; teams_in_league: number; games_played: number; games_remaining: number;
+  simulations: number; ot_rate_pct: number; reliability: 'none' | 'low' | 'ok';
+  teams: ProjTeam[];
+};
+
 type ShotAgg = {
   games: number; shots_for: number; shots_against: number;
   shots_for_per_game: number | null; shots_against_per_game: number | null;
@@ -480,6 +493,7 @@ export function StatisticsPage() {
   const [keepers, setKeepers] = useState<GoalieData | null>(null);
   const [keepersState, setKeepersState] = useState<'idle' | 'loading' | 'missing'>('idle');
   const [shots, setShots] = useState<ShotData | null>(null);
+  const [proj, setProj] = useState<Projection | null>(null);
 
   /* Säsonger */
   useEffect(() => {
@@ -533,6 +547,17 @@ export function StatisticsPage() {
     fetchJson(`${API_URL}/api/v1/shots${season ? `?season=${season}` : ''}`, ctrl.signal, 45000)
       .then(d => { if (d.status === 'ok' && d.games > 0) setShots(d); })
       .catch(() => { /* skottdata saknas tills scrapern körts */ });
+    return () => ctrl.abort();
+  }, [season, reloadKey, seasonsReady]);
+
+  /* Slutplacering — simuleringen tar några sekunder, men cachas i API:t */
+  useEffect(() => {
+    if (!seasonsReady) return;
+    setProj(null);
+    const ctrl = new AbortController();
+    fetchJson(`${API_URL}/api/v1/projection${season ? `?season=${season}` : ''}`, ctrl.signal, 90000)
+      .then(d => { if (d.status === 'ok' && (d.teams || []).length) setProj(d); })
+      .catch(() => { /* saknas tills API:t är driftsatt */ });
     return () => ctrl.abort();
   }, [season, reloadKey, seasonsReady]);
 
@@ -784,7 +809,7 @@ export function StatisticsPage() {
       )}
 
       {hasPlayed && segment === 'laget' && (
-        <Laget record={record} timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots} />
+        <Laget record={record} timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots} proj={proj} />
       )}
 
       {hasPlayed && segment === 'spelare' && (
@@ -810,15 +835,109 @@ export function StatisticsPage() {
   );
 }
 
+
+/**
+ * Simulerad slutplacering.
+ *
+ * Lagets egna sannolikheter först — det är dem man är här för — och sedan
+ * hela serien. Stapeln visar var laget hamnar i åtta av tio simuleringar,
+ * med den väntade placeringen markerad.
+ */
+function Slutplacering({ proj }: { proj: Projection }) {
+  const [showAll, setShowAll] = useState(false);
+  const us = proj.teams.find(t => t.is_bjk);
+  const n = proj.teams_in_league;
+  const shown = showAll ? proj.teams : proj.teams.slice(0, 6);
+
+  // Utan spelade matcher delar alla lag rating, och siffrorna beskriver bara
+  // spelschemat. Att visa dem som prognos vore att låtsas.
+  if (proj.reliability === 'none') {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Slutplacering</p>
+        <p className="mc-text">
+          Serien har inte startat. Innan någon match är spelad delar alla lag samma
+          styrketal, så en simulering skulle bara beskriva spelschemat — inte vem
+          som är bäst. Prognosen kommer när omgångarna börjar rulla.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Slutplacering · {proj.games_remaining} matcher kvar</p>
+
+      {us && (
+        <>
+          <div className="st-stats st-stats-tight">
+            <Stat label="Topp 6" value={`${us.top6_pct} %`} tone={pdoTone(us.top6_pct, 50)} />
+            <Stat label="Topp 10" value={`${us.top10_pct} %`} tone={pdoTone(us.top10_pct, 50)} />
+            <Stat label="Vinner serien" value={`${us.win_league_pct} %`} tone="var(--brand-gold)" />
+            <Stat label="Botten 2" value={`${us.bottom2_pct} %`} tone={pdoTone(-us.bottom2_pct, -50)} />
+          </div>
+          <div className="st-kv">
+            <span className="st-kvlabel">Väntad placering</span>
+            <span className="st-kvvalue">{us.expected_rank}</span>
+            <span className="st-kvhint">plats {us.rank_p10}–{us.rank_p90} i åtta av tio simuleringar</span>
+          </div>
+          <div className="st-kv">
+            <span className="st-kvlabel">Väntad poäng</span>
+            <span className="st-kvvalue">{us.expected_points}</span>
+            <span className="st-kvhint">{us.points_p10}–{us.points_p90} poäng, nu {us.current_points}</span>
+          </div>
+        </>
+      )}
+
+      <p className="mc-kicker st-sub">Hela serien</p>
+      <div className="pj-list">
+        {shown.map(t => {
+          // Stapeln spänner p10–p90 av placeringarna, med väntat läge markerat.
+          const left = ((t.rank_p10 - 1) / n) * 100;
+          const width = Math.max(3, ((t.rank_p90 - t.rank_p10 + 1) / n) * 100);
+          const dot = ((t.expected_rank - 0.5) / n) * 100;
+          return (
+            <div key={t.team} className={`pj-row${t.is_bjk ? ' pj-ours' : ''}`}>
+              <span className="pj-team">{shortTeam(t.team)}</span>
+              <span className="pj-track">
+                <span className="pj-span" style={{ left: `${left}%`, width: `${width}%` }} />
+                <span className="pj-dot" style={{ left: `${dot}%` }} />
+              </span>
+              <span className="pj-rank">{t.expected_rank}</span>
+            </div>
+          );
+        })}
+      </div>
+      {proj.teams.length > 6 && (
+        <button className="st-more" onClick={() => setShowAll(v => !v)}>
+          {showAll ? 'Visa topp 6' : `Visa alla ${proj.teams.length} lag`}
+        </button>
+      )}
+
+      <p className="mc-note">
+        Stapeln är plats {1}–{n} från vänster; det färgade fältet är där laget hamnar i åtta
+        av tio simuleringar och pricken den väntade placeringen.
+      </p>
+      <p className="mc-note">
+        {proj.simulations.toLocaleString('sv-SE')} simuleringar av de {proj.games_remaining} matcher
+        som återstår. Utfallen dras ur lagens styrketal, och{' '}
+        {proj.ot_rate_pct} % av matcherna avgörs efter full tid — hämtat ur säsongens egna matcher.
+        {proj.reliability === 'low' && ' Få omgångar är spelade, så styrketalen är osäkra och intervallen breda.'}
+      </p>
+    </section>
+  );
+}
+
 /* ── Laget ── */
 function Laget({
-  record, timeline, modules, analyticsState, shots,
+  record, timeline, modules, analyticsState, shots, proj,
 }: {
   record: { gp: number; w: number; otw: number; otl: number; l: number; pts: number; diff: number; rank: number };
   timeline: NonNullable<Modules['timeline']>;
   modules: Modules | null;
   analyticsState: 'idle' | 'loading' | 'error';
   shots: ShotData | null;
+  proj: Projection | null;
 }) {
   const last10 = timeline.slice(-10).map(t => t.result);
   const splits = modules?.splits;
@@ -877,6 +996,8 @@ function Laget({
           </p>
         </section>
       )}
+
+      {proj && proj.games_remaining > 0 && <Slutplacering proj={proj} />}
 
       {shots && (
         <section className="mc-card">
