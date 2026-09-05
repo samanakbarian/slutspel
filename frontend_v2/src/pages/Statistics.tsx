@@ -71,6 +71,23 @@ type OnIce = {
   top_pairs: { numbers: number[]; names: (string | null)[]; goals_for: number }[];
 };
 
+type GoalieSide = { games: number; shots_against: number; saves: number; goals_against: number; save_pct: number | null };
+
+type GoalieGame = {
+  game_id: number | null; date: string; is_home: boolean; opponent: string;
+  save_pct: number | null; saves: number; shots_against: number; goals_against: number;
+};
+
+type GoalieFull = {
+  name: string; jersey_number: number | null; games_played: number;
+  wins: number; losses: number; shutouts: number;
+  goals_against: number; shots_against: number; saves: number;
+  save_pct: number | null; gaa: number | null;
+  home: GoalieSide; away: GoalieSide; game_log: GoalieGame[];
+};
+
+type GoalieData = { status: string; games_with_log: number; goalies: GoalieFull[] };
+
 type Split = { gp: number; w: number; l: number; otw: number; otl: number; gf: number; ga: number; pts: number };
 type StateRecord = { w: number; l: number; otl?: number };
 
@@ -432,6 +449,8 @@ export function StatisticsPage() {
   const [playersState, setPlayersState] = useState<'idle' | 'loading' | 'missing'>('idle');
   const [onIce, setOnIce] = useState<OnIce | null>(null);
   const [onIceState, setOnIceState] = useState<'idle' | 'loading' | 'missing'>('idle');
+  const [keepers, setKeepers] = useState<GoalieData | null>(null);
+  const [keepersState, setKeepersState] = useState<'idle' | 'loading' | 'missing'>('idle');
 
   /* Säsonger */
   useEffect(() => {
@@ -526,14 +545,31 @@ export function StatisticsPage() {
       .catch(() => setOnIceState('missing'));
   }, [season]);
 
+  /* Målvakter — egen endpoint med matchlogg och hemma/borta */
+  const loadKeepers = useCallback(() => {
+    setKeepers(null);
+    setKeepersState('loading');
+    fetch(`${API_URL}/api/v1/goalies${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
+      .then(r => (r.status === 404 ? Promise.reject(new Error('MISSING')) : r.json()))
+      .then(d => {
+        if (d.status !== 'ok' || !(d.goalies || []).length) throw new Error('MISSING');
+        setKeepers(d);
+        setKeepersState('idle');
+      })
+      .catch(() => setKeepersState('missing'));
+  }, [season]);
+
   useEffect(() => {
     if (segment === 'spelare' && playersState === 'idle' && players === null) loadPlayers();
     if (segment === 'spelare' && onIceState === 'idle' && onIce === null) loadOnIce();
-  }, [segment, playersState, players, loadPlayers, onIceState, onIce, loadOnIce]);
+    if (segment === 'spelare' && keepersState === 'idle' && keepers === null) loadKeepers();
+  }, [segment, playersState, players, loadPlayers, onIceState, onIce, loadOnIce,
+      keepersState, keepers, loadKeepers]);
 
   useEffect(() => {
     setPlayers(null); setPlayersState('idle');
     setOnIce(null); setOnIceState('idle');
+    setKeepers(null); setKeepersState('idle');
   }, [season]);
 
   /* ── Härledda värden ── */
@@ -723,6 +759,7 @@ export function StatisticsPage() {
           leagueGoalies={leagueGoalies}
           playersState={playersState}
           onIce={onIce}
+          keepers={keepers}
         />
       )}
 
@@ -855,7 +892,7 @@ function Laget({
 
 /* ── Spelare ── */
 function Spelare({
-  scope, setScope, season, leagueName, bjkSkaters, bjkGoalies, leagueSkaters, leagueGoalies, playersState, onIce,
+  scope, setScope, season, leagueName, bjkSkaters, bjkGoalies, leagueSkaters, leagueGoalies, playersState, onIce, keepers,
 }: {
   scope: Scope;
   setScope: (s: Scope) => void;
@@ -867,6 +904,7 @@ function Spelare({
   leagueGoalies: Goalie[];
   playersState: 'idle' | 'loading' | 'missing';
   onIce: OnIce | null;
+  keepers: GoalieData | null;
 }) {
   const loven = scope === 'loven';
   // Malvakter star i poangligan hos Swehockey men hor hemma i sin egen tabell:
@@ -944,14 +982,132 @@ function Spelare({
         </>
       )}
 
-      <section className="mc-card">
-        <p className="mc-kicker">Målvakter ({goalies.length})</p>
-        {goalies.length === 0
-          ? <p className="mc-text">Ingen målvaktsstatistik för säsongen ännu.</p>
-          : <GoalieTable rows={goalies} showTeam={!loven} />}
-        <p className="mc-note">IM insläppta mål, Rp% räddningsprocent, NC nollor.</p>
-      </section>
+      {loven && keepers ? (
+        keepers.goalies.filter(g => g.games_played > 0).map(g => <GoalieCard key={g.name} g={g} />)
+      ) : (
+        <section className="mc-card">
+          <p className="mc-kicker">Målvakter ({goalies.length})</p>
+          {goalies.length === 0
+            ? <p className="mc-text">Ingen målvaktsstatistik för säsongen ännu.</p>
+            : <GoalieTable rows={goalies} showTeam={!loven} />}
+          <p className="mc-note">IM insläppta mål, Rp% räddningsprocent, NC nollor.</p>
+        </section>
+      )}
     </>
+  );
+}
+
+
+/**
+ * En målvakt: säsongstotaler, hemma mot borta, och räddningsprocenten match
+ * för match.
+ *
+ * Tabellen ger bara totaler. Kurvan är det som säger något om formen, och
+ * hemma/borta-delningen finns inte i källan utan räknas ur matchloggen.
+ */
+function GoalieCard({ g }: { g: GoalieFull }) {
+  // Hela loggen gjorde sidan orimligt lang — tva malvakter med 30 respektive
+  // 25 matcher lade till narmare 4000 px. De senaste racker som overblick.
+  const [showAll, setShowAll] = useState(false);
+  const log = g.game_log || [];
+  const curve = log
+    .filter(x => x.save_pct !== null)
+    .map(x => ({ label: shortDate(x.date), value: x.save_pct as number }));
+  const best = log.reduce<GoalieGame | null>(
+    (acc, x) => (x.save_pct !== null && (!acc || (acc.save_pct ?? 0) < x.save_pct) ? x : acc),
+    null,
+  );
+
+  return (
+    <section className="mc-card">
+      <div className="st-head">
+        <div>
+          <p className="mc-kicker">Målvakt</p>
+          <h3 className="gk-name">
+            {g.jersey_number ? <span className="gk-num">{g.jersey_number}</span> : null}
+            {humanName(g.name)}
+          </h3>
+        </div>
+      </div>
+
+      <div className="st-stats">
+        <Stat label="Matcher" value={g.games_played} />
+        <Stat label="Rp%" value={g.save_pct ?? '–'} tone="var(--brand-gold)" />
+        <Stat label="GAA" value={g.gaa ?? '–'} tone="var(--brand-green-light)" />
+        <Stat label="Nollor" value={g.shutouts} />
+        <Stat label="V–F" value={`${g.wins}–${g.losses}`} />
+        <Stat label="Räddningar" value={g.saves} />
+      </div>
+
+      {curve.length > 1 && (
+        <>
+          <p className="mc-kicker st-sub">Räddningsprocent match för match</p>
+          <Sparkline points={curve} height={64} format={v => `${v.toFixed(1)} %`} />
+        </>
+      )}
+
+      {(g.home.games > 0 || g.away.games > 0) && (
+        <>
+          <p className="mc-kicker st-sub">Hemma mot borta</p>
+          <PairedBar
+            label="Räddningsprocent"
+            left={g.home.save_pct ?? 0}
+            right={g.away.save_pct ?? 0}
+            leftLabel={g.home.save_pct !== null ? `${g.home.save_pct} %` : '–'}
+            rightLabel={g.away.save_pct !== null ? `${g.away.save_pct} %` : '–'}
+          />
+          <p className="mc-note">
+            Hemma {g.home.games} matcher, {g.home.goals_against} insläppta på {g.home.shots_against} skott.
+            Borta {g.away.games}, {g.away.goals_against} på {g.away.shots_against}. Grön stapel är hemma.
+          </p>
+        </>
+      )}
+
+      {log.length > 0 && (
+        <>
+          <p className="mc-kicker st-sub">
+            {showAll ? `Matcher (${log.length})` : `Senaste ${Math.min(5, log.length)} av ${log.length}`}
+          </p>
+          <div className="mc-tablewrap">
+            <table className="mc-table">
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th />
+                  <th className="mc-left">Motståndare</th>
+                  <th>Skott</th>
+                  <th>IM</th>
+                  <th>Rp%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(showAll ? log.slice().reverse() : log.slice(-5).reverse()).map((x, i) => (
+                  <tr key={i}>
+                    <td>{shortDate(x.date)}</td>
+                    <td><span className={`mc-ha${x.is_home ? ' mc-ha-home' : ''}`}>{x.is_home ? 'H' : 'B'}</span></td>
+                    <td className="mc-left st-pname">{shortTeam(x.opponent)}</td>
+                    <td>{x.shots_against}</td>
+                    <td>{x.goals_against}</td>
+                    <td className="mc-pts">{x.save_pct ?? '–'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {log.length > 5 && (
+            <button className="st-more" onClick={() => setShowAll(v => !v)}>
+              {showAll ? 'Visa färre' : `Visa alla ${log.length} matcher`}
+            </button>
+          )}
+          {best && (
+            <p className="mc-note">
+              Bästa matchen: {best.save_pct} % mot {shortTeam(best.opponent)} den {shortDate(best.date)},
+              {' '}{best.saves} räddningar på {best.shots_against} skott.
+            </p>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 

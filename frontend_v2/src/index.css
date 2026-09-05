@@ -1495,3 +1495,42 @@ a {
 .mr-onice-name { font-size: 0.68rem; color: var(--text-secondary); white-space: nowrap; }
 .mr-onice-name b { color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .mr-goal-ours .mr-onice-name b { color: var(--brand-green-light); }
+
+/* ── Målvaktskort ── */
+.gk-name {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.gk-num {
+  flex: none;
+  min-width: 1.7rem;
+  padding: 0.1rem 0.3rem;
+  text-align: center;
+  border-radius: 6px;
+  background: rgba(37, 163, 90, 0.16);
+  color: var(--brand-green-light);
+  font-size: 0.8rem;
+}
+
+/* Fäll ut en lista som annars gör sidan orimligt lång. */
+.st-more {
+  display: block;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.st-more:hover { color: var(--brand-green-light); border-color: rgba(37, 163, 90, 0.35); }
+.st-more:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; }
