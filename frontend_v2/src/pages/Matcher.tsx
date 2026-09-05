@@ -102,6 +102,13 @@ function formatDate(dateStr: string): string {
   return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
+/** Kompakt variant för listrader, där bredden är knapp. */
+function formatDateShort(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
 /* ── delkomponenter ── */
 function TeamBadge({ name, home }: { name: string; home: boolean }) {
   const initials = name.replace(/^(IF|BIK|HC|IK)\s+/i, '').slice(0, 3).toUpperCase();
@@ -153,22 +160,29 @@ function FormDots({ games }: { games: Game[] }) {
   );
 }
 
+/**
+ * Björklöven är alltid ett av lagen, så att skriva ut båda på varje rad
+ * upprepar samma ord och äter upp bredden — långa möten som
+ * "Björklöven mot Växjö Lakers HC" bröt till två rader på 360 px.
+ * Raden visar därför motståndaren, med H/B för hemma eller borta.
+ */
 function GameRow({ game }: { game: Game }) {
   return (
     <div className="mc-row">
-      <span className="mc-date">{formatDate(game.date)}</span>
-      {game.played
-        ? <span className={`mc-res mc-res-${game.result.toLowerCase()}`}>{game.result === 'OTL' ? 'ÖT' : game.result}</span>
-        : <span className="mc-res mc-res-none">{game.isHome ? 'H' : 'B'}</span>}
-      <span className="mc-teams">
-        <span className={BJK.test(game.home) ? 'mc-strong' : ''}>{game.home.replace(/^IF\s+/, '')}</span>
-        <span className="mc-sep">{game.played ? '–' : 'mot'}</span>
-        <span className={BJK.test(game.away) ? 'mc-strong' : ''}>{game.away.replace(/^IF\s+/, '')}</span>
+      <span className="mc-date">{formatDateShort(game.date)}</span>
+      <span className={`mc-ha${game.isHome ? ' mc-ha-home' : ''}`} title={game.isHome ? 'Hemma' : 'Borta'}>
+        {game.isHome ? 'H' : 'B'}
       </span>
-      {game.played && (
-        <span className="mc-score">
-          {game.isHome ? game.gf : game.ga}–{game.isHome ? game.ga : game.gf}
-        </span>
+      <span className="mc-opponent">{game.opponent.replace(/^IF\s+/, '')}</span>
+      {game.played ? (
+        <>
+          <span className="mc-score">{game.gf}–{game.ga}</span>
+          <span className={`mc-res mc-res-${game.result.toLowerCase()}`}>
+            {game.result === 'OTL' ? 'ÖT' : game.result}
+          </span>
+        </>
+      ) : (
+        <span className="mc-time">{game.time}</span>
       )}
     </div>
   );

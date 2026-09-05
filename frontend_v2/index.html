@@ -5,13 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lövenläget — SHL 26/27</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Laddas asynkront: en vanlig stylesheet-länk blockerar renderingen tills
-         Google Fonts svarat. Sidan ritas nu direkt med reservsnitten och byter
-         när Inter/Outfit är på plats. -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800;900&display=swap" media="print" onload="this.media='all';this.onload=null" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800;900&display=swap" /></noscript>
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
     <meta name="description" content="Statistik, matcher och nyheter om IF Björklöven i SHL 2026/27." />
   </head>
   <body>
