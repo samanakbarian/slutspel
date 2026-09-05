@@ -100,13 +100,18 @@ export function StatisticsPage() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
   const [selectedSeason, setSelectedSeason] = useState<string>('');
-  const [seasonsList, setSeasonsList] = useState<{key: string, name?: string}[]>([]);
+  const [seasonsList, setSeasonsList] = useState<{ key: string; name?: string; league?: string; has_team_data?: boolean | null }[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/v1/seasons`)
       .then(r => r.json())
       .then(d => {
-        const seasonList = Array.isArray(d.seasons) ? d.seasons : [];
+        const all = Array.isArray(d.seasons) ? d.seasons : [];
+        // Flera säsonger finns bara som jämförelsedata för prognosmodellen och
+        // innehåller inga Björklöven-matcher. Backend flaggar dem med
+        // has_team_data; är flaggan frånvarande (äldre API) visas allt.
+        const known = all.filter((x: { has_team_data?: boolean | null }) => x.has_team_data === true);
+        const seasonList = known.length > 0 ? known : all;
         setSeasonsList(seasonList);
         if (d.active && seasonList.some((s: { key: string }) => s.key === d.active)) {
           setSelectedSeason(d.active);
@@ -254,10 +259,20 @@ export function StatisticsPage() {
                 marginBottom: '4px'
               }}
             >
-              {seasonsList.map(s => (
-                <option key={s.key} value={s.key} style={{ background: '#0e1814' }}>
-                  {s.name || s.key.replace('_', ' ').toUpperCase()}
-                </option>
+              {Object.entries(
+                seasonsList.reduce<Record<string, typeof seasonsList>>((acc, s) => {
+                  const league = s.league || (s.key.startsWith('shl') ? 'SHL' : 'HockeyAllsvenskan');
+                  (acc[league] ||= []).push(s);
+                  return acc;
+                }, {}),
+              ).map(([league, items]) => (
+                <optgroup key={league} label={league} style={{ background: '#0e1814' }}>
+                  {items.map(s => (
+                    <option key={s.key} value={s.key} style={{ background: '#0e1814' }}>
+                      {(s.name || s.key).replace(/^(SHL|HockeyAllsvenskan)\s*/i, '')}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', margin: 0, background: 'linear-gradient(135deg, var(--text-primary), var(--brand-green-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Säsongsstatistik</h2>
