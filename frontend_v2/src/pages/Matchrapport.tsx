@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
+import { PairedBar } from '../components/charts/Charts';
 
 /* ── typer, speglar /api/v1/match/{game_id} ── */
 type Goal = {
@@ -67,6 +68,106 @@ function parsePeriods(pr: string | null | undefined): [number, number][] {
     .map(s => s.trim().match(/(\d+)\s*-\s*(\d+)/))
     .filter((m): m is RegExpMatchArray => Boolean(m))
     .map(m => [parseInt(m[1], 10), parseInt(m[2], 10)] as [number, number]);
+}
+
+
+/* ── matchbild: vad siffrorna säger utöver resultatet ── */
+
+/** Minuter i ledning, oavgjort och underläge, ur måltiderna. */
+function timeSplit(goals: Goal[], totalMin: number) {
+  const acc = { lead: 0, tied: 0, trail: 0 };
+  const add = (from: number, to: number, diff: number) => {
+    const dur = Math.max(0, to - from);
+    if (diff > 0) acc.lead += dur;
+    else if (diff < 0) acc.trail += dur;
+    else acc.tied += dur;
+  };
+  let diff = 0;
+  let prev = 0;
+  let biggest = 0;
+  for (const g of [...goals].sort((a, b) => a.minute - b.minute)) {
+    add(prev, g.minute, diff);
+    diff += isOurs(g.team_code) ? 1 : -1;
+    biggest = Math.max(biggest, diff);
+    prev = g.minute;
+  }
+  add(prev, totalMin, diff);
+  return { ...acc, biggest };
+}
+
+function Matchbild({ goals, penalties, totalMin }: { goals: Goal[]; penalties: Penalty[]; totalMin: number }) {
+  if (goals.length === 0) return null;
+  const t = timeSplit(goals, totalMin);
+  const mins = (v: number) => `${Math.round(v)} min`;
+
+  // Ett powerplay uppstår ur motståndarens utvisning. Utvisningar utan
+  // minuter är straffslag och lagstraff, som inte ger något spel i numerärt
+  // överläge — de ska inte räknas som tillfällen.
+  const ourPpChances = penalties.filter(p => !isOurs(p.team_code) && p.minutes > 0).length;
+  const theirPpChances = penalties.filter(p => isOurs(p.team_code) && p.minutes > 0).length;
+  const ourPpGoals = goals.filter(g => isOurs(g.team_code) && g.is_power_play).length;
+  const theirPpGoals = goals.filter(g => !isOurs(g.team_code) && g.is_power_play).length;
+  const ourShort = goals.filter(g => isOurs(g.team_code) && g.is_short_handed).length;
+
+  const pim = (ours: boolean) =>
+    penalties.filter(p => isOurs(p.team_code) === ours).reduce((n, p) => n + (p.minutes || 0), 0);
+
+  return (
+    <>
+      <section className="mr-card">
+        <p className="mr-kicker">Matchbild</p>
+        <PairedBar
+          label="Tid i ledning / underläge"
+          left={t.lead}
+          right={t.trail}
+          leftLabel={mins(t.lead)}
+          rightLabel={mins(t.trail)}
+        />
+        <div className="st-kv">
+          <span className="st-kvlabel">Oavgjort</span>
+          <span className="st-kvvalue">{mins(t.tied)}</span>
+        </div>
+        <div className="st-kv">
+          <span className="st-kvlabel">Största ledning</span>
+          <span className="st-kvvalue">{t.biggest > 0 ? `+${t.biggest}` : '–'}</span>
+        </div>
+        <p className="mr-note">
+          Räknat ur måltiderna, så minuterna är spelklocka och inte effektiv tid.
+          Grön stapel är tid i ledning.
+        </p>
+      </section>
+
+      {(ourPpChances > 0 || theirPpChances > 0) && (
+        <section className="mr-card">
+          <p className="mr-kicker">Specialteam</p>
+          <div className="st-kv">
+            <span className="st-kvlabel">Powerplay</span>
+            <span className="st-kvvalue">{ourPpGoals} / {ourPpChances}</span>
+            <span className="st-kvhint">
+              {ourPpChances > 0 ? `${Math.round((ourPpGoals / ourPpChances) * 100)} % utdelning` : 'Inga tillfällen'}
+            </span>
+          </div>
+          <div className="st-kv">
+            <span className="st-kvlabel">Boxplay</span>
+            <span className="st-kvvalue">{theirPpChances - theirPpGoals} / {theirPpChances}</span>
+            <span className="st-kvhint">
+              {theirPpChances > 0 ? `${Math.round(((theirPpChances - theirPpGoals) / theirPpChances) * 100)} % räddade` : 'Inga underlägen'}
+            </span>
+          </div>
+          {ourShort > 0 && (
+            <div className="st-kv">
+              <span className="st-kvlabel">Mål i underläge</span>
+              <span className="st-kvvalue">{ourShort}</span>
+            </div>
+          )}
+          <div className="st-kv">
+            <span className="st-kvlabel">Utvisningsminuter</span>
+            <span className="st-kvvalue">{pim(true)} mot {pim(false)}</span>
+          </div>
+        </section>
+      )}
+    </>
+  );
 }
 
 /* ── momentumkurva ── */
@@ -308,6 +409,11 @@ export function Matchrapport() {
       </section>
 
       <Momentum goals={data.goals} netResult={ourGoals - theirGoals} />
+      <Matchbild
+        goals={data.goals}
+        penalties={data.penalties}
+        totalMin={Math.max(60, periods.length * 20)}
+      />
       <Periods periods={periods} ourSide={ourSide} />
       <Goals goals={data.goals} />
       <Penalties penalties={data.penalties} />

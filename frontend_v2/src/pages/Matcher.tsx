@@ -16,6 +16,8 @@ type RawGame = {
   spectators?: number | null;
 };
 
+type Season = { key: string; name?: string; league?: string; has_team_data?: boolean | null };
+
 type Standing = {
   team_name?: string;
   rank?: number;
@@ -238,19 +240,33 @@ export function Matcher() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'kommande' | 'spelade'>('kommande');
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [season, setSeason] = useState<string | null>(null);
+
+  // Två säsonger är aktiva samtidigt (SHL och HA 26/27) och API:ts default
+  // landar på HockeyAllsvenskan, som saknar matcher. Fråga därför efter den
+  // säsong /api/v1/seasons själv pekar ut som aktiv.
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/seasons`, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const all: Season[] = Array.isArray(d?.seasons) ? d.seasons : [];
+        const known = all.filter(x => x.has_team_data === true);
+        setSeasons(known.length > 0 ? known : all);
+        setSeason(d?.active || '');
+      })
+      .catch(() => setSeason(''));
+  }, []);
 
   useEffect(() => {
+    if (season === null) return;
+    setLoading(true);
+    setError(null);
     const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), 30000);
+    const timer = window.setTimeout(() => ctrl.abort(), 40000);
 
-    // Två säsonger är aktiva samtidigt (SHL och HA 26/27) och API:ts default
-    // landar på HockeyAllsvenskan, som saknar matcher. Fråga därför efter den
-    // säsong /api/v1/seasons själv pekar ut som aktiv.
-    fetch(`${API_URL}/api/v1/seasons`, { cache: 'no-store', signal: ctrl.signal })
-      .then(r => (r.ok ? r.json() : null))
-      .then(s => (s?.active ? `?season=${encodeURIComponent(s.active)}` : ''))
-      .catch(() => '')
-      .then(q => fetch(`${API_URL}/api/v1/statistics${q}`, { cache: 'no-store', signal: ctrl.signal }))
+    const q = season ? `?season=${encodeURIComponent(season)}` : '';
+    fetch(`${API_URL}/api/v1/statistics${q}`, { cache: 'no-store', signal: ctrl.signal })
       .then(r => { if (!r.ok) throw new Error(`Servern svarade ${r.status}`); return r.json(); })
       .then(j => {
         if (j?.status === 'error') throw new Error(j.error || 'Okänt fel från API:t');
@@ -262,7 +278,9 @@ export function Matcher() {
         // rad, och då visar vi den ensam hellre än ingenting.
         const inline = j.standings || (j.team_standing ? [j.team_standing] : []);
         setStandings(Array.isArray(inline) ? inline : []);
-        fetch(`${API_URL}/api/v1/standings`, { cache: 'no-store' })
+        // Utan säsongsparameter svarar endpointen för den aktiva säsongen, och
+        // tabellen skulle visa SHL:s nollor även när en spelad säsong valts.
+        fetch(`${API_URL}/api/v1/standings${q}`, { cache: 'no-store', signal: ctrl.signal })
           .then(r => (r.ok ? r.json() : null))
           .then(d => {
             const rows = d?.standings ?? d;
@@ -270,13 +288,16 @@ export function Matcher() {
           })
           .catch(() => { /* endpointen finns inte än — behåll inline-raden */ });
         // Har säsongen börjat visar vi spelade matcher först.
-        if (all.some(g => g.played)) setView('spelade');
+        setView(all.some(g => g.played) ? 'spelade' : 'kommande');
       })
-      .catch((e: Error) => setError(e.name === 'AbortError' ? 'Tidsgränsen gick ut efter 30 sekunder.' : e.message))
-      .finally(() => { window.clearTimeout(timer); setLoading(false); });
+      .catch((e: Error) => {
+        if (ctrl.signal.aborted) return;
+        setError(e.name === 'AbortError' ? 'Tidsgränsen gick ut.' : e.message);
+      })
+      .finally(() => { window.clearTimeout(timer); if (!ctrl.signal.aborted) setLoading(false); });
 
     return () => { window.clearTimeout(timer); ctrl.abort(); };
-  }, []);
+  }, [season]);
 
   if (loading) {
     return (
@@ -299,6 +320,9 @@ export function Matcher() {
   }
 
   const played = games.filter(g => g.played).sort((a, b) => b.date.localeCompare(a.date));
+  // Senaste säsongen med lagdata som inte är den valda — dit pekar vi när den
+  // valda inte har några spelade matcher.
+  const lastPlayedSeason = seasons.find(x => x.key !== season && x.has_team_data === true) || null;
   const upcoming = games.filter(g => !g.played).sort((a, b) => a.date.localeCompare(b.date));
   const next = upcoming[0];
   const shown = view === 'spelade' ? played : upcoming;
@@ -338,11 +362,56 @@ export function Matcher() {
       </div>
 
       <section className="mc-card">
-        <p className="mc-kicker">{seasonName || 'Spelprogram'}</p>
+        <div className="st-head">
+          <p className="mc-kicker">{seasonName || 'Spelprogram'}</p>
+          {seasons.length > 1 && (
+            <select
+              className="st-season"
+              value={season ?? ''}
+              onChange={e => setSeason(e.target.value)}
+              aria-label="Välj säsong"
+            >
+              {Object.entries(
+                seasons.reduce<Record<string, Season[]>>((acc, x) => {
+                  const league = x.league === 'HA' ? 'HockeyAllsvenskan'
+                    : x.league || (x.key.startsWith('shl') ? 'SHL' : 'HockeyAllsvenskan');
+                  (acc[league] ||= []).push(x);
+                  return acc;
+                }, {}),
+              ).map(([league, items]) => (
+                <optgroup key={league} label={league}>
+                  {items.map(x => (
+                    <option key={x.key} value={x.key}>
+                      {(x.name || x.key).replace(/^(SHL|HockeyAllsvenskan)\s*/i, '')}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
+        </div>
         {shown.length === 0
           ? <p className="mc-text">{view === 'spelade' ? 'Inga matcher spelade än.' : 'Inga fler matcher inlagda.'}</p>
           : shown.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
+        {view === 'spelade' && played.length > 0 && (
+          <p className="mc-note">Tryck på en spelad match för matchrapport med mål, utvisningar och matchbild.</p>
+        )}
       </section>
+
+      {/* Utan spelade matcher finns inga rapporter att öppna. Hellre en väg
+          till den senaste säsongen som har dem än en tom lista. */}
+      {played.length === 0 && lastPlayedSeason && (
+        <section className="mc-card">
+          <p className="mc-kicker">Matchrapporter</p>
+          <p className="mc-text">
+            {seasonName || 'Säsongen'} har inga spelade matcher än, så det finns inga
+            rapporter att öppna. Matcherna från {lastPlayedSeason.name || lastPlayedSeason.key} ligger kvar.
+          </p>
+          <button className="empty-season-btn" onClick={() => setSeason(lastPlayedSeason.key)}>
+            Visa {lastPlayedSeason.name || lastPlayedSeason.key}
+          </button>
+        </section>
+      )}
     </div>
   );
 }
