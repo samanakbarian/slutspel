@@ -72,6 +72,14 @@ a {
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr auto;
+  /* Utan en explicit kolumn får grid-barnen min-width:auto, vilket låter
+     ett brett barn (t.ex. en tabell i analysmodulen) blåsa upp hela skalet
+     och skjuta topbar och bottennavigering utanför skärmen. */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.controlroom-shell > * {
+  min-width: 0;
 }
 
 .topbar {
@@ -118,7 +126,13 @@ a {
   padding: 0.8rem 0.75rem 5.2rem;
   max-width: 980px;
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
+}
+
+/* Brett innehåll ska scrolla i sin egen container, aldrig dra ut sidan. */
+.page {
+  min-width: 0;
 }
 
 .page {
