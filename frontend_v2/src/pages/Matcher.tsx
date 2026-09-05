@@ -195,9 +195,20 @@ function GameRow({ game }: { game: Game }) {
     </>
   );
 
+  // Utan en synlig markör syns det inte att raden gar att trycka pa — pa en
+  // telefon finns ingen hovring som avslojar det.
   return linkable
-    ? <Link to={`/matcher/${game.gameId}`} className="mc-row mc-row-link">{body}</Link>
-    : <div className="mc-row">{body}</div>;
+    ? (
+      <Link
+        to={`/matcher/${game.gameId}`}
+        className="mc-row mc-row-link"
+        aria-label={`Matchrapport: ${game.isHome ? 'Björklöven' : game.opponent} mot ${game.isHome ? game.opponent : 'Björklöven'} ${game.gf}–${game.ga}`}
+      >
+        {body}
+        <span className="mc-chevron" aria-hidden="true">›</span>
+      </Link>
+    )
+    : <div className="mc-row">{body}<span className="mc-chevron mc-chevron-off" aria-hidden="true" /></div>;
 }
 
 function StandingsTable({ rows }: { rows: Standing[] }) {
@@ -394,7 +405,10 @@ export function Matcher() {
           ? <p className="mc-text">{view === 'spelade' ? 'Inga matcher spelade än.' : 'Inga fler matcher inlagda.'}</p>
           : shown.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
         {view === 'spelade' && played.length > 0 && (
-          <p className="mc-note">Tryck på en spelad match för matchrapport med mål, utvisningar och matchbild.</p>
+          <p className="mc-note">
+            Rader med <span className="mc-chevron-inline">›</span> öppnar matchrapporten:
+            mål, utvisningar, specialteam och tid i ledning.
+          </p>
         )}
       </section>
 

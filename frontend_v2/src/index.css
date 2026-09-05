@@ -1354,3 +1354,21 @@ a {
 /* Namn på en rad. Bryts de blir varje rad dubbelt så hög och listan svår att
    överblicka; tabellen får hellre bli bredare och scrollas i sidled. */
 .mc-table td.st-pname { white-space: nowrap; padding-right: 0.75rem; }
+
+/* Tryckmarkör på matchrader som har en rapport. Utan den syns det inte på en
+   telefon att raden går att trycka på — det finns ingen hovring där. */
+.mc-chevron {
+  flex: none;
+  width: 0.9rem;
+  text-align: right;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--brand-green-light);
+  opacity: 0.75;
+}
+.mc-chevron-off { visibility: hidden; }
+.mc-row-link:hover .mc-chevron { opacity: 1; }
+.mc-chevron-inline { color: var(--brand-green-light); font-weight: 700; }
+
+/* Länkraden ska läsa som tryckbar även i vila, inte bara vid hovring. */
+.mc-row-link { background: rgba(255, 255, 255, 0.015); border-radius: 6px; }
