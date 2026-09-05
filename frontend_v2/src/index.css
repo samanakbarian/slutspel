@@ -1372,3 +1372,13 @@ a {
 
 /* Länkraden ska läsa som tryckbar även i vila, inte bara vid hovring. */
 .mc-row-link { background: rgba(255, 255, 255, 0.015); border-radius: 6px; }
+
+/* Kombinationsraderna behöver mer plats åt namnen än utvisningsstaplarna. */
+.st-pairnames {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-barrow:has(.st-pairnames) { grid-template-columns: minmax(0, 9rem) 1fr 1.8rem; }

@@ -55,6 +55,22 @@ type ApiPlayer = {
   points_per_game: number; percentiles: Record<string, number> | null;
 };
 
+type OnIcePlayer = {
+  jersey_number: number; name: string; position: string | null; is_goalie: boolean;
+  gf_on: number; ga_on: number; gf_on_ev: number; ga_on_ev: number;
+  diff: number; diff_ev: number; gf_share_pct: number;
+  official_plus_minus: number | null;
+};
+
+type OnIce = {
+  status: string;
+  games_with_events: number;
+  team_goals_for: number;
+  team_goals_against: number;
+  players: OnIcePlayer[];
+  top_pairs: { numbers: number[]; names: (string | null)[]; goals_for: number }[];
+};
+
 type Split = { gp: number; w: number; l: number; otw: number; otl: number; gf: number; ga: number; pts: number };
 type StateRecord = { w: number; l: number; otl?: number };
 
@@ -101,6 +117,15 @@ function humanName(n: string): string {
 }
 
 const shortTeam = (t: string) => String(t || '').replace(/^(IF|IK|HC|BIK)\s+/, '');
+
+/**
+ * Efternamnet ur "Efternamn, Förnamn". Två fulla namn på samma rad ryms inte
+ * på en telefon, och efternamnet är det som skiljer spelarna åt.
+ */
+function surname(n: string | null): string {
+  const clean = String(n || '').replace(/[*†‡]+/g, '').trim();
+  return clean.includes(',') ? clean.split(',')[0].trim() : clean.split(' ').slice(-1)[0];
+}
 
 /* ── Normalisering: API:t levererar flera generationers fältnamn ── */
 function normGame(g: RawGame): Game {
@@ -335,6 +360,8 @@ export function StatisticsPage() {
 
   const [players, setPlayers] = useState<ApiPlayer[] | null>(null);
   const [playersState, setPlayersState] = useState<'idle' | 'loading' | 'missing'>('idle');
+  const [onIce, setOnIce] = useState<OnIce | null>(null);
+  const [onIceState, setOnIceState] = useState<'idle' | 'loading' | 'missing'>('idle');
 
   /* Säsonger */
   useEffect(() => {
@@ -415,11 +442,29 @@ export function StatisticsPage() {
       .catch(() => setPlayersState('missing'));
   }, [season]);
 
+  /* På isen — hämtas när fliken öppnas, som spelarlistan */
+  const loadOnIce = useCallback(() => {
+    setOnIce(null);
+    setOnIceState('loading');
+    fetch(`${API_URL}/api/v1/onice${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
+      .then(r => (r.status === 404 ? Promise.reject(new Error('MISSING')) : r.json()))
+      .then(d => {
+        if (d.status !== 'ok' || !(d.players || []).length) throw new Error('MISSING');
+        setOnIce(d);
+        setOnIceState('idle');
+      })
+      .catch(() => setOnIceState('missing'));
+  }, [season]);
+
   useEffect(() => {
     if (segment === 'spelare' && playersState === 'idle' && players === null) loadPlayers();
-  }, [segment, playersState, players, loadPlayers]);
+    if (segment === 'spelare' && onIceState === 'idle' && onIce === null) loadOnIce();
+  }, [segment, playersState, players, loadPlayers, onIceState, onIce, loadOnIce]);
 
-  useEffect(() => { setPlayers(null); setPlayersState('idle'); }, [season]);
+  useEffect(() => {
+    setPlayers(null); setPlayersState('idle');
+    setOnIce(null); setOnIceState('idle');
+  }, [season]);
 
   /* ── Härledda värden ── */
   const standing: Standing = stats?.team_standing || {};
@@ -607,6 +652,7 @@ export function StatisticsPage() {
           leagueSkaters={leagueSkaters}
           leagueGoalies={leagueGoalies}
           playersState={playersState}
+          onIce={onIce}
         />
       )}
 
@@ -739,7 +785,7 @@ function Laget({
 
 /* ── Spelare ── */
 function Spelare({
-  scope, setScope, season, leagueName, bjkSkaters, bjkGoalies, leagueSkaters, leagueGoalies, playersState,
+  scope, setScope, season, leagueName, bjkSkaters, bjkGoalies, leagueSkaters, leagueGoalies, playersState, onIce,
 }: {
   scope: Scope;
   setScope: (s: Scope) => void;
@@ -750,6 +796,7 @@ function Spelare({
   leagueSkaters: Skater[];
   leagueGoalies: Goalie[];
   playersState: 'idle' | 'loading' | 'missing';
+  onIce: OnIce | null;
 }) {
   const loven = scope === 'loven';
   const skaters = loven ? bjkSkaters : leagueSkaters;
@@ -774,6 +821,81 @@ function Spelare({
             : `Lövenspelare är markerade och går att trycka på. Poängtoppen är serieledande spelare, inte hela ${leagueName}.`}
         </p>
       </section>
+
+      {loven && onIce && (
+        <>
+          <section className="mc-card">
+            <p className="mc-kicker">På isen · mål för och emot</p>
+            <div className="mc-tablewrap">
+              <table className="mc-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th className="mc-left">Spelare</th>
+                    <th>GF</th>
+                    <th>GA</th>
+                    <th>Diff</th>
+                    <th>Lika</th>
+                    <th>Andel</th>
+                    <th>Tabell</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {onIce.players.filter(p => !p.is_goalie).map(p => (
+                    <tr key={p.jersey_number}>
+                      <td>{p.jersey_number}</td>
+                      <td className="mc-left st-pname">{humanName(p.name)}</td>
+                      <td>{p.gf_on}</td>
+                      <td>{p.ga_on}</td>
+                      <td className="mc-pts">{p.diff > 0 ? `+${p.diff}` : p.diff}</td>
+                      <td>{p.diff_ev > 0 ? `+${p.diff_ev}` : p.diff_ev}</td>
+                      <td>{p.gf_share_pct}%</td>
+                      <td>
+                        {p.official_plus_minus === null
+                          ? '–'
+                          : p.official_plus_minus > 0 ? `+${p.official_plus_minus}` : p.official_plus_minus}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mc-note">
+              Räknat ur Swehockeys uppgift om vilka som stod på isen vid varje mål,
+              över {onIce.games_with_events} matcher. <b>Lika</b> räknar bara mål vid
+              lika styrka och i underläge, som plus/minus brukar göra. <b>Andel</b> är
+              hur stor del av lagets {onIce.team_goals_for} mål spelaren var med på.
+            </p>
+            <p className="mc-note">
+              <b>Tabell</b> är Swehockeys eget plus/minus. Det stämmer inte alltid med
+              vårt — deras siffra bygger på fler tillfällen än deras egna
+              on-ice-listor visar, och skillnaden går inte att härleda ur
+              matchhändelserna. Båda visas hellre än att det ena utges för det andra.
+            </p>
+          </section>
+
+          {onIce.top_pairs.length > 0 && (
+            <section className="mc-card">
+              <p className="mc-kicker">Oftast på isen tillsammans vid mål</p>
+              {onIce.top_pairs.slice(0, 8).map((pair, i) => {
+                const max = onIce.top_pairs[0]?.goals_for || 1;
+                return (
+                  <div key={i} className="st-barrow">
+                    <span className="st-pairnames">
+                      {surname(pair.names[0])} + {surname(pair.names[1])}
+                    </span>
+                    <span className="st-bartrack">
+                      <span className="st-barfill" style={{ width: `${(pair.goals_for / max) * 100}%` }} />
+                    </span>
+                    <span className="st-barvalue">{pair.goals_for}</span>
+                  </div>
+                );
+              })}
+              <p className="mc-note">Antal mål laget gjort med båda på isen. Målvakter är inte medräknade.</p>
+            </section>
+          )}
+        </>
+      )}
 
       <section className="mc-card">
         <p className="mc-kicker">Målvakter ({goalies.length})</p>
