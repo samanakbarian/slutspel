@@ -162,7 +162,7 @@ export function Spelare() {
       {curve.length > 1 && (
         <section className="mc-card">
           <p className="mc-kicker">Poäng ackumulerat</p>
-          <Sparkline points={curve} />
+          <Sparkline points={curve} height={104} unit=" p" />
           <p className="mc-note">
             {data.points_from_events} poäng fördelade på {data.games_with_points} matcher.
             Förloppet härleds ur målhändelserna, så matcher utan poäng syns inte som steg.
