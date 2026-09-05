@@ -1225,7 +1225,11 @@ a {
 }
 
 .st-click { cursor: pointer; }
-.st-plink { color: inherit; text-decoration: none; }
+/* Namnet var en länk men såg ut som text, så ingen förstod att raden ledde
+   vidare. Färg och pil säger det utan att kosta bredd. */
+.st-plink { color: var(--brand-green-light); text-decoration: none; font-weight: 600; }
+.st-plink-arrow { margin-left: 0.25rem; opacity: 0.7; }
+.st-click:hover .st-plink-arrow { opacity: 1; }
 .st-click:hover td { background: rgba(255, 255, 255, 0.05); }
 .st-plink:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 1px; border-radius: 3px; }
 
@@ -1406,3 +1410,64 @@ a {
 .st-sort:hover { color: var(--brand-green-light); }
 .st-sort:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; border-radius: 3px; }
 .mc-table th[aria-sort]:not([aria-sort='none']) .st-sort { color: var(--brand-gold); }
+
+/* ── Senaste matchen ── */
+.mc-latest { border-left: 3px solid var(--impact-neutral); }
+.mc-latest-w { border-left-color: var(--impact-positive); }
+.mc-latest-l { border-left-color: var(--impact-negative); }
+.mc-latest-otl { border-left-color: var(--impact-warning); }
+
+.mc-latest-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.mc-latest-opp {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mc-latest-score {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mc-latest-label { font-size: 0.74rem; color: var(--text-muted); margin-top: 0.15rem; }
+.mc-latest-w .mc-latest-score { color: var(--impact-positive); }
+.mc-latest-l .mc-latest-score { color: var(--impact-negative); }
+.mc-latest-otl .mc-latest-score { color: var(--impact-warning); }
+
+/* Uttalad väg vidare. En rad i listan säger inte att det finns mer att läsa. */
+.mc-cta {
+  display: block;
+  margin-top: 0.75rem;
+  padding: 0.6rem;
+  text-align: center;
+  border-radius: 9px;
+  background: var(--brand-green);
+  color: #04140c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.mc-cta:hover { filter: brightness(1.08); }
+.mc-cta:focus-visible { outline: 2px solid var(--brand-gold-light); outline-offset: 2px; }
+
+/* Sekundär variant: rapporten finns, men inte för matchen i kortet. */
+.mc-cta-soft {
+  background: rgba(37, 163, 90, 0.14);
+  border: 1px solid rgba(37, 163, 90, 0.32);
+  color: var(--brand-green-light);
+  font-size: 0.78rem;
+}

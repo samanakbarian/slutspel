@@ -145,6 +145,50 @@ function NextMatch({ game }: { game: Game }) {
   );
 }
 
+/**
+ * Senaste spelade matchen, överst och med en uttalad väg in i rapporten.
+ *
+ * Under säsong är det senaste resultatet det första man vill se, och
+ * matchrapporten det man vill vidare till. En rad i listan langre ner sager
+ * inte att det finns nagot mer att lasa.
+ */
+function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) {
+  const linkable = game.gameId !== null;
+  const label = game.result === 'W' ? 'Vinst'
+    : game.result === 'OTL' ? 'Förlust efter övertid'
+      : game.result === 'L' ? 'Förlust' : 'Oavgjort';
+  return (
+    <section className={`mc-hero mc-latest mc-latest-${game.result.toLowerCase() || 'none'}`}>
+      <p className="mc-kicker">Senaste matchen · {formatDate(game.date)}</p>
+      <div className="mc-latest-row">
+        <span className={`mc-ha${game.isHome ? ' mc-ha-home' : ''}`}>{game.isHome ? 'H' : 'B'}</span>
+        <span className="mc-latest-opp">{game.opponent.replace(/^IF\s+/, '')}</span>
+        <span className="mc-latest-score">{game.gf}–{game.ga}</span>
+      </div>
+      <p className="mc-latest-label">{label}</p>
+      {linkable ? (
+        <Link to={`/matcher/${game.gameId}`} className="mc-cta">
+          Läs matchrapporten
+          <span aria-hidden="true"> →</span>
+        </Link>
+      ) : fallback ? (
+        <>
+          {/* Slutspelsmatcher saknar match-id hos Swehockey och far darfor
+              ingen rapport. Hellre vidare till den senaste som har en an en
+              atervandsgrand. */}
+          <Link to={`/matcher/${fallback.gameId}`} className="mc-cta mc-cta-soft">
+            Senaste rapporten: {formatDateShort(fallback.date)} mot {fallback.opponent.replace(/^IF\s+/, '')}
+            <span aria-hidden="true"> →</span>
+          </Link>
+          <p className="mc-note">Slutspelsmatcher saknar matchrapport hos Swehockey.</p>
+        </>
+      ) : (
+        <p className="mc-note">Matchrapport saknas för den här matchen.</p>
+      )}
+    </section>
+  );
+}
+
 function FormDots({ games }: { games: Game[] }) {
   const last = games.slice(0, 10);
   if (last.length === 0) return null;
@@ -340,6 +384,14 @@ export function Matcher() {
 
   return (
     <div className="page animate-fade-up">
+      {/* Under säsong är senaste resultatet det man kollar först; före
+          seriestart finns bara nästa match att visa. */}
+      {played[0] && (
+        <LatestMatch
+          game={played[0]}
+          fallback={played[0].gameId === null ? played.find(g => g.gameId !== null) || null : null}
+        />
+      )}
       {next && <NextMatch game={next} />}
 
       {played.length > 0 && (

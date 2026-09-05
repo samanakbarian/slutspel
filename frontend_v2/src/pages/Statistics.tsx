@@ -342,7 +342,12 @@ function SkaterTable({
                 <td>{s.num || '–'}</td>
                 <td className="mc-left st-pname">
                   {s.isBjk
-                    ? <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>{humanName(s.name)}</Link>
+                    ? (
+                      <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>
+                        {humanName(s.name)}
+                        <span className="st-plink-arrow" aria-hidden="true">›</span>
+                      </Link>
+                    )
                     : humanName(s.name)}
                 </td>
                 <td>{s.gp}</td>
