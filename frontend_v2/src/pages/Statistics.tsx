@@ -162,6 +162,43 @@ function apiPlayerToSkater(p: ApiPlayer): Skater {
   };
 }
 
+/**
+ * Hämtning med tidsgräns och ett automatiskt omtag.
+ *
+ * Cloud Run skalar ner till noll mellan besöken, så det första anropet betalar
+ * både kallstart och en okachad BigQuery-fråga och kan gå över tidsgränsen.
+ * Andra försöket möter en varm instans och svarar på någon sekund. Utan
+ * omtaget möttes förstabesökaren av "tidsgränsen gick ut" trots att sidan
+ * hade fungerat direkt om den laddats om.
+ */
+async function fetchJson(
+  url: string,
+  outer: AbortSignal,
+  timeoutMs: number,
+  attempts = 2,
+): Promise<any> {
+  let last: Error = new Error('Okänt fel');
+  for (let i = 0; i < attempts; i += 1) {
+    const ctrl = new AbortController();
+    const relay = () => ctrl.abort();
+    outer.addEventListener('abort', relay);
+    const timer = window.setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+      if (!r.ok) throw new Error(`Servern svarade ${r.status}`);
+      return await r.json();
+    } catch (e) {
+      last = e as Error;
+      // Sidan lämnades eller säsongen byttes — då ska inget nytt försök göras.
+      if (outer.aborted) throw last;
+    } finally {
+      window.clearTimeout(timer);
+      outer.removeEventListener('abort', relay);
+    }
+  }
+  throw last;
+}
+
 /* ── Byggstenar ── */
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
@@ -196,36 +233,39 @@ function SkaterTable({ rows, showTeam, season }: { rows: Skater[]; showTeam: boo
             <th>#</th>
             <th className="mc-left">Spelare</th>
             {showTeam && <th>Lag</th>}
-            <th>Pos</th>
+            {/* GP–M–A–P först: på en telefon ryms bara några kolumner utan
+                att man scrollar i sidled, och i en poängliga är det de här
+                som ska synas. Position och P/M får komma efter. */}
             <th>GP</th>
             <th>M</th>
             <th>A</th>
             <th>P</th>
             <th>P/M</th>
             <th>+/-</th>
+            <th>Pos</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((s, i) => (
             <tr
               key={`${s.name}-${i}`}
-              className={`${s.isBjk ? 'mc-hl ' : ''}${s.isBjk ? 'st-click' : ''}`}
+              className={`${showTeam && s.isBjk ? 'mc-hl ' : ''}${s.isBjk ? 'st-click' : ''}`}
               onClick={s.isBjk ? () => navigate(to(s)) : undefined}
             >
               <td>{s.num || '–'}</td>
-              <td className="mc-left">
+              <td className="mc-left st-pname">
                 {s.isBjk
                   ? <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>{humanName(s.name)}</Link>
                   : humanName(s.name)}
               </td>
               {showTeam && <td>{shortTeam(s.team)}</td>}
-              <td>{s.pos || '–'}</td>
               <td>{s.gp}</td>
               <td>{s.g}</td>
               <td>{s.a}</td>
               <td className="mc-pts">{s.p}</td>
               <td>{s.ppg}</td>
               <td>{s.pm || '–'}</td>
+              <td>{s.pos || '–'}</td>
             </tr>
           ))}
         </tbody>
@@ -253,8 +293,8 @@ function GoalieTable({ rows, showTeam }: { rows: Goalie[]; showTeam: boolean }) 
         </thead>
         <tbody>
           {rows.map((g, i) => (
-            <tr key={`${g.name}-${i}`} className={g.isBjk ? 'mc-hl' : ''}>
-              <td className="mc-left">{humanName(g.name)}</td>
+            <tr key={`${g.name}-${i}`} className={showTeam && g.isBjk ? 'mc-hl' : ''}>
+              <td className="mc-left st-pname">{humanName(g.name)}</td>
               {showTeam && <td>{shortTeam(g.team)}</td>}
               <td>{g.gp}</td>
               <td>{g.ga}</td>
@@ -281,6 +321,14 @@ export function StatisticsPage() {
   const [stats, setStats] = useState<Record<string, any> | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  // Bumpas av "Försök igen" och tvingar om alla hämtningar för säsongen.
+  const [reloadKey, setReloadKey] = useState(0);
+  // En kall server tar tiotals sekunder. Utan besked ser sidan hängd ut.
+  const [slow, setSlow] = useState(false);
+  // Utan den här hämtas statistik och analys en gång utan säsong och en gång
+  // till så snart säsongslistan svarat — två dyra frågor per besök, där den
+  // första ändå kastas bort.
+  const [seasonsReady, setSeasonsReady] = useState(false);
 
   const [modules, setModules] = useState<Modules | null>(null);
   const [analyticsState, setAnalyticsState] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -303,40 +351,50 @@ export function StatisticsPage() {
         if (d.active && list.some(s => s.key === d.active)) setSeason(d.active);
         else if (list.length > 0) setSeason(list[0].key);
       })
-      .catch(() => {});
+      // Svarar säsongslistan inte alls hämtar vi ändå: utan säsongsparameter
+      // väljer API:t den aktiva säsongen själv.
+      .catch(() => {})
+      .finally(() => setSeasonsReady(true));
   }, []);
+
+  useEffect(() => {
+    if (!statsLoading) { setSlow(false); return; }
+    const t = window.setTimeout(() => setSlow(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [statsLoading]);
 
   /* Säsongsstatistik — blockerande, allt annat hänger på den */
   useEffect(() => {
+    if (!seasonsReady) return;
     setStatsLoading(true);
     setStatsError(null);
+    setSlow(false);
     const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), 40000);
-    fetch(`${API_URL}/api/v1/statistics${season ? `?season=${season}` : ''}`, { cache: 'no-store', signal: ctrl.signal })
-      .then(r => { if (!r.ok) throw new Error(`Servern svarade ${r.status}`); return r.json(); })
+    fetchJson(`${API_URL}/api/v1/statistics${season ? `?season=${season}` : ''}`, ctrl.signal, 45000)
       .then(setStats)
-      .catch((e: Error) => setStatsError(e.name === 'AbortError' ? 'Tidsgränsen gick ut.' : e.message))
-      .finally(() => { window.clearTimeout(timer); setStatsLoading(false); });
-    return () => { window.clearTimeout(timer); ctrl.abort(); };
-  }, [season]);
+      .catch((e: Error) => {
+        if (ctrl.signal.aborted) return;
+        setStatsError(e.name === 'AbortError' ? 'TIMEOUT' : e.message);
+      })
+      .finally(() => { if (!ctrl.signal.aborted) setStatsLoading(false); });
+    return () => ctrl.abort();
+  }, [season, reloadKey, seasonsReady]);
 
   /* Analys — laddas parallellt så sidan inte väntar på den */
   useEffect(() => {
+    if (!seasonsReady) return;
     setModules(null);
     setAnalyticsState('loading');
     const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), 60000);
-    fetch(`${API_URL}/api/v1/analytics${season ? `?season=${season}` : ''}`, { cache: 'no-store', signal: ctrl.signal })
-      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+    fetchJson(`${API_URL}/api/v1/analytics${season ? `?season=${season}` : ''}`, ctrl.signal, 60000)
       .then(d => {
         if (d.status === 'error') throw new Error(d.error || 'fel');
         setModules(d.modules || {});
         setAnalyticsState('idle');
       })
-      .catch(() => setAnalyticsState('error'))
-      .finally(() => window.clearTimeout(timer));
-    return () => { window.clearTimeout(timer); ctrl.abort(); };
-  }, [season]);
+      .catch(() => { if (!ctrl.signal.aborted) setAnalyticsState('error'); });
+    return () => ctrl.abort();
+  }, [season, reloadKey, seasonsReady]);
 
   /* Spelare med percentil — hämtas först när fliken öppnas */
   const loadPlayers = useCallback(() => {
@@ -440,18 +498,34 @@ export function StatisticsPage() {
           <div className="st-skeleton" />
           <div className="st-skeleton" />
           <div className="st-skeleton" />
+          {slow && (
+            <p className="mc-note">
+              Servern startar från vila när ingen varit inne på ett tag. Det
+              här tar en stund första gången, sedan går det direkt.
+            </p>
+          )}
         </section>
       </div>
     );
   }
 
   if (statsError || stats?.status === 'error') {
+    const timedOut = statsError === 'TIMEOUT';
     return (
       <div className="page animate-fade-up">
         <section className="mc-card mc-card-error">
           <p className="mc-kicker">Statistik</p>
-          <h2 className="mc-title">Kunde inte ladda statistiken</h2>
-          <p className="mc-text">{statsError || stats?.error}</p>
+          <h2 className="mc-title">
+            {timedOut ? 'Servern svarade inte i tid' : 'Kunde inte ladda statistiken'}
+          </h2>
+          <p className="mc-text">
+            {timedOut
+              ? 'Statistiken räknas fram ur hela seriens matcher, och servern startar från vila när ingen varit inne på ett tag. Ett nytt försök brukar gå på någon sekund.'
+              : statsError || stats?.error}
+          </p>
+          <button className="empty-season-btn" onClick={() => setReloadKey(k => k + 1)}>
+            Försök igen
+          </button>
         </section>
       </div>
     );

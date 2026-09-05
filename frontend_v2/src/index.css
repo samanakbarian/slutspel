@@ -1348,3 +1348,9 @@ a {
   color: var(--impact-positive);
 }
 .st-minilbl-bad { color: var(--impact-negative); }
+
+.mc-card-error .empty-season-btn { margin-top: 0.85rem; }
+
+/* Namn på en rad. Bryts de blir varje rad dubbelt så hög och listan svår att
+   överblicka; tabellen får hellre bli bredare och scrollas i sidled. */
+.mc-table td.st-pname { white-space: nowrap; padding-right: 0.75rem; }
