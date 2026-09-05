@@ -247,52 +247,117 @@ function KV({ label, value, hint }: { label: string; value: string; hint?: strin
 const rec = (r: StateRecord | undefined) =>
   r ? `${r.w}–${r.l}${r.otl ? `–${r.otl}` : ''}` : '–';
 
-function SkaterTable({ rows, showTeam, season }: { rows: Skater[]; showTeam: boolean; season: string }) {
+type SortKey = 'num' | 'name' | 'gp' | 'g' | 'a' | 'p' | 'ppg' | 'pm' | 'onice' | 'share';
+
+/** Kolumner som går att sortera på, med riktning som känns naturlig först. */
+const SKATER_COLUMNS: { key: SortKey; label: string; left?: boolean; desc: boolean; title: string }[] = [
+  { key: 'num', label: '#', desc: false, title: 'Tröjnummer' },
+  { key: 'name', label: 'Spelare', left: true, desc: false, title: 'Namn' },
+  { key: 'gp', label: 'GP', desc: true, title: 'Spelade matcher' },
+  { key: 'g', label: 'M', desc: true, title: 'Mål' },
+  { key: 'a', label: 'A', desc: true, title: 'Assist' },
+  { key: 'p', label: 'P', desc: true, title: 'Poäng' },
+  { key: 'ppg', label: 'P/M', desc: true, title: 'Poäng per match' },
+  { key: 'pm', label: '+/-', desc: true, title: 'Plus/minus enligt tabellen' },
+  { key: 'onice', label: 'På is', desc: true, title: 'Mål för minus mål emot medan spelaren stod på isen' },
+  { key: 'share', label: 'Andel', desc: true, title: 'Andel av lagets mål spelaren var med på' },
+];
+
+function SkaterTable({
+  rows, showTeam, season, onIceByNumber,
+}: {
+  rows: Skater[];
+  showTeam: boolean;
+  season: string;
+  onIceByNumber?: Map<number, OnIcePlayer>;
+}) {
   const navigate = useNavigate();
+  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'p', desc: true });
+  const hasOnIce = Boolean(onIceByNumber && onIceByNumber.size > 0);
+
   const to = (s: Skater) => `/statistik/spelare/${encodeURIComponent(s.name)}${season ? `?season=${season}` : ''}`;
+
+  const columns = SKATER_COLUMNS.filter(c => (c.key === 'onice' || c.key === 'share' ? hasOnIce : true));
+
+  const value = (s: Skater, key: SortKey): number | string => {
+    const oi = onIceByNumber?.get(s.num);
+    switch (key) {
+      case 'num': return s.num;
+      case 'name': return humanName(s.name);
+      case 'gp': return s.gp;
+      case 'g': return s.g;
+      case 'a': return s.a;
+      case 'p': return s.p;
+      case 'ppg': return s.gp ? s.p / s.gp : -1;
+      // Tomt värde ska alltid hamna sist, oavsett riktning.
+      case 'pm': return Number(String(s.pm).replace('+', '')) || (s.pm ? 0 : -999);
+      case 'onice': return oi ? oi.diff : -999;
+      case 'share': return oi ? oi.gf_share_pct : -1;
+    }
+  };
+
+  const sorted = useMemo(() => {
+    const list = [...rows];
+    list.sort((a, b) => {
+      const x = value(a, sort.key);
+      const y = value(b, sort.key);
+      const cmp = typeof x === 'string' && typeof y === 'string'
+        ? x.localeCompare(y, 'sv')
+        : Number(x) - Number(y);
+      return sort.desc ? -cmp : cmp;
+    });
+    return list;
+  }, [rows, sort, onIceByNumber]);
+
+  const toggle = (c: typeof SKATER_COLUMNS[number]) =>
+    setSort(prev => (prev.key === c.key ? { key: c.key, desc: !prev.desc } : { key: c.key, desc: c.desc }));
+
   return (
     <div className="mc-tablewrap">
       <table className="mc-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th className="mc-left">Spelare</th>
+            {columns.map(c => (
+              <th key={c.key} className={c.left ? 'mc-left' : undefined}
+                  aria-sort={sort.key === c.key ? (sort.desc ? 'descending' : 'ascending') : 'none'}>
+                <button type="button" className="st-sort" onClick={() => toggle(c)} title={c.title}>
+                  {c.label}
+                  {sort.key === c.key && <span aria-hidden="true">{sort.desc ? '▾' : '▴'}</span>}
+                </button>
+              </th>
+            ))}
             {showTeam && <th>Lag</th>}
-            {/* GP–M–A–P först: på en telefon ryms bara några kolumner utan
-                att man scrollar i sidled, och i en poängliga är det de här
-                som ska synas. Position och P/M får komma efter. */}
-            <th>GP</th>
-            <th>M</th>
-            <th>A</th>
-            <th>P</th>
-            <th>P/M</th>
-            <th>+/-</th>
             <th>Pos</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((s, i) => (
-            <tr
-              key={`${s.name}-${i}`}
-              className={`${showTeam && s.isBjk ? 'mc-hl ' : ''}${s.isBjk ? 'st-click' : ''}`}
-              onClick={s.isBjk ? () => navigate(to(s)) : undefined}
-            >
-              <td>{s.num || '–'}</td>
-              <td className="mc-left st-pname">
-                {s.isBjk
-                  ? <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>{humanName(s.name)}</Link>
-                  : humanName(s.name)}
-              </td>
-              {showTeam && <td>{shortTeam(s.team)}</td>}
-              <td>{s.gp}</td>
-              <td>{s.g}</td>
-              <td>{s.a}</td>
-              <td className="mc-pts">{s.p}</td>
-              <td>{s.ppg}</td>
-              <td>{s.pm || '–'}</td>
-              <td>{s.pos || '–'}</td>
-            </tr>
-          ))}
+          {sorted.map((s, i) => {
+            const oi = onIceByNumber?.get(s.num);
+            return (
+              <tr
+                key={`${s.name}-${i}`}
+                className={`${showTeam && s.isBjk ? 'mc-hl ' : ''}${s.isBjk ? 'st-click' : ''}`}
+                onClick={s.isBjk ? () => navigate(to(s)) : undefined}
+              >
+                <td>{s.num || '–'}</td>
+                <td className="mc-left st-pname">
+                  {s.isBjk
+                    ? <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>{humanName(s.name)}</Link>
+                    : humanName(s.name)}
+                </td>
+                <td>{s.gp}</td>
+                <td>{s.g}</td>
+                <td>{s.a}</td>
+                <td className="mc-pts">{s.p}</td>
+                <td>{s.ppg}</td>
+                <td>{s.pm || '–'}</td>
+                {hasOnIce && <td>{oi ? (oi.diff > 0 ? `+${oi.diff}` : oi.diff) : '–'}</td>}
+                {hasOnIce && <td>{oi ? `${oi.gf_share_pct}%` : '–'}</td>}
+                {showTeam && <td>{shortTeam(s.team)}</td>}
+                <td>{s.pos || '–'}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -799,8 +864,19 @@ function Spelare({
   onIce: OnIce | null;
 }) {
   const loven = scope === 'loven';
-  const skaters = loven ? bjkSkaters : leagueSkaters;
+  // Malvakter star i poangligan hos Swehockey men hor hemma i sin egen tabell:
+  // sex av lagets 33 rader var malvakter, fyra av dem utan en enda poang.
+  const isSkater = (p: Skater) => !String(p.pos || '').toUpperCase().startsWith('G');
+  const skaters = (loven ? bjkSkaters : leagueSkaters).filter(isSkater);
   const goalies = loven ? bjkGoalies : leagueGoalies;
+
+  const onIceByNumber = useMemo(() => {
+    const m = new Map<number, OnIcePlayer>();
+    for (const p of onIce?.players || []) {
+      if (!p.is_goalie) m.set(p.jersey_number, p);
+    }
+    return m;
+  }, [onIce]);
 
   return (
     <>
@@ -814,66 +890,32 @@ function Spelare({
         {playersState === 'loading' && loven && <div className="st-skeleton" />}
         {skaters.length === 0
           ? <p className="mc-text">Ingen poängstatistik för säsongen ännu.</p>
-          : <SkaterTable rows={skaters} showTeam={!loven} season={season} />}
+          : (
+            <SkaterTable
+              rows={skaters}
+              showTeam={!loven}
+              season={season}
+              onIceByNumber={loven ? onIceByNumber : undefined}
+            />
+          )}
         <p className="mc-note">
-          {loven
+          Tryck på en rubrik för att sortera. {loven
             ? 'Tryck på en spelare för profil med percentil mot serien och poäng match för match.'
             : `Lövenspelare är markerade och går att trycka på. Poängtoppen är serieledande spelare, inte hela ${leagueName}.`}
         </p>
+        {loven && onIce && (
+          <p className="mc-note">
+            <b>På is</b> är mål för minus mål emot medan spelaren stod på isen, över
+            {' '}{onIce.games_with_events} matcher, och <b>Andel</b> hur stor del av lagets
+            {' '}{onIce.team_goals_for} mål hen var med på. Räknat ur Swehockeys uppgift om
+            vilka som stod på isen — det sammanfaller inte alltid med tabellens
+            plus/minus, som står i egen kolumn.
+          </p>
+        )}
       </section>
 
       {loven && onIce && (
         <>
-          <section className="mc-card">
-            <p className="mc-kicker">På isen · mål för och emot</p>
-            <div className="mc-tablewrap">
-              <table className="mc-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th className="mc-left">Spelare</th>
-                    <th>GF</th>
-                    <th>GA</th>
-                    <th>Diff</th>
-                    <th>Lika</th>
-                    <th>Andel</th>
-                    <th>Tabell</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {onIce.players.filter(p => !p.is_goalie).map(p => (
-                    <tr key={p.jersey_number}>
-                      <td>{p.jersey_number}</td>
-                      <td className="mc-left st-pname">{humanName(p.name)}</td>
-                      <td>{p.gf_on}</td>
-                      <td>{p.ga_on}</td>
-                      <td className="mc-pts">{p.diff > 0 ? `+${p.diff}` : p.diff}</td>
-                      <td>{p.diff_ev > 0 ? `+${p.diff_ev}` : p.diff_ev}</td>
-                      <td>{p.gf_share_pct}%</td>
-                      <td>
-                        {p.official_plus_minus === null
-                          ? '–'
-                          : p.official_plus_minus > 0 ? `+${p.official_plus_minus}` : p.official_plus_minus}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mc-note">
-              Räknat ur Swehockeys uppgift om vilka som stod på isen vid varje mål,
-              över {onIce.games_with_events} matcher. <b>Lika</b> räknar bara mål vid
-              lika styrka och i underläge, som plus/minus brukar göra. <b>Andel</b> är
-              hur stor del av lagets {onIce.team_goals_for} mål spelaren var med på.
-            </p>
-            <p className="mc-note">
-              <b>Tabell</b> är Swehockeys eget plus/minus. Det stämmer inte alltid med
-              vårt — deras siffra bygger på fler tillfällen än deras egna
-              on-ice-listor visar, och skillnaden går inte att härleda ur
-              matchhändelserna. Båda visas hellre än att det ena utges för det andra.
-            </p>
-          </section>
-
           {onIce.top_pairs.length > 0 && (
             <section className="mc-card">
               <p className="mc-kicker">Oftast på isen tillsammans vid mål</p>

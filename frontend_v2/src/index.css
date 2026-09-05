@@ -1382,3 +1382,27 @@ a {
   white-space: nowrap;
 }
 .st-barrow:has(.st-pairnames) { grid-template-columns: minmax(0, 9rem) 1fr 1.8rem; }
+
+/* Sorterbara rubriker. Knappen fyller cellen så hela rubriken är tryckyta —
+   på en telefon räcker inte texten som mål. */
+.st-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  width: 100%;
+  justify-content: inherit;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mc-table th .st-sort { justify-content: center; }
+.mc-table th.mc-left .st-sort { justify-content: flex-start; }
+.st-sort:hover { color: var(--brand-green-light); }
+.st-sort:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; border-radius: 3px; }
+.mc-table th[aria-sort]:not([aria-sort='none']) .st-sort { color: var(--brand-gold); }
