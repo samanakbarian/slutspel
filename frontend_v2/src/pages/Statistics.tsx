@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
+import { EmptySeason } from '../components/EmptySeason';
 const AnalyticsTabs = lazy(() => import('../components/AnalyticsTabs'));
 
 /* ── types ── */
@@ -7,7 +8,7 @@ type PlayerStat = { rank?: number; number?: number; jersey_number?: number; name
 type GoalieStat = { rank?: number; number?: number; jersey_number?: number; name?: string; goalie_name?: string; team?: string; team_code?: string; gp?: number; games_played?: number; ga?: number; goals_against?: number; gaa?: string | number; svs?: number; svs_pct?: string | number; save_pct?: string | number; so?: number; shutouts?: number; wins?: number; losses?: number; win_pct?: number; toi_minutes?: string; shots_against?: number; saves?: number };
 type GameResult = { game_id?: number; date?: string; match_date?: string; match_time?: string; home_team?: string; away_team?: string; result?: string; period_results?: string; spectators?: number | null; venue?: string; bjk_is_home?: boolean; bjk_result?: string; home_goals?: number; away_goals?: number; status?: string };
 type Standing = { team_name?: string; games_played?: number; wins?: number; losses?: number; ot_wins?: number; ot_losses?: number; points?: number; goal_diff?: number; rank?: number; pp_pct?: number; pk_pct?: number };
-type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string; _periods: string; _spectators: number | null; _venue: string } & GameResult;
+type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string; _played: boolean; _periods: string; _spectators: number | null; _venue: string } & GameResult;
 type Tab = 'overview' | 'scorers' | 'goalies' | 'results' | 'analys';
 
 /* normalizers — handle both local server.js and production BQ API response shapes */
@@ -37,6 +38,9 @@ function normGame(g: any): NormGame {
   return {
     ...g, _date: d, _home: h, _away: a, _result: r, _hg: hg, _ag: ag,
     _bjkHome: g.bjk_is_home ?? isBjk, _bjkRes: res,
+    // En match räknas som spelad först när den har ett faktiskt resultat.
+    // Utan detta renderas kommande matcher som 0–0 under "Senaste matcherna".
+    _played: Boolean(m),
     _periods: g.period_results || '',
     _spectators: g.spectators ?? null,
     _venue: g.venue || ''
@@ -116,28 +120,24 @@ export function StatisticsPage() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(`${API_URL}/api/v1/statistics${selectedSeason ? `?season=${selectedSeason}` : ''}`, { cache: 'no-store' })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(async (j) => {
-        const noTeamData =
-          (j?.counts?.team_games ?? 0) === 0 &&
-          (j?.counts?.team_players_regular ?? 0) === 0 &&
-          (j?.counts?.team_goalies ?? 0) === 0;
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 30000);
 
-        // If active season has no populated stats yet, fall back to known populated season.
-        if (selectedSeason && noTeamData && selectedSeason !== 'ha_2526') {
-          const fallbackRes = await fetch(`${API_URL}/api/v1/statistics?season=ha_2526`, { cache: 'no-store' });
-          if (fallbackRes.ok) {
-            const fallbackJson = await fallbackRes.json();
-            setSelectedSeason('ha_2526');
-            setRaw(fallbackJson);
-            return;
-          }
-        }
-        setRaw(j);
+    fetch(`${API_URL}/api/v1/statistics${selectedSeason ? `?season=${selectedSeason}` : ''}`, {
+      cache: 'no-store',
+      signal: ctrl.signal,
+    })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(setRaw)
+      .catch((e: Error) => {
+        setError(e.name === 'AbortError' ? 'Tidsgränsen gick ut efter 30 sekunder.' : e.message);
       })
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        window.clearTimeout(timer);
+        setLoading(false);
+      });
+
+    return () => { window.clearTimeout(timer); ctrl.abort(); };
   }, [selectedSeason]);
 
   if (loading) return (<div className="page animate-fade-up"><Card kicker="Statistik"><h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--brand-green-light)' }}>Laddar Swehockey-data...</h2><div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>{[0,1,2,3].map(i => <Shimmer key={i} />)}</div></Card></div>);
@@ -162,12 +162,22 @@ export function StatisticsPage() {
 
   const scorers = (raw.top_scorers || []).map(normPlayer);
   const goalies = (raw.top_goalies || []).map(normGoalie);
-  const games = (raw.games || raw.upcoming_or_recent_games || []).map(normGame);
+  const allGames: NormGame[] = (raw.games || raw.upcoming_or_recent_games || []).map(normGame);
+  const games = allGames.filter((g: NormGame) => g._played);
+  const upcoming = allGames
+    .filter((g: NormGame) => !g._played)
+    .sort((a: NormGame, b: NormGame) => a._date.localeCompare(b._date));
   const bjkReg = (raw.bjorkloven_skaters?.regular || []).map(normPlayer);
   const bjkPlay = (raw.bjorkloven_skaters?.playoff || []).map(normPlayer);
   const bjkGReg = (raw.bjorkloven_goalies?.regular || []).map(normGoalie);
 
   const scrapedAt = raw.snapshot_scraped_at;
+  // API:t returnerar t.ex. "SHL 2026/27" — använd det i stället för hårdkodad liga.
+  const seasonLabel: string = raw.season || seasonsList.find(x => x.key === selectedSeason)?.name || 'säsongen';
+  const leagueName = seasonLabel.replace(/\s*\d{4}\/\d{2}\s*$/, '').trim() || 'ligan';
+  // Har säsongen kommit igång? Tabellrad med 0 matcher betyder att den inte har det.
+  const hasPlayed = rec.gp > 0 || games.length > 0;
+  const playedFallback = seasonsList.find(x => x.key !== selectedSeason && /2025\/26/.test(x.name || '')) || null;
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'overview', label: 'Översikt', icon: '📊' },
@@ -262,7 +272,31 @@ export function StatisticsPage() {
         {tabs.map(t => (<button key={t.key} className={`stat-tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}><span style={{ marginRight: 5 }}>{t.icon}</span>{t.label}</button>))}
       </div>
 
-      {tab === 'overview' && (<>
+      {tab === 'overview' && !hasPlayed && (
+        <EmptySeason
+          seasonName={seasonLabel}
+          fallback={playedFallback ? { key: playedFallback.key, name: playedFallback.name || playedFallback.key } : null}
+          onSelectFallback={setSelectedSeason}
+        />
+      )}
+
+      {tab === 'overview' && upcoming.length > 0 && (
+        <Card kicker={`Kommande matcher (${upcoming.length})`}>
+          {upcoming.slice(0, 6).map((g: NormGame, i: number) => (
+            <div key={i} className="game-row">
+              <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
+              <span style={{ flex: 1 }}>
+                <span style={{ fontWeight: g._bjkHome ? 700 : 400 }}>{g._home}</span>
+                <span style={{ color: 'var(--text-muted)', margin: '0 6px' }}>mot</span>
+                <span style={{ fontWeight: !g._bjkHome ? 700 : 400 }}>{g._away}</span>
+              </span>
+              <span style={{ fontSize: '.68rem', color: 'var(--text-muted)' }}>{g._bjkHome ? 'Hemma' : 'Borta'}</span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {tab === 'overview' && hasPlayed && (<>
         <Card kicker={rec.rank ? `#${rec.rank} i tabellen` : 'Grundserie'} glow="var(--brand-gold)" style={{ background: 'linear-gradient(135deg, rgba(14,24,20,.9), rgba(20,30,26,.9))' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', gap: 4 }}>
             <StatPill label="GP" value={rec.gp} />
@@ -301,9 +335,28 @@ export function StatisticsPage() {
         </Card>}
       </>)}
 
-      {tab === 'scorers' && <Card kicker="Poängliga — Hela HockeyAllsvenskan"><StatsTable columns={skaterCols} rows={scorers} highlightTeam="ifb" /></Card>}
-      {tab === 'goalies' && <Card kicker="Målvaktsstatistik — Hela HockeyAllsvenskan"><StatsTable columns={goalieCols} rows={goalies} highlightTeam="ifb" /></Card>}
-      {tab === 'results' && <Card kicker={`Alla Björklöven-matcher (${games.length})`}>
+      {tab === 'scorers' && <Card kicker={`Poängliga — hela ${leagueName}`}><StatsTable columns={skaterCols} rows={scorers} highlightTeam="ifb" /></Card>}
+      {tab === 'goalies' && <Card kicker={`Målvaktsstatistik — hela ${leagueName}`}><StatsTable columns={goalieCols} rows={goalies} highlightTeam="ifb" /></Card>}
+      {tab === 'results' && games.length === 0 && upcoming.length > 0 && (
+        <Card kicker={`Spelprogram (${upcoming.length} matcher)`}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '.82rem', marginBottom: 10 }}>
+            Inga matcher spelade än. Här är hela spelprogrammet.
+          </p>
+          {upcoming.map((g: NormGame, i: number) => (
+            <div key={i} className="game-row">
+              <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
+              <span style={{ flex: 1 }}>
+                <span style={{ fontWeight: g._bjkHome ? 700 : 400 }}>{g._home}</span>
+                <span style={{ color: 'var(--text-muted)', margin: '0 6px' }}>mot</span>
+                <span style={{ fontWeight: !g._bjkHome ? 700 : 400 }}>{g._away}</span>
+              </span>
+              <span style={{ fontSize: '.68rem', color: 'var(--text-muted)' }}>{g._bjkHome ? 'Hemma' : 'Borta'}</span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {tab === 'results' && games.length > 0 && <Card kicker={`Spelade matcher (${games.length})`}>
         {games.map((g: NormGame, i: number) => (<div key={i} className="game-row">
           <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
           <Badge r={g._bjkRes} />
