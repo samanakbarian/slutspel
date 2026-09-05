@@ -15,6 +15,9 @@ type Goal = {
   score_state: string | null;
   is_power_play: boolean;
   is_short_handed: boolean;
+  /** Tröjnummer på isen: för det görande laget respektive det släppande. */
+  on_ice_for?: number[];
+  on_ice_against?: number[];
 };
 
 type Penalty = {
@@ -43,6 +46,8 @@ type MatchReport = {
   goals: Goal[];
   penalties: Penalty[];
   counts: { events: number; goals: number; penalties: number };
+  /** Lagets tröjnummer → namn, så on-ice-listorna går att läsa. */
+  squad?: Record<string, { name: string; position: string | null }>;
 };
 
 const BJK = /bj[oö]rkl[oö]ven/i;
@@ -53,6 +58,12 @@ function humanName(n: string | null): string {
   if (!n) return '—';
   const m = n.split(',').map(s => s.trim());
   return m.length === 2 ? `${m[1]} ${m[0]}` : n;
+}
+
+/** Efternamnet räcker i en tät lista och sparar den bredd vi inte har. */
+function surname(n: string | null): string {
+  const clean = String(n || '').replace(/[*†‡]+/g, '').trim();
+  return clean.includes(',') ? clean.split(',')[0].trim() : clean.split(' ').slice(-1)[0];
 }
 
 function isOurs(teamCode: string | null): boolean {
@@ -261,7 +272,39 @@ function Periods({ periods, ourSide }: { periods: [number, number][]; ourSide: '
 }
 
 /* ── målkronologi ── */
-function Goals({ goals }: { goals: Goal[] }) {
+/**
+ * Björklövens spelare på isen vid ett mål.
+ *
+ * `on_ice_for` hör till det görande laget, `on_ice_against` till det
+ * släppande — vilken av dem som är vår beror alltså på vem som gjorde målet.
+ * Motståndarnas nummer utelämnas: vi har inga namn till dem, och en rad
+ * siffror säger ingenting.
+ */
+function OnIce({ goal, squad }: { goal: Goal; squad: MatchReport['squad'] }) {
+  const ours = isOurs(goal.team_code) ? goal.on_ice_for : goal.on_ice_against;
+  if (!ours || ours.length === 0 || !squad) return null;
+
+  // Malvakten star pa isen vid nastan varje mal och hor inte hemma har. Ett
+  // nummer utan namntraff visas som siffra: att tyst utelamna det gor listan
+  // for kort, och da ser ett fem mot fem ut som fyra mot fem.
+  const named = ours
+    .map(n => ({ num: n, entry: squad[String(n)] }))
+    .filter(x => !String(x.entry?.position || '').toUpperCase().startsWith('G'));
+  if (named.length === 0) return null;
+
+  return (
+    <span className="mr-onice">
+      <span className="mr-onice-label">{isOurs(goal.team_code) ? 'På isen' : 'Ute vid målet'}</span>
+      {named.map(x => (
+        <span key={x.num} className="mr-onice-name">
+          <b>{x.num}</b> {x.entry ? surname(x.entry.name) : ''}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function Goals({ goals, squad }: { goals: Goal[]; squad: MatchReport['squad'] }) {
   if (goals.length === 0) {
     return (
       <section className="mr-card">
@@ -286,6 +329,7 @@ function Goals({ goals }: { goals: Goal[] }) {
             {g.assists.length > 0 && (
               <span className="mr-goal-assists">{g.assists.map(humanName).join(', ')}</span>
             )}
+            <OnIce goal={g} squad={squad} />
           </span>
           <span className="mr-goal-state">{(g.score_state || '').replace(/\s*\([A-Z]+\)/, '')}</span>
         </div>
@@ -415,7 +459,7 @@ export function Matchrapport() {
         totalMin={Math.max(60, periods.length * 20)}
       />
       <Periods periods={periods} ourSide={ourSide} />
-      <Goals goals={data.goals} />
+      <Goals goals={data.goals} squad={data.squad} />
       <Penalties penalties={data.penalties} />
 
       {data.counts.events === 0 && (

@@ -1471,3 +1471,27 @@ a {
   color: var(--brand-green-light);
   font-size: 0.78rem;
 }
+
+/* ── Vilka som var på isen vid målet ── */
+.mr-onice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.4rem;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed rgba(172, 199, 186, 0.12);
+}
+
+.mr-onice-label {
+  flex-basis: 100%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.mr-onice-name { font-size: 0.68rem; color: var(--text-secondary); white-space: nowrap; }
+.mr-onice-name b { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.mr-goal-ours .mr-onice-name b { color: var(--brand-green-light); }
