@@ -155,51 +155,84 @@ export default function AnalyticsTabs({
 }) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<AnalyticsTab>('season');
 
   useEffect(() => {
-    const key = `analytics_cache_v2_${season || 'default'}`;
+    const key = `analytics_cache_v3_${season || 'default'}`;
     const now = Date.now();
     const ttlMs = 10 * 60 * 1000; // 10 min
-    const hasUsableModules = (payload: any) => {
-      const m = payload?.modules;
-      return !!m && Array.isArray(m.timeline) && m.timeline.length > 0 && Array.isArray(m.form) && m.form.length > 0;
-    };
+
+    // Ett svar duger att cacha så snart API:t säger ok. Tidigare krävdes
+    // dessutom att timeline och form hade innehåll — men de är tomma så
+    // länge matchhändelserna saknas, så cachen skrevs aldrig och varje
+    // sidvisning betalade hela anropet (uppmätt ~16 s) på nytt.
+    const isCacheable = (payload: any) => payload?.status === 'ok' && !!payload?.modules;
 
     try {
       const cached = sessionStorage.getItem(key);
       if (cached) {
         const parsed = JSON.parse(cached) as { ts: number; payload: any };
-        if (parsed?.ts && now - parsed.ts < ttlMs && parsed?.payload?.status === 'ok' && hasUsableModules(parsed.payload)) {
+        if (parsed?.ts && now - parsed.ts < ttlMs && isCacheable(parsed.payload)) {
           setData(parsed.payload);
           setLoading(false);
           return;
         }
       }
     } catch {
-      // ignore cache parsing failures and continue with network fetch
+      // trasig cache ska aldrig blockera nätverksanropet
     }
 
-    fetch(`${API_URL}/api/v1/analytics${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
-      .then(r => r.json())
+    setLoading(true);
+    setError(null);
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 40000);
+
+    fetch(`${API_URL}/api/v1/analytics${season ? `?season=${season}` : ''}`, {
+      cache: 'no-store',
+      signal: ctrl.signal,
+    })
+      .then(r => {
+        if (!r.ok) throw new Error(`Servern svarade ${r.status}`);
+        return r.json();
+      })
       .then(d => {
-        if (d.status === 'ok') {
-          setData(d);
-          if (hasUsableModules(d)) {
-            try {
-              sessionStorage.setItem(key, JSON.stringify({ ts: now, payload: d }));
-            } catch {
-              // ignore storage errors
-            }
+        if (d?.status !== 'ok') throw new Error(d?.error || 'Analysen kunde inte beräknas.');
+        setData(d);
+        if (isCacheable(d)) {
+          try {
+            sessionStorage.setItem(key, JSON.stringify({ ts: now, payload: d }));
+          } catch {
+            // sessionStorage kan vara full eller avstängd — inte kritiskt
           }
         }
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch((e: Error) => {
+        setError(
+          e.name === 'AbortError'
+            ? 'Analysen tog längre än 40 sekunder och avbröts.'
+            : e.message,
+        );
+      })
+      .finally(() => {
+        window.clearTimeout(timer);
+        setLoading(false);
+      });
+
+    return () => { window.clearTimeout(timer); ctrl.abort(); };
   }, [season]);
 
   if (loading) return <div style={{ textAlign: 'center', padding: 40, color: chartTheme.text }}>Laddar analys...</div>;
-  if (!data) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Kunde inte ladda analysdata</div>;
+  if (error || !data) {
+    return (
+      <div style={{ padding: 20, borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+        <p style={{ color: RED, fontWeight: 700, marginBottom: 6 }}>Kunde inte ladda analysdata</p>
+        <p style={{ color: chartTheme.text, fontSize: 13, lineHeight: 1.5 }}>
+          {error || 'Okänt fel.'}
+        </p>
+      </div>
+    );
+  }
 
   const m = data?.modules;
   if (!m) return <div style={{ textAlign: 'center', padding: 40, color: RED }}>Ingen data hittades för vald säsong.</div>;
