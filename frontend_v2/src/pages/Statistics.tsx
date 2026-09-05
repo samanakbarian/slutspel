@@ -71,6 +71,24 @@ type OnIce = {
   top_pairs: { numbers: number[]; names: (string | null)[]; goals_for: number }[];
 };
 
+type ShotAgg = {
+  games: number; shots_for: number; shots_against: number;
+  shots_for_per_game: number | null; shots_against_per_game: number | null;
+  shot_share_pct: number | null; goals_for: number; goals_against: number;
+  shooting_pct: number | null; save_pct: number | null; pdo: number | null;
+};
+
+type ShotData = {
+  status: string; games: number; window: number;
+  totals: ShotAgg; home: ShotAgg; away: ShotAgg;
+  rolling: { date: string; match: number; window: number; pdo: number | null; shot_share_pct: number | null }[];
+  game_log: {
+    game_id: number; date: string; is_home: boolean; opponent: string;
+    shots_for: number; shots_against: number; shot_share_pct: number | null;
+    goals_for: number; goals_against: number; pdo: number | null;
+  }[];
+};
+
 type GoalieSide = { games: number; shots_against: number; saves: number; goals_against: number; save_pct: number | null };
 
 type GoalieGame = {
@@ -259,6 +277,16 @@ function KV({ label, value, hint }: { label: string; value: string; hint?: strin
       {hint && <span className="st-kvhint">{hint}</span>}
     </div>
   );
+}
+
+/** Grönt över normalvärdet, rött under, guld nära. */
+function pdoTone(value: number | null, normal: number): string | undefined {
+  if (value === null) return undefined;
+  const d = value - normal;
+  const margin = normal / 50;
+  if (d > margin) return 'var(--impact-positive)';
+  if (d < -margin) return 'var(--impact-negative)';
+  return 'var(--brand-gold)';
 }
 
 const rec = (r: StateRecord | undefined) =>
@@ -451,6 +479,7 @@ export function StatisticsPage() {
   const [onIceState, setOnIceState] = useState<'idle' | 'loading' | 'missing'>('idle');
   const [keepers, setKeepers] = useState<GoalieData | null>(null);
   const [keepersState, setKeepersState] = useState<'idle' | 'loading' | 'missing'>('idle');
+  const [shots, setShots] = useState<ShotData | null>(null);
 
   /* Säsonger */
   useEffect(() => {
@@ -493,6 +522,17 @@ export function StatisticsPage() {
         setStatsError(e.name === 'AbortError' ? 'TIMEOUT' : e.message);
       })
       .finally(() => { if (!ctrl.signal.aborted) setStatsLoading(false); });
+    return () => ctrl.abort();
+  }, [season, reloadKey, seasonsReady]);
+
+  /* Skott och PDO — behövs på både Laget och Utveckling */
+  useEffect(() => {
+    if (!seasonsReady) return;
+    setShots(null);
+    const ctrl = new AbortController();
+    fetchJson(`${API_URL}/api/v1/shots${season ? `?season=${season}` : ''}`, ctrl.signal, 45000)
+      .then(d => { if (d.status === 'ok' && d.games > 0) setShots(d); })
+      .catch(() => { /* skottdata saknas tills scrapern körts */ });
     return () => ctrl.abort();
   }, [season, reloadKey, seasonsReady]);
 
@@ -744,7 +784,7 @@ export function StatisticsPage() {
       )}
 
       {hasPlayed && segment === 'laget' && (
-        <Laget record={record} timeline={timeline} modules={modules} analyticsState={analyticsState} />
+        <Laget record={record} timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots} />
       )}
 
       {hasPlayed && segment === 'spelare' && (
@@ -764,7 +804,7 @@ export function StatisticsPage() {
       )}
 
       {hasPlayed && segment === 'utveckling' && (
-        <Utveckling timeline={timeline} modules={modules} analyticsState={analyticsState} />
+        <Utveckling timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots} />
       )}
     </div>
   );
@@ -772,12 +812,13 @@ export function StatisticsPage() {
 
 /* ── Laget ── */
 function Laget({
-  record, timeline, modules, analyticsState,
+  record, timeline, modules, analyticsState, shots,
 }: {
   record: { gp: number; w: number; otw: number; otl: number; l: number; pts: number; diff: number; rank: number };
   timeline: NonNullable<Modules['timeline']>;
   modules: Modules | null;
   analyticsState: 'idle' | 'loading' | 'error';
+  shots: ShotData | null;
 }) {
   const last10 = timeline.slice(-10).map(t => t.result);
   const splits = modules?.splits;
@@ -834,6 +875,58 @@ function Laget({
             Hemma {splits.home.gp} matcher ({splits.home.w}–{splits.home.l}), borta {splits.away.gp} ({splits.away.w}–{splits.away.l}).
             Grön stapel är hemma.
           </p>
+        </section>
+      )}
+
+      {shots && (
+        <section className="mc-card">
+          <p className="mc-kicker">Skott och tur</p>
+          <PairedBar
+            label="Skott per match"
+            left={shots.totals.shots_for_per_game ?? 0}
+            right={shots.totals.shots_against_per_game ?? 0}
+            leftLabel={String(shots.totals.shots_for_per_game ?? '–')}
+            rightLabel={String(shots.totals.shots_against_per_game ?? '–')}
+          />
+          <div className="st-stats st-stats-tight">
+            <Stat
+              label="Skottandel"
+              value={shots.totals.shot_share_pct !== null ? `${shots.totals.shot_share_pct} %` : '–'}
+              tone={pdoTone(shots.totals.shot_share_pct, 50)}
+            />
+            <Stat label="Skjut%" value={shots.totals.shooting_pct ?? '–'} />
+            <Stat label="Rädd%" value={shots.totals.save_pct ?? '–'} />
+            <Stat
+              label="PDO"
+              value={shots.totals.pdo ?? '–'}
+              tone={pdoTone(shots.totals.pdo, 100)}
+            />
+          </div>
+          <p className="mc-note">
+            <b>Skottandelen</b> är hur stor del av matchernas skott som var lagets egna,
+            {' '}{shots.totals.shots_for} mot {shots.totals.shots_against} över {shots.totals.games} matcher.
+            Över 50 betyder att laget styrde spelet.
+          </p>
+          <p className="mc-note">
+            <b>PDO</b> är skjutprocent plus räddningsprocent, det närmaste ett turmått som finns.
+            Runt 100 är normalt. Klart över betyder att pucken varit vänlig — och över tid
+            dras talet mot 100 igen.
+          </p>
+          <p className="mc-kicker st-sub">Hemma mot borta</p>
+          <PairedBar
+            label="Skottandel"
+            left={shots.home.shot_share_pct ?? 0}
+            right={shots.away.shot_share_pct ?? 0}
+            leftLabel={`${shots.home.shot_share_pct ?? '–'} %`}
+            rightLabel={`${shots.away.shot_share_pct ?? '–'} %`}
+          />
+          <PairedBar
+            label="PDO"
+            left={shots.home.pdo ?? 0}
+            right={shots.away.pdo ?? 0}
+            leftLabel={String(shots.home.pdo ?? '–')}
+            rightLabel={String(shots.away.pdo ?? '–')}
+          />
         </section>
       )}
 
@@ -949,10 +1042,10 @@ function Spelare({
         {loven && onIce && (
           <p className="mc-note">
             <b>På is</b> är mål för minus mål emot medan spelaren stod på isen, över
-            {' '}{onIce.games_with_events} matcher, och <b>Andel</b> hur stor del av lagets
-            {' '}{onIce.team_goals_for} mål hen var med på. Räknat ur Swehockeys uppgift om
-            vilka som stod på isen — det sammanfaller inte alltid med tabellens
-            plus/minus, som står i egen kolumn.
+            {' '}{onIce.games_with_events} matcher. <b>Andel</b> är hur stor del av de
+            {' '}{onIce.team_goals_for} mål där Swehockey angett vilka som var ute — inte
+            av säsongens alla mål, eftersom uppgiften saknas för en del av dem.
+            Talen sammanfaller inte alltid med tabellens plus/minus, som står i egen kolumn.
           </p>
         )}
       </section>
@@ -1113,11 +1206,12 @@ function GoalieCard({ g }: { g: GoalieFull }) {
 
 /* ── Utveckling ── */
 function Utveckling({
-  timeline, modules, analyticsState,
+  timeline, modules, analyticsState, shots,
 }: {
   timeline: NonNullable<Modules['timeline']>;
   modules: Modules | null;
   analyticsState: 'idle' | 'loading' | 'error';
+  shots: ShotData | null;
 }) {
   const form = modules?.form || [];
   const elo = modules?.predictions?.elo_history || [];
@@ -1181,6 +1275,33 @@ function Utveckling({
           </div>
           <p className="mc-note">
             Den guldfärgade kurvan är poängskörden i fönstret.
+          </p>
+        </section>
+      )}
+
+      {shots && shots.rolling.length > 1 && (
+        <section className="mc-card">
+          <p className="mc-kicker">PDO — rullande {shots.window} matcher</p>
+          <Sparkline
+            points={shots.rolling.filter(r => r.pdo !== null).map(r => ({ label: shortDate(r.date), value: r.pdo as number }))}
+            height={100}
+            colour="var(--brand-gold)"
+            fill="rgba(245,192,69,0.12)"
+            format={v => v.toFixed(1)}
+          />
+          <p className="mc-note">
+            Skjutprocent plus räddningsprocent. 100 är normalläget — toppar betyder att
+            pucken gick lagets väg, och kurvan brukar söka sig tillbaka.
+          </p>
+          <p className="mc-kicker st-sub">Skottandel — rullande {shots.window} matcher</p>
+          <Sparkline
+            points={shots.rolling.filter(r => r.shot_share_pct !== null).map(r => ({ label: shortDate(r.date), value: r.shot_share_pct as number }))}
+            height={100}
+            format={v => v.toFixed(1)}
+          />
+          <p className="mc-note">
+            Andel av skotten. Över 50 betyder att laget sköt mer än motståndarna —
+            till skillnad från PDO säger det något om spelet, inte om turen.
           </p>
         </section>
       )}

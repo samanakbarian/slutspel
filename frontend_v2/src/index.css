@@ -1534,3 +1534,7 @@ a {
 }
 .st-more:hover { color: var(--brand-green-light); border-color: rgba(37, 163, 90, 0.35); }
 .st-more:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; }
+
+/* Fyra värden på en rad ryms; auto-fit skulle annars ge tre plus en ensam. */
+.st-stats-tight { grid-template-columns: repeat(4, 1fr); }
+.st-stats-tight .st-statval { font-size: 1.15rem; }
