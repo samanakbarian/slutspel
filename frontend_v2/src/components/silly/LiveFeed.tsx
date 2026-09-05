@@ -16,7 +16,7 @@ const TAG_LABELS: Record<NewsTag, string> = {
     HETT_RYKTE: 'RYKTE',
     KONTRAKTSFÖRLÄNGNING: 'FÖRLÄNGNING',
     FORUM_RYKTE: 'FORUMRYKTE',
-    ÖVRIGT: 'ÖVRIGT',
+    ÖVRIGT: 'KLUBBEN',
 };
 
 export function LiveFeed() {
@@ -24,19 +24,20 @@ export function LiveFeed() {
 
     if (!data) return null;
 
-    const filteredNews = data.news_feed.filter(n => {
-        if (newsFilter === 'ALL_SILLY') return n.tag !== 'ÖVRIGT' && n.tag !== 'FORUM_RYKTE';
-        if (newsFilter === 'ÖVRIGT') return n.tag === 'ÖVRIGT';
-        return n.tag === newsFilter;
-    });
+    // Tidigare dolde standardvyn ÖVRIGT och FORUM_RYKTE, vilket innebar att
+    // allmänna klubbnyheter fanns i datat men aldrig syntes. "Allt" visar nu
+    // hela flödet; övergångsstoffet finns kvar som egna filter.
+    const filteredNews = data.news_feed
+        .filter(n => (newsFilter === 'ALL_SILLY' ? true : n.tag === newsFilter))
+        .sort((a, b) => `${b.date} ${b.time || ''}`.localeCompare(`${a.date} ${a.time || ''}`));
 
     const filterOptions: (NewsTag | 'ALL_SILLY')[] = [
-        'ALL_SILLY', 'BEKRÄFTAT_NYFÖRVÄRV', 'BEKRÄFTAD_FÖRLUST', 'HETT_RYKTE', 'KONTRAKTSFÖRLÄNGNING'
+        'ALL_SILLY', 'ÖVRIGT', 'BEKRÄFTAT_NYFÖRVÄRV', 'BEKRÄFTAD_FÖRLUST', 'KONTRAKTSFÖRLÄNGNING', 'HETT_RYKTE', 'FORUM_RYKTE'
     ];
 
     return (
         <div className="signal-card" style={{ padding: '1rem' }}>
-            <p className="card-kicker" style={{ marginBottom: '0.75rem' }}>📰 Nyhetsflödet</p>
+            <p className="card-kicker" style={{ marginBottom: '0.75rem' }}>Flödet ({filteredNews.length})</p>
 
             {/* Filter Pills */}
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
@@ -58,7 +59,7 @@ export function LiveFeed() {
                             transition: 'all 0.2s ease'
                         }}
                     >
-                        {tag === 'ALL_SILLY' ? 'Alla' : TAG_LABELS[tag as NewsTag]}
+                        {tag === 'ALL_SILLY' ? 'Allt' : TAG_LABELS[tag as NewsTag]}
                     </button>
                 ))}
             </div>
@@ -68,7 +69,7 @@ export function LiveFeed() {
                 {filteredNews.length === 0 && (
                     <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>Inga nyheter att visa.</p>
                 )}
-                {filteredNews.slice(0, 20).map((news, idx) => (
+                {filteredNews.slice(0, 40).map((news, idx) => (
                     <div key={news.id || idx} style={{
                         padding: '0.7rem 0.8rem',
                         background: 'rgba(255,255,255,0.02)',

@@ -454,3 +454,229 @@ a {
 
 .empty-season-btn:hover { filter: brightness(1.08); }
 .empty-season-btn:focus-visible { outline: 2px solid var(--brand-gold-light); outline-offset: 2px; }
+
+/* ── Matcher ──────────────────────────────────────────── */
+.mc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.75rem;
+  min-width: 0;
+}
+
+.mc-card-error { border-color: rgba(255, 77, 77, 0.35); background: rgba(255, 77, 77, 0.06); }
+
+.mc-kicker {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.mc-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; }
+.mc-text { font-size: 0.84rem; color: var(--text-secondary); }
+
+/* hero: nästa match */
+.mc-hero {
+  background: linear-gradient(150deg, rgba(37, 163, 90, 0.17), rgba(14, 26, 21, 0.92) 62%);
+  border: 1px solid rgba(37, 163, 90, 0.3);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.mc-matchup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0.7rem 0 0.6rem;
+}
+
+.mc-team { flex: 1; text-align: center; min-width: 0; }
+
+.mc-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 0.35rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--glass-border);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.mc-badge-own {
+  border-color: var(--brand-green);
+  background: rgba(37, 163, 90, 0.14);
+  color: var(--brand-green-light);
+}
+
+.mc-teamname {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.mc-vs { flex: none; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+
+.mc-countdown {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--brand-gold);
+  line-height: 1.1;
+}
+
+.mc-when { text-align: center; font-size: 0.76rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+/* form */
+.mc-form { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.mc-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: #3a4a43; }
+.mc-dot-w { background: var(--impact-positive); }
+.mc-dot-l { background: var(--impact-negative); }
+.mc-dot-otl { background: var(--impact-warning); }
+.mc-dot-d { background: var(--impact-neutral); }
+.mc-formtext { margin-left: 0.4rem; font-size: 0.72rem; color: var(--text-muted); }
+
+/* matchrader */
+.mc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+  font-size: 0.8rem;
+  min-width: 0;
+}
+
+.mc-row:last-child { border-bottom: none; }
+
+.mc-date {
+  flex: none;
+  width: 74px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mc-res {
+  flex: none;
+  width: 26px;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  border: 1px solid currentColor;
+}
+
+.mc-res-w { color: var(--impact-positive); }
+.mc-res-l { color: var(--impact-negative); }
+.mc-res-otl { color: var(--impact-warning); }
+.mc-res-d { color: var(--impact-neutral); }
+.mc-res-none { color: var(--text-muted); border-style: dashed; }
+
+.mc-teams { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mc-strong { font-weight: 700; color: var(--text-primary); }
+.mc-sep { color: var(--text-muted); margin: 0 0.3rem; }
+
+.mc-score {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* tabell */
+.mc-tablewrap { overflow-x: auto; }
+.mc-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+
+.mc-table th {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 0.3rem 0.4rem;
+  text-align: center;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.mc-table td {
+  padding: 0.4rem 0.3rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mc-table .mc-left { text-align: left; }
+.mc-table td.mc-left { color: var(--text-primary); }
+.mc-table .mc-pts { font-weight: 700; color: var(--brand-gold); }
+.mc-table tr.mc-hl td { background: rgba(37, 163, 90, 0.12); color: var(--brand-green-light); font-weight: 700; }
+.mc-table tr.mc-hl td:first-child { border-radius: 5px 0 0 5px; }
+.mc-table tr.mc-hl td:last-child { border-radius: 0 5px 5px 0; }
+
+.mc-note { margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted); }
+
+/* segmenterad kontroll */
+.mc-seg {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+}
+
+.mc-segbtn {
+  flex: 1;
+  padding: 0.45rem 0.3rem;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.mc-segbtn.mc-on { background: var(--brand-green); color: #04140c; }
+.mc-segbtn:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 1px; }
+
+/* ── Färskhetsbadge: tonläge i stället för "Status oklar" ── */
+.freshness-ok { border-color: rgba(37, 192, 109, 0.35); color: var(--impact-positive); }
+.freshness-warn { border-color: rgba(255, 194, 71, 0.4); color: var(--impact-warning); }
+.freshness-bad { border-color: rgba(255, 77, 77, 0.4); color: var(--impact-negative); }
+.freshness-idle { color: var(--text-muted); }
+
+/* ── Sidfot ── */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 1.4rem 0 0.4rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.app-footer a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+.app-footer a:hover { color: var(--brand-green-light); }

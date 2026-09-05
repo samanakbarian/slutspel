@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSillyStore } from '../store/useSillyStore';
 import { LiveFeed } from '../components/silly/LiveFeed';
 
-export function SillySeason() {
+export function Nyheter() {
     const { data, isLoading, error, fetchData } = useSillyStore();
 
     useEffect(() => {
@@ -13,7 +13,7 @@ export function SillySeason() {
         return (
             <div className="page animate-fade-up">
                 <section className="signal-card">
-                    <p className="card-kicker">Rykten & Nyheter</p>
+                    <p className="card-kicker">Nyheter</p>
                     <h2 className="card-title">Laddar nyhetsflödet...</h2>
                 </section>
             </div>
@@ -24,7 +24,7 @@ export function SillySeason() {
         return (
             <div className="page animate-fade-up">
                 <section className="signal-card signal-card-critical">
-                    <p className="card-kicker">Rykten & Nyheter</p>
+                    <p className="card-kicker">Nyheter</p>
                     <h2 className="card-title">Kunde inte hämta data</h2>
                     <p className="card-text">{error}</p>
                     <button
@@ -56,10 +56,10 @@ export function SillySeason() {
         <div className="page animate-fade-up">
             {/* Header */}
             <section className="signal-card signal-card-primary">
-                <p className="card-kicker">Silly Season {data.season}</p>
+                <p className="card-kicker">Runt klubben · {data.season}</p>
                 <h2 className="card-title">{data.headline || 'Nyhetsflödet'}</h2>
                 <p className="card-text">
-                    {totalArticles} nyheter skrapade
+                    {totalArticles} artiklar
                     {data._meta?.lastRefresh && (
                         <> • Senast {new Date(data._meta.lastRefresh).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</>
                     )}
