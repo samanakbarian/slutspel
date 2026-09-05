@@ -15,6 +15,7 @@ type Player = {
   age: number | null;
   note: string | null;
   has_contract_info: boolean;
+  eliteprospects?: { url: string; confidence: string } | null;
 };
 
 type RosterResponse = {
@@ -45,11 +46,16 @@ const STATUS_LABELS: Record<string, string> = {
 const POS_ORDER: Record<string, number> = { GK: 0, LD: 1, RD: 2, CE: 3, LW: 4, RW: 5 };
 
 /**
- * EliteProspects har ingen öppen uppslagning på namn, så vi länkar till deras
- * spelarsök. Ingen data hämtas därifrån — det är bara en utlänk.
+ * Direktlänk till spelarens EliteProspects-sida.
+ *
+ * En EP-adress kräver spelarens id, som API:t slår upp och skickar med.
+ * Saknas det — namnet stavas annorlunda där, eller spelaren finns inte —
+ * faller vi tillbaka på deras spelarsök i stället för att gissa en adress
+ * som leder fel.
  */
-function eliteProspectsUrl(name: string): string {
-  return `https://www.eliteprospects.com/search/player?name=${encodeURIComponent(name)}`;
+function eliteProspectsUrl(p: Player): string {
+  return p.eliteprospects?.url
+    || `https://www.eliteprospects.com/search/player?name=${encodeURIComponent(p.name)}`;
 }
 
 function groupByPosition(players: Player[]) {
@@ -82,7 +88,7 @@ function PlayerRow({ p }: { p: Player }) {
   return (
     <a
       className="rs-player"
-      href={eliteProspectsUrl(p.name)}
+      href={eliteProspectsUrl(p)}
       target="_blank"
       rel="noreferrer"
       style={{ borderLeftColor: colour }}

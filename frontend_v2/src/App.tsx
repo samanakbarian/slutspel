@@ -1,15 +1,20 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { AlertTriangle, CalendarDays, LineChart, MessageSquare, Newspaper, Users } from 'lucide-react';
 import { Matcher } from './pages/Matcher';
 import { Matchrapport } from './pages/Matchrapport';
 import { Nyheter } from './pages/Nyheter';
 import { Roster } from './pages/Roster';
-import { EkonomiPage } from './pages/Ekonomi';
+import { Spelare } from './pages/Spelare';
 import { XFeedPage } from './pages/XFeed';
 import { StatisticsPage } from './pages/Statistics';
-import { PreseasonShlPage } from './pages/PreseasonShl';
 import { useLageStore } from './store/useLageStore';
+
+// De avpublicerade sidorna är de enda som använder Recharts. Laddas de lazy
+// hamnar biblioteket i en egen chunk i stället för i huvudbundlen, som alla
+// besökare betalar för.
+const EkonomiPage = lazy(() => import('./pages/Ekonomi').then(m => ({ default: m.EkonomiPage })));
+const PreseasonShlPage = lazy(() => import('./pages/PreseasonShl').then(m => ({ default: m.PreseasonShlPage })));
 
 /**
  * Fem flikar. Ekonomi och Preseason ligger kvar som rutter men är
@@ -85,11 +90,13 @@ function App() {
         </header>
 
         <main className="content-area">
+          <Suspense fallback={<div className="page"><section className="mc-card"><p className="mc-kicker">Laddar</p></section></div>}>
           <Routes>
             <Route path="/" element={<Navigate to="/matcher" replace />} />
             <Route path="/matcher" element={<Matcher />} />
             <Route path="/matcher/:gameId" element={<Matchrapport />} />
             <Route path="/statistik" element={<StatisticsPage />} />
+            <Route path="/statistik/spelare/:name" element={<Spelare />} />
             <Route path="/trupp" element={<Roster />} />
             <Route path="/nyheter" element={<Nyheter />} />
             <Route path="/x" element={<XFeedPage />} />
@@ -104,6 +111,7 @@ function App() {
             <Route path="/mer" element={<Navigate to="/om" replace />} />
             <Route path="*" element={<Navigate to="/matcher" replace />} />
           </Routes>
+          </Suspense>
 
           <footer className="app-footer">
             <NavLink to="/om">Om Lövenläget</NavLink>

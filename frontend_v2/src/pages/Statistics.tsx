@@ -1,394 +1,860 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { EmptySeason } from '../components/EmptySeason';
-const AnalyticsTabs = lazy(() => import('../components/AnalyticsTabs'));
+import { FormDots, PairedBar, PeriodBars, Sparkline } from '../components/charts/Charts';
 
-/* ── types ── */
-type PlayerStat = { rank?: number; number?: number; jersey_number?: number; name?: string; player_name?: string; team?: string; team_code?: string; position?: string; gp?: number; games_played?: number; goals?: number; assists?: number; points?: number; avg?: string; avg_ppg?: number; pim?: number; plus_minus?: string | number };
-type GoalieStat = { rank?: number; number?: number; jersey_number?: number; name?: string; goalie_name?: string; team?: string; team_code?: string; gp?: number; games_played?: number; ga?: number; goals_against?: number; gaa?: string | number; svs?: number; svs_pct?: string | number; save_pct?: string | number; so?: number; shutouts?: number; wins?: number; losses?: number; win_pct?: number; toi_minutes?: string; shots_against?: number; saves?: number };
-type GameResult = { game_id?: number; date?: string; match_date?: string; match_time?: string; home_team?: string; away_team?: string; result?: string; period_results?: string; spectators?: number | null; venue?: string; bjk_is_home?: boolean; bjk_result?: string; home_goals?: number; away_goals?: number; status?: string };
-type Standing = { team_name?: string; games_played?: number; wins?: number; losses?: number; ot_wins?: number; ot_losses?: number; points?: number; goal_diff?: number; rank?: number; pp_pct?: number; pk_pct?: number };
-type NormGame = { _date: string; _home: string; _away: string; _result: string; _hg: number; _ag: number; _bjkHome: boolean; _bjkRes: string; _played: boolean; _periods: string; _spectators: number | null; _venue: string } & GameResult;
-type Tab = 'overview' | 'scorers' | 'goalies' | 'results' | 'analys';
+/**
+ * Statistiken i tre ytor i stället för fem flikar:
+ *
+ *   Laget       — säsongen i ett svep: facit, form, hemma/borta, perioder,
+ *                 specialteam, matchlägen.
+ *   Spelare     — poängliga och målvakter, växlingsbart mellan Löven och
+ *                 hela serien. Varje Lövenrad leder till spelarens profil.
+ *   Utveckling  — allt som rör sig över tid: poängkurva, form, Elo, när
+ *                 målen faller, publik, utvisningar.
+ *
+ * Tidigare låg en hel analysmodul (Recharts, ~1000 rader) nästlad i en
+ * underflik här. Den ligger kvar för /preseason-shl men laddas inte längre
+ * på statistiksidan — diagrammen nedan är handritad SVG.
+ */
 
-/* normalizers — handle both local server.js and production BQ API response shapes */
-function normPlayer(p: any): PlayerStat & { _name: string; _team: string; _pos: string; _num: number; _gp: number; _g: number; _a: number; _p: number; _ppg: string; _pim: number; _pm: string } {
-  const gp = p.gp ?? p.games_played ?? 0;
-  const pts = p.points ?? 0;
-  const ppg = p.avg_ppg ?? p.avg ?? (gp > 0 ? (pts / gp).toFixed(2) : '0.00');
-  return { ...p, _name: p.name || p.player_name || '', _team: p.team || p.team_code || '', _pos: p.position || '', _num: p.jersey_number ?? p.number ?? 0, _gp: gp, _g: p.goals ?? 0, _a: p.assists ?? 0, _p: pts, _ppg: String(ppg), _pim: p.pim ?? 0, _pm: String(p.plus_minus ?? '') };
+/* ── Typer ── */
+type Season = { key: string; name?: string; league?: string; has_team_data?: boolean | null };
+
+type Standing = {
+  rank?: number; games_played?: number; wins?: number; ot_wins?: number;
+  ot_losses?: number; losses?: number; points?: number; goal_diff?: number;
+};
+
+type RawGame = {
+  game_id?: number | null; match_date?: string; date?: string; home_team?: string;
+  away_team?: string; result?: string; bjk_is_home?: boolean; bjk_result?: string;
+  home_goals?: number; away_goals?: number;
+};
+
+type Game = {
+  gameId: number | null; date: string; home: string; away: string;
+  hg: number; ag: number; isHome: boolean; res: string; played: boolean;
+};
+
+type Skater = {
+  name: string; team: string; pos: string; num: number; gp: number;
+  g: number; a: number; p: number; ppg: string; pim: number; pm: string;
+  isBjk: boolean;
+};
+
+type Goalie = {
+  name: string; team: string; gp: number; ga: number; gaa: string;
+  svp: string; so: number; w: number; l: number; isBjk: boolean;
+};
+
+type ApiPlayer = {
+  name: string; jersey_number: number | null; position: string; games_played: number;
+  goals: number; assists: number; points: number; pim: number; plus_minus: number;
+  points_per_game: number; percentiles: Record<string, number> | null;
+};
+
+type Split = { gp: number; w: number; l: number; otw: number; otl: number; gf: number; ga: number; pts: number };
+type StateRecord = { w: number; l: number; otl?: number };
+
+type Modules = {
+  timeline?: { date: string; opponent: string; result: string; score: string; cumPts: number; isHome: boolean; gf: number; ga: number }[];
+  splits?: { home: Split; away: Split };
+  periods?: { period: number; label: string; gf: number; ga: number; games: number }[];
+  form?: { date: string; matchNum: number; pts: number; gf_avg: number; ga_avg: number; window: number }[];
+  streaks?: {
+    longest_win: { length: number; start: string; end: string } | null;
+    longest_loss: { length: number; start: string; end: string } | null;
+    current: { type: string; length: number } | null;
+  };
+  special_teams?: { pp_goals: number; pp_opportunities: number; pp_pct: number; pk_goals_against: number; pk_times: number; pk_pct: number; total_pim: number; avg_pim_per_game: number; special_teams_index: number };
+  attendance?: { avg: number; max: number; min: number; home_games: number; trend?: { date: string; opponent: string; spectators: number }[] };
+  penalty_breakdown?: { by_period: { period: number; count: number }[]; most_penalized: { name: string; count: number; minutes: number }[] };
+  game_state?: {
+    lead_after_1: StateRecord; trail_after_1: StateRecord; tied_after_1: StateRecord;
+    lead_after_2: StateRecord; trail_after_2: StateRecord; tied_after_2: StateRecord;
+    game_types?: { one_goal: StateRecord; two_goals: StateRecord; three_plus_goals: StateRecord };
+  };
+  predictions?: { elo_history?: { date: string; elo: number }[]; scoring_timeline?: { interval: string; gf: number; ga: number }[] };
+};
+
+type Segment = 'laget' | 'spelare' | 'utveckling';
+type Scope = 'loven' | 'serien';
+
+const BJK = /bj[oö]rkl[oö]ven|ifb/i;
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+function shortDate(d: string): string {
+  const x = new Date(`${String(d).slice(0, 10)}T00:00:00`);
+  return Number.isNaN(x.getTime()) ? d : `${x.getDate()} ${MONTHS[x.getMonth()]}`;
 }
-function normGoalie(g: any): GoalieStat & { _name: string; _team: string; _gp: number; _ga: number; _gaa: string; _svp: string; _so: number; _w: number; _l: number; _wpct: string; _svs: number; _toi: string } {
-  return { ...g, _name: g.name || g.goalie_name || '', _team: g.team || g.team_code || '', _gp: g.gp ?? g.games_played ?? 0, _ga: g.ga ?? g.goals_against ?? 0, _gaa: String(g.gaa ?? ''), _svp: String(g.svs_pct ?? g.save_pct ?? ''), _so: g.so ?? g.shutouts ?? 0, _w: g.wins ?? 0, _l: g.losses ?? 0, _wpct: g.win_pct ? String(Number(g.win_pct).toFixed(1)) : '', _svs: g.svs ?? g.saves ?? 0, _toi: g.toi_minutes ?? g.mip ?? '' };
+
+/**
+ * "Efternamn, Förnamn" → "Förnamn Efternamn".
+ * Swehockey markerar vissa spelare med asterisker; de hör inte till namnet.
+ */
+function humanName(n: string): string {
+  const clean = String(n || '').replace(/[*†‡]+/g, '').trim();
+  const p = clean.split(',').map(s => s.trim());
+  return p.length === 2 && p[1] ? `${p[1]} ${p[0]}` : clean;
 }
-function normGame(g: any): NormGame {
-  const d = g.date || g.match_date || '';
-  const h = g.home_team || '';
-  const a = g.away_team || '';
-  const isBjk = h.toLowerCase().includes('björklöven') || h.toLowerCase().includes('bjorkloven');
-  const r = (g.result || '').replace(/\xa0/g, ' ').trim();
-  const m = r.match(/(\d+)\s*-\s*(\d+)/);
-  const hg = g.home_goals ?? (m ? parseInt(m[1]) : 0);
-  const ag = g.away_goals ?? (m ? parseInt(m[2]) : 0);
+
+const shortTeam = (t: string) => String(t || '').replace(/^(IF|IK|HC|BIK)\s+/, '');
+
+/* ── Normalisering: API:t levererar flera generationers fältnamn ── */
+function normGame(g: RawGame): Game {
+  const date = String(g.match_date || g.date || '').slice(0, 10);
+  const home = g.home_team || '';
+  const away = g.away_team || '';
+  const isHome = g.bjk_is_home ?? BJK.test(home);
+  const m = String(g.result || '').replace(/ /g, ' ').match(/(\d+)\s*-\s*(\d+)/);
+  const hg = g.home_goals ?? (m ? Number(m[1]) : 0);
+  const ag = g.away_goals ?? (m ? Number(m[2]) : 0);
   let res = g.bjk_result || '';
   if (!res && m) {
-    const bjkG = isBjk ? hg : ag; const oppG = isBjk ? ag : hg;
-    res = bjkG > oppG ? 'W' : bjkG < oppG ? 'L' : 'D';
+    const ours = isHome ? hg : ag;
+    const theirs = isHome ? ag : hg;
+    res = ours > theirs ? 'W' : ours < theirs ? 'L' : 'D';
   }
+  // En match räknas som spelad först när den har ett faktiskt resultat.
+  return { gameId: g.game_id ?? null, date, home, away, hg, ag, isHome, res, played: Boolean(m) };
+}
+
+function normSkater(p: Record<string, unknown>): Skater {
+  const num = (p.jersey_number ?? p.number ?? 0) as number;
+  const gp = (p.games_played ?? p.gp ?? 0) as number;
+  const pts = (p.points ?? 0) as number;
+  const team = String(p.team_code || p.team || '');
   return {
-    ...g, _date: d, _home: h, _away: a, _result: r, _hg: hg, _ag: ag,
-    _bjkHome: g.bjk_is_home ?? isBjk, _bjkRes: res,
-    // En match räknas som spelad först när den har ett faktiskt resultat.
-    // Utan detta renderas kommande matcher som 0–0 under "Senaste matcherna".
-    _played: Boolean(m),
-    _periods: g.period_results || '',
-    _spectators: g.spectators ?? null,
-    _venue: g.venue || ''
+    name: String(p.player_name || p.name || ''),
+    team, pos: String(p.position || ''), num: Number(num) || 0,
+    gp: Number(gp) || 0,
+    g: Number(p.goals ?? 0), a: Number(p.assists ?? 0), p: Number(pts) || 0,
+    ppg: gp ? (Number(pts) / Number(gp)).toFixed(2) : '–',
+    pim: Number(p.pim ?? 0), pm: String(p.plus_minus ?? ''),
+    isBjk: BJK.test(team),
   };
 }
 
-/* ── small helpers ── */
-const resultColor: Record<string, string> = { W: '#25c06d', L: '#ff4d4d', OTL: '#ffc247', D: '#77b5ff' };
-function Badge({ r }: { r: string }) {
-  const c = resultColor[r] || '#6f857c';
-  return <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 22, fontSize: '.7rem', fontWeight: 800, color: c, border: `1.5px solid ${c}`, borderRadius: 5 }}>{r}</span>;
-}
-function Shimmer() { return <div style={{ height: 18, borderRadius: 6, background: 'linear-gradient(90deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.03) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />; }
-function StatPill({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
-  return (<div style={{ textAlign: 'center', padding: '12px 4px', minWidth: 64 }}>
-    <div style={{ fontSize: '1.65rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: accent || 'var(--text-primary)', lineHeight: 1.1 }}>{value}</div>
-    <div style={{ fontSize: '.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: 4 }}>{label}</div>
-  </div>);
-}
-function FormStreak({ games }: { games: ReturnType<typeof normGame>[] }) {
-  const last10 = games.slice(0, 10);
-  return (<div style={{ display: 'flex', gap: 5, alignItems: 'center', justifyContent: 'center', padding: '10px 0' }}>
-    {last10.map((g, i) => (<div key={i} title={`${g._date}: ${g._home} ${g._hg}-${g._ag} ${g._away}`}
-      style={{ width: 10, height: 10, borderRadius: '50%', background: resultColor[g._bjkRes] || '#444', opacity: 1 - i * 0.05, transition: 'transform .2s', cursor: 'pointer' }}
-      onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.6)')} onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')} />))}
-    <span style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginLeft: 6 }}>
-      Senaste 10: {last10.filter(g => g._bjkRes === 'W').length}V-{last10.filter(g => g._bjkRes === 'L').length}F
-    </span>
-  </div>);
-}
-function Card({ children, kicker, glow, style }: { children: React.ReactNode; kicker?: string; glow?: string; style?: React.CSSProperties }) {
-  return (<section style={{ background: 'rgba(14,24,20,.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(172,199,186,.12)', borderRadius: 14, padding: '18px 20px', marginBottom: 14, borderLeft: glow ? `3px solid ${glow}` : undefined, boxShadow: glow ? `0 0 20px ${glow}22` : '0 8px 24px rgba(0,0,0,.3)', ...style }}>
-    {kicker && <p style={{ fontSize: '.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', color: 'var(--brand-green)', marginBottom: 8 }}>{kicker}</p>}
-    {children}
-  </section>);
-}
-function StatsTable({ columns, rows, highlightTeam }: { columns: { key: string; label: string; align?: string; accent?: boolean; width?: number }[]; rows: Record<string, any>[]; highlightTeam?: string }) {
-  return (<div style={{ overflowX: 'auto', margin: '0 -8px' }}>
-    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 2px', fontSize: '.8rem' }}>
-      <thead><tr>{columns.map(c => (<th key={c.key} style={{ textAlign: (c.align || 'center') as any, padding: '8px 6px', fontSize: '.65rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.1em', color: c.accent ? 'var(--brand-gold)' : 'var(--text-muted)', borderBottom: '1px solid rgba(172,199,186,.1)', position: 'sticky', top: 0, background: 'rgba(14,24,20,.95)', width: c.width }}>{c.label}</th>))}</tr></thead>
-      <tbody>{rows.map((row, i) => {
-        const hl = highlightTeam && (row._team || row.team || '').toLowerCase() === highlightTeam.toLowerCase();
-        return (<tr key={i} style={{ background: hl ? 'rgba(37,163,90,.08)' : i % 2 === 0 ? 'rgba(255,255,255,.01)' : 'transparent', transition: 'background .15s' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.04)')}
-          onMouseLeave={e => (e.currentTarget.style.background = hl ? 'rgba(37,163,90,.08)' : i % 2 === 0 ? 'rgba(255,255,255,.01)' : 'transparent')}>
-          {columns.map(c => (<td key={c.key} style={{ textAlign: (c.align || 'center') as any, padding: '7px 6px', fontWeight: c.accent ? 700 : (c.key === '_name' && hl) ? 700 : 400, color: c.accent ? 'var(--brand-gold)' : (c.key === '_name' && hl) ? 'var(--brand-green-light)' : 'var(--text-primary)', borderBottom: '1px solid rgba(172,199,186,.05)' }}>{row[c.key] ?? ''}</td>))}
-        </tr>);
-      })}</tbody>
-    </table>
-  </div>);
+function normGoalie(g: Record<string, unknown>): Goalie {
+  const team = String(g.team_code || g.team || '');
+  const svp = g.svs_pct ?? g.save_pct ?? '';
+  return {
+    name: String(g.goalie_name || g.name || ''), team,
+    gp: Number(g.games_played ?? g.gp ?? 0),
+    ga: Number(g.goals_against ?? g.ga ?? 0),
+    gaa: g.gaa != null && g.gaa !== '' ? Number(g.gaa).toFixed(2) : '–',
+    svp: svp !== '' && svp != null ? Number(svp).toFixed(2) : '–',
+    so: Number(g.shutouts ?? g.so ?? 0),
+    w: Number(g.wins ?? 0), l: Number(g.losses ?? 0),
+    isBjk: BJK.test(team),
+  };
 }
 
-/* ══════════════════════════════════════════ */
+function apiPlayerToSkater(p: ApiPlayer): Skater {
+  return {
+    name: p.name, team: 'IF Björklöven', pos: p.position, num: p.jersey_number ?? 0,
+    gp: p.games_played, g: p.goals, a: p.assists, p: p.points,
+    ppg: p.points_per_game.toFixed(2), pim: p.pim,
+    pm: p.plus_minus > 0 ? `+${p.plus_minus}` : String(p.plus_minus),
+    isBjk: true,
+  };
+}
+
+/* ── Byggstenar ── */
+function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
+  return (
+    <div className="st-stat">
+      <span className="st-statval" style={tone ? { color: tone } : undefined}>{value}</span>
+      <span className="st-statlbl">{label}</span>
+    </div>
+  );
+}
+
+function KV({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="st-kv">
+      <span className="st-kvlabel">{label}</span>
+      <span className="st-kvvalue">{value}</span>
+      {hint && <span className="st-kvhint">{hint}</span>}
+    </div>
+  );
+}
+
+const rec = (r: StateRecord | undefined) =>
+  r ? `${r.w}–${r.l}${r.otl ? `–${r.otl}` : ''}` : '–';
+
+function SkaterTable({ rows, showTeam, season }: { rows: Skater[]; showTeam: boolean; season: string }) {
+  const navigate = useNavigate();
+  const to = (s: Skater) => `/statistik/spelare/${encodeURIComponent(s.name)}${season ? `?season=${season}` : ''}`;
+  return (
+    <div className="mc-tablewrap">
+      <table className="mc-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th className="mc-left">Spelare</th>
+            {showTeam && <th>Lag</th>}
+            <th>Pos</th>
+            <th>GP</th>
+            <th>M</th>
+            <th>A</th>
+            <th>P</th>
+            <th>P/M</th>
+            <th>+/-</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((s, i) => (
+            <tr
+              key={`${s.name}-${i}`}
+              className={`${s.isBjk ? 'mc-hl ' : ''}${s.isBjk ? 'st-click' : ''}`}
+              onClick={s.isBjk ? () => navigate(to(s)) : undefined}
+            >
+              <td>{s.num || '–'}</td>
+              <td className="mc-left">
+                {s.isBjk
+                  ? <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>{humanName(s.name)}</Link>
+                  : humanName(s.name)}
+              </td>
+              {showTeam && <td>{shortTeam(s.team)}</td>}
+              <td>{s.pos || '–'}</td>
+              <td>{s.gp}</td>
+              <td>{s.g}</td>
+              <td>{s.a}</td>
+              <td className="mc-pts">{s.p}</td>
+              <td>{s.ppg}</td>
+              <td>{s.pm || '–'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function GoalieTable({ rows, showTeam }: { rows: Goalie[]; showTeam: boolean }) {
+  return (
+    <div className="mc-tablewrap">
+      <table className="mc-table">
+        <thead>
+          <tr>
+            <th className="mc-left">Målvakt</th>
+            {showTeam && <th>Lag</th>}
+            <th>GP</th>
+            <th>IM</th>
+            <th>GAA</th>
+            <th>Rp%</th>
+            <th>NC</th>
+            <th>V</th>
+            <th>F</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((g, i) => (
+            <tr key={`${g.name}-${i}`} className={g.isBjk ? 'mc-hl' : ''}>
+              <td className="mc-left">{humanName(g.name)}</td>
+              {showTeam && <td>{shortTeam(g.team)}</td>}
+              <td>{g.gp}</td>
+              <td>{g.ga}</td>
+              <td>{g.gaa}</td>
+              <td className="mc-pts">{g.svp}</td>
+              <td>{g.so}</td>
+              <td>{g.w}</td>
+              <td>{g.l}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════ */
 export function StatisticsPage() {
-  const [raw, setRaw] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('overview');
-  const [selectedSeason, setSelectedSeason] = useState<string>('');
-  const [seasonsList, setSeasonsList] = useState<{ key: string; name?: string; league?: string; has_team_data?: boolean | null }[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [season, setSeason] = useState('');
+  const [segment, setSegment] = useState<Segment>('laget');
+  const [scope, setScope] = useState<Scope>('loven');
 
+  const [stats, setStats] = useState<Record<string, any> | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const [modules, setModules] = useState<Modules | null>(null);
+  const [analyticsState, setAnalyticsState] = useState<'idle' | 'loading' | 'error'>('idle');
+
+  const [players, setPlayers] = useState<ApiPlayer[] | null>(null);
+  const [playersState, setPlayersState] = useState<'idle' | 'loading' | 'missing'>('idle');
+
+  /* Säsonger */
   useEffect(() => {
     fetch(`${API_URL}/api/v1/seasons`)
       .then(r => r.json())
       .then(d => {
-        const all = Array.isArray(d.seasons) ? d.seasons : [];
+        const all: Season[] = Array.isArray(d.seasons) ? d.seasons : [];
         // Flera säsonger finns bara som jämförelsedata för prognosmodellen och
         // innehåller inga Björklöven-matcher. Backend flaggar dem med
-        // has_team_data; är flaggan frånvarande (äldre API) visas allt.
-        const known = all.filter((x: { has_team_data?: boolean | null }) => x.has_team_data === true);
-        const seasonList = known.length > 0 ? known : all;
-        setSeasonsList(seasonList);
-        if (d.active && seasonList.some((s: { key: string }) => s.key === d.active)) {
-          setSelectedSeason(d.active);
-        } else if (seasonList.length > 0) {
-          setSelectedSeason(seasonList[0].key);
-        }
+        // has_team_data; saknas flaggan (äldre API) visas allt.
+        const known = all.filter(s => s.has_team_data === true);
+        const list = known.length > 0 ? known : all;
+        setSeasons(list);
+        if (d.active && list.some(s => s.key === d.active)) setSeason(d.active);
+        else if (list.length > 0) setSeason(list[0].key);
       })
       .catch(() => {});
   }, []);
 
+  /* Säsongsstatistik — blockerande, allt annat hänger på den */
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    setStatsLoading(true);
+    setStatsError(null);
     const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), 30000);
-
-    fetch(`${API_URL}/api/v1/statistics${selectedSeason ? `?season=${selectedSeason}` : ''}`, {
-      cache: 'no-store',
-      signal: ctrl.signal,
-    })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(setRaw)
-      .catch((e: Error) => {
-        setError(e.name === 'AbortError' ? 'Tidsgränsen gick ut efter 30 sekunder.' : e.message);
-      })
-      .finally(() => {
-        window.clearTimeout(timer);
-        setLoading(false);
-      });
-
+    const timer = window.setTimeout(() => ctrl.abort(), 40000);
+    fetch(`${API_URL}/api/v1/statistics${season ? `?season=${season}` : ''}`, { cache: 'no-store', signal: ctrl.signal })
+      .then(r => { if (!r.ok) throw new Error(`Servern svarade ${r.status}`); return r.json(); })
+      .then(setStats)
+      .catch((e: Error) => setStatsError(e.name === 'AbortError' ? 'Tidsgränsen gick ut.' : e.message))
+      .finally(() => { window.clearTimeout(timer); setStatsLoading(false); });
     return () => { window.clearTimeout(timer); ctrl.abort(); };
-  }, [selectedSeason]);
+  }, [season]);
 
-  if (loading) return (<div className="page animate-fade-up"><Card kicker="Statistik"><h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--brand-green-light)' }}>Laddar Swehockey-data...</h2><div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>{[0,1,2,3].map(i => <Shimmer key={i} />)}</div></Card></div>);
-  if (error || raw?.status === 'error') return (<div className="page animate-fade-up"><Card kicker="Statistik" glow="var(--impact-negative)"><h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem' }}>Kunde inte ladda statistik</h2><p style={{ color: 'var(--text-secondary)', marginTop: 6 }}>{error || raw?.error}</p></Card></div>);
+  /* Analys — laddas parallellt så sidan inte väntar på den */
+  useEffect(() => {
+    setModules(null);
+    setAnalyticsState('loading');
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 60000);
+    fetch(`${API_URL}/api/v1/analytics${season ? `?season=${season}` : ''}`, { cache: 'no-store', signal: ctrl.signal })
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(d => {
+        if (d.status === 'error') throw new Error(d.error || 'fel');
+        setModules(d.modules || {});
+        setAnalyticsState('idle');
+      })
+      .catch(() => setAnalyticsState('error'))
+      .finally(() => window.clearTimeout(timer));
+    return () => { window.clearTimeout(timer); ctrl.abort(); };
+  }, [season]);
 
-  // Normalize — handles both local server.js shape and production BQ API shape
-  const standing: Standing = raw.team_standing || raw.record || {};
-  const rec = {
-    gp: standing.games_played ?? (raw.record?.gp ?? 0),
-    wins: standing.wins ?? (raw.record?.wins ?? 0),
-    losses: standing.losses ?? (raw.record?.losses ?? 0),
-    otl: standing.ot_losses ?? (raw.record?.otl ?? 0),
-    otw: standing.ot_wins ?? 0,
-    gf: raw.record?.gf ?? 0,
-    ga: raw.record?.ga ?? 0,
-    points: standing.points ?? (raw.record?.points ?? 0),
-    goalDiff: standing.goal_diff ?? 0,
+  /* Spelare med percentil — hämtas först när fliken öppnas */
+  const loadPlayers = useCallback(() => {
+    setPlayers(null);
+    setPlayersState('loading');
+    fetch(`${API_URL}/api/v1/players${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
+      .then(r => {
+        // Endpointen är ny; en äldre driftsatt API-version svarar 404 och då
+        // faller vi tillbaka på poängligan från /statistics.
+        if (r.status === 404) throw new Error('MISSING');
+        return r.json();
+      })
+      .then(d => {
+        if (d.status !== 'ok') throw new Error('MISSING');
+        setPlayers(d.players || []);
+        setPlayersState('idle');
+      })
+      .catch(() => setPlayersState('missing'));
+  }, [season]);
+
+  useEffect(() => {
+    if (segment === 'spelare' && playersState === 'idle' && players === null) loadPlayers();
+  }, [segment, playersState, players, loadPlayers]);
+
+  useEffect(() => { setPlayers(null); setPlayersState('idle'); }, [season]);
+
+  /* ── Härledda värden ── */
+  const standing: Standing = stats?.team_standing || {};
+  const record = useMemo(() => ({
+    gp: standing.games_played ?? stats?.record?.gp ?? 0,
+    w: standing.wins ?? stats?.record?.wins ?? 0,
+    otw: standing.ot_wins ?? stats?.record?.otw ?? 0,
+    otl: standing.ot_losses ?? stats?.record?.otl ?? 0,
+    l: standing.losses ?? stats?.record?.losses ?? 0,
+    pts: standing.points ?? stats?.record?.points ?? 0,
+    diff: standing.goal_diff ?? 0,
     rank: standing.rank ?? 0,
-    ppPct: raw.record?.pp_pct ?? standing.pp_pct,
-    pkPct: raw.record?.pk_pct ?? standing.pk_pct,
-  };
+  }), [stats, standing]);
 
-  const scorers = (raw.top_scorers || []).map(normPlayer);
-  const goalies = (raw.top_goalies || []).map(normGoalie);
-  const allGames: NormGame[] = (raw.games || raw.upcoming_or_recent_games || []).map(normGame);
-  const games = allGames.filter((g: NormGame) => g._played);
-  const upcoming = allGames
-    .filter((g: NormGame) => !g._played)
-    .sort((a: NormGame, b: NormGame) => a._date.localeCompare(b._date));
-  const bjkReg = (raw.bjorkloven_skaters?.regular || []).map(normPlayer);
-  const bjkPlay = (raw.bjorkloven_skaters?.playoff || []).map(normPlayer);
-  const bjkGReg = (raw.bjorkloven_goalies?.regular || []).map(normGoalie);
+  const allGames = useMemo<Game[]>(
+    () => ((stats?.games || stats?.upcoming_or_recent_games || []) as RawGame[]).map(normGame),
+    [stats],
+  );
+  const upcoming = useMemo(
+    () => allGames.filter(g => !g.played).sort((a, b) => a.date.localeCompare(b.date)),
+    [allGames],
+  );
 
-  const scrapedAt = raw.snapshot_scraped_at;
-  // API:t returnerar t.ex. "SHL 2026/27" — använd det i stället för hårdkodad liga.
-  const seasonLabel: string = raw.season || seasonsList.find(x => x.key === selectedSeason)?.name || 'säsongen';
-  const leagueName = seasonLabel.replace(/\s*\d{4}\/\d{2}\s*$/, '').trim() || 'ligan';
-  // Har säsongen kommit igång? Tabellrad med 0 matcher betyder att den inte har det.
-  const hasPlayed = rec.gp > 0 || games.length > 0;
-  const playedFallback = seasonsList.find(x => x.key !== selectedSeason && /2025\/26/.test(x.name || '')) || null;
+  const bjkSkaters = useMemo<Skater[]>(() => {
+    if (players && players.length > 0) return players.map(apiPlayerToSkater);
+    return ((stats?.bjorkloven_skaters?.regular || []) as Record<string, unknown>[]).map(normSkater);
+  }, [players, stats]);
+  const bjkGoalies = useMemo<Goalie[]>(
+    () => ((stats?.bjorkloven_goalies?.regular || []) as Record<string, unknown>[]).map(normGoalie),
+    [stats],
+  );
+  const leagueSkaters = useMemo<Skater[]>(
+    () => ((stats?.top_scorers || []) as Record<string, unknown>[]).map(normSkater),
+    [stats],
+  );
+  const leagueGoalies = useMemo<Goalie[]>(
+    () => ((stats?.top_goalies || []) as Record<string, unknown>[]).map(normGoalie),
+    [stats],
+  );
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'overview', label: 'Översikt', icon: '📊' },
-    { key: 'scorers', label: 'Poängliga', icon: '🏅' },
-    { key: 'goalies', label: 'Målvakter', icon: '🧤' },
-    { key: 'results', label: 'Matcher', icon: '📅' },
-    { key: 'analys', label: 'Analys', icon: '📈' },
-  ];
+  const seasonLabel: string = stats?.season || seasons.find(s => s.key === season)?.name || 'Säsongen';
+  const leagueName = seasonLabel.replace(/\s*\d{4}\/\d{2}\s*$/, '').trim() || 'serien';
+  const hasPlayed = record.gp > 0 || allGames.some(g => g.played);
+  const fallbackSeason = seasons.find(s => s.key !== season && s.has_team_data === true && /2025\/26/.test(s.name || '')) || null;
+  const timeline = modules?.timeline || [];
 
-  const skaterCols = [
-    { key: '_num', label: '#', width: 32 },
-    { key: '_name', label: 'Spelare', align: 'left' },
-    { key: '_team', label: 'Lag', width: 48 },
-    { key: '_pos', label: 'Pos', width: 38 },
-    { key: '_gp', label: 'GP', width: 36 },
-    { key: '_g', label: 'G', width: 34 },
-    { key: '_a', label: 'A', width: 34 },
-    { key: '_p', label: 'P', width: 34, accent: true },
-    { key: '_ppg', label: 'PPG', width: 42 },
-    { key: '_pim', label: 'PIM', width: 38 },
-    { key: '_pm', label: '+/-', width: 42 },
-  ];
-  const bjkCols = skaterCols.filter(c => c.key !== '_team');
-  const goalieCols = [
-    { key: '_name', label: 'Målvakt', align: 'left' },
-    { key: '_team', label: 'Lag', width: 44 },
-    { key: '_gp', label: 'GP', width: 36 },
-    { key: '_ga', label: 'GA', width: 36 },
-    { key: '_gaa', label: 'GAA', width: 44 },
-    { key: '_svp', label: 'SV%', width: 48, accent: true },
-    { key: '_svs', label: 'SVS', width: 40 },
-    { key: '_so', label: 'SO', width: 32 },
-    { key: '_w', label: 'V', width: 32 },
-    { key: '_l', label: 'F', width: 32 },
-    { key: '_wpct', label: 'V%', width: 40 },
-  ];
+  const seasonSelect = (
+    <select
+      className="st-season"
+      value={season}
+      onChange={e => setSeason(e.target.value)}
+      aria-label="Välj säsong"
+    >
+      {Object.entries(
+        seasons.reduce<Record<string, Season[]>>((acc, s) => {
+          const league = s.league === 'HA' ? 'HockeyAllsvenskan' : s.league || (s.key.startsWith('shl') ? 'SHL' : 'HockeyAllsvenskan');
+          (acc[league] ||= []).push(s);
+          return acc;
+        }, {}),
+      ).map(([league, items]) => (
+        <optgroup key={league} label={league}>
+          {items.map(s => (
+            <option key={s.key} value={s.key}>{(s.name || s.key).replace(/^(SHL|HockeyAllsvenskan)\s*/i, '')}</option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  );
 
-  const winPct = rec.gp > 0 ? ((rec.wins / rec.gp) * 100).toFixed(0) : '–';
+  if (statsLoading) {
+    return (
+      <div className="page animate-fade-up">
+        <section className="mc-card">
+          <p className="mc-kicker">Statistik</p>
+          <h2 className="mc-title">Hämtar säsongen…</h2>
+          <div className="st-skeleton" />
+          <div className="st-skeleton" />
+          <div className="st-skeleton" />
+        </section>
+      </div>
+    );
+  }
+
+  if (statsError || stats?.status === 'error') {
+    return (
+      <div className="page animate-fade-up">
+        <section className="mc-card mc-card-error">
+          <p className="mc-kicker">Statistik</p>
+          <h2 className="mc-title">Kunde inte ladda statistiken</h2>
+          <p className="mc-text">{statsError || stats?.error}</p>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="page animate-fade-up">
-      <style>{`
-        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        .stat-tab{flex:1;padding:9px 10px;border:none;border-radius:9px;cursor:pointer;font-family:var(--font-sans);font-weight:600;font-size:.78rem;transition:all .25s cubic-bezier(.4,0,.2,1);background:transparent;color:var(--text-muted)}
-        .stat-tab:hover{background:rgba(255,255,255,.04);color:var(--text-secondary)}
-        .stat-tab.active{background:linear-gradient(135deg,var(--brand-green),#1a8a4a);color:#fff;box-shadow:0 4px 16px rgba(37,163,90,.25)}
-        .game-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(172,199,186,.06);font-size:.82rem;transition:background .15s}
-        .game-row:hover{background:rgba(255,255,255,.03);border-radius:6px}
-        @media (max-width: 768px){
-          .stat-tabbar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-          .stat-tabbar::-webkit-scrollbar{display:none}
-          .stat-tab{flex:0 0 auto;min-width:108px;white-space:nowrap}
-          .game-row{font-size:.75rem}
-        }
-      `}</style>
-
-      <Card glow="var(--brand-green)">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+      <section className="mc-card">
+        <div className="st-head">
           <div>
-            <select 
-              value={selectedSeason} 
-              onChange={(e) => setSelectedSeason(e.target.value)}
-              style={{
-                background: 'rgba(37,163,90,.1)',
-                border: '1px solid rgba(37,163,90,.3)',
-                color: 'var(--brand-green-light)',
-                borderRadius: '6px',
-                padding: '2px 8px',
-                fontSize: '.7rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                outline: 'none',
-                cursor: 'pointer',
-                marginBottom: '4px'
-              }}
-            >
-              {Object.entries(
-                seasonsList.reduce<Record<string, typeof seasonsList>>((acc, s) => {
-                  const league = s.league || (s.key.startsWith('shl') ? 'SHL' : 'HockeyAllsvenskan');
-                  (acc[league] ||= []).push(s);
-                  return acc;
-                }, {}),
-              ).map(([league, items]) => (
-                <optgroup key={league} label={league} style={{ background: '#0e1814' }}>
-                  {items.map(s => (
-                    <option key={s.key} value={s.key} style={{ background: '#0e1814' }}>
-                      {(s.name || s.key).replace(/^(SHL|HockeyAllsvenskan)\s*/i, '')}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', margin: 0, background: 'linear-gradient(135deg, var(--text-primary), var(--brand-green-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Säsongsstatistik</h2>
+            <p className="mc-kicker">Statistik</p>
+            <h2 className="mc-title">{seasonLabel}</h2>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {scrapedAt && <div style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(37,163,90,.1)', border: '1px solid rgba(37,163,90,.2)', fontSize: '.68rem', color: 'var(--brand-green-light)' }}>{new Date(scrapedAt).toLocaleDateString('sv-SE')}</div>}
-          </div>
+          {seasonSelect}
         </div>
-      </Card>
+        {hasPlayed && record.rank > 0 && (
+          <p className="mc-note">
+            Placering {record.rank} i {leagueName}
+            {stats?.snapshot_scraped_at && (
+              <> · <span className="st-nowrap">uppdaterad {new Date(stats.snapshot_scraped_at).toLocaleDateString('sv-SE')}</span></>
+            )}
+          </p>
+        )}
+      </section>
 
-      <div className="stat-tabbar" style={{ display: 'flex', gap: 4, padding: 4, background: 'rgba(14,24,20,.7)', borderRadius: 12, border: '1px solid rgba(172,199,186,.08)', marginBottom: 14 }}>
-        {tabs.map(t => (<button key={t.key} className={`stat-tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}><span style={{ marginRight: 5 }}>{t.icon}</span>{t.label}</button>))}
+      <div className="mc-seg" role="tablist" aria-label="Statistikvyer">
+        {([
+          ['laget', 'Laget'],
+          ['spelare', 'Spelare'],
+          ['utveckling', 'Utveckling'],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={segment === key}
+            className={`mc-segbtn${segment === key ? ' mc-on' : ''}`}
+            onClick={() => setSegment(key)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      {tab === 'overview' && !hasPlayed && (
-        <EmptySeason
-          seasonName={seasonLabel}
-          fallback={playedFallback ? { key: playedFallback.key, name: playedFallback.name || playedFallback.key } : null}
-          onSelectFallback={setSelectedSeason}
+      {!hasPlayed && (
+        <>
+          <EmptySeason
+            seasonName={seasonLabel}
+            fallback={fallbackSeason ? { key: fallbackSeason.key, name: fallbackSeason.name || fallbackSeason.key } : null}
+            onSelectFallback={setSeason}
+          />
+          {upcoming.length > 0 && (
+            <section className="mc-card">
+              <p className="mc-kicker">Närmast i spelprogrammet</p>
+              {upcoming.slice(0, 5).map((g, i) => (
+                <div key={i} className="mc-row">
+                  <span className="mc-date">{shortDate(g.date)}</span>
+                  <span className={`mc-ha${g.isHome ? ' mc-ha-home' : ''}`}>{g.isHome ? 'H' : 'B'}</span>
+                  <span className="mc-opponent">{shortTeam(g.isHome ? g.away : g.home)}</span>
+                </div>
+              ))}
+              <p className="mc-note">Hela programmet finns under <Link to="/matcher">Matcher</Link>.</p>
+            </section>
+          )}
+        </>
+      )}
+
+      {hasPlayed && segment === 'laget' && (
+        <Laget record={record} timeline={timeline} modules={modules} analyticsState={analyticsState} />
+      )}
+
+      {hasPlayed && segment === 'spelare' && (
+        <Spelare
+          scope={scope}
+          setScope={setScope}
+          season={season}
+          leagueName={leagueName}
+          bjkSkaters={bjkSkaters}
+          bjkGoalies={bjkGoalies}
+          leagueSkaters={leagueSkaters}
+          leagueGoalies={leagueGoalies}
+          playersState={playersState}
         />
       )}
 
-      {tab === 'overview' && upcoming.length > 0 && (
-        <Card kicker={`Kommande matcher (${upcoming.length})`}>
-          {upcoming.slice(0, 6).map((g: NormGame, i: number) => (
-            <div key={i} className="game-row">
-              <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
-              <span style={{ flex: 1 }}>
-                <span style={{ fontWeight: g._bjkHome ? 700 : 400 }}>{g._home}</span>
-                <span style={{ color: 'var(--text-muted)', margin: '0 6px' }}>mot</span>
-                <span style={{ fontWeight: !g._bjkHome ? 700 : 400 }}>{g._away}</span>
-              </span>
-              <span style={{ fontSize: '.68rem', color: 'var(--text-muted)' }}>{g._bjkHome ? 'Hemma' : 'Borta'}</span>
-            </div>
-          ))}
-        </Card>
-      )}
-
-      {tab === 'overview' && hasPlayed && (<>
-        <Card kicker={rec.rank ? `#${rec.rank} i tabellen` : 'Grundserie'} glow="var(--brand-gold)" style={{ background: 'linear-gradient(135deg, rgba(14,24,20,.9), rgba(20,30,26,.9))' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', gap: 4 }}>
-            <StatPill label="GP" value={rec.gp} />
-            <StatPill label="Vinster" value={rec.wins} accent="var(--impact-positive)" />
-            <StatPill label="Förluster" value={rec.losses} accent="var(--impact-negative)" />
-            <StatPill label="ÖT" value={rec.otl} accent="var(--impact-warning)" />
-            {rec.gf > 0 && <StatPill label="GF" value={rec.gf} />}
-            {rec.ga > 0 && <StatPill label="GA" value={rec.ga} />}
-            <StatPill label="Poäng" value={rec.points} accent="var(--brand-gold)" />
-            <StatPill label="V%" value={`${winPct}%`} accent="var(--brand-green-light)" />
-            {rec.ppPct != null && <StatPill label="PP%" value={`${rec.ppPct}%`} />}
-            {rec.pkPct != null && <StatPill label="PK%" value={`${rec.pkPct}%`} />}
-          </div>
-          {games.length > 0 && <FormStreak games={games} />}
-        </Card>
-
-        {bjkReg.length > 0 && <Card kicker="Björklöven — Poängtoppen (Grundserie)"><StatsTable columns={bjkCols} rows={bjkReg} /></Card>}
-        {bjkPlay.length > 0 && <Card kicker="Björklöven — Slutspel"><StatsTable columns={bjkCols} rows={bjkPlay} /></Card>}
-
-        {/* If no bjk-specific data, show top scorers inline */}
-        {bjkReg.length === 0 && scorers.length > 0 && <Card kicker="Poängtoppen"><StatsTable columns={skaterCols} rows={scorers.slice(0, 10)} highlightTeam="ifb" /></Card>}
-
-        {bjkGReg.length > 0 && <Card kicker="Målvakter (Grundserie)"><StatsTable columns={goalieCols.filter(c => c.key !== '_team')} rows={bjkGReg} /></Card>}
-        {bjkGReg.length === 0 && goalies.length > 0 && <Card kicker="Målvakter"><StatsTable columns={goalieCols} rows={goalies} highlightTeam="ifb" /></Card>}
-
-        {games.length > 0 && <Card kicker="Senaste matcherna">
-          {games.slice(0, 6).map((g: NormGame, i: number) => (<div key={i} className="game-row">
-            <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
-            <Badge r={g._bjkRes} />
-            <span style={{ flex: 1 }}>
-              <span style={{ fontWeight: g._bjkHome ? 700 : 400 }}>{g._home}</span>
-              <span style={{ color: 'var(--text-muted)', margin: '0 6px', fontWeight: 600 }}>{g._hg}–{g._ag}</span>
-              <span style={{ fontWeight: !g._bjkHome ? 700 : 400 }}>{g._away}</span>
-            </span>
-          </div>))}
-        </Card>}
-      </>)}
-
-      {tab === 'scorers' && <Card kicker={`Poängliga — hela ${leagueName}`}><StatsTable columns={skaterCols} rows={scorers} highlightTeam="ifb" /></Card>}
-      {tab === 'goalies' && <Card kicker={`Målvaktsstatistik — hela ${leagueName}`}><StatsTable columns={goalieCols} rows={goalies} highlightTeam="ifb" /></Card>}
-      {tab === 'results' && games.length === 0 && upcoming.length > 0 && (
-        <Card kicker={`Spelprogram (${upcoming.length} matcher)`}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '.82rem', marginBottom: 10 }}>
-            Inga matcher spelade än. Här är hela spelprogrammet.
-          </p>
-          {upcoming.map((g: NormGame, i: number) => (
-            <div key={i} className="game-row">
-              <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
-              <span style={{ flex: 1 }}>
-                <span style={{ fontWeight: g._bjkHome ? 700 : 400 }}>{g._home}</span>
-                <span style={{ color: 'var(--text-muted)', margin: '0 6px' }}>mot</span>
-                <span style={{ fontWeight: !g._bjkHome ? 700 : 400 }}>{g._away}</span>
-              </span>
-              <span style={{ fontSize: '.68rem', color: 'var(--text-muted)' }}>{g._bjkHome ? 'Hemma' : 'Borta'}</span>
-            </div>
-          ))}
-        </Card>
-      )}
-
-      {tab === 'results' && games.length > 0 && <Card kicker={`Spelade matcher (${games.length})`}>
-        {games.map((g: NormGame, i: number) => (<div key={i} className="game-row">
-          <span style={{ color: 'var(--text-muted)', fontSize: '.7rem', minWidth: 68, fontVariantNumeric: 'tabular-nums' }}>{g._date}</span>
-          <Badge r={g._bjkRes} />
-          <span style={{ flex: 1 }}>
-            <span style={{ fontWeight: g._bjkHome ? 700 : 400 }}>{g._home}</span>
-            <span style={{ color: 'var(--text-muted)', margin: '0 6px', fontWeight: 600 }}>{g._hg}–{g._ag}</span>
-            <span style={{ fontWeight: !g._bjkHome ? 700 : 400 }}>{g._away}</span>
-          </span>
-        </div>))}
-      </Card>}
-      {tab === 'analys' && (
-        <Card kicker="Avancerad analys — Björklöven">
-          <Suspense fallback={<p style={{ color: 'var(--text-muted)' }}>Laddar analysmodul...</p>}>
-            <AnalyticsTabs season={selectedSeason} hideShlTab />
-          </Suspense>
-        </Card>
+      {hasPlayed && segment === 'utveckling' && (
+        <Utveckling timeline={timeline} modules={modules} analyticsState={analyticsState} />
       )}
     </div>
+  );
+}
+
+/* ── Laget ── */
+function Laget({
+  record, timeline, modules, analyticsState,
+}: {
+  record: { gp: number; w: number; otw: number; otl: number; l: number; pts: number; diff: number; rank: number };
+  timeline: NonNullable<Modules['timeline']>;
+  modules: Modules | null;
+  analyticsState: 'idle' | 'loading' | 'error';
+}) {
+  const last10 = timeline.slice(-10).map(t => t.result);
+  const splits = modules?.splits;
+  const st = modules?.special_teams;
+  const gs = modules?.game_state;
+  const att = modules?.attendance;
+  const periods = (modules?.periods || []).map(p => ({ label: p.label, gf: p.gf, ga: p.ga }));
+
+  return (
+    <>
+      <section className="mc-card">
+        <p className="mc-kicker">Facit</p>
+        <div className="st-stats">
+          <Stat label="Matcher" value={record.gp} />
+          <Stat label="Vinster" value={record.w} tone="var(--impact-positive)" />
+          {record.otw > 0 && <Stat label="ÖT-vinst" value={record.otw} tone="var(--impact-warning)" />}
+          {record.otl > 0 && <Stat label="ÖT-förlust" value={record.otl} tone="var(--impact-warning)" />}
+          <Stat label="Förluster" value={record.l} tone="var(--impact-negative)" />
+          <Stat label="Poäng" value={record.pts} tone="var(--brand-gold)" />
+          <Stat label="Målskillnad" value={record.diff > 0 ? `+${record.diff}` : record.diff} />
+          <Stat label="P/match" value={record.gp ? (record.pts / record.gp).toFixed(2) : '–'} tone="var(--brand-green-light)" />
+        </div>
+        {last10.length > 0 && (
+          <>
+            <p className="mc-kicker st-sub">Senaste {last10.length}</p>
+            <FormDots results={last10} />
+          </>
+        )}
+      </section>
+
+      {analyticsState === 'loading' && (
+        <section className="mc-card">
+          <p className="mc-kicker">Analys</p>
+          <div className="st-skeleton" />
+          <div className="st-skeleton" />
+          <p className="mc-note">Räknar fram splittar, perioder och specialteam ur matchhändelserna.</p>
+        </section>
+      )}
+
+      {analyticsState === 'error' && (
+        <section className="mc-card">
+          <p className="mc-kicker">Analys</p>
+          <p className="mc-text">Analysdata kunde inte hämtas just nu. Facit ovan kommer direkt från serietabellen och påverkas inte.</p>
+        </section>
+      )}
+
+      {splits && (splits.home.gp > 0 || splits.away.gp > 0) && (
+        <section className="mc-card">
+          <p className="mc-kicker">Hemma mot borta</p>
+          <PairedBar label="Poäng" left={splits.home.pts} right={splits.away.pts} />
+          <PairedBar label="Gjorda mål" left={splits.home.gf} right={splits.away.gf} />
+          <PairedBar label="Insläppta mål" left={splits.home.ga} right={splits.away.ga} />
+          <p className="mc-note">
+            Hemma {splits.home.gp} matcher ({splits.home.w}–{splits.home.l}), borta {splits.away.gp} ({splits.away.w}–{splits.away.l}).
+            Grön stapel är hemma.
+          </p>
+        </section>
+      )}
+
+      {periods.length > 0 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Mål per period</p>
+          <PeriodBars periods={periods} />
+          <p className="mc-note">Grön stapel gjorda mål, röd insläppta. Siffran under är skillnaden.</p>
+        </section>
+      )}
+
+      {st && st.pp_opportunities > 0 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Specialteam</p>
+          <KV label="Powerplay" value={`${st.pp_pct} %`} hint={`${st.pp_goals} mål på ${st.pp_opportunities} spel`} />
+          <KV label="Boxplay" value={`${st.pk_pct} %`} hint={`${st.pk_goals_against} insläppta på ${st.pk_times} underlägen`} />
+          <KV label="Index" value={String(st.special_teams_index)} hint="PP% + PK%. Över 100 räknas som starkt." />
+          <KV label="Utvisningar" value={`${st.avg_pim_per_game} min/match`} hint={`${st.total_pim} minuter totalt`} />
+        </section>
+      )}
+
+      {gs && (
+        <section className="mc-card">
+          <p className="mc-kicker">Matchlägen</p>
+          <KV label="Ledning efter period 1" value={rec(gs.lead_after_1)} />
+          <KV label="Oavgjort efter period 1" value={rec(gs.tied_after_1)} />
+          <KV label="Underläge efter period 1" value={rec(gs.trail_after_1)} />
+          <KV label="Ledning efter period 2" value={rec(gs.lead_after_2)} />
+          <KV label="Underläge efter period 2" value={rec(gs.trail_after_2)} />
+          {gs.game_types && (
+            <>
+              <p className="mc-kicker st-sub">Marginal</p>
+              <KV label="Enmålsmatcher" value={rec(gs.game_types.one_goal)} />
+              <KV label="Tvåmålsmatcher" value={rec(gs.game_types.two_goals)} />
+              <KV label="Tre mål eller mer" value={rec(gs.game_types.three_plus_goals)} />
+            </>
+          )}
+          <p className="mc-note">Läses vinster–förluster–övertidsförluster.</p>
+        </section>
+      )}
+
+      {att && att.home_games > 0 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Publik</p>
+          <div className="st-stats">
+            <Stat label="Snitt" value={att.avg.toLocaleString('sv-SE')} tone="var(--brand-gold)" />
+            <Stat label="Högst" value={att.max.toLocaleString('sv-SE')} />
+            <Stat label="Lägst" value={att.min.toLocaleString('sv-SE')} />
+            <Stat label="Hemmamatcher" value={att.home_games} />
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
+/* ── Spelare ── */
+function Spelare({
+  scope, setScope, season, leagueName, bjkSkaters, bjkGoalies, leagueSkaters, leagueGoalies, playersState,
+}: {
+  scope: Scope;
+  setScope: (s: Scope) => void;
+  season: string;
+  leagueName: string;
+  bjkSkaters: Skater[];
+  bjkGoalies: Goalie[];
+  leagueSkaters: Skater[];
+  leagueGoalies: Goalie[];
+  playersState: 'idle' | 'loading' | 'missing';
+}) {
+  const loven = scope === 'loven';
+  const skaters = loven ? bjkSkaters : leagueSkaters;
+  const goalies = loven ? bjkGoalies : leagueGoalies;
+
+  return (
+    <>
+      <div className="mc-seg" role="tablist" aria-label="Urval">
+        <button role="tab" aria-selected={loven} className={`mc-segbtn${loven ? ' mc-on' : ''}`} onClick={() => setScope('loven')}>Björklöven</button>
+        <button role="tab" aria-selected={!loven} className={`mc-segbtn${!loven ? ' mc-on' : ''}`} onClick={() => setScope('serien')}>Hela {leagueName}</button>
+      </div>
+
+      <section className="mc-card">
+        <p className="mc-kicker">{loven ? `Poängliga (${skaters.length})` : `Poängtoppen — topp ${skaters.length}`}</p>
+        {playersState === 'loading' && loven && <div className="st-skeleton" />}
+        {skaters.length === 0
+          ? <p className="mc-text">Ingen poängstatistik för säsongen ännu.</p>
+          : <SkaterTable rows={skaters} showTeam={!loven} season={season} />}
+        <p className="mc-note">
+          {loven
+            ? 'Tryck på en spelare för profil med percentil mot serien och poäng match för match.'
+            : `Lövenspelare är markerade och går att trycka på. Poängtoppen är serieledande spelare, inte hela ${leagueName}.`}
+        </p>
+      </section>
+
+      <section className="mc-card">
+        <p className="mc-kicker">Målvakter ({goalies.length})</p>
+        {goalies.length === 0
+          ? <p className="mc-text">Ingen målvaktsstatistik för säsongen ännu.</p>
+          : <GoalieTable rows={goalies} showTeam={!loven} />}
+        <p className="mc-note">IM insläppta mål, Rp% räddningsprocent, NC nollor.</p>
+      </section>
+    </>
+  );
+}
+
+/* ── Utveckling ── */
+function Utveckling({
+  timeline, modules, analyticsState,
+}: {
+  timeline: NonNullable<Modules['timeline']>;
+  modules: Modules | null;
+  analyticsState: 'idle' | 'loading' | 'error';
+}) {
+  const form = modules?.form || [];
+  const elo = modules?.predictions?.elo_history || [];
+  const scoring = modules?.predictions?.scoring_timeline || [];
+  const streaks = modules?.streaks;
+  const trend = modules?.attendance?.trend || [];
+  const pen = modules?.penalty_breakdown;
+
+  if (analyticsState === 'loading') {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Utveckling</p>
+        <h2 className="mc-title">Räknar…</h2>
+        <div className="st-skeleton" />
+        <div className="st-skeleton" />
+        <p className="mc-note">Kurvorna byggs ur varje spelad match, så första hämtningen tar några sekunder.</p>
+      </section>
+    );
+  }
+
+  if (analyticsState === 'error' || timeline.length === 0) {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Utveckling</p>
+        <p className="mc-text">
+          {analyticsState === 'error'
+            ? 'Analysdata kunde inte hämtas just nu.'
+            : 'Utvecklingen kräver spelade matcher med registrerade händelser.'}
+        </p>
+      </section>
+    );
+  }
+
+  const pointCurve = timeline.map(t => ({ label: shortDate(t.date), value: t.cumPts }));
+  const rolling = form.filter(f => f.window >= 5);
+
+  return (
+    <>
+      <section className="mc-card">
+        <p className="mc-kicker">Poäng ackumulerat</p>
+        <Sparkline points={pointCurve} height={72} />
+        <p className="mc-note">
+          {timeline.length} matcher, {pointCurve[pointCurve.length - 1]?.value ?? 0} poäng.
+          En brantare kurva betyder fler poäng per match.
+        </p>
+      </section>
+
+      {rolling.length > 1 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Form — poäng på rullande {rolling[rolling.length - 1].window} matcher</p>
+          <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.pts }))} height={64} colour="var(--brand-gold)" fill="rgba(245,192,69,0.12)" />
+          <div className="st-twin">
+            <div>
+              <p className="st-minilbl">Gjorda mål per match</p>
+              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.gf_avg }))} height={54} />
+            </div>
+            <div>
+              <p className="st-minilbl st-minilbl-bad">Insläppta mål per match</p>
+              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.ga_avg }))} height={54} colour="var(--impact-negative)" fill="rgba(255,77,77,0.10)" />
+            </div>
+          </div>
+          <p className="mc-note">
+            Den guldfärgade kurvan är poängskörden i fönstret.
+          </p>
+        </section>
+      )}
+
+      {elo.length > 1 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Styrketal över säsongen</p>
+          <Sparkline points={elo.map(e => ({ label: shortDate(e.date), value: Math.round(e.elo) }))} height={64} colour="var(--impact-neutral)" fill="rgba(119,181,255,0.10)" />
+          <p className="mc-note">
+            Elo startar på 1500 och rör sig efter varje resultat, viktat mot motståndets styrka.
+            Nu {Math.round(elo[elo.length - 1].elo)}.
+          </p>
+        </section>
+      )}
+
+      {scoring.length > 0 && (
+        <section className="mc-card">
+          <p className="mc-kicker">När målen faller</p>
+          <PeriodBars periods={scoring.map(s => ({ label: s.interval, gf: s.gf, ga: s.ga }))} />
+          <p className="mc-note">Tiominutersintervall över matchen. Grön gjorda, röd insläppta.</p>
+        </section>
+      )}
+
+      {streaks && (streaks.longest_win || streaks.current) && (
+        <section className="mc-card">
+          <p className="mc-kicker">Sviter</p>
+          {streaks.current && (
+            <KV label="Just nu" value={`${streaks.current.length} ${streaks.current.type === 'W' ? 'raka vinster' : 'raka förluster'}`} />
+          )}
+          {streaks.longest_win && (
+            <KV label="Längsta segersvit" value={`${streaks.longest_win.length} matcher`} hint={`${shortDate(streaks.longest_win.start)} – ${shortDate(streaks.longest_win.end)}`} />
+          )}
+          {streaks.longest_loss && (
+            <KV label="Längsta förlustsvit" value={`${streaks.longest_loss.length} matcher`} hint={`${shortDate(streaks.longest_loss.start)} – ${shortDate(streaks.longest_loss.end)}`} />
+          )}
+        </section>
+      )}
+
+      {trend.length > 1 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Publik per hemmamatch</p>
+          <Sparkline points={trend.map(t => ({ label: shortDate(t.date), value: t.spectators }))} height={60} colour="var(--brand-gold)" fill="rgba(245,192,69,0.12)" />
+          <p className="mc-note">{trend.length} hemmamatcher med registrerad publiksiffra.</p>
+        </section>
+      )}
+
+      {pen && (pen.by_period?.length > 0 || pen.most_penalized?.length > 0) && (
+        <section className="mc-card">
+          <p className="mc-kicker">Utvisningar</p>
+          {pen.by_period?.length > 0 && (
+            <div className="st-bars">
+              {pen.by_period.map(p => {
+                const max = Math.max(...pen.by_period.map(x => x.count), 1);
+                return (
+                  <div key={p.period} className="st-barrow">
+                    <span className="st-barlabel">{p.period > 3 ? 'ÖT' : `P${p.period}`}</span>
+                    <span className="st-bartrack"><span className="st-barfill" style={{ width: `${(p.count / max) * 100}%` }} /></span>
+                    <span className="st-barvalue">{p.count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {pen.most_penalized?.length > 0 && (
+            <>
+              <p className="mc-kicker st-sub">Mest utvisade</p>
+              {pen.most_penalized.slice(0, 5).map(p => (
+                <KV key={p.name} label={humanName(p.name)} value={`${p.minutes} min`} hint={`${p.count} utvisningar`} />
+              ))}
+            </>
+          )}
+        </section>
+      )}
+    </>
   );
 }
