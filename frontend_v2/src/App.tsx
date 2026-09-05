@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { AlertTriangle, CalendarDays, LineChart, MessageSquare, Newspaper, Users } from 'lucide-react';
 import { Matcher } from './pages/Matcher';
+import { Matchrapport } from './pages/Matchrapport';
 import { Nyheter } from './pages/Nyheter';
 import { Roster } from './pages/Roster';
 import { EkonomiPage } from './pages/Ekonomi';
@@ -87,6 +88,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/matcher" replace />} />
             <Route path="/matcher" element={<Matcher />} />
+            <Route path="/matcher/:gameId" element={<Matchrapport />} />
             <Route path="/statistik" element={<StatisticsPage />} />
             <Route path="/trupp" element={<Roster />} />
             <Route path="/nyheter" element={<Nyheter />} />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 
 /* ── typer ── */
@@ -28,6 +29,7 @@ type Standing = {
 };
 
 type Game = {
+  gameId: number | null;
   date: string;
   time: string;
   home: string;
@@ -62,6 +64,7 @@ function normalise(g: RawGame): Game {
   if (played) result = gf > ga ? 'W' : gf < ga ? (ot ? 'OTL' : 'L') : 'D';
 
   return {
+    gameId: g.game_id ?? null,
     date: g.match_date || g.date || '',
     time: g.match_time || '',
     home,
@@ -167,8 +170,11 @@ function FormDots({ games }: { games: Game[] }) {
  * Raden visar därför motståndaren, med H/B för hemma eller borta.
  */
 function GameRow({ game }: { game: Game }) {
-  return (
-    <div className="mc-row">
+  // Rapporten bygger på matchhändelser, som bara finns för spelade matcher
+  // och först när schedule har ett game_id att koppla dem till.
+  const linkable = game.played && game.gameId !== null;
+  const body = (
+    <>
       <span className="mc-date">{formatDateShort(game.date)}</span>
       <span className={`mc-ha${game.isHome ? ' mc-ha-home' : ''}`} title={game.isHome ? 'Hemma' : 'Borta'}>
         {game.isHome ? 'H' : 'B'}
@@ -184,8 +190,12 @@ function GameRow({ game }: { game: Game }) {
       ) : (
         <span className="mc-time">{game.time}</span>
       )}
-    </div>
+    </>
   );
+
+  return linkable
+    ? <Link to={`/matcher/${game.gameId}`} className="mc-row mc-row-link">{body}</Link>
+    : <div className="mc-row">{body}</div>;
 }
 
 function StandingsTable({ rows }: { rows: Standing[] }) {

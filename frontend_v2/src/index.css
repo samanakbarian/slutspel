@@ -752,3 +752,206 @@ a {
 
 .app-footer a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
 .app-footer a:hover { color: var(--brand-green-light); }
+
+/* ── Matchrapport ─────────────────────────────────────── */
+.mr-back {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  font-size: 0.76rem;
+  color: var(--brand-green-light);
+  text-decoration: none;
+}
+
+.mr-back:hover { text-decoration: underline; }
+
+.mr-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.75rem;
+  min-width: 0;
+}
+
+.mr-card-error { border-color: rgba(255, 77, 77, 0.35); background: rgba(255, 77, 77, 0.06); }
+
+.mr-kicker {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.mr-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; }
+.mr-text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45; }
+.mr-note { margin-top: 0.4rem; font-size: 0.68rem; color: var(--text-muted); }
+
+/* resultathuvud */
+.mr-hero {
+  background: linear-gradient(150deg, rgba(37, 163, 90, 0.14), rgba(14, 26, 21, 0.92) 62%);
+  border: 1px solid rgba(37, 163, 90, 0.26);
+  border-radius: 16px;
+  padding: 0.95rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.mr-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.35rem;
+}
+
+.mr-side {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.mr-side:last-of-type { text-align: right; }
+.mr-side-ours { color: var(--brand-green-light); font-weight: 800; }
+
+.mr-scorenum {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mr-outcome { font-size: 0.74rem; color: var(--text-muted); }
+.mr-outcome-vinst { color: var(--impact-positive); }
+.mr-outcome-förlust { color: var(--impact-negative); }
+
+/* perioder */
+.mr-periods { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.mr-period {
+  flex: 1 1 72px;
+  padding: 0.5rem 0.4rem;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  text-align: center;
+}
+
+.mr-period-win { border-color: rgba(37, 192, 109, 0.4); }
+.mr-period-loss { border-color: rgba(255, 77, 77, 0.35); }
+
+.mr-period-label {
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.mr-period-score {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mr-period-win .mr-period-score { color: var(--impact-positive); }
+.mr-period-loss .mr-period-score { color: var(--impact-negative); }
+
+/* mål och utvisningar */
+.mr-goal, .mr-pen {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+  font-size: 0.8rem;
+}
+
+.mr-goal:last-child, .mr-pen:last-child { border-bottom: none; }
+
+.mr-goal-time {
+  flex: none;
+  width: 42px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+}
+
+.mr-goal-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--impact-negative);
+  margin-top: 5px;
+}
+
+.mr-goal-ours .mr-goal-dot { background: var(--impact-positive); }
+
+.mr-goal-body { flex: 1; min-width: 0; }
+.mr-goal-scorer { display: block; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.mr-goal-assists { display: block; font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; overflow-wrap: anywhere; }
+
+.mr-goal-state {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mr-tag {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+.mr-tag-pp { background: rgba(245, 192, 69, 0.18); color: var(--brand-gold); }
+.mr-tag-sh { background: rgba(119, 181, 255, 0.18); color: var(--impact-neutral); }
+
+.mr-pen-min {
+  flex: none;
+  width: 26px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--impact-warning);
+  padding-top: 1px;
+}
+
+.mr-pen-body { flex: 1; min-width: 0; }
+.mr-pen-player { display: block; color: var(--text-primary); overflow-wrap: anywhere; }
+.mr-pen-type { display: block; font-size: 0.7rem; color: var(--text-muted); }
+.mr-pen-ours .mr-pen-player { font-weight: 600; }
+
+.mr-pimbar { margin-bottom: 0.7rem; }
+
+.mr-pimlabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.mr-pimlabels b { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.mr-pimtrack { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: rgba(255, 255, 255, 0.05); }
+
+/* Klickbar matchrad — bara när en rapport faktiskt finns att öppna. */
+.mc-row-link { text-decoration: none; color: inherit; cursor: pointer; }
+.mc-row-link:hover { background: rgba(255, 255, 255, 0.03); }
+.mc-row-link:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: -2px; border-radius: 6px; }
