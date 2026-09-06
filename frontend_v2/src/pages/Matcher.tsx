@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
 import { Guard } from '../components/Guard';
+import { Tabellen } from '../components/Tabellen';
+import type { Standing } from '../components/Tabellen';
 
 /* ── typer ── */
 type RawGame = {
@@ -19,21 +21,6 @@ type RawGame = {
 };
 
 type Season = { key: string; name?: string; league?: string; has_team_data?: boolean | null };
-
-type Standing = {
-  team_name?: string;
-  rank?: number;
-  games_played?: number;
-  wins?: number;
-  losses?: number;
-  ot_wins?: number;
-  ot_losses?: number;
-  points?: number;
-  goal_diff?: number;
-  /** Räknas i API:t ur schemat; Swehockeys tabell bär bara målskillnaden. */
-  goals_for?: number | null;
-  goals_against?: number | null;
-};
 
 type Game = {
   gameId: number | null;
@@ -216,71 +203,6 @@ function GameRow({ game }: { game: Game }) {
     : <div className="mc-row">{body}<span className="mc-chevron mc-chevron-off" aria-hidden="true" /></div>;
 }
 
-function StandingsTable({ rows }: { rows: Standing[] }) {
-  // En ensam rad är ingen tabell. Så länge backend bara exponerar lagets egen
-  // rad blir "#1 av 1" mer vilseledande än upplysande — visa den inte då.
-  if (rows.length < 2) return null;
-  const sorted = [...rows].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
-  const started = sorted.some(r => (r.games_played ?? 0) > 0);
-  const lead = Math.max(1, ...sorted.map(r => r.points ?? 0));
-
-  return (
-    <section className="mc-card">
-      <p className="mc-kicker">Tabellen</p>
-      <div className="st-scroll">
-      <div className="st-rows">
-        <div className="st-head">
-          <span /><span>Lag</span>
-          <span title="Spelade matcher">M</span>
-          <span title="Vinster i ordinarie tid">V</span>
-          <span title="Vinster efter förlängning eller straffar">ÖV</span>
-          <span title="Förluster efter förlängning eller straffar">ÖF</span>
-          <span title="Förluster i ordinarie tid">F</span>
-          <span title="Gjorda–insläppta mål">Mål</span>
-          <span title="Målskillnad">+/−</span>
-          <span>P</span>
-        </div>
-        {sorted.map((r, i) => {
-          const pts = r.points ?? 0;
-          const diff = r.goal_diff ?? 0;
-          const ours = BJK.test(r.team_name || '');
-          return (
-            <div
-              key={i}
-              className={`st-row${ours ? ' st-row-ours' : ''}`}
-              // Raden är sin egen stapel: fyllningen står i proportion till
-              // ledarens poäng. Tabellen får en form utan att ta mer bredd,
-              // och det är bredden vi inte har på en telefon.
-              style={{ ['--st-fill' as string]: `${started ? (pts / lead) * 100 : 0}%` }}
-            >
-              <span className="st-rank">{r.rank ?? i + 1}</span>
-              <span className="st-team">{(r.team_name || '').replace(/^IF\s+/, '')}</span>
-              <span className="st-n">{r.games_played ?? 0}</span>
-              <span className="st-n">{r.wins ?? 0}</span>
-              <span className="st-n st-dim">{r.ot_wins ?? 0}</span>
-              <span className="st-n st-dim">{r.ot_losses ?? 0}</span>
-              <span className="st-n">{r.losses ?? 0}</span>
-              <span className="st-goals">
-                {r.goals_for != null && r.goals_against != null
-                  ? `${r.goals_for}\u2013${r.goals_against}`
-                  : '–'}
-              </span>
-              {/* Riktigt minustecken, inte bindestreck — siffrorna står i
-                  tabellsiffror och ett bindestreck sitter för högt. */}
-              <span className={`st-n st-diffnum${diff > 0 ? ' st-difftext-pos' : diff < 0 ? ' st-difftext-neg' : ''}`}>
-                {diff > 0 ? `+${diff}` : diff < 0 ? `\u2212${Math.abs(diff)}` : '0'}
-              </span>
-              <span className="st-points">{pts}</span>
-            </div>
-          );
-        })}
-      </div>
-      </div>
-      {!started && <p className="mc-note">Serien har inte startat — placeringen är preliminär tills omgång 1 är spelad.</p>}
-    </section>
-  );
-}
-
 /* ── sida ── */
 export function Matcher() {
   const [games, setGames] = useState<Game[]>([]);
@@ -398,7 +320,7 @@ export function Matcher() {
         </section>
       )}
 
-      <Guard name="Tabellen"><StandingsTable rows={standings} /></Guard>
+      <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} /></Guard>
 
       <div className="mc-seg" role="tablist">
         <button
