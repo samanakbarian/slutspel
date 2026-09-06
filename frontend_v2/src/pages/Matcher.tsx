@@ -218,26 +218,49 @@ function StandingsTable({ rows }: { rows: Standing[] }) {
   if (rows.length < 2) return null;
   const sorted = [...rows].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
   const started = sorted.some(r => (r.games_played ?? 0) > 0);
+  const lead = Math.max(1, ...sorted.map(r => r.points ?? 0));
+  const spread = Math.max(1, ...sorted.map(r => Math.abs(r.goal_diff ?? 0)));
+
   return (
     <section className="mc-card">
       <p className="mc-kicker">Tabellen</p>
-      <div className="mc-tablewrap">
-        <table className="mc-table">
-          <thead>
-            <tr><th>#</th><th className="mc-left">Lag</th><th>M</th><th>MSK</th><th>P</th></tr>
-          </thead>
-          <tbody>
-            {sorted.map((r, i) => (
-              <tr key={i} className={BJK.test(r.team_name || '') ? 'mc-hl' : ''}>
-                <td>{r.rank ?? i + 1}</td>
-                <td className="mc-left">{(r.team_name || '').replace(/^IF\s+/, '')}</td>
-                <td>{r.games_played ?? 0}</td>
-                <td>{(r.goal_diff ?? 0) > 0 ? `+${r.goal_diff}` : (r.goal_diff ?? 0)}</td>
-                <td className="mc-pts">{r.points ?? 0}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="st-rows">
+        <div className="st-head">
+          <span /><span>Lag</span><span>M</span><span>Målskillnad</span><span>P</span>
+        </div>
+        {sorted.map((r, i) => {
+          const pts = r.points ?? 0;
+          const diff = r.goal_diff ?? 0;
+          const ours = BJK.test(r.team_name || '');
+          return (
+            <div
+              key={i}
+              className={`st-row${ours ? ' st-row-ours' : ''}`}
+              // Raden är sin egen stapel: fyllningen står i proportion till
+              // ledarens poäng. Tabellen får en form utan att ta mer bredd,
+              // och det är bredden vi inte har på en telefon.
+              style={{ ['--st-fill' as string]: `${started ? (pts / lead) * 100 : 0}%` }}
+            >
+              <span className="st-rank">{r.rank ?? i + 1}</span>
+              <span className="st-team">{(r.team_name || '').replace(/^IF\s+/, '')}</span>
+              <span className="st-games">{r.games_played ?? 0}</span>
+              <span className="st-diff">
+                <span className="st-diffbar">
+                  <i
+                    className={diff < 0 ? 'st-neg' : 'st-pos'}
+                    style={{ width: `${(Math.abs(diff) / spread) * 50}%`, [diff < 0 ? 'right' : 'left']: '50%' }}
+                  />
+                </span>
+                <b className={diff > 0 ? 'st-difftext-pos' : diff < 0 ? 'st-difftext-neg' : ''}>
+                  {/* Riktigt minustecken, inte bindestreck — siffrorna står i
+                      tabellsiffror och ett bindestreck sitter för högt. */}
+                  {diff > 0 ? `+${diff}` : diff < 0 ? `\u2212${Math.abs(diff)}` : '0'}
+                </b>
+              </span>
+              <span className="st-points">{pts}</span>
+            </div>
+          );
+        })}
       </div>
       {!started && <p className="mc-note">Serien har inte startat — placeringen är preliminär tills omgång 1 är spelad.</p>}
     </section>
