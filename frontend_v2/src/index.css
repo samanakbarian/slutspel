@@ -873,6 +873,14 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+.mr-period-shots {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .mr-period-win .mr-period-score { color: var(--impact-positive); }
 .mr-period-loss .mr-period-score { color: var(--impact-negative); }
 
@@ -897,16 +905,29 @@ a {
   padding-top: 1px;
 }
 
-.mr-goal-dot {
+/* Lagkoden på varje mål- och utvisningsrad. Ersätter den färgade pricken:
+   färgen ensam gick inte att läsa i gråskala, och på utvisningarna fanns
+   ingen markering alls — listan såg ut som om alla satt på oss. */
+.mr-team {
   flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--impact-negative);
-  margin-top: 5px;
+  min-width: 34px;
+  text-align: center;
+  margin-top: 1px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
 }
 
-.mr-goal-ours .mr-goal-dot { background: var(--impact-positive); }
+.mr-team-ours {
+  color: var(--brand-green-light);
+  background: rgba(37, 163, 90, 0.16);
+  border-color: rgba(66, 216, 131, 0.35);
+}
 
 .mr-goal-body { flex: 1; min-width: 0; }
 .mr-goal-scorer { display: block; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
@@ -949,6 +970,64 @@ a {
 .mr-pen-player { display: block; color: var(--text-primary); overflow-wrap: anywhere; }
 .mr-pen-type { display: block; font-size: 0.7rem; color: var(--text-muted); }
 .mr-pen-ours .mr-pen-player { font-weight: 600; }
+
+/* målvakter */
+.mr-gk {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.1rem 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+}
+.mr-gk:last-of-type { border-bottom: none; }
+.mr-gk-name { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); }
+.mr-gk-ours .mr-gk-name { color: var(--text-primary); }
+.mr-gk-team {
+  margin-left: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.mr-gk-line { grid-column: 1; font-size: 0.72rem; color: var(--text-muted); }
+.mr-gk-pct {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.mr-gk-ours .mr-gk-pct { color: var(--brand-green-light); }
+
+/* delbart kort */
+.share-wrap {
+  max-width: 420px;
+  margin: 0 auto 0.8rem;
+}
+.share-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow);
+}
+.share-btn {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(66, 216, 131, 0.35);
+  border-radius: 10px;
+  background: rgba(37, 163, 90, 0.16);
+  color: var(--brand-green-light);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.share-btn:disabled { opacity: 0.55; cursor: progress; }
+.share-btn:focus-visible { outline: 2px solid var(--brand-green-light); outline-offset: 2px; }
 
 .mr-pimbar { margin-bottom: 0.7rem; }
 
@@ -1633,6 +1712,22 @@ a {
   font-size: 0.7rem;
   color: var(--text-muted);
   margin-top: -0.25rem;
+}
+
+/* Ordet "backpar" skiljer backarna från forwardsen i samma rad. Etiketten
+   står utskriven i stället för att bäras av en färg — raden läses lika bra
+   i gråskala. */
+.tor-sub-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 3px;
+  padding: 0 0.25rem;
+  margin: 0 0.1rem;
 }
 
 .tor-name { font-size: 0.78rem; color: var(--text-secondary); min-width: 0; }

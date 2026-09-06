@@ -149,6 +149,11 @@ type LineRow = {
   goals_against: number;
   diff: number;
   share_of_team_goals: number;
+  /** De tre forwardsen respektive backparet, flest matcher först. */
+  forwards?: string[];
+  defence?: string[];
+  /** Hur många fler som spelat i femman än de som listas. */
+  rotated?: number;
   players: string[];
 };
 type LineData = {
@@ -1085,25 +1090,40 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
     );
   }
   const t = data.totals;
+  const rotated = data.lines.reduce((n, l) => n + (l.rotated || 0), 0);
   return (
     <section className="mc-card">
-      <p className="mc-kicker">Kedjorna</p>
-      <h2 className="mc-title">Vilken kedja vinner sina byten?</h2>
+      <p className="mc-kicker">Femmorna</p>
+      <h2 className="mc-title">Vilken femma vinner sina byten?</h2>
       <Tornado
         leftLabel="Mål emot"
-        rightLabel="Mål med kedjan på isen"
+        rightLabel="Mål med femman på isen"
         rows={data.lines.map(l => ({
           key: String(l.line),
-          label: `Kedja ${l.line}`,
-          sub: l.players.slice(0, 3).map(surname).join(', '),
+          label: `Femma ${l.line}`,
+          // Forwards och backar hålls isär. Slås de ihop avgörs de tre som
+          // syns av vem som råkat spela flest matcher, och då kan ett backpar
+          // stå listat som kedja.
+          sub: (
+            <>
+              {(l.forwards || l.players.slice(0, 3)).map(surname).join(', ')}
+              {(l.defence?.length ?? 0) > 0 && (
+                <> <span className="tor-sub-tag">backpar</span> {l.defence!.map(surname).join(', ')}</>
+              )}
+            </>
+          ),
           left: l.goals_against,
           right: l.goals_for,
         }))}
       />
       <p className="mc-note">
-        Summa {t.goals_for} mål för, {t.goals_against} emot.
+        Swehockeys uppställning grupperar hela femman under en rubrik — tre
+        forwards och ett backpar — och målet räknas till den femma flest av
+        spelarna på isen tillhörde.
+        {rotated > 0 && <> {rotated} spelare till har hoppat in i någon av femmorna.</>}
+        {' '}Summa {t.goals_for} mål för, {t.goals_against} emot.
         {(t.without_line_for + t.without_line_against) > 0 && (
-          <> {t.without_line_for + t.without_line_against} mål gjordes utan kedja på isen — tomt mål.</>
+          <> {t.without_line_for + t.without_line_against} mål gjordes utan femma på isen — tomt mål.</>
         )}
       </p>
     </section>

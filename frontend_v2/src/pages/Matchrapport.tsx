@@ -2,85 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { PairedBar } from '../components/charts/Charts';
-
-/* ── typer, speglar /api/v1/match/{game_id} ── */
-type Goal = {
-  time: string;
-  minute: number;
-  period: number | null;
-  team_code: string | null;
-  scorer: string | null;
-  scorer_number: number | null;
-  assists: string[];
-  score_state: string | null;
-  is_power_play: boolean;
-  is_short_handed: boolean;
-  /** Tröjnummer på isen: för det görande laget respektive det släppande. */
-  on_ice_for?: number[];
-  on_ice_against?: number[];
-};
-
-type Penalty = {
-  time: string;
-  minute: number;
-  period: number | null;
-  team_code: string | null;
-  player: string | null;
-  player_number: number | null;
-  minutes: number;
-  type: string | null;
-};
-
-type MatchReport = {
-  status: string;
-  error?: string;
-  game_id: number;
-  date: string;
-  time?: string | null;
-  home_team: string;
-  away_team: string;
-  result?: string | null;
-  period_results?: string | null;
-  venue?: string | null;
-  spectators?: number | null;
-  goals: Goal[];
-  penalties: Penalty[];
-  counts: { events: number; goals: number; penalties: number };
-  /** Lagets tröjnummer → namn, så on-ice-listorna går att läsa. */
-  squad?: Record<string, { name: string; position: string | null }>;
-};
-
-const BJK = /bj[oö]rkl[oö]ven/i;
-const BJK_CODES = ['IFB', 'BJO', 'BJK'];
-
-/** Swehockeys namnform är "Efternamn, Förnamn" — vänd till läsbar ordning. */
-function humanName(n: string | null): string {
-  if (!n) return '—';
-  const m = n.split(',').map(s => s.trim());
-  return m.length === 2 ? `${m[1]} ${m[0]}` : n;
-}
-
-/** Efternamnet räcker i en tät lista och sparar den bredd vi inte har. */
-function surname(n: string | null): string {
-  const clean = String(n || '').replace(/[*†‡]+/g, '').trim();
-  return clean.includes(',') ? clean.split(',')[0].trim() : clean.split(' ').slice(-1)[0];
-}
-
-function isOurs(teamCode: string | null): boolean {
-  return BJK_CODES.includes((teamCode || '').toUpperCase());
-}
-
-/** "(0-0, 0-1, 1-0)" → [[0,0],[0,1],[1,0]] */
-function parsePeriods(pr: string | null | undefined): [number, number][] {
-  if (!pr) return [];
-  return pr
-    .replace(/[()]/g, '')
-    .split(',')
-    .map(s => s.trim().match(/(\d+)\s*-\s*(\d+)/))
-    .filter((m): m is RegExpMatchArray => Boolean(m))
-    .map(m => [parseInt(m[1], 10), parseInt(m[2], 10)] as [number, number]);
-}
-
+import { DelaMatchen } from '../components/share/DelaMatchen';
+import type { Goal, MatchReport, Penalty } from '../lib/match';
+import { BJK, humanName, isOurs, parsePeriods, surname } from '../lib/match';
 
 /* ── matchbild: vad siffrorna säger utöver resultatet ── */
 
@@ -190,7 +114,10 @@ function Momentum({ goals, netResult }: { goals: Goal[]; netResult: number }) {
   const PAD = 8;
   const ZERO = 52;
   const STEP = 13; // px per måls skillnad
-  const LEN = 65; // minuter på x-axeln, med plats för förlängning
+  // Minuter på x-axeln. Marginalen efter 65 finns för att avgörandet i
+  // straffläggningen skrivs på 65:00 — utan den ligger steget på kanten och
+  // syns inte alls.
+  const LEN = 68;
 
   const x = (min: number) => PAD + Math.min(min, LEN) / LEN * (W - PAD * 2);
 
@@ -248,9 +175,27 @@ function Momentum({ goals, netResult }: { goals: Goal[]; netResult: number }) {
 }
 
 /* ── periodsplit ── */
-function Periods({ periods, ourSide }: { periods: [number, number][]; ourSide: 'home' | 'away' }) {
+/** "12,9,9" → [12, 9, 9]. Tom sträng ger tom lista. */
+function byPeriod(text: string | null | undefined): number[] {
+  return String(text || '')
+    .split(',')
+    .map(x => parseInt(x.trim(), 10))
+    .filter(n => Number.isFinite(n));
+}
+
+function Periods({
+  periods, ourSide, teams,
+}: {
+  periods: [number, number][];
+  ourSide: 'home' | 'away';
+  teams: MatchReport['teams'];
+}) {
   if (periods.length === 0) return null;
   const label = (i: number) => (i < 3 ? `${i + 1}:a perioden` : i === 3 ? 'Förlängning' : 'Straffar');
+  // Skotten per period ligger i matchprotokollet, inte i händelserna. De
+  // säger om resultatet i perioden speglade spelet eller gick emot det.
+  const ourShots = byPeriod(teams?.ours.shots_by_period);
+  const theirShots = byPeriod(teams?.theirs.shots_by_period);
   return (
     <section className="mr-card">
       <p className="mr-kicker">Period för period</p>
@@ -259,14 +204,52 @@ function Periods({ periods, ourSide }: { periods: [number, number][]; ourSide: '
           const ours = ourSide === 'home' ? h : a;
           const theirs = ourSide === 'home' ? a : h;
           const tone = ours > theirs ? 'win' : ours < theirs ? 'loss' : 'draw';
+          const sf = ourShots[i];
+          const sa = theirShots[i];
           return (
             <div key={i} className={`mr-period mr-period-${tone}`}>
               <span className="mr-period-label">{label(i)}</span>
               <span className="mr-period-score">{ours}–{theirs}</span>
+              {sf != null && sa != null && (
+                <span className="mr-period-shots">{sf}–{sa} skott</span>
+              )}
             </div>
           );
         })}
       </div>
+    </section>
+  );
+}
+
+/**
+ * Målvakterna, båda lagens.
+ *
+ * En förlust med 0–4 och 35 räddningar är en annan match än en förlust med
+ * 0–4 och 15. Utan de här raderna gick det inte att se skillnaden.
+ */
+function Malvakter({ goalies }: { goalies: MatchReport['goalies'] }) {
+  const list = (goalies || []).filter(g => g.shots_against != null);
+  if (list.length === 0) return null;
+  return (
+    <section className="mr-card">
+      <p className="mr-kicker">Målvakter</p>
+      {list.map((g, i) => {
+        const pct = g.save_pct ?? (g.shots_against ? (g.saves! / g.shots_against) * 100 : null);
+        return (
+          <div key={i} className={`mr-gk${g.is_ours ? ' mr-gk-ours' : ''}`}>
+            <span className="mr-gk-name">
+              {g.number != null ? `${g.number}. ` : ''}{humanName(g.name)}
+              {!g.is_ours && <span className="mr-gk-team">{g.team || 'motståndaren'}</span>}
+            </span>
+            <span className="mr-gk-line">
+              {g.saves} av {g.shots_against} räddningar
+              {g.time_on_ice ? ` · ${g.time_on_ice}` : ''}
+            </span>
+            <span className="mr-gk-pct">{pct != null ? `${pct.toFixed(1).replace('.', ',')} %` : '—'}</span>
+          </div>
+        );
+      })}
+      <p className="mr-note">Räddningsprocenten kommer ur matchprotokollets målvaktssummering.</p>
     </section>
   );
 }
@@ -304,6 +287,24 @@ function OnIce({ goal, squad }: { goal: Goal; squad: MatchReport['squad'] }) {
   );
 }
 
+/**
+ * Vilket lag raden hör till, utskrivet.
+ *
+ * Tidigare skildes lagen bara av en grön eller röd prick på målen och av
+ * fetstil på utvisningarna. Fem utvisningar i rad läste därför som fem
+ * Björklövenutvisningar, oavsett vem som satt. Lagkoden står ur Swehockeys
+ * egen händelse, så den stämmer även när motståndaren delar tröjnummer med
+ * oss — och den funkar i gråskala, till skillnad från prickens färg.
+ */
+function TeamMark({ code }: { code: string | null }) {
+  const ours = isOurs(code);
+  return (
+    <span className={`mr-team${ours ? ' mr-team-ours' : ''}`}>
+      {(code || '?').toUpperCase()}
+    </span>
+  );
+}
+
 function Goals({ goals, squad }: { goals: Goal[]; squad: MatchReport['squad'] }) {
   if (goals.length === 0) {
     return (
@@ -319,7 +320,7 @@ function Goals({ goals, squad }: { goals: Goal[]; squad: MatchReport['squad'] })
       {goals.map((g, i) => (
         <div key={i} className={`mr-goal${isOurs(g.team_code) ? ' mr-goal-ours' : ''}`}>
           <span className="mr-goal-time">{g.time}</span>
-          <span className="mr-goal-dot" />
+          <TeamMark code={g.team_code} />
           <span className="mr-goal-body">
             <span className="mr-goal-scorer">
               {g.scorer_number ? `${g.scorer_number}. ` : ''}{humanName(g.scorer)}
@@ -360,6 +361,7 @@ function Penalties({ penalties }: { penalties: Penalty[] }) {
       {penalties.map((p, i) => (
         <div key={i} className={`mr-pen${isOurs(p.team_code) ? ' mr-pen-ours' : ''}`}>
           <span className="mr-goal-time">{p.time}</span>
+          <TeamMark code={p.team_code} />
           <span className="mr-pen-min">{p.minutes}′</span>
           <span className="mr-pen-body">
             <span className="mr-pen-player">
@@ -453,14 +455,19 @@ export function Matchrapport() {
       </section>
 
       <Momentum goals={data.goals} netResult={ourGoals - theirGoals} />
+      {/* Förlängningen är fem minuter och straffläggningen ingen speltid alls.
+          Räknat som 20 minuter per period blev en straffmatch 100 minuter lång,
+          och tiden i ledning därmed nästan dubbelt så lång som den var. */}
       <Matchbild
         goals={data.goals}
         penalties={data.penalties}
-        totalMin={Math.max(60, periods.length * 20)}
+        totalMin={periods.length > 3 ? 65 : 60}
       />
-      <Periods periods={periods} ourSide={ourSide} />
+      <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
+      <Malvakter goalies={data.goalies} />
       <Goals goals={data.goals} squad={data.squad} />
       <Penalties penalties={data.penalties} />
+      <DelaMatchen data={data} />
 
       {data.counts.events === 0 && (
         <section className="mr-card">

@@ -6,6 +6,8 @@
  * färger kommer från temats tokens, aldrig hårdkodade värden.
  */
 
+import type { ReactNode } from 'react';
+
 type Point = { label: string; value: number };
 
 /**
@@ -233,7 +235,7 @@ export function Tornado({
   leftLabel,
   rightLabel,
 }: {
-  rows: { key: string; label: string; sub?: string; left: number; right: number }[];
+  rows: { key: string; label: string; sub?: ReactNode; left: number; right: number }[];
   leftLabel: string;
   rightLabel: string;
 }) {
