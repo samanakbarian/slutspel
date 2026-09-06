@@ -59,12 +59,15 @@ type NextMatch = {
   is_premiere: boolean;
   us: Placing;
   them: Placing;
-  us_season: TeamSeason;
-  them_season: TeamSeason;
-  us_form: FormGame[];
-  them_form: FormGame[];
-  meetings: { date: string; is_home: boolean; goals_for: number; goals_against: number }[];
-  upcoming: { date: string; time: string | null; opponent: string; is_home: boolean }[];
+  // Fälten nedan kan saknas. Netlify bygger frontend direkt vid push medan
+  // backend deployas för hand, så en ny klient möter regelbundet ett äldre
+  // svar. Läses de utan skydd kraschar hela sidan — vilket de gjorde.
+  us_season?: TeamSeason;
+  them_season?: TeamSeason;
+  us_form?: FormGame[];
+  them_form?: FormGame[];
+  meetings?: { date: string; is_home: boolean; goals_for: number; goals_against: number }[];
+  upcoming?: { date: string; time: string | null; opponent: string; is_home: boolean }[];
   venue_average: number | null;
   venue_games: number;
   previous: { season?: string; teams?: number; opponent?: PrevRow; us?: PrevRow } | null;
@@ -179,7 +182,13 @@ export function InforMatchen({ season }: { season: string | null }) {
   const { game, previous } = data;
   const days = daysUntil(game.date);
   const opponent = game.opponent.replace(/^IF\s+/, '');
-  const record = data.meetings.reduce(
+  const meetings = data.meetings ?? [];
+  const upcoming = data.upcoming ?? [];
+  const usForm = data.us_form ?? [];
+  const themForm = data.them_form ?? [];
+  const usSeason = data.us_season ?? null;
+  const themSeason = data.them_season ?? null;
+  const record = meetings.reduce(
     (a, m) => (m.goals_for > m.goals_against ? { ...a, w: a.w + 1 } : { ...a, l: a.l + 1 }),
     { w: 0, l: 0 },
   );
@@ -189,14 +198,14 @@ export function InforMatchen({ season }: { season: string | null }) {
   // just den vecka det behövs mest.
   const duels: Duel[] = [];
   let duelNote = '';
-  if (data.us && data.them && data.us_season && data.them_season) {
+  if (data.us && data.them && usSeason && themSeason) {
     duels.push(
       { label: 'Poäng', us: data.us.points, them: data.them.points },
-      { label: 'Målskillnad', us: data.us_season.goals_for - data.us_season.goals_against,
-        them: data.them_season.goals_for - data.them_season.goals_against, format: signed },
-      { label: 'Mål per match', us: data.us_season.goals_for_avg, them: data.them_season.goals_for_avg, format: decimal },
-      { label: 'Insläppta per match', us: data.us_season.goals_against_avg,
-        them: data.them_season.goals_against_avg, format: decimal, lowerIsBetter: true },
+      { label: 'Målskillnad', us: usSeason.goals_for - usSeason.goals_against,
+        them: themSeason.goals_for - themSeason.goals_against, format: signed },
+      { label: 'Mål per match', us: usSeason.goals_for_avg, them: themSeason.goals_for_avg, format: decimal },
+      { label: 'Insläppta per match', us: usSeason.goals_against_avg,
+        them: themSeason.goals_against_avg, format: decimal, lowerIsBetter: true },
     );
     duelNote = `Efter ${data.us.games_played} respektive ${data.them.games_played} matcher i år.`;
   }
@@ -249,11 +258,11 @@ export function InforMatchen({ season }: { season: string | null }) {
         </p>
       )}
 
-      {duels.length === 0 && data.upcoming.length > 1 && (
+      {duels.length === 0 && upcoming.length > 1 && (
         <div className="im-start">
           <span className="im-startlabel">Inledningen</span>
           <div className="im-startrows">
-            {data.upcoming.map((g, i) => (
+            {upcoming.map((g, i) => (
               <div className={`im-startrow${i === 0 ? ' im-startnext' : ''}`} key={i}>
                 <span className="im-startdate">{shortDate(g.date)}</span>
                 <span className={`im-startha${g.is_home ? ' im-startha-h' : ''}`}>
@@ -267,21 +276,21 @@ export function InforMatchen({ season }: { season: string | null }) {
         </div>
       )}
 
-      <Form games={data.us_form} label="Form · Björklöven" />
-      <Form games={data.them_form} label={`Form · ${opponent}`} />
+      <Form games={usForm} label="Form · Björklöven" />
+      <Form games={themForm} label={`Form · ${opponent}`} />
 
-      {(streakText(data.us_season) || streakText(data.them_season)) && (
+      {(streakText(usSeason) || streakText(themSeason)) && (
         <div className="im-streaks">
-          {streakText(data.us_season) && <span><b>Björklöven</b> {streakText(data.us_season)}</span>}
-          {streakText(data.them_season) && <span><b>{opponent}</b> {streakText(data.them_season)}</span>}
+          {streakText(usSeason) && <span><b>Björklöven</b> {streakText(usSeason)}</span>}
+          {streakText(themSeason) && <span><b>{opponent}</b> {streakText(themSeason)}</span>}
         </div>
       )}
 
-      {data.meetings.length > 0 && (
+      {meetings.length > 0 && (
         <div className="im-h2h">
           <span className="im-h2hlabel">Inbördes i år · {record.w}–{record.l}</span>
           <span className="im-h2hchips">
-            {data.meetings.map((m, i) => (
+            {meetings.map((m, i) => (
               <span
                 key={i}
                 className={`im-h2hchip${m.goals_for > m.goals_against ? ' im-h2hwin' : ' im-h2hloss'}`}

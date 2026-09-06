@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
+import { Guard } from '../components/Guard';
 
 /* ── typer ── */
 type RawGame = {
@@ -388,7 +389,7 @@ export function Matcher() {
       {/* Nästa match med sammanhang: placering, form för båda lagen, inbördes.
           Före seriestart beskrivs motståndaren med förra säsongen i stället —
           tabellen säger ingenting då. Faller kortet bort visas nedräkningen. */}
-      {next && <InforMatchen season={season} />}
+      {next && <Guard name="Inför matchen"><InforMatchen season={season} /></Guard>}
 
       {played.length > 0 && (
         <section className="mc-card">
@@ -397,7 +398,7 @@ export function Matcher() {
         </section>
       )}
 
-      <StandingsTable rows={standings} />
+      <Guard name="Tabellen"><StandingsTable rows={standings} /></Guard>
 
       <div className="mc-seg" role="tablist">
         <button

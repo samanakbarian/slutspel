@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
+import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isDefence, isOurs, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
 
@@ -819,10 +820,10 @@ export function Matchrapport() {
         </p>
       </section>
 
-      <Kontext
+      <Guard name="Sammanhang"><Kontext
         ctx={data.context}
         opponent={(ourSide === 'home' ? data.away_team : data.home_team).replace(/^IF\s+/, '')}
-      />
+      /></Guard>
       <Momentum goals={data.goals} penalties={data.penalties} netResult={ourGoals - theirGoals} />
       {/* Förlängningen är fem minuter och straffläggningen ingen speltid alls.
           Räknat som 20 minuter per period blev en straffmatch 100 minuter lång,
@@ -833,12 +834,12 @@ export function Matchrapport() {
         totalMin={periods.length > 3 ? 65 : 60}
       />
       <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
-      <Boxscore skaters={data.skaters} squad={data.squad} />
-      <Malvakter goalies={data.goalies} />
-      <Femmorna lineup={data.lineup} squad={data.squad} />
+      <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} /></Guard>
+      <Guard name="Målvakter"><Malvakter goalies={data.goalies} /></Guard>
+      <Guard name="Uppställning"><Femmorna lineup={data.lineup} squad={data.squad} /></Guard>
       <Goals goals={data.goals} squad={data.squad} />
       <Penalties penalties={data.penalties} goals={data.goals} />
-      <DelaMatchen data={data} />
+      <Guard name="Dela matchen"><DelaMatchen data={data} /></Guard>
 
       {data.counts.events === 0 && (
         <section className="mr-card">
