@@ -74,8 +74,39 @@ type GameLogRow = {
 
 type Split = { games: number; goals: number; assists: number; points: number; shots: number | null; plus_minus_on_ice: number };
 
+type GoalieGame = {
+  game_number: number;
+  game_id: number | null;
+  date: string;
+  opponent: string;
+  is_home: boolean;
+  saves: number;
+  shots_against: number;
+  goals_against: number;
+  save_pct: number | null;
+  time_on_ice?: string | null;
+  shutout?: boolean;
+};
+
+type GoalieStats = {
+  name: string;
+  jersey_number: number | null;
+  games_played: number;
+  wins: number;
+  losses: number;
+  shutouts: number;
+  saves: number;
+  shots_against: number;
+  goals_against: number;
+  save_pct: number | null;
+  gaa: number | null;
+  gaa_basis?: 'speltid' | 'matcher';
+  minutes?: number | null;
+};
+
 type PlayerResponse = {
   status: string;
+  role?: 'goalie';
   error?: string;
   note?: string;
   season?: string;
@@ -125,6 +156,130 @@ function Stat({ label, value, hint, tone }: { label: string; value: string; hint
       <span className="sp-stat-val" style={tone ? { color: tone } : undefined}>{value}</span>
       <span className="sp-stat-lbl">{label}</span>
       {hint && <span className="sp-stat-hint">{hint}</span>}
+    </div>
+  );
+}
+
+
+/**
+ * Målvaktssidan.
+ *
+ * GAA räknas på verklig istid från matchrapporten, inte på antal matcher. En
+ * målvakt som byts ut efter en period har inte spelat en match, och det
+ * påverkar snittet mer än man tror. Saknas speltiden säger kortet det i
+ * stället för att låtsas att talet är exakt.
+ */
+function Malvakt({ data }: { data: PlayerResponse }) {
+  const g = data.player as unknown as GoalieStats;
+  const log = (data.game_log as unknown as GoalieGame[]) || [];
+  const display = humanName(g.name);
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? log : log.slice(-10);
+
+  const curve = log
+    .filter(x => x.save_pct != null)
+    .map(x => ({ label: String(x.game_number), value: Number(x.save_pct) }));
+
+  return (
+    <div className="page animate-fade-up">
+      <Link to="/statistik" className="mr-back">← Statistik</Link>
+
+      <section className="sp-hero">
+        <div className="sp-head">
+          <span className="sp-num">{g.jersey_number ?? '–'}</span>
+          <div className="sp-ident">
+            <h2 className="sp-name">{display}</h2>
+            <p className="sp-meta">Målvakt · {data.season}</p>
+          </div>
+        </div>
+        <div className="sp-totals">
+          <div><span className="sp-val">{g.games_played}</span><span className="sp-lbl">Matcher</span></div>
+          <div><span className="sp-val sp-gold">{g.save_pct != null ? `${g.save_pct}` : '–'}</span><span className="sp-lbl">Rädd. %</span></div>
+          <div><span className="sp-val sp-green">{g.gaa ?? '–'}</span><span className="sp-lbl">GAA</span></div>
+          <div><span className="sp-val">{g.shutouts}</span><span className="sp-lbl">Nollor</span></div>
+        </div>
+      </section>
+
+      <section className="mc-card">
+        <p className="mc-kicker">Nyckeltal</p>
+        <div className="sp-stats">
+          <Stat label="Vinster" value={String(g.wins)} tone="var(--impact-positive)" />
+          <Stat label="Förluster" value={String(g.losses)} />
+          <Stat label="Räddningar" value={`${g.saves}`} hint={`av ${g.shots_against} skott`} />
+          <Stat label="Insläppta" value={String(g.goals_against)} />
+          {g.minutes != null && <Stat label="Istid" value={`${g.minutes} min`} />}
+        </div>
+        <p className="mc-note">
+          {g.gaa_basis === 'speltid'
+            ? 'GAA räknas på verklig istid ur matchrapporten, inte på antal matcher.'
+            : 'GAA räknas på antal matcher — speltiden saknas för den här säsongen.'}
+        </p>
+      </section>
+
+      {curve.length > 1 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Räddningsprocent per match</p>
+          <Sparkline points={curve} height={110} unit=" %" format={v => v.toFixed(1)} />
+          <p className="mc-note">
+            X-axeln är matchnummer. Enstaka matcher svänger kraftigt — en match med få
+            skott ger stort utslag åt båda håll.
+          </p>
+        </section>
+      )}
+
+      {log.length > 0 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Matchlogg</p>
+          <div className="opp-wrap">
+            <table className="opp-tbl sp-log">
+              <thead>
+                <tr>
+                  <th scope="col">Match</th>
+                  <th scope="col">Motstånd</th>
+                  <th scope="col" className="opp-num">Rädd.</th>
+                  <th scope="col" className="opp-num">Insl.</th>
+                  <th scope="col" className="opp-num">%</th>
+                  <th scope="col" className="opp-num">Istid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.slice().reverse().map(x => (
+                  <tr key={x.game_id ?? x.game_number} className={x.shutout ? 'sp-scored' : undefined}>
+                    <td>
+                      <span className="sp-date">{shortDate(x.date)}</span>
+                      <span className={`mc-ha${x.is_home ? ' mc-ha-home' : ''}`}>{x.is_home ? 'H' : 'B'}</span>
+                    </td>
+                    <td className="opp-team">
+                      {x.game_id
+                        ? <Link to={`/matcher/${x.game_id}`}>{shortTeam(x.opponent)}</Link>
+                        : shortTeam(x.opponent)}
+                      {x.shutout && <span className="sp-res sp-res-w">Hållen nolla</span>}
+                    </td>
+                    <td className="opp-num">{x.saves}/{x.shots_against}</td>
+                    <td className="opp-num">{x.goals_against}</td>
+                    <td className="opp-num">{x.save_pct != null ? x.save_pct.toFixed(1) : '–'}</td>
+                    <td className="opp-num">{x.time_on_ice ?? '·'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {log.length > visible.length && (
+            <button type="button" className="sp-more" onClick={() => setShowAll(true)}>
+              Visa alla {log.length} matcher
+            </button>
+          )}
+          <p className="mc-note">
+            En punkt i istidskolumnen betyder att matchrapporten saknas för den matchen.
+          </p>
+        </section>
+      )}
+
+      <a className="sp-ep"
+         href={`https://www.eliteprospects.com/search/player?name=${encodeURIComponent(display)}`}
+         target="_blank" rel="noreferrer">
+        Öppna {display} på EliteProspects ↗
+      </a>
     </div>
   );
 }
@@ -211,6 +366,12 @@ export function Spelare() {
         </section>
       </div>
     );
+  }
+
+  // Målvakter får ett eget svar och en egen sida. En utespelarlogg med noll
+  // skott och noll skjutprocent säger ingenting om en målvakt.
+  if (data.role === 'goalie') {
+    return <Malvakt data={data} />;
   }
 
   const p = data.player;
