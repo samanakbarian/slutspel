@@ -1026,76 +1026,73 @@ a {
 .mr-pen-type { display: block; font-size: 0.7rem; color: var(--text-muted); }
 .mr-pen-ours .mr-pen-player { font-weight: 600; }
 
-/* boxscore: punktdiagram över plus/minus, plus spelartabellen */
+/* boxscore: plus/minus som namnrader, plus spelartabellen */
 
-/* En kolumn per +/--värde, spelarna staplade uppåt från axeln. Alla kolumner
-   är lika höga så axeln ligger i linje; --pm-rows sätts av komponenten till
-   den högsta stapeln. */
-.pm-plot {
+/* En rad per +/--värde. Radens längd är stapeln — antalet brickor bär
+   fördelningen — och varje spelare står med nummer och namn, eftersom bara
+   tröjnumret krävde att man kunde truppen utantill. */
+.pm-rows {
   display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
+  flex-direction: column;
   gap: 0.3rem;
-  margin: 0.3rem 0 0.2rem;
-  overflow-x: auto;
-}
-.pm-col { display: flex; flex-direction: column; align-items: center; flex: 1 1 0; min-width: 2.4rem; }
-
-/* Breda staplar viks i sidled, så nollkolumnen inte sätter kortets höjd. */
-.pm-stacks {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  margin-bottom: 0.3rem;
+  margin: 0.4rem 0 0.8rem;
 }
 
-.pm-dots {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 3px;
-  height: calc(var(--pm-rows) * 25px);
-}
-
-.pm-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+.pm-row {
   display: grid;
-  place-items: center;
-  font-size: 0.6rem;
-  font-weight: 700;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  padding: 0.35rem 0 0.35rem 0.1rem;
+  border-left: 3px solid var(--glass-border);
+  border-radius: 2px;
+}
+.pm-row-pos { border-left-color: var(--data-for); }
+.pm-row-neg { border-left-color: var(--data-against); }
+
+.pm-value {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
-  color: var(--text-secondary);
+  text-align: right;
+  padding-top: 1px;
+}
+.pm-row-pos .pm-value { color: var(--data-for); }
+.pm-row-neg .pm-value { color: var(--data-against); }
+
+.pm-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+
+.pm-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
-  flex: none;
+  font-size: 0.7rem;
+  color: var(--text-primary);
+  white-space: nowrap;
 }
-.pm-dot-pos {
-  color: #04150e;
-  background: var(--data-for);
-  border-color: var(--data-for);
-}
-.pm-dot-neg {
-  color: #1a0a04;
-  background: var(--data-against);
-  border-color: var(--data-against);
-}
-
-.pm-tick { width: 100%; height: 1px; background: var(--glass-border); }
-.pm-label {
-  margin-top: 0.25rem;
-  font-size: 0.72rem;
+.pm-chip b {
+  font-size: 0.6rem;
   font-weight: 700;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+/* Poängen står som siffra, inte som en färg. */
+.pm-chip i {
+  font-style: normal;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--brand-gold);
+}
+.pm-row-pos .pm-chip { background: rgba(27, 175, 122, 0.14); border-color: rgba(27, 175, 122, 0.3); }
+.pm-row-neg .pm-chip { background: rgba(217, 89, 38, 0.14); border-color: rgba(217, 89, 38, 0.32); }
 
-/* Ytterlägena namnges; resten går att slå upp i tabellen. */
-.pm-out { display: flex; flex-direction: column; gap: 0.15rem; margin: 0.5rem 0 0.7rem; }
-.pm-outrow { font-size: 0.72rem; color: var(--text-secondary); }
-.pm-outrow b { margin-right: 0.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pm-empty { font-size: 0.7rem; color: var(--text-muted); font-style: italic; }
 
 .bx-details { margin-bottom: 0.6rem; }
 .bx-summary {

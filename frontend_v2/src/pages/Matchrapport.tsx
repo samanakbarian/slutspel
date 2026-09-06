@@ -364,78 +364,48 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
   const hasReport = list.some(p => p.has_report);
   const pos = (p: Skater) => positionOf(squad, p.name, p.number);
 
-  // En kolumn per +/--värde, tomma mellansteg inräknade så axeln inte
-  // hoppar. Spelarna staplas uppåt från axeln, de med flest poäng överst.
+  // En rad per +/--värde, bäst överst, tomma mellansteg inräknade så skalan
+  // inte hoppar över ett värde. Radens längd är stapeln.
   const lo = Math.min(0, ...list.map(p => p.plus_minus));
   const hi = Math.max(0, ...list.map(p => p.plus_minus));
-  // Nollan samlar ofta halva laget. En stapel på elva prickar drar upp hela
-  // kortets höjd, så breda staplar viks i sidled — som i en riktig punktplott
-  // — i lika höga delar.
-  const CAP = 6;
-  const columns = [];
-  for (let v = lo; v <= hi; v++) {
-    const players = list
-      .filter(p => p.plus_minus === v)
-      .sort((a, b) => b.points - a.points || b.gf_on_ev - a.gf_on_ev || a.name.localeCompare(b.name, 'sv'));
-    const parts = Math.max(1, Math.ceil(players.length / CAP));
-    const per = Math.ceil(players.length / parts);
-    const stacks = Array.from({ length: parts }, (_, i) => players.slice(i * per, (i + 1) * per));
-    columns.push({ value: v, players, stacks });
+  const rows = [];
+  for (let v = hi; v >= lo; v--) {
+    rows.push({
+      value: v,
+      players: list
+        .filter(p => p.plus_minus === v)
+        .sort((a, b) => b.points - a.points || b.gf_on_ev - a.gf_on_ev || a.name.localeCompare(b.name, 'sv')),
+    });
   }
-  const tallest = Math.max(1, ...columns.flatMap(c => c.stacks.map(st => st.length)));
 
   return (
     <section className="mr-card">
       <p className="mr-kicker">Spelarna</p>
       <h2 className="mr-title">Vem var på isen när det small?</h2>
 
-      {/* Punktdiagram i stället för en rad per spelare. Plus/minus har tre
-          eller fyra distinkta värden i en match och de flesta ligger på noll,
-          så en lista blir tjugo rader där tolv är tomma. Här är varje spelare
-          en prick med sitt tröjnummer, staplad på sitt värde — hela laget på
-          en skärmhöjd, och fördelningen syns direkt. */}
-      <div className="pm-plot" style={{ ['--pm-rows' as string]: tallest }}>
-        {columns.map(c => (
-          <div className="pm-col" key={c.value}>
-            <div className="pm-stacks">
-              {c.stacks.map((stack, i) => (
-                <div className="pm-dots" key={i}>
-                  {stack.map(p => (
-                    <span
-                      key={p.name}
-                      className={`pm-dot${c.value > 0 ? ' pm-dot-pos' : c.value < 0 ? ' pm-dot-neg' : ''}`}
-                      title={`${p.number != null ? `${p.number}. ` : ''}${humanName(p.name)} — ${p.gf_on_ev} mål för, ${p.ga_on_ev} emot på isen${p.points > 0 ? `, ${p.points} poäng` : ''}`}
-                    >
-                      {p.number ?? '?'}
-                    </span>
-                  ))}
-                </div>
+      {/* En rad per +/--värde, namnen som brickor. Tröjnummer ensamt gick
+          inte att läsa utan att kunna truppen utantill, och en stapel per
+          spelare gav tjugo rader där tolv var tomma. Här är radens längd
+          stapeln, och varje spelare står med namn. */}
+      <div className="pm-rows">
+        {rows.map(r => (
+          <div className={`pm-row${r.value > 0 ? ' pm-row-pos' : r.value < 0 ? ' pm-row-neg' : ''}`} key={r.value}>
+            <span className="pm-value">{r.value > 0 ? '+' : ''}{r.value}</span>
+            <span className="pm-chips">
+              {r.players.length === 0 && <span className="pm-empty">ingen</span>}
+              {r.players.map(p => (
+                <span
+                  className="pm-chip"
+                  key={p.name}
+                  title={`${humanName(p.name)} — ${p.gf_on_ev} mål för, ${p.ga_on_ev} emot på isen`}
+                >
+                  <b>{p.number ?? '–'}</b> {surname(p.name)}
+                  {p.points > 0 && <i>{p.points}p</i>}
+                </span>
               ))}
-            </div>
-            <span className="pm-tick" />
-            <span className={`pm-label${c.value > 0 ? ' bx-val-pos' : c.value < 0 ? ' bx-val-neg' : ''}`}>
-              {c.value > 0 ? '+' : ''}{c.value}
             </span>
           </div>
         ))}
-      </div>
-
-      {/* De som sticker ut namnges — resten går att slå upp i tabellen. */}
-      <div className="pm-out">
-        {columns[columns.length - 1].value > 0 && columns[columns.length - 1].players.length > 0 && (
-          <span className="pm-outrow">
-            <b className="bx-val-pos">
-              +{columns[columns.length - 1].value}
-            </b>
-            {columns[columns.length - 1].players.map(p => surname(p.name)).join(', ')}
-          </span>
-        )}
-        {columns[0].value < 0 && columns[0].players.length > 0 && (
-          <span className="pm-outrow">
-            <b className="bx-val-neg">{columns[0].value}</b>
-            {columns[0].players.map(p => surname(p.name)).join(', ')}
-          </span>
-        )}
       </div>
 
       <details className="bx-details" open={open} onToggle={e => setOpen((e.target as HTMLDetailsElement).open)}>
@@ -484,9 +454,8 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
       </details>
 
       <p className="mr-note">
-        Varje prick är en spelare, med tröjnumret i. Plus/minus räknas ur vilka
-        som stod på isen — mål i lika styrka och i underläge räknas,
-        powerplaymål inte — alltså samma regel som Swehockey.
+        Plus/minus räknas ur vilka som stod på isen — mål i lika styrka och i
+        underläge räknas, powerplaymål inte — alltså samma regel som Swehockey.
         {!hasReport && ' Skott och tekningar saknas här; matchrapporten fanns inte när matchen skördades.'}
       </p>
     </section>
