@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
-import { PairedBar } from '../components/charts/Charts';
+import { PairedBar, Tornado } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
-import type { Goal, MatchReport, Penalty } from '../lib/match';
+import type { Goal, MatchReport, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isOurs, parsePeriods, surname } from '../lib/match';
 
 /* ── matchbild: vad siffrorna säger utöver resultatet ── */
@@ -217,6 +217,103 @@ function Periods({
           );
         })}
       </div>
+    </section>
+  );
+}
+
+/**
+ * Lagets spelare, sorterade på plus/minus.
+ *
+ * Stapeln är den snabba läsningen: vem som var på isen när det gick åt rätt
+ * håll. Tabellen under bär resten — mål, assist, utvisningsminuter, skott och
+ * tekningar. Skott och tekningar finns bara för matcher med rapport, och
+ * skrivs som tankstreck i stället för noll när den saknas.
+ *
+ * Plus/minus räknas ur on-ice-listorna enligt regelboken: mål i lika styrka
+ * och i underläge räknas, powerplaymål inte, och straffslag och avgörandet i
+ * straffläggningen inte alls. Talet stämmer med Swehockeys officiella i 233
+ * av 233 spelarrader under HockeyAllsvenskan 2025/26.
+ */
+function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: MatchReport['squad'] }) {
+  const [open, setOpen] = useState(false);
+  const list = (skaters || []).filter(p => p.in_lineup || p.points > 0 || p.gf_on + p.ga_on > 0);
+  if (list.length === 0) return null;
+
+  const hasReport = list.some(p => p.has_report);
+  const pos = (p: Skater) => squad?.[String(p.number ?? '')]?.position || '';
+  const shown = open ? list : list.filter(p => p.plus_minus !== 0 || p.points > 0);
+
+  return (
+    <section className="mr-card">
+      <p className="mr-kicker">Spelarna</p>
+      <h2 className="mr-title">Vem var på isen när det small?</h2>
+      {/* Båda halvorna, inte bara nettot. I en 2-1-match är alla +1 eller 0,
+          och ett ensamt nettotal hade dolt om det stod 2-1 eller 1-0 på isen
+          när spelaren var ute. */}
+      <Tornado
+        leftLabel="Mål emot"
+        rightLabel="Mål för"
+        wideLabels
+        rows={shown.map(p => ({
+          key: p.name,
+          label: `${p.number != null ? `${p.number}. ` : ''}${surname(p.name)}`,
+          left: p.ga_on_ev,
+          right: p.gf_on_ev,
+        }))}
+      />
+
+      {shown.length < list.length && (
+        <button className="bx-more" onClick={() => setOpen(true)}>
+          Visa alla {list.length} spelare
+        </button>
+      )}
+
+      <div className="bx-tablewrap">
+        <table className="bx-table">
+          <thead>
+            <tr>
+              <th className="bx-l">Spelare</th>
+              <th>M</th><th>A</th><th>P</th><th>+/−</th><th>Utv</th>
+              {hasReport && <><th>Skott</th><th>Tekn.</th></>}
+            </tr>
+          </thead>
+          <tbody>
+            {list.map(p => (
+              <tr key={p.name}>
+                <td className="bx-l">
+                  {p.number != null && <b>{p.number}</b>} {surname(p.name)}
+                  {pos(p) && <span className="bx-pos-tag">{pos(p)}</span>}
+                </td>
+                <td>{p.goals}</td>
+                <td>{p.assists}</td>
+                <td>{p.points}</td>
+                <td className={p.plus_minus > 0 ? 'bx-val-pos' : p.plus_minus < 0 ? 'bx-val-neg' : ''}>
+                  {p.plus_minus > 0 ? '+' : ''}{p.plus_minus}
+                </td>
+                <td>{p.pim}</td>
+                {hasReport && (
+                  <>
+                    <td>{p.shots ?? '–'}</td>
+                    <td>
+                      {p.faceoffs_won != null && p.faceoffs_won + (p.faceoffs_lost || 0) > 0
+                        ? `${p.faceoffs_won}/${p.faceoffs_won + (p.faceoffs_lost || 0)}`
+                        : '–'}
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mr-note">
+        Plus/minus räknas ur vilka som stod på isen vid varje mål: mål i lika
+        styrka och i underläge räknas, powerplaymål inte, och straffslag och
+        straffläggning inte alls. Talet stämmer med Swehockeys officiella i
+        233 av 233 spelarrader under förra säsongen.
+        {!hasReport && ' Skott och tekningar saknas för den här matchen — matchrapporten fanns inte när den skördades.'}
+      </p>
     </section>
   );
 }
@@ -464,6 +561,7 @@ export function Matchrapport() {
         totalMin={periods.length > 3 ? 65 : 60}
       />
       <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
+      <Boxscore skaters={data.skaters} squad={data.squad} />
       <Malvakter goalies={data.goalies} />
       <Goals goals={data.goals} squad={data.squad} />
       <Penalties penalties={data.penalties} />

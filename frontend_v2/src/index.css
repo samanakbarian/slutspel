@@ -971,6 +971,68 @@ a {
 .mr-pen-type { display: block; font-size: 0.7rem; color: var(--text-muted); }
 .mr-pen-ours .mr-pen-player { font-weight: 600; }
 
+/* boxscore: tornadostapeln plus spelartabellen */
+
+/* Färgen förstärker tecknet i +/--kolumnen, den bär inte betydelsen ensam —
+   plustecknet står utskrivet. */
+.bx-val-pos { color: var(--data-for); }
+.bx-val-neg { color: var(--data-against); }
+
+.bx-more {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.7rem;
+  padding: 0.45rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+/* Tabellen scrollar i sin egen ruta; sidan ska aldrig scrolla i sidled. */
+.bx-tablewrap { overflow-x: auto; margin: 0 -0.2rem; }
+.bx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.bx-table th {
+  padding: 0.3rem 0.35rem;
+  text-align: right;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+.bx-table td {
+  padding: 0.3rem 0.35rem;
+  text-align: right;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(172, 199, 186, 0.06);
+  white-space: nowrap;
+}
+.bx-table tr:last-child td { border-bottom: none; }
+.bx-table .bx-l { text-align: left; color: var(--text-primary); }
+.bx-table td.bx-l b {
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-right: 0.15rem;
+}
+.bx-pos-tag {
+  margin-left: 0.3rem;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
 /* målvakter */
 .mr-gk {
   display: grid;
@@ -1706,6 +1768,9 @@ a {
   margin-bottom: 0.7rem;
 }
 .tor-row:last-child { margin-bottom: 0; }
+
+/* Personnamn behöver mer plats än "Femma 1". */
+.tor-wide .tor-row { grid-template-columns: 6.4rem 1fr 2.6rem; }
 
 .tor-sub {
   grid-column: 1 / -1;

@@ -61,6 +61,32 @@ export type GoalieLine = {
   time_on_ice: string | null;
 };
 
+/** Lagets utespelare, en rad per match. */
+export type Skater = {
+  name: string;
+  number: number | null;
+  line: number | null;
+  goals: number;
+  assists: number;
+  points: number;
+  pim: number;
+  /** Alla mål med spelaren på isen, oavsett spelform. */
+  gf_on: number;
+  ga_on: number;
+  /** Bara de som ger plus/minus: lika styrka och underläge. */
+  gf_on_ev: number;
+  ga_on_ev: number;
+  plus_minus: number;
+  /** Swehockeys eget tal, när matchrapporten finns. */
+  official_plus_minus: number | null;
+  shots: number | null;
+  faceoffs_won: number | null;
+  faceoffs_lost: number | null;
+  faceoff_pct: number | null;
+  has_report: boolean;
+  in_lineup: boolean;
+};
+
 export type MatchReport = {
   status: string;
   error?: string;
@@ -80,6 +106,7 @@ export type MatchReport = {
   squad?: Record<string, { name: string; position: string | null }>;
   teams?: { ours: TeamSide; theirs: TeamSide } | null;
   goalies?: GoalieLine[];
+  skaters?: Skater[];
 };
 
 export const BJK = /bj[oö]rkl[oö]ven/i;

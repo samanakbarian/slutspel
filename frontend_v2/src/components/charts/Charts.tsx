@@ -234,15 +234,18 @@ export function Tornado({
   rows,
   leftLabel,
   rightLabel,
+  wideLabels = false,
 }: {
   rows: { key: string; label: string; sub?: ReactNode; left: number; right: number }[];
   leftLabel: string;
   rightLabel: string;
+  /** Bredare etikettkolumn. Personnamn ryms inte i den som räcker för "Femma 1". */
+  wideLabels?: boolean;
 }) {
   if (rows.length === 0) return null;
   const max = Math.max(1, ...rows.flatMap(r => [r.left, r.right]));
   return (
-    <div className="tor">
+    <div className={`tor${wideLabels ? ' tor-wide' : ''}`}>
       <div className="tor-legend">
         <span><i style={{ background: 'var(--data-for)' }} />{rightLabel}</span>
         <span><i style={{ background: 'var(--data-against)' }} />{leftLabel}</span>
@@ -261,7 +264,8 @@ export function Tornado({
               <span className="tor-val">{r.right}</span>
             </div>
           </div>
-          <div className="tor-diff">{r.right - r.left >= 0 ? '+' : ''}{r.right - r.left}</div>
+          {/* Noll får inget plustecken — "+0" är inte ett tal någon skriver. */}
+          <div className="tor-diff">{r.right - r.left > 0 ? '+' : ''}{r.right - r.left}</div>
           {/* Namnen under staplarna i stället för bredvid: i etikettkolumnen
               tvingade de raden till tre rader och kastade staplarna ur linje. */}
           {r.sub && <div className="tor-sub">{r.sub}</div>}
