@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from './texttv';
 
 /**
  * Serietabellen i två lägen.
@@ -33,26 +33,6 @@ export type Standing = {
 };
 
 const BJK = /bj[oö]rkl[oö]ven/i;
-const LAGE_KEY = 'lovenlaget:tabell-lage';
-/** SVT Text lägger SHL-tabellen på 358; 377 är målservicen. */
-const SIDA = '358';
-
-/**
- * Lagnamnet kortat som Text-TV gjorde det.
- *
- * Bolagsformen bär ingen information i en tabell — "BIK Karlskoga" och
- * "Kalmar HC" är Karlskoga och Kalmar. Utan den här kapades var tredje namn
- * mitt i ordet. Ordet stryks bara när något återstår, så AIK förblir AIK och
- * inte tomt.
- */
-const FORM = /^(if|ik|hc|bk|sk|hk|hf|is|aik|hockey)$/i;
-
-export function kortnamn(name: string | undefined): string {
-  const delar = String(name || '').trim().split(/\s+/);
-  const kvar = delar.filter(d => !FORM.test(d));
-  return (kvar.length > 0 ? kvar : delar).join(' ').toUpperCase();
-}
-
 /** Riktigt minustecken; ett bindestreck sitter för högt bland tabellsiffror. */
 const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${Math.abs(v)}` : '0');
 
@@ -116,7 +96,7 @@ function Klassisk({ rows, started, lead }: { rows: Standing[]; started: boolean;
  */
 function Rad({ r, index }: { r: Standing; index: number }) {
   const ours = BJK.test(r.team_name || '');
-  const namn = kortnamn(r.team_name);
+  const namn = ttLag(r.team_name);
   return (
     <div className={`tt-rad${ours ? ' tt-vi' : ''}`}>
       <span className="tt-plats">{r.rank ?? index + 1}</span>
@@ -136,51 +116,27 @@ function Rad({ r, index }: { r: Standing; index: number }) {
 
 function TextTv({ rows, season }: { rows: Standing[]; season: string }) {
   return (
-    <div className="tt-sida">
-      <div className="tt-topp">
-        <span>TABELL</span>
-        <span>{SIDA}&nbsp;&nbsp;{season.toUpperCase()}</span>
+    <TextTvSida sida={SIDA.tabell} rubrik="TABELL" info={season}>
+      <div className="tt-rad tt-rubrik">
+        <span className="tt-plats" />
+        <span className="tt-lag">LAG</span>
+        <span className="tt-prickar" />
+        <span className="tt-tal">M</span>
+        <span className="tt-tal">V</span>
+        <span className="tt-tal" title="Vinster och förluster efter förlängning">Ö</span>
+        <span className="tt-tal">F</span>
+        <span className="tt-mal">MÅL</span>
+        <span className="tt-poang">P</span>
       </div>
-      <div className="tt-scroll">
-        <div className="tt-rutnat">
-          <div className="tt-rad tt-rubrik">
-            <span className="tt-plats" />
-            <span className="tt-lag">LAG</span>
-            <span className="tt-prickar" />
-            <span className="tt-tal">M</span>
-            <span className="tt-tal">V</span>
-            <span className="tt-tal" title="Vinster och förluster efter förlängning">Ö</span>
-            <span className="tt-tal">F</span>
-            <span className="tt-mal">MÅL</span>
-            <span className="tt-poang">P</span>
-          </div>
-          {rows.map((r, i) => <Rad key={i} r={r} index={i} />)}
-        </div>
-      </div>
-    </div>
+      {rows.map((r, i) => <Rad key={i} r={r} index={i} />)}
+    </TextTvSida>
   );
 }
 
 /* ── kortet ──────────────────────────────────────────────────────────── */
 
 export function Tabellen({ rows, season }: { rows: Standing[]; season?: string }) {
-  // Valet minns sig själv. En växel man måste hitta varje gång går inte att
-  // leva med, och det är just levandet som är testet.
-  const [lage, setLage] = useState<'klassisk' | 'texttv'>('klassisk');
-
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(LAGE_KEY) === 'texttv') setLage('texttv');
-    } catch {
-      // Privat läge och blockerade kakor kastar här. Standardläget duger.
-    }
-  }, []);
-
-  const vaxla = () => {
-    const nytt = lage === 'texttv' ? 'klassisk' : 'texttv';
-    setLage(nytt);
-    try { localStorage.setItem(LAGE_KEY, nytt); } catch { /* se ovan */ }
-  };
+  const [texttv, vaxla] = useTextTv('tabell');
 
   // En ensam rad är ingen tabell. Så länge backend bara exponerar lagets egen
   // rad blir "#1 av 1" mer vilseledande än upplysande — visa den inte då.
@@ -191,21 +147,13 @@ export function Tabellen({ rows, season }: { rows: Standing[]; season?: string }
   const lead = Math.max(1, ...sorted.map(r => r.points ?? 0));
 
   return (
-    <section className={`mc-card${lage === 'texttv' ? ' mc-card-tt' : ''}`}>
+    <section className={`mc-card${texttv ? ' mc-card-tt' : ''}`}>
       <div className="tab-huvud">
-        {lage === 'texttv' ? <span /> : <p className="mc-kicker">Tabellen</p>}
-        <button
-          type="button"
-          className={`tab-vaxel${lage === 'texttv' ? ' tab-vaxel-pa' : ''}`}
-          onClick={vaxla}
-          aria-pressed={lage === 'texttv'}
-          title="Visa tabellen som SVT Text sida 358"
-        >
-          {SIDA}
-        </button>
+        {texttv ? <span /> : <p className="mc-kicker">Tabellen</p>}
+        <TextTvVaxel sida={SIDA.tabell} pa={texttv} onClick={vaxla} />
       </div>
 
-      {lage === 'texttv'
+      {texttv
         ? <TextTv rows={sorted} season={season || ''} />
         : <Klassisk rows={sorted} started={started} lead={lead} />}
 

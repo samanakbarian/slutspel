@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { EmptySeason } from '../components/EmptySeason';
 import { FormDots, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
+import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 
 /**
  * Statistiken i tre ytor i stället för fem flikar:
@@ -368,6 +369,45 @@ const SKATER_COLUMNS: { key: SortKey; label: string; left?: boolean; desc: boole
   { key: 'onice', label: 'På is', desc: true, title: 'Mål för minus mål emot medan spelaren stod på isen' },
   { key: 'share', label: 'Andel', desc: true, title: 'Andel av lagets mål spelaren var med på' },
 ];
+
+/**
+ * Poängligan som SVT Text sida 365.
+ *
+ * Tätare test än tabellen: här är namnen huvudsaken, inte talen. Håller
+ * versalerna och den fasta teckenbredden här håller de överallt — det är
+ * hela skälet att pröva just den här vyn härnäst.
+ *
+ * Namnen kortas som på Text-TV: efternamn plus initial. "Dower Nilsson, Liam"
+ * blir "DOWER NILSSON L". Utan det ryms inte en poängliga på telefonbredd.
+ */
+function PoangligaTextTv({ rows, showTeam }: { rows: Skater[]; showTeam: boolean }) {
+  return (
+    <TextTvSida sida={SIDA.poangliga} rubrik="POÄNGLIGA" info={showTeam ? 'SERIEN' : 'BJÖRKLÖVEN'}>
+      <div className="tt-rad tt-rad-pl tt-rubrik">
+        <span className="tt-plats" />
+        <span className="tt-lag">SPELARE</span>
+        <span className="tt-prickar" />
+        {showTeam && <span className="tt-tal">LAG</span>}
+        <span className="tt-tal" title="Spelade matcher">SM</span>
+        <span className="tt-tal" title="Mål">M</span>
+        <span className="tt-tal" title="Assist">A</span>
+        <span className="tt-poang">P</span>
+      </div>
+      {rows.map((r, i) => (
+        <div key={r.name} className={`tt-rad tt-rad-pl${r.isBjk && showTeam ? ' tt-vi' : ''}`}>
+          <span className="tt-plats">{i + 1}</span>
+          <span className="tt-lag">{ttNamn(r.name)}</span>
+          <span className="tt-prickar" aria-hidden="true" />
+          {showTeam && <span className="tt-tal tt-svag">{(r.team || '').slice(0, 3).toUpperCase()}</span>}
+          <span className="tt-tal tt-svag">{r.gp}</span>
+          <span className="tt-tal">{r.g}</span>
+          <span className="tt-tal">{r.a}</span>
+          <span className="tt-poang">{r.p}</span>
+        </div>
+      ))}
+    </TextTvSida>
+  );
+}
 
 function SkaterTable({
   rows, showTeam, season, onIceByNumber,
@@ -1514,6 +1554,7 @@ function Spelare({
   keepers: GoalieData | null;
 }) {
   const loven = scope === 'loven';
+  const [texttv, vaxlaTexttv] = useTextTv('poangliga');
   // Malvakter star i poangligan hos Swehockey men hor hemma i sin egen tabell:
   // sex av lagets 33 rader var malvakter, fyra av dem utan en enda poang.
   const isSkater = (p: Skater) => !String(p.pos || '').toUpperCase().startsWith('G');
@@ -1535,23 +1576,34 @@ function Spelare({
         <button role="tab" aria-selected={!loven} className={`mc-segbtn${!loven ? ' mc-on' : ''}`} onClick={() => setScope('serien')}>Hela {leagueName}</button>
       </div>
 
-      <section className="mc-card">
-        <p className="mc-kicker">{loven ? `Poängliga (${skaters.length})` : `Poängtoppen — topp ${skaters.length}`}</p>
+      <section className={`mc-card${texttv ? ' mc-card-tt' : ''}`}>
+        <div className="tab-huvud">
+          {texttv
+            ? <span />
+            : <p className="mc-kicker">{loven ? `Poängliga (${skaters.length})` : `Poängtoppen — topp ${skaters.length}`}</p>}
+          <TextTvVaxel sida={SIDA.poangliga} pa={texttv} onClick={vaxlaTexttv} />
+        </div>
         {playersState === 'loading' && loven && <div className="st-skeleton" />}
         {skaters.length === 0
           ? <p className="mc-text">Ingen poängstatistik för säsongen ännu.</p>
-          : (
-            <SkaterTable
-              rows={skaters}
-              showTeam={!loven}
-              season={season}
-              onIceByNumber={loven ? onIceByNumber : undefined}
-            />
-          )}
+          : texttv
+            ? <PoangligaTextTv rows={skaters} showTeam={!loven} />
+            : (
+              <SkaterTable
+                rows={skaters}
+                showTeam={!loven}
+                season={season}
+                onIceByNumber={loven ? onIceByNumber : undefined}
+              />
+            )}
         <p className="mc-note">
-          Tryck på en rubrik för att sortera. {loven
-            ? 'Tryck på en spelare för profil med percentil mot serien och poäng match för match.'
-            : `Lövenspelare är markerade och går att trycka på. Poängtoppen är serieledande spelare, inte hela ${leagueName}.`}
+          {texttv
+            ? 'Sida 365 är en ren lista, som på Text-TV. Slå av läget för sortering och spelarprofiler.'
+            : <>
+                Tryck på en rubrik för att sortera. {loven
+                  ? 'Tryck på en spelare för profil med percentil mot serien och poäng match för match.'
+                  : `Lövenspelare är markerade och går att trycka på. Poängtoppen är serieledande spelare, inte hela ${leagueName}.`}
+              </>}
         </p>
         {loven && onIce && (
           <p className="mc-note">

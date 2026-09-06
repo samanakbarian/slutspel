@@ -1117,6 +1117,16 @@ a {
 .tt-minus { color: var(--tt-rod); }
 .tt-poang { color: var(--tt-gul); font-weight: 700; }
 
+/* Poängligan: namnen är huvudsaken här, inte talen, så namnkolumnen får
+   mer plats och sifferkolumnerna mindre. */
+.tt-rad-pl {
+  grid-template-columns: 1.5rem auto 1fr 1.6rem 1.5rem 1.5rem 1.9rem;
+}
+.tt-rad-pl:has(> .tt-tal:nth-of-type(4)) {
+  grid-template-columns: 1.5rem auto 1fr 2rem 1.5rem 1.4rem 1.4rem 1.8rem;
+}
+.tt-rad-pl .tt-lag { max-width: 9.4rem; }
+
 /* Inversvideo, precis som Text-TV markerade en rad. */
 .tt-vi {
   background: var(--tt-gron);
