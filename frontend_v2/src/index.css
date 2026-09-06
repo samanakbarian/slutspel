@@ -955,6 +955,61 @@ a {
 
 .mr-tag-pp { background: rgba(245, 192, 69, 0.18); color: var(--brand-gold); }
 .mr-tag-sh { background: rgba(119, 181, 255, 0.18); color: var(--impact-neutral); }
+.mr-tag-eq { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+.mr-tag-ps { background: rgba(213, 81, 177, 0.16); color: #d551b1; }
+.mr-tag-en { background: rgba(217, 89, 38, 0.16); color: var(--data-against); }
+
+/* Utvisningens utfall, kopplat till målet det ledde till. */
+.mr-pen-out {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+.mr-pen-out-goal { color: var(--brand-gold); }
+
+/* kontextkortet */
+.ctx-rank {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.2rem 0 0.7rem;
+}
+.ctx-rankbig {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--brand-green-light);
+  font-variant-numeric: tabular-nums;
+}
+.ctx-rankbig i { font-size: 1rem; font-style: normal; font-weight: 600; }
+.ctx-rankbody { font-size: 0.8rem; color: var(--text-secondary); }
+.ctx-rankbody b { display: block; color: var(--text-primary); font-weight: 700; }
+.ctx-move { display: block; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+.ctx-form { display: inline-flex; gap: 0.25rem; align-items: center; }
+.ctx-dot { width: 9px; height: 9px; border-radius: 50%; display: block; }
+.ctx-dot-w { background: var(--data-for); }
+.ctx-dot-l { background: var(--data-against); }
+/* Förlängning markeras med en ring, inte med en tredje färg. */
+.ctx-dot-ot { box-shadow: 0 0 0 2px var(--bg-dark), 0 0 0 3px var(--brand-gold); }
+
+/* uppställningen */
+.lu-row {
+  display: grid;
+  grid-template-columns: 4.4rem 1fr;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+}
+.lu-row:last-of-type { border-bottom: none; }
+.lu-label { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); }
+.lu-players { display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem; align-items: center; }
+.lu-p { font-size: 0.74rem; color: var(--text-primary); white-space: nowrap; }
+.lu-p b { color: var(--text-muted); font-weight: 700; margin-right: 0.15rem; }
+.lu-p-d { color: var(--text-secondary); }
+.lu-sep { width: 1px; height: 12px; background: var(--glass-border); }
 
 .mr-pen-min {
   flex: none;
@@ -1626,23 +1681,35 @@ a {
 }
 
 /* ── Vilka som var på isen vid målet ── */
+/* On-ice-listan är hopfälld: utfälld tog den en stor del av sidans höjd och
+   lästes sällan. Insikten "vem stod på isen för flest mål emot" bor i
+   boxscoren, där den går att sortera. */
 .mr-onice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2rem 0.4rem;
   margin-top: 0.35rem;
   padding-top: 0.35rem;
   border-top: 1px dashed rgba(172, 199, 186, 0.12);
 }
 
 .mr-onice-label {
-  flex-basis: 100%;
+  display: block;
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
+  cursor: pointer;
+  list-style: none;
+}
+.mr-onice-label::-webkit-details-marker { display: none; }
+.mr-onice-label::after { content: ' ▾'; }
+.mr-onice[open] .mr-onice-label::after { content: ' ▴'; }
+
+.mr-onice-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.4rem;
+  margin-top: 0.25rem;
 }
 
 .mr-onice-name { font-size: 0.68rem; color: var(--text-secondary); white-space: nowrap; }

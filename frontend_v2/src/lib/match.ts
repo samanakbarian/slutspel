@@ -87,6 +87,25 @@ export type Skater = {
   in_lineup: boolean;
 };
 
+/** En rad ur uppställningen: en femma, målvakterna eller extraspelarna. */
+export type LineupBlock = {
+  block: string;
+  line: number | null;
+  players: { number: number | null; name: string }[];
+};
+
+export type Placing = { rank: number; points: number; games_played: number };
+
+export type MatchContext = {
+  before: Placing | null;
+  after: Placing | null;
+  opponent_before: Placing | null;
+  form: { game_id: number; won: boolean; beyond_regulation: boolean; opponent: string }[];
+  meetings: { game_id: number; date: string; is_home: boolean; goals_for: number; goals_against: number }[];
+  venue_average: number | null;
+  venue_games: number;
+};
+
 export type MatchReport = {
   status: string;
   error?: string;
@@ -107,6 +126,8 @@ export type MatchReport = {
   teams?: { ours: TeamSide; theirs: TeamSide } | null;
   goalies?: GoalieLine[];
   skaters?: Skater[];
+  lineup?: LineupBlock[];
+  context?: MatchContext | null;
 };
 
 export const BJK = /bj[oö]rkl[oö]ven/i;
@@ -127,6 +148,37 @@ export function humanName(n: string | null): string {
 export function surname(n: string | null): string {
   const clean = String(n || '').replace(/[*†‡]+/g, '').trim();
   return clean.includes(',') ? clean.split(',')[0].trim() : clean.split(' ').slice(-1)[0];
+}
+
+/** Namnet utan Swehockeys markörer, som uppslagsnyckel. */
+function nameKey(n: string | null | undefined): string {
+  return String(n || '').replace(/[*†‡]+/g, '').trim().replace(/,$/, '').toLowerCase();
+}
+
+/**
+ * Spelarens position, slagen upp på namn i första hand.
+ *
+ * Truppen är nycklad på tröjnummer, men spelare byter nummer under säsongen:
+ * Oliwer Sjöström bar 26 mot Almtuna och står som 5 i säsongstabellen. Slås
+ * positionen upp på numret missar den honom helt, och en back visas som
+ * forward. Namnet är det som håller.
+ */
+export function positionOf(
+  squad: Record<string, { name: string; position: string | null }> | undefined,
+  name: string,
+  number: number | null,
+): string {
+  if (!squad) return '';
+  const key = nameKey(name);
+  for (const entry of Object.values(squad)) {
+    if (nameKey(entry.name) === key) return String(entry.position || '');
+  }
+  return String(squad[String(number ?? '')]?.position || '');
+}
+
+/** Sant för backar: LD, RD och D. */
+export function isDefence(position: string): boolean {
+  return /D$/.test(position.toUpperCase().replace(/\d+$/, ''));
 }
 
 /** "(0-0, 0-1, 1-0)" → [[0,0],[0,1],[1,0]] */
