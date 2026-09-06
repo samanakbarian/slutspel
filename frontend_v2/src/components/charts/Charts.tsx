@@ -22,6 +22,8 @@ export function Sparkline({
   fill = 'rgba(66, 216, 131, 0.14)',
   format = (v: number) => String(v),
   unit = '',
+  guide,
+  guideLabel,
 }: {
   points: Point[];
   height?: number;
@@ -30,6 +32,12 @@ export function Sparkline({
   format?: (v: number) => string;
   /** Sätts ut efter sista värdet, t.ex. "%" eller "p". */
   unit?: string;
+  /**
+   * Streckad referenskurva på samma skala, lika lång som `points`. Används
+   * för takt: en poängkurva utan referens ser alltid ut att gå uppåt.
+   */
+  guide?: number[];
+  guideLabel?: string;
 }) {
   if (points.length < 2) return null;
 
@@ -40,7 +48,7 @@ export function Sparkline({
   const TOP = 10;
   const BOTTOM = height - 16;
 
-  const values = points.map(p => p.value);
+  const values = points.map(p => p.value).concat(guide || []);
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
   // En rak linje har inget spann; ge den ändå en axel att stå på.
@@ -85,6 +93,19 @@ export function Sparkline({
           )}
         </g>
       ))}
+
+      {guide && guide.length === points.length && (
+        <path
+          d={guide.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}
+          fill="none" stroke="var(--text-muted)" strokeWidth="1.2" strokeDasharray="4 3"
+        />
+      )}
+      {guide && guideLabel && guide.length === points.length && (
+        <text x={W - RIGHT} y={Math.max(y(guide[guide.length - 1]) - 4, TOP + 2)}
+              fill="var(--text-muted)" fontSize="8.5" fontFamily="monospace" textAnchor="end">
+          {guideLabel}
+        </text>
+      )}
 
       <path d={area} fill={fill} stroke="none" />
       <path d={line} fill="none" stroke={colour} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />

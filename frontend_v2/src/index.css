@@ -1752,3 +1752,121 @@ a {
 }
 .swing-score b { color: var(--text-primary); font-weight: 600; }
 .swing-score span { color: var(--text-muted); padding: 0 0.3rem; }
+
+/* ── Spelarsidan: tillägg för den fullständiga matchloggen ───────────── */
+
+.sp-name { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.sp-band {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 0.08rem 0.32rem;
+  border-radius: 3px;
+  background: var(--brand-gold);
+  color: #16210f;
+}
+.sp-band-a { background: rgba(245, 192, 69, 0.22); color: var(--brand-gold); }
+
+.sp-nav { display: flex; gap: 0.3rem; margin-left: auto; }
+.sp-nav button {
+  font: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.sp-nav button:disabled { opacity: 0.3; cursor: default; }
+.sp-nav button:focus-visible { outline: 2px solid var(--brand-green-light); outline-offset: 2px; }
+
+.sp-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.4rem, 1fr));
+  gap: 0.7rem 0.5rem;
+  margin-top: 0.2rem;
+}
+.sp-stats-tight { grid-template-columns: repeat(auto-fit, minmax(4.6rem, 1fr)); }
+.sp-stat { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
+.sp-stat-val {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.sp-stat-lbl {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.sp-stat-hint { font-size: 0.66rem; color: var(--text-muted); }
+
+.sp-split { display: flex; gap: 1.4rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+.sp-split > div { display: flex; flex-direction: column; gap: 0.05rem; }
+.sp-split-h {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.sp-split b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-gold);
+}
+.sp-split span:last-child { font-size: 0.72rem; color: var(--text-secondary); }
+
+.sp-mates { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem; }
+.sp-mates-h {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+.sp-mate {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.22rem 0;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+}
+.sp-mate:last-child { border-bottom: 0; }
+.sp-mate a { color: var(--text-primary); text-decoration: none; }
+.sp-mate a:hover { color: var(--brand-green-light); }
+.sp-mate b { font-variant-numeric: tabular-nums; color: var(--brand-green-light); font-weight: 600; }
+
+.sp-log td { vertical-align: top; }
+.sp-log .sp-date { display: inline-block; min-width: 3.1rem; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.sp-log .opp-team a { color: var(--text-primary); text-decoration: none; }
+.sp-log .opp-team a:hover { color: var(--brand-green-light); }
+.sp-res { display: block; font-size: 0.66rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.sp-res-w { color: var(--impact-positive); }
+.sp-res-l { color: var(--text-muted); }
+.sp-scored td { background: rgba(66, 216, 131, 0.04); }
+
+.sp-more {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-top: 0.7rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--brand-green-light);
+  cursor: pointer;
+}
+.sp-more:focus-visible { outline: 2px solid var(--brand-green-light); outline-offset: 2px; }
