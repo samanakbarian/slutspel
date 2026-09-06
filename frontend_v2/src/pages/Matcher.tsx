@@ -4,6 +4,7 @@ import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
 import { Guard } from '../components/Guard';
 import { Tabellen } from '../components/Tabellen';
+import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from '../components/texttv';
 import type { Standing } from '../components/Tabellen';
 
 /* ── typer ── */
@@ -163,6 +164,44 @@ function FormDots({ games }: { games: Game[] }) {
  * "Björklöven mot Växjö Lakers HC" bröt till två rader på 360 px.
  * Raden visar därför motståndaren, med H/B för hemma eller borta.
  */
+/**
+ * Spelprogrammet som SVT Text sida 359.
+ *
+ * Text-TV skrev aldrig ut båda lagen — Björklöven är alltid ett av dem, så
+ * raden bär motståndaren och ett H eller B. Spelade matcher slutar i
+ * resultatet, kommande i avsparkstiden, och prickraden bär ögat dit.
+ *
+ * Raderna är fortfarande länkar där en rapport finns. Läget byter utseende,
+ * inte funktion.
+ */
+function ProgramTextTv({ games, season }: { games: Game[]; season: string }) {
+  return (
+    <TextTvSida sida={SIDA.spelschema} rubrik="SPELPROGRAM" info={season}>
+      {games.map((g, i) => {
+        const linkable = g.played && g.gameId !== null;
+        const inner = (
+          <>
+            <span className="tt-plats tt-datum">{formatDateShort(g.date)}</span>
+            <span className={`tt-ha${g.isHome ? ' tt-ha-h' : ''}`}>{g.isHome ? 'H' : 'B'}</span>
+            <span className="tt-lag">{ttLag(g.opponent)}</span>
+            <span className="tt-prickar" aria-hidden="true" />
+            {g.played
+              ? (
+                <span className={`tt-res tt-res-${g.result.toLowerCase() || 'none'}`}>
+                  {g.gf}-{g.ga}{g.result === 'OTL' || g.result === 'D' ? ' ÖT' : ''}
+                </span>
+              )
+              : <span className="tt-tid">{(g.time || '').replace(':', '.')}</span>}
+          </>
+        );
+        return linkable
+          ? <Link key={i} to={`/matcher/${g.gameId}`} className="tt-rad tt-rad-pg tt-rad-lank">{inner}</Link>
+          : <div key={i} className="tt-rad tt-rad-pg">{inner}</div>;
+      })}
+    </TextTvSida>
+  );
+}
+
 function GameRow({ game }: { game: Game }) {
   // Rapporten bygger på matchhändelser, som bara finns för spelade matcher
   // och först när schedule har ett game_id att koppla dem till.
@@ -211,6 +250,7 @@ export function Matcher() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'kommande' | 'spelade'>('kommande');
+  const [texttv, vaxlaTexttv] = useTextTv('spelprogram');
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [season, setSeason] = useState<string | null>(null);
 
@@ -343,9 +383,13 @@ export function Matcher() {
         </button>
       </div>
 
-      <section className="mc-card">
+      <section className={`mc-card${texttv ? ' mc-card-tt' : ''}`}>
         <div className="st-head">
-          <p className="mc-kicker">{seasonName || 'Spelprogram'}</p>
+          {/* Växeln måste synas i båda lägena — annars går läget inte att slå
+              på, bara av. */}
+          {texttv ? <span /> : <p className="mc-kicker">{seasonName || 'Spelprogram'}</p>}
+          <span className="st-headhoger">
+            <TextTvVaxel sida={SIDA.spelschema} pa={texttv} onClick={vaxlaTexttv} />
           {seasons.length > 1 && (
             <select
               className="st-season"
@@ -371,11 +415,14 @@ export function Matcher() {
               ))}
             </select>
           )}
+          </span>
         </div>
         {shown.length === 0
           ? <p className="mc-text">{view === 'spelade' ? 'Inga matcher spelade än.' : 'Inga fler matcher inlagda.'}</p>
-          : shown.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
-        {view === 'spelade' && played.length > 0 && (
+          : texttv
+            ? <ProgramTextTv games={shown} season={seasonName} />
+            : shown.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
+        {view === 'spelade' && played.length > 0 && !texttv && (
           <p className="mc-note">
             Rader med <span className="mc-chevron-inline">›</span> öppnar matchrapporten:
             mål, utvisningar, specialteam och tid i ledning.

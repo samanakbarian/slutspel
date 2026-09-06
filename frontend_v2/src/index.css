@@ -1044,6 +1044,8 @@ a {
   cursor: pointer;
   font-variant-numeric: tabular-nums;
 }
+.st-headhoger { display: flex; gap: 0.4rem; align-items: flex-start; }
+
 .tab-vaxel-pa { color: #43D97B; border-color: #43D97B; background: rgba(67, 217, 123, 0.12); }
 .tab-vaxel:focus-visible { outline: 2px solid var(--brand-green-light); outline-offset: 2px; }
 
@@ -1127,6 +1129,25 @@ a {
 }
 .tt-rad-pl .tt-lag { max-width: 9.4rem; }
 
+/* Spelprogrammet: datum, hemma/borta, motståndare, och resultat eller tid. */
+.tt-rad-pg { grid-template-columns: 2.9rem 1rem auto 1fr 3.4rem; }
+.tt-rad-pg .tt-lag { max-width: 9.6rem; }
+.tt-datum { text-align: left; color: var(--tt-svag); }
+.tt-ha { text-align: center; color: var(--tt-svag); font-weight: 700; }
+.tt-ha-h { color: var(--tt-cyan); }
+.tt-tid { text-align: right; color: var(--tt-svag); font-variant-numeric: tabular-nums; }
+.tt-res { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tt-res-w { color: var(--tt-gron); }
+.tt-res-l { color: var(--tt-rod); }
+.tt-res-otl, .tt-res-d { color: var(--tt-gul); }
+.tt-res-none { color: var(--tt-vit); }
+
+/* Raden är fortfarande en länk där rapporten finns; läget byter utseende,
+   inte funktion. */
+.tt-rad-lank { text-decoration: none; color: inherit; }
+.tt-rad-lank:active { background: rgba(79, 217, 217, 0.18); }
+.tt-rad-lank:focus-visible { outline: 2px solid var(--tt-cyan); outline-offset: -2px; }
+
 /* Inversvideo, precis som Text-TV markerade en rad. */
 .tt-vi {
   background: var(--tt-gron);
@@ -1146,7 +1167,10 @@ a {
 .st-scroll { overflow-x: auto; margin: 0 -0.2rem; }
 .st-rows { display: flex; flex-direction: column; min-width: 316px; }
 
-.st-head,
+/* Egen klass, inte .st-head: den namnet var redan taget av sektionsrubriken
+   med säsongsväljaren (display: flex) längre ned i filen, som vann kaskaden.
+   Tabellens rubrikrad låg därför aldrig i linje med sina kolumner. */
+.st-kol,
 .st-row {
   display: grid;
   grid-template-columns:
@@ -1157,7 +1181,7 @@ a {
   gap: 0.15rem;
 }
 
-.st-head {
+.st-kol {
   font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1166,8 +1190,8 @@ a {
   padding: 0 0.25rem 0.3rem;
   border-bottom: 1px solid var(--glass-border);
 }
-.st-head span:first-child { visibility: hidden; }
-.st-head span:not(:nth-child(2)) { text-align: right; }
+.st-kol span:first-child { visibility: hidden; }
+.st-kol span:not(:nth-child(2)) { text-align: right; }
 
 /* Fyllningen står i proportion till ledarens poäng, satt av komponenten via
    --st-fill. Raden blir sin egen stapel och tabellen får en form utan att ta

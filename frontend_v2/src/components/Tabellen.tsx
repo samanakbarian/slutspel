@@ -42,7 +42,7 @@ function Klassisk({ rows, started, lead }: { rows: Standing[]; started: boolean;
   return (
     <div className="st-scroll">
       <div className="st-rows">
-        <div className="st-head">
+        <div className="st-kol">
           <span /><span>Lag</span>
           <span title="Spelade matcher">M</span>
           <span title="Vinster i ordinarie tid">V</span>
