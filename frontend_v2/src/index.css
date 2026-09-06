@@ -60,6 +60,18 @@
   --impact-warning: #ffc247;
   --impact-neutral: #77b5ff;
 
+  /* Datafärger för diagram. Grönt mot rött faller på färgseendetestet —
+     ΔE 4,7 för deuteranopi, alltså samma färg för den som är rödgrönblind.
+     Paret nedan ligger på 9,3, och lagfärgerna på 13,2 mellan värsta
+     grannpar. Validerade mot ytan #0e1814. Använd dem i diagram; impact-
+     färgerna ovan är för text och märken, där formen bär betydelsen. */
+  --data-for: #1baf7a;
+  --data-against: #d95926;
+  --data-t1: #199e70;
+  --data-t2: #3987e5;
+  --data-t3: #c98500;
+  --data-t4: #d55181;
+
   --glass-border: rgba(172, 199, 186, 0.15);
   --glass-bg: rgba(255, 255, 255, 0.02);
   --glass-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
@@ -1588,3 +1600,155 @@ a {
 .pj-ours .pj-team { color: var(--brand-green-light); font-weight: 700; }
 .pj-ours .pj-span { background: rgba(37, 163, 90, 0.38); }
 .pj-ours .pj-dot { background: var(--brand-green-light); }
+
+/* ── Tornado: mål för och emot per kedja ─────────────────────────────── */
+
+.tor-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.7rem;
+}
+.tor-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 0.35rem;
+}
+
+.tor-row {
+  display: grid;
+  grid-template-columns: 3.4rem 1fr 2.6rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+.tor-row:last-child { margin-bottom: 0; }
+
+.tor-sub {
+  grid-column: 1 / -1;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: -0.25rem;
+}
+
+.tor-name { font-size: 0.78rem; color: var(--text-secondary); min-width: 0; }
+.tor-name b {
+  display: block;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.tor-bars { display: flex; align-items: center; height: 22px; min-width: 0; }
+.tor-half { display: flex; align-items: center; flex: 1; gap: 0.35rem; min-width: 0; }
+.tor-left { justify-content: flex-end; }
+.tor-half i { height: 13px; border-radius: 3px; display: block; }
+.tor-axis { width: 1px; height: 22px; background: var(--glass-border); flex: none; }
+
+.tor-val {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  flex: none;
+}
+
+.tor-diff {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--data-for);
+}
+
+/* ── Placering per omgång ────────────────────────────────────────────── */
+
+.rl { width: 100%; height: auto; display: block; }
+.rl text { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.rl-grid { stroke: rgba(172, 199, 186, 0.09); stroke-width: 1; }
+.rl-axis { stroke: var(--glass-border); stroke-width: 1; }
+.rl-tick { fill: var(--text-muted); font-size: 9.5px; }
+.rl-end { font-size: 9.5px; font-weight: 600; }
+.rl-series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+
+/* ── Motståndartabell ────────────────────────────────────────────────── */
+
+.opp-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.8rem; }
+.opp-chip {
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+}
+.opp-chip[aria-pressed='true'] {
+  background: rgba(66, 216, 131, 0.12);
+  border-color: rgba(66, 216, 131, 0.45);
+  color: var(--brand-green-light);
+}
+
+.opp-wrap { overflow-x: auto; }
+.opp-tbl { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+.opp-tbl th {
+  text-align: left;
+  font-size: 0.63rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0 0 0.4rem;
+  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+.opp-tbl td {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+  white-space: nowrap;
+}
+.opp-tbl tr:last-child td { border-bottom: 0; }
+.opp-num { font-variant-numeric: tabular-nums; text-align: right; padding-left: 0.6rem; color: var(--text-secondary); }
+.opp-team { color: var(--text-primary); font-weight: 500; }
+.opp-bar { width: 5.5rem; padding-left: 0.7rem; }
+.opp-bar i { display: block; height: 8px; border-radius: 2px; background: var(--data-for); }
+
+/* ── Vändningar och tapp ─────────────────────────────────────────────── */
+
+.swing-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+}
+.swing-row:last-child { border-bottom: 0; }
+.swing-when { font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.swing-who { font-size: 0.85rem; font-weight: 500; }
+.swing-tag {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+}
+.swing-tag.up { background: rgba(27, 175, 122, 0.16); color: var(--data-for); }
+.swing-tag.down { background: rgba(217, 89, 38, 0.16); color: var(--data-against); }
+.swing-score {
+  text-align: right;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.swing-score b { color: var(--text-primary); font-weight: 600; }
+.swing-score span { color: var(--text-muted); padding: 0 0.3rem; }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { EmptySeason } from '../components/EmptySeason';
-import { FormDots, PairedBar, PeriodBars, Sparkline } from '../components/charts/Charts';
+import { FormDots, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 
 /**
  * Statistiken i tre ytor i stället för fem flikar:
@@ -142,6 +142,47 @@ type Modules = {
   };
   predictions?: { elo_history?: { date: string; elo: number }[]; scoring_timeline?: { interval: string; gf: number; ga: number }[] };
 };
+
+type LineRow = {
+  line: number;
+  goals_for: number;
+  goals_against: number;
+  diff: number;
+  share_of_team_goals: number;
+  players: string[];
+};
+type LineData = {
+  lines: LineRow[];
+  totals: {
+    goals_for: number; goals_against: number;
+    without_line_for: number; without_line_against: number;
+  };
+};
+
+type TableTeam = {
+  team: string; is_bjk: boolean; final_rank: number;
+  points: number; games_played: number; ranks: (number | null)[];
+};
+type TableHistory = {
+  rounds: number[];
+  teams: TableTeam[];
+  table_settled_after_last_round?: boolean;
+};
+
+type OpponentRow = {
+  opponent: string; games: number; wins: number; losses: number;
+  goals_for: number; goals_against: number; diff: number; beyond_regulation: number;
+};
+type OpponentData = { games: number; opponents: OpponentRow[] };
+
+type Swing = {
+  kind: 'comeback' | 'collapse';
+  game_id: number; date: string; opponent: string; is_home: boolean;
+  after_two: string; final: string; beyond_regulation: boolean;
+};
+type SwingData = { comebacks: number; collapses: number; swings: Swing[] };
+
+type VenueFilter = 'all' | 'home' | 'away' | 'last10';
 
 type Segment = 'laget' | 'spelare' | 'utveckling';
 type Scope = 'loven' | 'serien';
@@ -495,6 +536,19 @@ export function StatisticsPage() {
   const [shots, setShots] = useState<ShotData | null>(null);
   const [proj, setProj] = useState<Projection | null>(null);
 
+  // De fyra nya vyerna. Var och en hämtas när sin flik öppnas och får sakna
+  // svar: en äldre driftsatt API-version känner inte endpointen, och då ska
+  // resten av sidan fungera som förut.
+  const [lines, setLines] = useState<LineData | null>(null);
+  const [linesState, setLinesState] = useState<'idle' | 'loading' | 'missing'>('idle');
+  const [history, setHistory] = useState<TableHistory | null>(null);
+  const [historyState, setHistoryState] = useState<'idle' | 'loading' | 'missing'>('idle');
+  const [opponents, setOpponents] = useState<OpponentData | null>(null);
+  const [opponentsState, setOpponentsState] = useState<'idle' | 'loading' | 'missing'>('idle');
+  const [venue, setVenue] = useState<VenueFilter>('all');
+  const [swings, setSwings] = useState<SwingData | null>(null);
+  const [swingsState, setSwingsState] = useState<'idle' | 'loading' | 'missing'>('idle');
+
   /* Säsonger */
   useEffect(() => {
     fetch(`${API_URL}/api/v1/seasons`)
@@ -624,17 +678,88 @@ export function StatisticsPage() {
       .catch(() => setKeepersState('missing'));
   }, [season]);
 
+  /* Kedjorna, tabellen över tid, motståndarna och svängarna. Samma mönster
+     som spelarlistan: hämtas när fliken öppnas, och ett uteblivet svar
+     släcker bara sitt eget kort. */
+  const loadLines = useCallback(() => {
+    setLines(null);
+    setLinesState('loading');
+    fetch(`${API_URL}/api/v1/lines${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
+      .then(r => (r.status === 404 ? Promise.reject(new Error('MISSING')) : r.json()))
+      .then(d => {
+        if (d.status !== 'ok' || !(d.lines || []).length) throw new Error('MISSING');
+        setLines(d);
+        setLinesState('idle');
+      })
+      .catch(() => setLinesState('missing'));
+  }, [season]);
+
+  const loadHistory = useCallback(() => {
+    setHistory(null);
+    setHistoryState('loading');
+    fetch(`${API_URL}/api/v1/table-history${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
+      .then(r => (r.status === 404 ? Promise.reject(new Error('MISSING')) : r.json()))
+      .then(d => {
+        if (d.status !== 'ok' || !(d.teams || []).length) throw new Error('MISSING');
+        setHistory(d);
+        setHistoryState('idle');
+      })
+      .catch(() => setHistoryState('missing'));
+  }, [season]);
+
+  const loadSwings = useCallback(() => {
+    setSwings(null);
+    setSwingsState('loading');
+    fetch(`${API_URL}/api/v1/swings${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
+      .then(r => (r.status === 404 ? Promise.reject(new Error('MISSING')) : r.json()))
+      .then(d => {
+        if (d.status !== 'ok') throw new Error('MISSING');
+        setSwings(d);
+        setSwingsState('idle');
+      })
+      .catch(() => setSwingsState('missing'));
+  }, [season]);
+
+  // Motståndarvyn hämtas om när filtret ändras, inte bara när fliken öppnas.
+  const loadOpponents = useCallback((which: VenueFilter) => {
+    setOpponents(null);
+    setOpponentsState('loading');
+    const query = new URLSearchParams();
+    if (season) query.set('season', season);
+    if (which === 'home' || which === 'away') query.set('venue', which);
+    if (which === 'last10') query.set('last', '10');
+    fetch(`${API_URL}/api/v1/opponents?${query.toString()}`, { cache: 'no-store' })
+      .then(r => (r.status === 404 ? Promise.reject(new Error('MISSING')) : r.json()))
+      .then(d => {
+        if (d.status !== 'ok' || !(d.opponents || []).length) throw new Error('MISSING');
+        setOpponents(d);
+        setOpponentsState('idle');
+      })
+      .catch(() => setOpponentsState('missing'));
+  }, [season]);
+
   useEffect(() => {
     if (segment === 'spelare' && playersState === 'idle' && players === null) loadPlayers();
     if (segment === 'spelare' && onIceState === 'idle' && onIce === null) loadOnIce();
     if (segment === 'spelare' && keepersState === 'idle' && keepers === null) loadKeepers();
+    if (segment === 'laget' && linesState === 'idle' && lines === null) loadLines();
+    if (segment === 'laget' && opponentsState === 'idle' && opponents === null) loadOpponents(venue);
+    if (segment === 'utveckling' && historyState === 'idle' && history === null) loadHistory();
+    if (segment === 'utveckling' && swingsState === 'idle' && swings === null) loadSwings();
   }, [segment, playersState, players, loadPlayers, onIceState, onIce, loadOnIce,
-      keepersState, keepers, loadKeepers]);
+      keepersState, keepers, loadKeepers,
+      linesState, lines, loadLines, opponentsState, opponents, loadOpponents, venue,
+      historyState, history, loadHistory, swingsState, swings, loadSwings]);
 
   useEffect(() => {
     setPlayers(null); setPlayersState('idle');
     setOnIce(null); setOnIceState('idle');
     setKeepers(null); setKeepersState('idle');
+    setLines(null); setLinesState('idle');
+    setHistory(null); setHistoryState('idle');
+    setOpponents(null); setOpponentsState('idle');
+    setSwings(null); setSwingsState('idle');
+    setVenue('all');
   }, [season]);
 
   /* ── Härledda värden ── */
@@ -809,7 +934,14 @@ export function StatisticsPage() {
       )}
 
       {hasPlayed && segment === 'laget' && (
-        <Laget record={record} timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots} proj={proj} />
+        <Laget
+          record={record} timeline={timeline} modules={modules} analyticsState={analyticsState}
+          shots={shots} proj={proj}
+          lines={lines} linesState={linesState}
+          opponents={opponents} opponentsState={opponentsState}
+          venue={venue}
+          onVenue={v => { setVenue(v); loadOpponents(v); }}
+        />
       )}
 
       {hasPlayed && segment === 'spelare' && (
@@ -829,7 +961,11 @@ export function StatisticsPage() {
       )}
 
       {hasPlayed && segment === 'utveckling' && (
-        <Utveckling timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots} />
+        <Utveckling
+          timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots}
+          history={history} historyState={historyState}
+          swings={swings} swingsState={swingsState}
+        />
       )}
     </div>
   );
@@ -929,8 +1065,231 @@ function Slutplacering({ proj }: { proj: Projection }) {
 }
 
 /* ── Laget ── */
+
+/**
+ * Kedjornas utfall.
+ *
+ * Kedjan kommer ur klubbens egen uppställning på matchsidan, inte gissad ur
+ * vilka som gör mål ihop. Summan står utsatt: mål i tomt mål har ingen kedja
+ * på isen och hamnar utanför, och det ska synas i stället för att tigas ihjäl.
+ */
+function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loading' | 'missing' }) {
+  if (state === 'missing') return null;
+  if (state === 'loading' || !data) {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Kedjorna</p>
+        <div className="st-skeleton" />
+        <div className="st-skeleton" />
+      </section>
+    );
+  }
+  const t = data.totals;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Kedjorna</p>
+      <h2 className="mc-title">Vilken kedja vinner sina byten?</h2>
+      <Tornado
+        leftLabel="Mål emot"
+        rightLabel="Mål med kedjan på isen"
+        rows={data.lines.map(l => ({
+          key: String(l.line),
+          label: `Kedja ${l.line}`,
+          sub: l.players.slice(0, 3).map(surname).join(', '),
+          left: l.goals_against,
+          right: l.goals_for,
+        }))}
+      />
+      <p className="mc-note">
+        Summa {t.goals_for} mål för, {t.goals_against} emot.
+        {(t.without_line_for + t.without_line_against) > 0 && (
+          <> {t.without_line_for + t.without_line_against} mål gjordes utan kedja på isen — tomt mål.</>
+        )}
+      </p>
+    </section>
+  );
+}
+
+/** Facit mot varje motståndare, med filter för hemma, borta och senaste tio. */
+function Motstandare({
+  data, state, venue, onVenue,
+}: {
+  data: OpponentData | null;
+  state: 'idle' | 'loading' | 'missing';
+  venue: VenueFilter;
+  onVenue: (v: VenueFilter) => void;
+}) {
+  if (state === 'missing') return null;
+  const max = Math.max(1, ...(data?.opponents || []).map(o => Math.abs(o.diff)));
+  const filters: { key: VenueFilter; label: string }[] = [
+    { key: 'all', label: 'Alla matcher' },
+    { key: 'home', label: 'Hemma' },
+    { key: 'away', label: 'Borta' },
+    { key: 'last10', label: 'Senaste 10' },
+  ];
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Motståndare</p>
+      <h2 className="mc-title">Mot vem gick det bra?</h2>
+      <div className="opp-filter" role="group" aria-label="Filtrera matcher">
+        {filters.map(f => (
+          <button
+            key={f.key}
+            type="button"
+            className="opp-chip"
+            aria-pressed={venue === f.key}
+            onClick={() => onVenue(f.key)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      {state === 'loading' || !data ? (
+        <>
+          <div className="st-skeleton" />
+          <div className="st-skeleton" />
+        </>
+      ) : (
+        <>
+          <div className="opp-wrap">
+            <table className="opp-tbl">
+              <thead>
+                <tr>
+                  <th scope="col">Lag</th>
+                  <th scope="col" className="opp-num">V–F</th>
+                  <th scope="col" className="opp-num">Mål</th>
+                  <th scope="col" className="opp-num">Diff</th>
+                  <th scope="col" className="opp-bar" aria-label="Målskillnad som stapel" />
+                </tr>
+              </thead>
+              <tbody>
+                {data.opponents.map(o => (
+                  <tr key={o.opponent}>
+                    <td className="opp-team">{shortTeam(o.opponent)}</td>
+                    <td className="opp-num">{o.wins}–{o.losses}</td>
+                    <td className="opp-num">{o.goals_for}–{o.goals_against}</td>
+                    <td className="opp-num">{o.diff > 0 ? `+${o.diff}` : o.diff}</td>
+                    <td className="opp-bar">
+                      <i
+                        style={{
+                          width: `${(Math.abs(o.diff) / max) * 100}%`,
+                          background: o.diff >= 0 ? 'var(--data-for)' : 'var(--data-against)',
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mc-note">{data.games} matcher i urvalet.</p>
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Tabellplacering per omgång för de fyra bästa lagen. */
+function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'idle' | 'loading' | 'missing' }) {
+  if (state === 'missing') return null;
+  if (state === 'loading' || !data) {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Tabellen över tid</p>
+        <div className="st-skeleton" />
+        <div className="st-skeleton" />
+      </section>
+    );
+  }
+  const palette = ['var(--data-t1)', 'var(--data-t2)', 'var(--data-t3)', 'var(--data-t4)'];
+  // Vårt lag först, sedan de bästa. Färgen följer laget, inte placeringen.
+  const ours = data.teams.filter(t => t.is_bjk);
+  const rest = data.teams.filter(t => !t.is_bjk).slice(0, 3);
+  const shown = [...ours, ...rest].slice(0, 4);
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Tabellen över tid</p>
+      <h2 className="mc-title">Hur såg serien ut vecka för vecka?</h2>
+      <div className="tor-legend">
+        {shown.map((t, i) => (
+          <span key={t.team}><i style={{ background: palette[i] }} />{shortTeam(t.team)}</span>
+        ))}
+      </div>
+      <RankLines
+        rounds={data.rounds}
+        teamCount={data.teams.length}
+        teams={shown.map((t, i) => ({
+          team: t.team,
+          ranks: t.ranks,
+          colour: palette[i],
+          short: shortTeam(t.team).slice(0, 4),
+          finalRank: t.final_rank,
+        }))}
+      />
+      <p className="mc-note">
+        Räknas ur matchresultaten: 3 poäng för vinst, 2 efter förlängning, 1 för förlust efter
+        förlängning.
+        {data.table_settled_after_last_round && (
+          <> Sluttabellen avgjordes efter vår sista omgång, så kurvans slut är inte samma sak som
+          slutplaceringen.</>
+        )}
+      </p>
+    </section>
+  );
+}
+
+/** Vändningar och tapp: ställningen efter två perioder mot slutresultatet. */
+function Svangar({ data, state }: { data: SwingData | null; state: 'idle' | 'loading' | 'missing' }) {
+  if (state === 'missing') return null;
+  if (state === 'loading' || !data) {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Vändningar och tapp</p>
+        <div className="st-skeleton" />
+      </section>
+    );
+  }
+  if (data.swings.length === 0) {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Vändningar och tapp</p>
+        <p className="mc-text">Ingen match vändes eller tappades efter två perioder den här säsongen.</p>
+      </section>
+    );
+  }
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Vändningar och tapp</p>
+      <h2 className="mc-title">
+        {data.comebacks} {data.comebacks === 1 ? 'vändning' : 'vändningar'}, {data.collapses}{' '}
+        {data.collapses === 1 ? 'tapp' : 'tapp'}
+      </h2>
+      <div>
+        {data.swings.map(x => (
+          <div className="swing-row" key={x.game_id}>
+            <div>
+              <div className="swing-when">{shortDate(x.date)} · {x.is_home ? 'hemma' : 'borta'}</div>
+              <div className="swing-who">
+                <span className={`swing-tag ${x.kind === 'comeback' ? 'up' : 'down'}`}>
+                  {x.kind === 'comeback' ? 'Vändning' : 'Tapp'}
+                </span>
+                {shortTeam(x.opponent)}
+              </div>
+            </div>
+            <div className="swing-score">
+              {x.after_two}<span>→</span><b>{x.final}</b>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mc-note">Ställningen efter två perioder mot slutresultatet.</p>
+    </section>
+  );
+}
+
 function Laget({
   record, timeline, modules, analyticsState, shots, proj,
+  lines, linesState, opponents, opponentsState, venue, onVenue,
 }: {
   record: { gp: number; w: number; otw: number; otl: number; l: number; pts: number; diff: number; rank: number };
   timeline: NonNullable<Modules['timeline']>;
@@ -938,6 +1297,12 @@ function Laget({
   analyticsState: 'idle' | 'loading' | 'error';
   shots: ShotData | null;
   proj: Projection | null;
+  lines: LineData | null;
+  linesState: 'idle' | 'loading' | 'missing';
+  opponents: OpponentData | null;
+  opponentsState: 'idle' | 'loading' | 'missing';
+  venue: VenueFilter;
+  onVenue: (v: VenueFilter) => void;
 }) {
   const last10 = timeline.slice(-10).map(t => t.result);
   const splits = modules?.splits;
@@ -967,6 +1332,10 @@ function Laget({
           </>
         )}
       </section>
+
+      <Kedjorna data={lines} state={linesState} />
+
+      <Motstandare data={opponents} state={opponentsState} venue={venue} onVenue={onVenue} />
 
       {analyticsState === 'loading' && (
         <section className="mc-card">
@@ -1327,12 +1696,16 @@ function GoalieCard({ g }: { g: GoalieFull }) {
 
 /* ── Utveckling ── */
 function Utveckling({
-  timeline, modules, analyticsState, shots,
+  timeline, modules, analyticsState, shots, history, historyState, swings, swingsState,
 }: {
   timeline: NonNullable<Modules['timeline']>;
   modules: Modules | null;
   analyticsState: 'idle' | 'loading' | 'error';
   shots: ShotData | null;
+  history: TableHistory | null;
+  historyState: 'idle' | 'loading' | 'missing';
+  swings: SwingData | null;
+  swingsState: 'idle' | 'loading' | 'missing';
 }) {
   const form = modules?.form || [];
   const elo = modules?.predictions?.elo_history || [];
@@ -1371,6 +1744,8 @@ function Utveckling({
 
   return (
     <>
+      <TabellenOverTid data={history} state={historyState} />
+
       <section className="mc-card">
         <p className="mc-kicker">Poäng ackumulerat</p>
         <Sparkline points={pointCurve} height={104} unit=" p" />
@@ -1496,6 +1871,8 @@ function Utveckling({
           )}
         </section>
       )}
+
+      <Svangar data={swings} state={swingsState} />
     </>
   );
 }

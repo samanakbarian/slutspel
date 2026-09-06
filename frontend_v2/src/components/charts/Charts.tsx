@@ -199,3 +199,130 @@ export function FormDots({ results }: { results: string[] }) {
     </div>
   );
 }
+
+/**
+ * Tornadostapel: två mått åt var sitt håll från en mittlinje.
+ *
+ * Formen bär betydelsen — sidan om axeln säger vilket mått det är — så
+ * färgen är sekundär. Talen står utsatta, för på en telefon finns ingen
+ * hovring att läsa av dem med.
+ */
+export function Tornado({
+  rows,
+  leftLabel,
+  rightLabel,
+}: {
+  rows: { key: string; label: string; sub?: string; left: number; right: number }[];
+  leftLabel: string;
+  rightLabel: string;
+}) {
+  if (rows.length === 0) return null;
+  const max = Math.max(1, ...rows.flatMap(r => [r.left, r.right]));
+  return (
+    <div className="tor">
+      <div className="tor-legend">
+        <span><i style={{ background: 'var(--data-for)' }} />{rightLabel}</span>
+        <span><i style={{ background: 'var(--data-against)' }} />{leftLabel}</span>
+      </div>
+      {rows.map(r => (
+        <div className="tor-row" key={r.key}>
+          <div className="tor-name"><b>{r.label}</b></div>
+          <div className="tor-bars">
+            <div className="tor-half tor-left">
+              <span className="tor-val">{r.left}</span>
+              <i style={{ width: `${(r.left / max) * 100}%`, background: 'var(--data-against)' }} />
+            </div>
+            <div className="tor-axis" />
+            <div className="tor-half">
+              <i style={{ width: `${(r.right / max) * 100}%`, background: 'var(--data-for)' }} />
+              <span className="tor-val">{r.right}</span>
+            </div>
+          </div>
+          <div className="tor-diff">{r.right - r.left >= 0 ? '+' : ''}{r.right - r.left}</div>
+          {/* Namnen under staplarna i stället för bredvid: i etikettkolumnen
+              tvingade de raden till tre rader och kastade staplarna ur linje. */}
+          {r.sub && <div className="tor-sub">{r.sub}</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Placering per omgång för flera lag.
+ *
+ * Y-axeln är vänd: plats 1 överst, som i en tabell. Varje serie får en
+ * etikett vid sin högerände, så färgen aldrig är enda sättet att veta
+ * vilket lag som är vilket.
+ */
+export function RankLines({
+  rounds,
+  teams,
+  teamCount = 14,
+  height = 200,
+}: {
+  rounds: number[];
+  teams: { team: string; ranks: (number | null)[]; colour: string; short: string; finalRank: number }[];
+  teamCount?: number;
+  height?: number;
+}) {
+  if (rounds.length < 2 || teams.length === 0) return null;
+  // Smal viewBox med flit: samma textstorlek i SVG-enheter blir fler faktiska
+  // pixlar nar bilden skalas till ~340 px pa en telefon.
+  const W = 360;
+  const L = 26, R = 62, T = 14, B = 34;
+  const plotW = W - L - R;
+  const plotH = height - T - B;
+  const x = (i: number) => L + (i / (rounds.length - 1)) * plotW;
+  const y = (rank: number) => T + ((rank - 1) / Math.max(1, teamCount - 1)) * plotH;
+
+  const guides = [1, 4, 8, teamCount].filter((v, i, a) => a.indexOf(v) === i);
+  const ticks = [0, Math.floor(rounds.length / 4), Math.floor(rounds.length / 2),
+                 Math.floor((rounds.length * 3) / 4), rounds.length - 1]
+    .filter((v, i, a) => a.indexOf(v) === i);
+
+  return (
+    <svg
+      className="rl"
+      viewBox={`0 0 ${W} ${height + 16}`}
+      role="img"
+      aria-label={`Tabellplacering per omgång. ${teams
+        .map(t => `${t.team} slutade ${t.finalRank}:a`)
+        .join('. ')}.`}
+    >
+      {guides.map(g => (
+        <line key={g} className="rl-grid" x1={L} y1={y(g)} x2={L + plotW} y2={y(g)} />
+      ))}
+      <line className="rl-axis" x1={L} y1={T} x2={L} y2={T + plotH} />
+      {guides.map(g => (
+        <text key={`t${g}`} className="rl-tick" x={L - 5} y={y(g) + 3} textAnchor="end">{g}</text>
+      ))}
+      {ticks.map(i => (
+        <text key={`x${i}`} className="rl-tick" x={x(i)} y={T + plotH + 14} textAnchor="middle">
+          {rounds[i]}
+        </text>
+      ))}
+      <text className="rl-tick" x={L + plotW / 2} y={T + plotH + 26} textAnchor="middle">Omgång</text>
+
+      {teams.map(t => {
+        const pts = t.ranks
+          .map((r, i) => (r == null ? null : `${x(i).toFixed(1)},${y(r).toFixed(1)}`))
+          .filter(Boolean)
+          .join(' ');
+        return <polyline key={t.team} className="rl-series" stroke={t.colour} points={pts} />;
+      })}
+
+      {teams.map(t => (
+        <text
+          key={`l${t.team}`}
+          className="rl-end"
+          x={L + plotW + 7}
+          y={y(t.finalRank) + 3}
+          fill={t.colour}
+        >
+          {t.finalRank} {t.short}
+        </text>
+      ))}
+    </svg>
+  );
+}
