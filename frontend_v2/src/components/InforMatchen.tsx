@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
+import { ordinal } from '../lib/match';
 
 /**
  * Vad som väntar i nästa match.
@@ -63,6 +64,7 @@ type NextMatch = {
   us_form: FormGame[];
   them_form: FormGame[];
   meetings: { date: string; is_home: boolean; goals_for: number; goals_against: number }[];
+  upcoming: { date: string; time: string | null; opponent: string; is_home: boolean }[];
   venue_average: number | null;
   venue_games: number;
   previous: { season?: string; teams?: number; opponent?: PrevRow; us?: PrevRow } | null;
@@ -197,18 +199,11 @@ export function InforMatchen({ season }: { season: string | null }) {
         them: data.them_season.goals_against_avg, format: decimal, lowerIsBetter: true },
     );
     duelNote = `Efter ${data.us.games_played} respektive ${data.them.games_played} matcher i år.`;
-  } else if (previous?.us && previous?.opponent) {
-    const pu = previous.us;
-    const po = previous.opponent;
-    duels.push(
-      { label: 'Poäng', us: pu.points, them: po.points },
-      { label: 'Målskillnad', us: pu.goal_diff, them: po.goal_diff, format: signed },
-    );
-    if (pu.wins != null && po.wins != null) {
-      duels.push({ label: 'Vinster', us: pu.wins + (pu.ot_wins || 0), them: po.wins + (po.ot_wins || 0) });
-    }
-    duelNote = `Förra säsongen: ${pu.season} respektive ${previous.season}. Olika serier — talen är en bakgrund, inte en prognos.`;
   }
+  // Före omgång 1 finns inga siffror att ställa mot varandra. Att jämföra
+  // 119 poäng i Allsvenskan med 73 i SHL vore att låtsas att talen betyder
+  // samma sak; de gör de inte. Då säger kortet vad motståndaren gjorde i sin
+  // egen serie, och visar inledningen — det enda som faktiskt är färskt.
 
   const streakText = (t: TeamSeason) =>
     t && t.streak.length > 1 ? `${t.streak.length} raka ${t.streak.won ? 'vinster' : 'förluster'}` : null;
@@ -246,6 +241,31 @@ export function InforMatchen({ season }: { season: string | null }) {
 
       <Duels rows={duels} opponent={opponent} />
       {duelNote && <p className="mr-note im-duelnote">{duelNote}</p>}
+
+      {duels.length === 0 && previous?.opponent && previous.season && (
+        <p className="im-fact">
+          <b>{opponent}</b> slutade {ordinal(previous.opponent.rank)}
+          {previous.teams ? ` av ${previous.teams}` : ''} i {previous.season}.
+        </p>
+      )}
+
+      {duels.length === 0 && data.upcoming.length > 1 && (
+        <div className="im-start">
+          <span className="im-startlabel">Inledningen</span>
+          <div className="im-startrows">
+            {data.upcoming.map((g, i) => (
+              <div className={`im-startrow${i === 0 ? ' im-startnext' : ''}`} key={i}>
+                <span className="im-startdate">{shortDate(g.date)}</span>
+                <span className={`im-startha${g.is_home ? ' im-startha-h' : ''}`}>
+                  {g.is_home ? 'H' : 'B'}
+                </span>
+                <span className="im-startopp">{g.opponent.replace(/^IF\s+/, '')}</span>
+                <span className="im-starttime">{g.time || ''}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Form games={data.us_form} label="Form · Björklöven" />
       <Form games={data.them_form} label={`Form · ${opponent}`} />

@@ -29,6 +29,9 @@ type Standing = {
   ot_losses?: number;
   points?: number;
   goal_diff?: number;
+  /** Räknas i API:t ur schemat; Swehockeys tabell bär bara målskillnaden. */
+  goals_for?: number | null;
+  goals_against?: number | null;
 };
 
 type Game = {
@@ -219,14 +222,22 @@ function StandingsTable({ rows }: { rows: Standing[] }) {
   const sorted = [...rows].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
   const started = sorted.some(r => (r.games_played ?? 0) > 0);
   const lead = Math.max(1, ...sorted.map(r => r.points ?? 0));
-  const spread = Math.max(1, ...sorted.map(r => Math.abs(r.goal_diff ?? 0)));
 
   return (
     <section className="mc-card">
       <p className="mc-kicker">Tabellen</p>
+      <div className="st-scroll">
       <div className="st-rows">
         <div className="st-head">
-          <span /><span>Lag</span><span>M</span><span>Målskillnad</span><span>P</span>
+          <span /><span>Lag</span>
+          <span title="Spelade matcher">M</span>
+          <span title="Vinster i ordinarie tid">V</span>
+          <span title="Vinster efter förlängning eller straffar">ÖV</span>
+          <span title="Förluster efter förlängning eller straffar">ÖF</span>
+          <span title="Förluster i ordinarie tid">F</span>
+          <span title="Gjorda–insläppta mål">Mål</span>
+          <span title="Målskillnad">+/−</span>
+          <span>P</span>
         </div>
         {sorted.map((r, i) => {
           const pts = r.points ?? 0;
@@ -243,24 +254,26 @@ function StandingsTable({ rows }: { rows: Standing[] }) {
             >
               <span className="st-rank">{r.rank ?? i + 1}</span>
               <span className="st-team">{(r.team_name || '').replace(/^IF\s+/, '')}</span>
-              <span className="st-games">{r.games_played ?? 0}</span>
-              <span className="st-diff">
-                <span className="st-diffbar">
-                  <i
-                    className={diff < 0 ? 'st-neg' : 'st-pos'}
-                    style={{ width: `${(Math.abs(diff) / spread) * 50}%`, [diff < 0 ? 'right' : 'left']: '50%' }}
-                  />
-                </span>
-                <b className={diff > 0 ? 'st-difftext-pos' : diff < 0 ? 'st-difftext-neg' : ''}>
-                  {/* Riktigt minustecken, inte bindestreck — siffrorna står i
-                      tabellsiffror och ett bindestreck sitter för högt. */}
-                  {diff > 0 ? `+${diff}` : diff < 0 ? `\u2212${Math.abs(diff)}` : '0'}
-                </b>
+              <span className="st-n">{r.games_played ?? 0}</span>
+              <span className="st-n">{r.wins ?? 0}</span>
+              <span className="st-n st-dim">{r.ot_wins ?? 0}</span>
+              <span className="st-n st-dim">{r.ot_losses ?? 0}</span>
+              <span className="st-n">{r.losses ?? 0}</span>
+              <span className="st-goals">
+                {r.goals_for != null && r.goals_against != null
+                  ? `${r.goals_for}\u2013${r.goals_against}`
+                  : '–'}
+              </span>
+              {/* Riktigt minustecken, inte bindestreck — siffrorna står i
+                  tabellsiffror och ett bindestreck sitter för högt. */}
+              <span className={`st-n st-diffnum${diff > 0 ? ' st-difftext-pos' : diff < 0 ? ' st-difftext-neg' : ''}`}>
+                {diff > 0 ? `+${diff}` : diff < 0 ? `\u2212${Math.abs(diff)}` : '0'}
               </span>
               <span className="st-points">{pts}</span>
             </div>
           );
         })}
+      </div>
       </div>
       {!started && <p className="mc-note">Serien har inte startat — placeringen är preliminär tills omgång 1 är spelad.</p>}
     </section>

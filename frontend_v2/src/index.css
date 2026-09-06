@@ -1028,41 +1028,46 @@ a {
 
 /* ── serietabellen ── */
 
-.st-rows { display: flex; flex-direction: column; }
+/* En serietabell med tre kolumner är ingen tabell. Alla kolumner får plats på
+   390 px med små siffror; smalare telefoner scrollar i sidled i sin egen ruta
+   i stället för att sidan gör det. */
+.st-scroll { overflow-x: auto; margin: 0 -0.2rem; }
+.st-rows { display: flex; flex-direction: column; min-width: 316px; }
 
 .st-head,
 .st-row {
   display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr) 1.6rem 4.4rem 2.1rem;
+  grid-template-columns:
+    1.1rem minmax(3rem, 1fr)
+    1.15rem 1.15rem 1.15rem 1.15rem 1.15rem
+    3.2rem 1.8rem 1.7rem;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.15rem;
 }
 
 .st-head {
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0 0.35rem 0.3rem;
+  padding: 0 0.25rem 0.3rem;
   border-bottom: 1px solid var(--glass-border);
 }
 .st-head span:first-child { visibility: hidden; }
-.st-head span:nth-child(3),
-.st-head span:nth-child(5) { text-align: right; }
-.st-head span:nth-child(4) { text-align: center; }
+.st-head span:not(:nth-child(2)) { text-align: right; }
 
 /* Fyllningen står i proportion till ledarens poäng, satt av komponenten via
    --st-fill. Raden blir sin egen stapel och tabellen får en form utan att ta
    mer bredd — och bredd är det vi inte har på en telefon. */
 .st-row {
   position: relative;
-  padding: 0.4rem 0.35rem;
+  padding: 0.38rem 0.25rem;
   border-bottom: 1px solid rgba(172, 199, 186, 0.06);
   background: linear-gradient(
     90deg,
-    rgba(37, 163, 90, 0.17) 0,
-    rgba(37, 163, 90, 0.17) var(--st-fill, 0%),
+    rgba(37, 163, 90, 0.15) 0,
+    rgba(37, 163, 90, 0.15) var(--st-fill, 0%),
     transparent var(--st-fill, 0%)
   );
 }
@@ -1079,58 +1084,42 @@ a {
 }
 
 .st-rank {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-.st-row-ours .st-rank { color: var(--brand-green-light); }
-
-.st-team {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.st-row-ours .st-team { color: var(--text-primary); font-weight: 700; }
-
-.st-games {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Målskillnaden som avvikelse från mitten: plus åt höger, minus åt vänster. */
-.st-diff { display: flex; align-items: center; gap: 0.3rem; }
-.st-diffbar {
-  position: relative;
-  flex: 1;
-  height: 6px;
-  border-radius: 2px;
-  background: rgba(172, 199, 186, 0.07);
-  overflow: hidden;
-}
-.st-diffbar i { position: absolute; top: 0; height: 6px; }
-.st-diffbar .st-pos { background: var(--data-for); border-radius: 0 2px 2px 0; }
-.st-diffbar .st-neg { background: var(--data-against); border-radius: 2px 0 0 2px; }
-
-.st-diff b {
-  flex: none;
-  width: 1.9rem;
-  text-align: right;
   font-size: 0.66rem;
   font-weight: 700;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
+.st-row-ours .st-rank { color: var(--brand-green-light); }
+
+.st-team {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 0.15rem;
+}
+.st-row-ours .st-team { color: var(--text-primary); font-weight: 700; }
+
+.st-n,
+.st-goals {
+  font-size: 0.66rem;
+  color: var(--text-secondary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* Förlängningskolumnerna är de minst avlästa; de tonas ned så ögat hittar
+   vinster och förluster först. */
+.st-dim { color: var(--text-muted); }
+.st-goals { font-size: 0.6rem; color: var(--text-muted); white-space: nowrap; }
+.st-diffnum { font-weight: 700; }
 .st-difftext-pos { color: var(--data-for); }
 .st-difftext-neg { color: var(--data-against); }
 
 .st-points {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 800;
   text-align: right;
   color: var(--text-primary);
@@ -1315,6 +1304,53 @@ a {
 }
 .im-h2hwin { color: var(--data-for); background: rgba(27, 175, 122, 0.14); border-color: rgba(27, 175, 122, 0.3); }
 .im-h2hloss { color: var(--data-against); background: rgba(217, 89, 38, 0.13); border-color: rgba(217, 89, 38, 0.3); }
+
+/* Premiärläget: en faktarad om motståndaren och seriens inledning. Ingen
+   jämförelse mellan serier — 119 poäng i Allsvenskan och 73 i SHL betyder
+   inte samma sak, och att ställa dem mot varandra vore att låtsas det. */
+.im-fact {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: 0.6rem 0 0.2rem;
+  border-top: 1px solid rgba(172, 199, 186, 0.12);
+}
+.im-fact b { color: var(--text-primary); font-weight: 700; }
+
+.im-start { padding-top: 0.6rem; }
+.im-startlabel {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.im-startrows { display: flex; flex-direction: column; }
+.im-startrow {
+  display: grid;
+  grid-template-columns: 3.2rem 1.1rem 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.06);
+  font-size: 0.74rem;
+}
+.im-startrow:last-child { border-bottom: none; }
+.im-startnext .im-startopp { color: var(--text-primary); font-weight: 700; }
+.im-startdate { font-size: 0.68rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.im-startha {
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  border-radius: 3px;
+}
+.im-startha-h { color: var(--brand-green-light); border-color: rgba(66, 216, 131, 0.35); }
+.im-startopp { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.im-starttime { font-size: 0.66rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 /* boxscore: plus/minus som namnrader, plus spelartabellen */
 
