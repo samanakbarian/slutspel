@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
-import { PairedBar, Tornado } from '../components/charts/Charts';
+import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isDefence, isOurs, parsePeriods, positionOf, surname } from '../lib/match';
@@ -363,39 +363,89 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
 
   const hasReport = list.some(p => p.has_report);
   const pos = (p: Skater) => positionOf(squad, p.name, p.number);
-  const shown = open ? list : list.filter(p => p.plus_minus !== 0 || p.points > 0);
+
+  // En kolumn per +/--värde, tomma mellansteg inräknade så axeln inte
+  // hoppar. Spelarna staplas uppåt från axeln, de med flest poäng överst.
+  const lo = Math.min(0, ...list.map(p => p.plus_minus));
+  const hi = Math.max(0, ...list.map(p => p.plus_minus));
+  // Nollan samlar ofta halva laget. En stapel på elva prickar drar upp hela
+  // kortets höjd, så breda staplar viks i sidled — som i en riktig punktplott
+  // — i lika höga delar.
+  const CAP = 6;
+  const columns = [];
+  for (let v = lo; v <= hi; v++) {
+    const players = list
+      .filter(p => p.plus_minus === v)
+      .sort((a, b) => b.points - a.points || b.gf_on_ev - a.gf_on_ev || a.name.localeCompare(b.name, 'sv'));
+    const parts = Math.max(1, Math.ceil(players.length / CAP));
+    const per = Math.ceil(players.length / parts);
+    const stacks = Array.from({ length: parts }, (_, i) => players.slice(i * per, (i + 1) * per));
+    columns.push({ value: v, players, stacks });
+  }
+  const tallest = Math.max(1, ...columns.flatMap(c => c.stacks.map(st => st.length)));
 
   return (
     <section className="mr-card">
       <p className="mr-kicker">Spelarna</p>
       <h2 className="mr-title">Vem var på isen när det small?</h2>
-      {/* Båda halvorna, inte bara nettot. I en 2-1-match är alla +1 eller 0,
-          och ett ensamt nettotal hade dolt om det stod 2-1 eller 1-0 på isen
-          när spelaren var ute. */}
-      <Tornado
-        leftLabel="Mål emot"
-        rightLabel="Mål för"
-        wideLabels
-        rows={shown.map(p => ({
-          key: p.name,
-          label: `${p.number != null ? `${p.number}. ` : ''}${surname(p.name)}`,
-          left: p.ga_on_ev,
-          right: p.gf_on_ev,
-        }))}
-      />
 
-      {shown.length < list.length && (
-        <button className="bx-more" onClick={() => setOpen(true)}>
-          Visa alla {list.length} spelare
-        </button>
-      )}
+      {/* Punktdiagram i stället för en rad per spelare. Plus/minus har tre
+          eller fyra distinkta värden i en match och de flesta ligger på noll,
+          så en lista blir tjugo rader där tolv är tomma. Här är varje spelare
+          en prick med sitt tröjnummer, staplad på sitt värde — hela laget på
+          en skärmhöjd, och fördelningen syns direkt. */}
+      <div className="pm-plot" style={{ ['--pm-rows' as string]: tallest }}>
+        {columns.map(c => (
+          <div className="pm-col" key={c.value}>
+            <div className="pm-stacks">
+              {c.stacks.map((stack, i) => (
+                <div className="pm-dots" key={i}>
+                  {stack.map(p => (
+                    <span
+                      key={p.name}
+                      className={`pm-dot${c.value > 0 ? ' pm-dot-pos' : c.value < 0 ? ' pm-dot-neg' : ''}`}
+                      title={`${p.number != null ? `${p.number}. ` : ''}${humanName(p.name)} — ${p.gf_on_ev} mål för, ${p.ga_on_ev} emot på isen${p.points > 0 ? `, ${p.points} poäng` : ''}`}
+                    >
+                      {p.number ?? '?'}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <span className="pm-tick" />
+            <span className={`pm-label${c.value > 0 ? ' bx-val-pos' : c.value < 0 ? ' bx-val-neg' : ''}`}>
+              {c.value > 0 ? '+' : ''}{c.value}
+            </span>
+          </div>
+        ))}
+      </div>
 
+      {/* De som sticker ut namnges — resten går att slå upp i tabellen. */}
+      <div className="pm-out">
+        {columns[columns.length - 1].value > 0 && columns[columns.length - 1].players.length > 0 && (
+          <span className="pm-outrow">
+            <b className="bx-val-pos">
+              +{columns[columns.length - 1].value}
+            </b>
+            {columns[columns.length - 1].players.map(p => surname(p.name)).join(', ')}
+          </span>
+        )}
+        {columns[0].value < 0 && columns[0].players.length > 0 && (
+          <span className="pm-outrow">
+            <b className="bx-val-neg">{columns[0].value}</b>
+            {columns[0].players.map(p => surname(p.name)).join(', ')}
+          </span>
+        )}
+      </div>
+
+      <details className="bx-details" open={open} onToggle={e => setOpen((e.target as HTMLDetailsElement).open)}>
+        <summary className="bx-summary">Hela tabellen · {list.length} spelare</summary>
       <div className="bx-tablewrap">
         <table className="bx-table">
           <thead>
             <tr>
               <th className="bx-l">Spelare</th>
-              <th>M</th><th>A</th><th>P</th><th>+/−</th><th>Utv</th>
+              <th>M</th><th>A</th><th>P</th><th>På isen</th><th>+/−</th><th>Utv</th>
               {hasReport && <><th>Skott</th><th>Tekn.</th></>}
             </tr>
           </thead>
@@ -409,6 +459,9 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
                 <td>{p.goals}</td>
                 <td>{p.assists}</td>
                 <td>{p.points}</td>
+                {/* Båda halvorna: två spelare på -1 kan ha stått för 2-1
+                    respektive 0-1, och nettot ensamt döljer skillnaden. */}
+                <td className="bx-onice">{p.gf_on_ev}–{p.ga_on_ev}</td>
                 <td className={p.plus_minus > 0 ? 'bx-val-pos' : p.plus_minus < 0 ? 'bx-val-neg' : ''}>
                   {p.plus_minus > 0 ? '+' : ''}{p.plus_minus}
                 </td>
@@ -428,13 +481,13 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
           </tbody>
         </table>
       </div>
+      </details>
 
       <p className="mr-note">
-        Plus/minus räknas ur vilka som stod på isen vid varje mål: mål i lika
-        styrka och i underläge räknas, powerplaymål inte, och straffslag och
-        straffläggning inte alls. Talet stämmer med Swehockeys officiella i
-        233 av 233 spelarrader under förra säsongen.
-        {!hasReport && ' Skott och tekningar saknas för den här matchen — matchrapporten fanns inte när den skördades.'}
+        Varje prick är en spelare, med tröjnumret i. Plus/minus räknas ur vilka
+        som stod på isen — mål i lika styrka och i underläge räknas,
+        powerplaymål inte — alltså samma regel som Swehockey.
+        {!hasReport && ' Skott och tekningar saknas här; matchrapporten fanns inte när matchen skördades.'}
       </p>
     </section>
   );

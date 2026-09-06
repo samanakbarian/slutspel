@@ -1026,7 +1026,96 @@ a {
 .mr-pen-type { display: block; font-size: 0.7rem; color: var(--text-muted); }
 .mr-pen-ours .mr-pen-player { font-weight: 600; }
 
-/* boxscore: tornadostapeln plus spelartabellen */
+/* boxscore: punktdiagram över plus/minus, plus spelartabellen */
+
+/* En kolumn per +/--värde, spelarna staplade uppåt från axeln. Alla kolumner
+   är lika höga så axeln ligger i linje; --pm-rows sätts av komponenten till
+   den högsta stapeln. */
+.pm-plot {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 0.3rem;
+  margin: 0.3rem 0 0.2rem;
+  overflow-x: auto;
+}
+.pm-col { display: flex; flex-direction: column; align-items: center; flex: 1 1 0; min-width: 2.4rem; }
+
+/* Breda staplar viks i sidled, så nollkolumnen inte sätter kortets höjd. */
+.pm-stacks {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin-bottom: 0.3rem;
+}
+
+.pm-dots {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  height: calc(var(--pm-rows) * 25px);
+}
+
+.pm-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  flex: none;
+}
+.pm-dot-pos {
+  color: #04150e;
+  background: var(--data-for);
+  border-color: var(--data-for);
+}
+.pm-dot-neg {
+  color: #1a0a04;
+  background: var(--data-against);
+  border-color: var(--data-against);
+}
+
+.pm-tick { width: 100%; height: 1px; background: var(--glass-border); }
+.pm-label {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ytterlägena namnges; resten går att slå upp i tabellen. */
+.pm-out { display: flex; flex-direction: column; gap: 0.15rem; margin: 0.5rem 0 0.7rem; }
+.pm-outrow { font-size: 0.72rem; color: var(--text-secondary); }
+.pm-outrow b { margin-right: 0.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.bx-details { margin-bottom: 0.6rem; }
+.bx-summary {
+  padding: 0.45rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  cursor: pointer;
+  list-style: none;
+  text-align: center;
+}
+.bx-summary::-webkit-details-marker { display: none; }
+.bx-summary::after { content: ' ▾'; }
+.bx-details[open] .bx-summary { margin-bottom: 0.5rem; }
+.bx-details[open] .bx-summary::after { content: ' ▴'; }
+
+.bx-onice { color: var(--text-muted); font-size: 0.68rem; }
+
 
 /* Färgen förstärker tecknet i +/--kolumnen, den bär inte betydelsen ensam —
    plustecknet står utskrivet. */
