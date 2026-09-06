@@ -150,6 +150,24 @@ export function surname(n: string | null): string {
   return clean.includes(',') ? clean.split(',')[0].trim() : clean.split(' ').slice(-1)[0];
 }
 
+/**
+ * Svenskt ordningstal: 1:a, 2:a, 3:e, 9:e, 11:e, 21:a.
+ *
+ * Bara tal som slutar på ett eller två tar ":a", och undantaget är elva och
+ * tolv. Att hårdkoda ":a" gav "9:a" och "3:a", vilket ingen skriver.
+ */
+export function ordinal(n: number): string {
+  const last = n % 10;
+  const two = n % 100;
+  const suffix = (last === 1 || last === 2) && two !== 11 && two !== 12 ? ':a' : ':e';
+  return `${n}${suffix}`;
+}
+
+/** Ordningstalets ändelse ensam, när siffran sätts separat. */
+export function ordinalSuffix(n: number): string {
+  return ordinal(n).replace(String(n), '');
+}
+
 /** Namnet utan Swehockeys markörer, som uppslagsnyckel. */
 function nameKey(n: string | null | undefined): string {
   return String(n || '').replace(/[*†‡]+/g, '').trim().replace(/,$/, '').toLowerCase();

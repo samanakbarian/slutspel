@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
+import { InforMatchen } from '../components/InforMatchen';
 
 /* ── typer ── */
 type RawGame = {
@@ -81,22 +82,7 @@ function normalise(g: RawGame): Game {
   };
 }
 
-function daysUntil(dateStr: string): number | null {
-  if (!dateStr) return null;
-  const then = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(then.getTime())) return null;
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.round((then.getTime() - today.getTime()) / 86400000);
-}
 
-function countdownLabel(days: number | null): string {
-  if (days === null) return '';
-  if (days < 0) return 'Spelad';
-  if (days === 0) return 'I dag';
-  if (days === 1) return 'I morgon';
-  return `om ${days} dagar`;
-}
 
 const WEEKDAYS = ['sön', 'mån', 'tis', 'ons', 'tors', 'fre', 'lör'];
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
@@ -115,35 +101,6 @@ function formatDateShort(dateStr: string): string {
 }
 
 /* ── delkomponenter ── */
-function TeamBadge({ name, home }: { name: string; home: boolean }) {
-  const initials = name.replace(/^(IF|BIK|HC|IK)\s+/i, '').slice(0, 3).toUpperCase();
-  return (
-    <div className="mc-team">
-      <span className={`mc-badge${home ? ' mc-badge-own' : ''}`}>{initials}</span>
-      <span className="mc-teamname">{name.replace(/^IF\s+/, '')}</span>
-    </div>
-  );
-}
-
-function NextMatch({ game }: { game: Game }) {
-  const days = daysUntil(game.date);
-  return (
-    <section className="mc-hero">
-      <p className="mc-kicker">Nästa match</p>
-      <div className="mc-matchup">
-        <TeamBadge name={game.home} home={BJK.test(game.home)} />
-        <span className="mc-vs">mot</span>
-        <TeamBadge name={game.away} home={BJK.test(game.away)} />
-      </div>
-      <p className="mc-countdown">{countdownLabel(days)}</p>
-      <p className="mc-when">
-        {formatDate(game.date)}
-        {game.time ? ` · ${game.time}` : ''} · {game.isHome ? 'Hemma' : 'Borta'}
-        {game.venue ? ` · ${game.venue}` : ''}
-      </p>
-    </section>
-  );
-}
 
 /**
  * Senaste spelade matchen, överst och med en uttalad väg in i rapporten.
@@ -392,7 +349,10 @@ export function Matcher() {
           fallback={played[0].gameId === null ? played.find(g => g.gameId !== null) || null : null}
         />
       )}
-      {next && <NextMatch game={next} />}
+      {/* Nästa match med sammanhang: placering, form för båda lagen, inbördes.
+          Före seriestart beskrivs motståndaren med förra säsongen i stället —
+          tabellen säger ingenting då. Faller kortet bort visas nedräkningen. */}
+      {next && <InforMatchen season={season} />}
 
       {played.length > 0 && (
         <section className="mc-card">

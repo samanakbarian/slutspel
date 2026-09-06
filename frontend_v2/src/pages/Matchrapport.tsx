@@ -4,7 +4,7 @@ import { API_URL } from '../config/api';
 import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
-import { BJK, humanName, isDefence, isOurs, parsePeriods, positionOf, surname } from '../lib/match';
+import { BJK, humanName, isDefence, isOurs, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
 
 /* ── kontext: vad matchen betydde ── */
 
@@ -36,16 +36,16 @@ function Kontext({ ctx, opponent }: { ctx: MatchContext | null | undefined; oppo
       <p className="mr-kicker">Sammanhang</p>
       {after && (
         <div className="ctx-rank">
-          <span className="ctx-rankbig">{after.rank}<i>:a</i></span>
+          <span className="ctx-rankbig">{after.rank}<i>{ordinalSuffix(after.rank)}</i></span>
           <span className="ctx-rankbody">
             <b>{after.points} poäng</b> efter {after.games_played} matcher
             {before && (
               <span className="ctx-move">
                 {moved > 0
-                  ? `Klättrade ${moved} placering${moved > 1 ? 'ar' : ''} från ${before.rank}:a`
+                  ? `Klättrade ${moved} placering${moved > 1 ? 'ar' : ''} från ${ordinal(before.rank)}`
                   : moved < 0
-                    ? `Tappade ${-moved} placering${-moved > 1 ? 'ar' : ''} från ${before.rank}:a`
-                    : `Låg ${before.rank}:a även före`}
+                    ? `Tappade ${-moved} placering${-moved > 1 ? 'ar' : ''} från ${ordinal(before.rank)}`
+                    : `Låg ${ordinal(before.rank)} även före`}
               </span>
             )}
           </span>
@@ -70,7 +70,7 @@ function Kontext({ ctx, opponent }: { ctx: MatchContext | null | undefined; oppo
       {theirs && (
         <div className="st-kv">
           <span className="st-kvlabel">{opponent} före matchen</span>
-          <span className="st-kvvalue">{theirs.rank}:a</span>
+          <span className="st-kvvalue">{ordinal(theirs.rank)}</span>
           <span className="st-kvhint">{theirs.points} poäng</span>
         </div>
       )}

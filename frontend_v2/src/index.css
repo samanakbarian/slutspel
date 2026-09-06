@@ -1026,6 +1026,97 @@ a {
 .mr-pen-type { display: block; font-size: 0.7rem; color: var(--text-muted); }
 .mr-pen-ours .mr-pen-player { font-weight: 600; }
 
+/* ── inför matchen ── */
+
+.im-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 0.9rem;
+  box-shadow: var(--glass-shadow);
+}
+
+/* Premiären får en egen ton. Det är en gång per säsong, och i debutåret
+   klubbens största match på mycket länge. */
+.im-premiere {
+  background:
+    radial-gradient(120% 90% at 85% 0%, rgba(66, 216, 131, 0.14) 0%, transparent 60%),
+    var(--bg-card);
+  border-color: rgba(66, 216, 131, 0.3);
+}
+
+.im-opponent {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0.35rem 0 0.3rem;
+}
+.im-ha {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.im-when { font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 0.7rem; }
+.im-when b { color: var(--brand-green-light); font-weight: 700; }
+
+/* Tabelläget: båda lagen sida vid sida med placeringen stor. */
+.im-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(172, 199, 186, 0.1);
+  border-bottom: 1px solid rgba(172, 199, 186, 0.1);
+  margin-bottom: 0.6rem;
+}
+.im-side { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.im-rank {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.im-rank i { font-size: 0.7rem; font-style: normal; font-weight: 600; color: var(--text-muted); }
+.im-team {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.im-pts { font-size: 0.66rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.im-vs { font-size: 0.68rem; color: var(--text-muted); }
+
+/* Premiärläget: förra säsongen får beskriva lagen, eftersom tabellen är tom. */
+.im-prev {
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(172, 199, 186, 0.1);
+  border-bottom: 1px solid rgba(172, 199, 186, 0.1);
+  margin-bottom: 0.6rem;
+}
+.im-prevrow { font-size: 0.76rem; color: var(--text-secondary); line-height: 1.5; }
+.im-prevrow + .im-prevrow { margin-top: 0.3rem; }
+.im-prevrow b { color: var(--text-primary); font-weight: 700; }
+/* Före seriestart finns varken form eller inbördes, och kortet slutade då
+   med en linje som inte skilde något från något. */
+.im-prev:last-child, .im-grid:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.im-form { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+.im-formlabel { flex: 1; font-size: 0.72rem; color: var(--text-secondary); }
+.im-dots { display: inline-flex; gap: 0.25rem; align-items: center; }
+
 /* boxscore: plus/minus som namnrader, plus spelartabellen */
 
 /* En rad per +/--värde. Radens längd är stapeln — antalet brickor bär
