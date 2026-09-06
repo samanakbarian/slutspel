@@ -161,6 +161,8 @@ type LineData = {
   totals: {
     goals_for: number; goals_against: number;
     without_line_for: number; without_line_against: number;
+    /** Distinkta spelare som roterat in utöver de tjugo som listas. */
+    rotated_players?: number;
   };
 };
 
@@ -1090,7 +1092,9 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
     );
   }
   const t = data.totals;
-  const rotated = data.lines.reduce((n, l) => n + (l.rotated || 0), 0);
+  // Distinkta spelare, från API:t. En summa av radernas `rotated` räknade
+  // samma back en gång per femma han hoppat in i — 41 där sanningen var 20.
+  const rotated = t.rotated_players ?? 0;
   return (
     <section className="mc-card">
       <p className="mc-kicker">Femmorna</p>
@@ -1120,7 +1124,7 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
         Swehockeys uppställning grupperar hela femman under en rubrik — tre
         forwards och ett backpar — och målet räknas till den femma flest av
         spelarna på isen tillhörde.
-        {rotated > 0 && <> {rotated} spelare till har hoppat in i någon av femmorna.</>}
+        {rotated > 0 && <> {rotated} spelare till har hoppat in i en femma under säsongen.</>}
         {' '}Summa {t.goals_for} mål för, {t.goals_against} emot.
         {(t.without_line_for + t.without_line_against) > 0 && (
           <> {t.without_line_for + t.without_line_against} mål gjordes utan femma på isen — tomt mål.</>
