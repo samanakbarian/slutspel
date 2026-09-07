@@ -205,10 +205,10 @@ function Momentum({
   if (goals.length === 0) return null;
 
   const W = 280;
-  const H = 92;
+  const PLOT_T = 10;   // diagrammets överkant
+  const PLOT_H = 66;   // dess höjd
+  const H = 96;        // plus en rad för minuterna, under diagrammet
   const PAD = 8;
-  const ZERO = 52;
-  const STEP = 13; // px per måls skillnad
   // Minuter på x-axeln. Marginalen efter 65 finns för att avgörandet i
   // straffläggningen skrivs på 65:00 — utan den ligger steget på kanten och
   // syns inte alls.
@@ -218,12 +218,23 @@ function Momentum({
 
   // Bygg differensen ur måltider i stället för score_state, som bara är text.
   let diff = 0;
-  const pts: { x: number; y: number }[] = [{ x: x(0), y: ZERO }];
+  const diffs: number[] = [];
   for (const g of goals) {
     diff += isOurs(g.team_code) ? 1 : -1;
-    const px = x(g.minute);
-    pts.push({ x: px, y: ZERO - diff * STEP });
+    diffs.push(diff);
   }
+
+  // Y-axeln följer matchen i stället för en fast skala. Med 13 px per mål och
+  // nollinjen låst till mitten hamnade en 3–6-match tre steg under diagrammets
+  // botten, tvärs över minutsiffrorna. Marginalen på 0,8 mål i var ände ger
+  // också plats åt utvisningsstrecken utan att de går utanför.
+  const lo = Math.min(0, ...diffs);
+  const hi = Math.max(0, ...diffs);
+  const span = hi - lo + 1.6;
+  const y = (d: number) => PLOT_T + ((hi + 0.8 - d) / span) * PLOT_H;
+  const ZERO = y(0);
+
+  const pts = [{ x: x(0), y: ZERO }, ...diffs.map((d, i) => ({ x: x(goals[i].minute), y: y(d) }))];
   pts.push({ x: x(LEN), y: pts[pts.length - 1].y });
 
   // Trappstegslinje: håll nivån till nästa mål, hoppa sedan.
@@ -246,7 +257,7 @@ function Momentum({
         aria-label={`Måldifferens över matchen, slutar på ${diff > 0 ? '+' : ''}${diff}`}>
         <line x1={PAD} y1={ZERO} x2={W - PAD} y2={ZERO} stroke="rgba(150,185,168,0.28)" strokeWidth="1" strokeDasharray="2 3" />
         {[20, 40, 60].map(m => (
-          <line key={m} x1={x(m)} y1={10} x2={x(m)} y2={H - 22} stroke="rgba(150,185,168,0.12)" strokeWidth="1" />
+          <line key={m} x1={x(m)} y1={PLOT_T} x2={x(m)} y2={PLOT_T + PLOT_H} stroke="rgba(150,185,168,0.12)" strokeWidth="1" />
         ))}
         <path d={area} fill={diff >= 0 ? 'rgba(37,192,109,0.14)' : 'rgba(255,77,77,0.14)'} stroke="none" />
         <path d={d} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
@@ -261,6 +272,11 @@ function Momentum({
             <title>{`${p.time} ${p.minutes}′ ${humanName(p.player)}${p.type ? ` — ${p.type}` : ''}`}</title>
           </line>
         ))}
+        {/* Målskyttarnas namn stod tidigare vid varje prick, växelvis över och
+            under kurvan. Två mål med en minuts mellanrum lade namnen i
+            varandra — "Semjonov" och "Sandgren" gick inte att skilja åt. De
+            står i mållistan nedanför och i prickens etikett; kurvan visar
+            förloppet. */}
         {goals.map((g, i) => (
           <g key={i}>
             <circle cx={x(g.minute)} cy={pts[i + 1].y} r="3"
@@ -274,17 +290,8 @@ function Momentum({
             </circle>
           </g>
         ))}
-        {/* Målskyttens efternamn vid varje mål, växelvis över och under
-            kurvan så namnen inte lägger sig i varandra. */}
-        {goals.map((g, i) => (
-          <text key={`n${i}`} x={x(g.minute)} y={pts[i + 1].y + (i % 2 ? 12 : -7)}
-            fill={isOurs(g.team_code) ? 'var(--impact-positive)' : 'var(--text-muted)'}
-            fontSize="7" textAnchor="middle">
-            {surname(g.scorer)}
-          </text>
-        ))}
         {[0, 20, 40, 60].map(m => (
-          <text key={m} x={x(m)} y={H - 6} fill="var(--text-muted)" fontSize="8" fontFamily="monospace"
+          <text key={m} x={x(m)} y={H - 4} fill="var(--text-muted)" fontSize="8" fontFamily="monospace"
             textAnchor={m === 0 ? 'start' : 'middle'}>{m}'</text>
         ))}
       </svg>

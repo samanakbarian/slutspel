@@ -274,11 +274,10 @@ export function DelaMatchen({ data }: { data: MatchReport }) {
       <button className="share-btn" onClick={share} disabled={busy}>
         {busy ? 'Skapar bild…' : 'Dela som bild'}
       </button>
-      <p className="mr-note">
-        Kortet är en kvadrat i 1080×1080 och hämtar sina siffror ur samma svar
-        som sidan — det kan inte säga något annat än matchrapporten.
-        {status && <> {status}</>}
-      </p>
+      {/* Ingen förklarande text under knappen. Formatet och varifrån siffrorna
+          kommer är vårt problem, inte läsarens — kvar står bara det som
+          faktiskt behöver sägas, när något gick fel. */}
+      {status && <p className="mr-note">{status}</p>}
     </section>
   );
 }
