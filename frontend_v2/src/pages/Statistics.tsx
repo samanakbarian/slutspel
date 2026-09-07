@@ -573,7 +573,11 @@ export function StatisticsPage() {
   // Utan den här hämtas statistik och analys en gång utan säsong och en gång
   // till så snart säsongslistan svarat — två dyra frågor per besök, där den
   // första ändå kastas bort.
-  const [seasonsReady, setSeasonsReady] = useState(false);
+  // Tom strang betyder "den säsong API:t självt väljer". Att vänta in
+  // /api/v1/seasons innan något annat hämtades gjorde varje sidladdning en
+  // extra tur längre — och API:ts standardval är mätt identiskt med det
+  // /seasons pekar ut. Listan behövs bara för väljaren.
+  const [activeKey, setActiveKey] = useState('');
 
   const [modules, setModules] = useState<Modules | null>(null);
   const [analyticsState, setAnalyticsState] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -612,13 +616,11 @@ export function StatisticsPage() {
         const known = all.filter(s => s.has_team_data === true);
         const list = known.length > 0 ? known : all;
         setSeasons(list);
-        if (d.active && list.some(s => s.key === d.active)) setSeason(d.active);
-        else if (list.length > 0) setSeason(list[0].key);
+        setActiveKey(d.active && list.some(s => s.key === d.active) ? d.active : (list[0]?.key || ''));
       })
       // Svarar säsongslistan inte alls hämtar vi ändå: utan säsongsparameter
       // väljer API:t den aktiva säsongen själv.
-      .catch(() => {})
-      .finally(() => setSeasonsReady(true));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -629,7 +631,6 @@ export function StatisticsPage() {
 
   /* Säsongsstatistik — blockerande, allt annat hänger på den */
   useEffect(() => {
-    if (!seasonsReady) return;
     setStatsLoading(true);
     setStatsError(null);
     setSlow(false);
@@ -642,33 +643,30 @@ export function StatisticsPage() {
       })
       .finally(() => { if (!ctrl.signal.aborted) setStatsLoading(false); });
     return () => ctrl.abort();
-  }, [season, reloadKey, seasonsReady]);
+  }, [season, reloadKey]);
 
   /* Skott och PDO — behövs på både Laget och Utveckling */
   useEffect(() => {
-    if (!seasonsReady) return;
     setShots(null);
     const ctrl = new AbortController();
     fetchJson(`${API_URL}/api/v1/shots${season ? `?season=${season}` : ''}`, ctrl.signal, 45000)
       .then(d => { if (d.status === 'ok' && d.games > 0) setShots(d); })
       .catch(() => { /* skottdata saknas tills scrapern körts */ });
     return () => ctrl.abort();
-  }, [season, reloadKey, seasonsReady]);
+  }, [season, reloadKey]);
 
   /* Slutplacering — simuleringen tar några sekunder, men cachas i API:t */
   useEffect(() => {
-    if (!seasonsReady) return;
     setProj(null);
     const ctrl = new AbortController();
     fetchJson(`${API_URL}/api/v1/projection${season ? `?season=${season}` : ''}`, ctrl.signal, 90000)
       .then(d => { if (d.status === 'ok' && (d.teams || []).length) setProj(d); })
       .catch(() => { /* saknas tills API:t är driftsatt */ });
     return () => ctrl.abort();
-  }, [season, reloadKey, seasonsReady]);
+  }, [season, reloadKey]);
 
   /* Analys — laddas parallellt så sidan inte väntar på den */
   useEffect(() => {
-    if (!seasonsReady) return;
     setModules(null);
     setAnalyticsState('loading');
     const ctrl = new AbortController();
@@ -680,7 +678,7 @@ export function StatisticsPage() {
       })
       .catch(() => { if (!ctrl.signal.aborted) setAnalyticsState('error'); });
     return () => ctrl.abort();
-  }, [season, reloadKey, seasonsReady]);
+  }, [season, reloadKey]);
 
   /* Spelare med percentil — hämtas först när fliken öppnas */
   const loadPlayers = useCallback(() => {
@@ -861,7 +859,7 @@ export function StatisticsPage() {
   const seasonSelect = (
     <select
       className="st-season"
-      value={season}
+      value={season || activeKey}
       onChange={e => setSeason(e.target.value)}
       aria-label="Välj säsong"
     >

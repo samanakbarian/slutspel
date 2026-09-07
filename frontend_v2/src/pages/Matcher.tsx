@@ -252,25 +252,31 @@ export function Matcher() {
   const [view, setView] = useState<'kommande' | 'spelade'>('kommande');
   const [texttv, vaxlaTexttv] = useTextTv('spelprogram');
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [season, setSeason] = useState<string | null>(null);
+  // Tom sträng betyder "den säsong API:t självt väljer".
+  const [season, setSeason] = useState<string>('');
+  const [activeKey, setActiveKey] = useState('');
 
-  // Två säsonger är aktiva samtidigt (SHL och HA 26/27) och API:ts default
-  // landar på HockeyAllsvenskan, som saknar matcher. Fråga därför efter den
-  // säsong /api/v1/seasons själv pekar ut som aktiv.
+  // Säsongslistan fyller bara väljaren och blockerar därför ingenting.
+  //
+  // Tidigare väntade matchhämtningen in det här svaret, med motiveringen att
+  // API:ts standardval landade på Hockeyallsvenskan. Det stämmer inte längre:
+  // lookup_season sorterar SHL först bland aktiva säsonger, och mätt mot
+  // produktionen ger /statistics och /statistics?season=shl_2627 identiska 52
+  // matcher. Turen kostade alltså en hel rundresa utan att ändra något.
   useEffect(() => {
     fetch(`${API_URL}/api/v1/seasons`, { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
         const all: Season[] = Array.isArray(d?.seasons) ? d.seasons : [];
         const known = all.filter(x => x.has_team_data === true);
-        setSeasons(known.length > 0 ? known : all);
-        setSeason(d?.active || '');
+        const list = known.length > 0 ? known : all;
+        setSeasons(list);
+        setActiveKey(d?.active || '');
       })
-      .catch(() => setSeason(''));
+      .catch(() => { /* väljaren blir tom; matcherna hämtas ändå */ });
   }, []);
 
   useEffect(() => {
-    if (season === null) return;
     setLoading(true);
     setError(null);
     const ctrl = new AbortController();
@@ -288,16 +294,9 @@ export function Matcher() {
         // backend har den endpointen exponerar statistics bara lagets egen
         // rad, och då visar vi den ensam hellre än ingenting.
         const inline = j.standings || (j.team_standing ? [j.team_standing] : []);
-        setStandings(Array.isArray(inline) ? inline : []);
-        // Utan säsongsparameter svarar endpointen för den aktiva säsongen, och
-        // tabellen skulle visa SHL:s nollor även när en spelad säsong valts.
-        fetch(`${API_URL}/api/v1/standings${q}`, { cache: 'no-store', signal: ctrl.signal })
-          .then(r => (r.ok ? r.json() : null))
-          .then(d => {
-            const rows = d?.standings ?? d;
-            if (Array.isArray(rows) && rows.length > 1) setStandings(rows);
-          })
-          .catch(() => { /* endpointen finns inte än — behåll inline-raden */ });
+        // Bara som reserv: den riktiga tabellen hämtas parallellt nedan och
+        // skriver över den här raden när den kommer.
+        setStandings(prev => (prev.length > 1 ? prev : (Array.isArray(inline) ? inline : [])));
         // Har säsongen börjat visar vi spelade matcher först.
         setView(all.some(g => g.played) ? 'spelade' : 'kommande');
       })
@@ -306,6 +305,17 @@ export function Matcher() {
         setError(e.name === 'AbortError' ? 'Tidsgränsen gick ut.' : e.message);
       })
       .finally(() => { window.clearTimeout(timer); if (!ctrl.signal.aborted) setLoading(false); });
+
+    // Tabellen behöver bara säsongsnyckeln, inte matcherna — den låg tidigare
+    // inuti statistikens .then och väntade därför i onödan på ett svar den inte
+    // använde. Kallt kostade det 1,4 sekunder extra.
+    fetch(`${API_URL}/api/v1/standings${q}`, { cache: 'no-store', signal: ctrl.signal })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const rows = d?.standings ?? d;
+        if (Array.isArray(rows) && rows.length > 1) setStandings(rows);
+      })
+      .catch(() => { /* endpointen svarar inte — inline-raden får stå kvar */ });
 
     return () => { window.clearTimeout(timer); ctrl.abort(); };
   }, [season]);
@@ -333,7 +343,7 @@ export function Matcher() {
   const played = games.filter(g => g.played).sort((a, b) => b.date.localeCompare(a.date));
   // Senaste säsongen med lagdata som inte är den valda — dit pekar vi när den
   // valda inte har några spelade matcher.
-  const lastPlayedSeason = seasons.find(x => x.key !== season && x.has_team_data === true) || null;
+  const lastPlayedSeason = seasons.find(x => x.key !== (season || activeKey) && x.has_team_data === true) || null;
   const upcoming = games.filter(g => !g.played).sort((a, b) => a.date.localeCompare(b.date));
   const next = upcoming[0];
   const shown = view === 'spelade' ? played : upcoming;
@@ -393,7 +403,7 @@ export function Matcher() {
           {seasons.length > 1 && (
             <select
               className="st-season"
-              value={season ?? ''}
+              value={season || activeKey}
               onChange={e => setSeason(e.target.value)}
               aria-label="Välj säsong"
             >
