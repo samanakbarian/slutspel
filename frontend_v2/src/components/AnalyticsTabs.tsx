@@ -281,7 +281,7 @@ export default function AnalyticsTabs({
         ))}
       </div>
 
-      {(!hasUsableData || season === 'ha_2324') && (
+      {!hasUsableData && (
         <div style={{ padding: 16, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: '#fca5a5', marginBottom: 20, fontSize: 14 }}>
           ⚠️ <strong>Begränsad analysdata:</strong> Detaljerad skottdata samlades inte in för HockeyAllsvenskan denna säsong. Vissa flikar eller grafer kan därför vara tomma.
         </div>

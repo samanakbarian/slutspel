@@ -613,7 +613,7 @@ export function StatisticsPage() {
         // Flera säsonger finns bara som jämförelsedata för prognosmodellen och
         // innehåller inga Björklöven-matcher. Backend flaggar dem med
         // has_team_data; saknas flaggan (äldre API) visas allt.
-        const known = all.filter(s => s.has_team_data === true);
+        const known = all.filter(s => s.has_team_data === true && s.key !== 'ha_2324');
         const list = known.length > 0 ? known : all;
         setSeasons(list);
         setActiveKey(d.active && list.some(s => s.key === d.active) ? d.active : (list[0]?.key || ''));
