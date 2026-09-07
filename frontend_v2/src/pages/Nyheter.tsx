@@ -261,26 +261,8 @@ function Klipp({ post }: { post: FeedItem }) {
   );
 }
 
-/** Ett inlägg är inte en artikel och ska inte se ut som en. */
-function Inlagg({ post }: { post: FeedItem }) {
-  const kalla = post.sources?.[0];
-  const inre = (
-    <>
-      <div className="ny-radhuvud">
-        <span className="ny-handtag">{kalla?.name || 'X'}</span>
-        <span className="ny-tid">{klockan(post.ts)}</span>
-      </div>
-      <p className="ny-inlaggstext">{post.title}</p>
-    </>
-  );
-  return kalla?.url
-    ? <a className="ny-rad ny-rad-x" href={kalla.url} target="_blank" rel="noreferrer">{inre}</a>
-    : <div className="ny-rad ny-rad-x">{inre}</div>;
-}
-
 function Post({ post }: { post: FeedItem }) {
   if (post.type === 'video') return <Klipp post={post} />;
-  if (post.type === 'x') return <Inlagg post={post} />;
   return <Rad post={post} />;
 }
 
@@ -307,7 +289,7 @@ export function Nyheter() {
   }, []);
 
   const poster = useMemo(() => {
-    const alla = data?.items || [];
+    const alla = (data?.items || []).filter(p => p.type !== 'x');
     return filter === 'allt' ? alla : alla.filter(p => p.tag === filter);
   }, [data, filter]);
 
@@ -344,9 +326,14 @@ export function Nyheter() {
     );
   }
 
-  const antal = data.counts_by_tag || {};
-  const totalt = data.items?.length || 0;
-  const kallor = new Set((data.items || []).map(p => p.sources?.[0]?.name).filter(Boolean)).size;
+  const utanX = useMemo(() => (data?.items || []).filter(p => p.type !== 'x'), [data]);
+  const antal = useMemo(() => {
+    const r: Record<string, number> = {};
+    utanX.forEach(p => { r[p.tag] = (r[p.tag] || 0) + 1; });
+    return r;
+  }, [utanX]);
+  const totalt = utanX.length;
+  const kallor = new Set(utanX.map(p => p.sources?.[0]?.name).filter(Boolean)).size;
   // Ett inlägg är inte en nyhet och får inte bära sidan. Toppen är den
   // färskaste artikeln om A-laget; snacket och ungdomsraderna ligger kvar i
   // flödet där de hör hemma, med varsitt eget filter. Regeln är avsiktligt

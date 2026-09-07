@@ -2876,11 +2876,6 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .ny-tagg-ungdom { background: rgba(120, 160, 255, 0.16); color: #9db8ff; }
 .ny-tagg-snack { background: rgba(167, 139, 250, 0.16); color: #c4b5fd; }
 
-/* inlägg */
-.ny-rad-x { border-left: 3px solid rgba(167, 139, 250, 0.5); }
-.ny-handtag { font-size: 0.7rem; font-weight: 700; color: #c4b5fd; }
-.ny-inlaggstext { font-size: 0.84rem; line-height: 1.4; color: var(--text-secondary); overflow-wrap: anywhere; }
-
 .ny-tomt { font-size: 0.82rem; color: var(--text-muted); font-style: italic; margin: 0.8rem 0; }
 
 .ny-rubrik {
