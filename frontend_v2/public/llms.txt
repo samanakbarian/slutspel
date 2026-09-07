@@ -1,0 +1,30 @@
+# Sida 377
+
+> Statistik, matcher och nyheter om IF Björklöven i SHL 2026/27. Byggd och
+> underhållen av Saman Akbarian. All idrottsdata kommer från Swehockey Stats.
+
+Sajten är en ensidesapplikation: innehållet renderas i webbläsaren, så den
+här filen beskriver vad som finns bakom varje adress för den som läser rå
+HTML. Namnet kommer från SVT Text sida 377, målservicen där resultaten
+tickade in medan matcherna pågick.
+
+## Sidor
+
+- [Matcher](https://sida377.se/matcher): Spelprogram och resultat för säsongen, med matchrapport per spelad match — mål, utvisningar, målvakter, skott per period och en momentumkurva över måldifferensen.
+- [Statistik](https://sida377.se/statistik): Poängliga, målvaktsstatistik, hemma mot borta, skottandel och PDO. Plus/minus räknas enligt regelboken: bara spel fem mot fem och i numerärt underläge, aldrig powerplaymål, och straffar och straffläggning räknas inte alls.
+- [Truppen](https://sida377.se/trupp): Spelarna med position, nummer och säsongens utfall.
+- [Nyheter](https://sida377.se/nyheter): Flöde från klubbens egen sida och svensk hockeymedia, uppmärkt per ämne — match, trupp, ungdom, klubb.
+- [Om](https://sida377.se/om): Hur siffrorna räknas och varifrån de kommer.
+
+## Om datan
+
+- Källa: Swehockey Stats. Ingen annan leverantör används.
+- Uppdatering: matchdata skördas fyra gånger om dygnet, nyheter varje timme.
+- Säsong: SHL 2026/27. Björklöven är nyuppflyttat och spelar sin första
+  SHL-säsong sedan 2001. Premiär 19 september 2026, borta mot Djurgårdens IF.
+- Historik finns för Hockeyallsvenskan 2023/24 till 2025/26.
+
+## Upphovsman
+
+Saman Akbarian. Sajten är ett fanprojekt och har ingen koppling till
+IF Björklöven, SHL eller Swehockey.

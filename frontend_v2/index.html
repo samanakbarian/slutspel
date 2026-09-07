@@ -35,13 +35,63 @@
     <meta name="twitter:description" content="Matcher, tabell, poängliga och matchrapporter för IF Björklöven i SHL 2026/27." />
     <meta name="twitter:image" content="https://sida377.se/og.png" />
 
+    <meta name="author" content="Saman Akbarian" />
     <meta name="theme-color" content="#07110d" />
+
+    <!--
+      Strukturerad data. Google läser den för att förstå vad sajten är, och
+      språkmodellerna som skördar webben läser den av samma skäl — de kör
+      sällan JavaScript, så det som står i huvudet är allt de får.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Sida 377",
+      "alternateName": "Lövenläget",
+      "url": "https://sida377.se/",
+      "inLanguage": "sv-SE",
+      "description": "Statistik, matcher och nyheter om IF Björklöven i SHL 2026/27, byggt på Swehockey Stats.",
+      "creator": { "@type": "Person", "name": "Saman Akbarian" },
+      "author": { "@type": "Person", "name": "Saman Akbarian" },
+      "about": {
+        "@type": "SportsTeam",
+        "name": "IF Björklöven",
+        "sport": "Ishockey",
+        "memberOf": { "@type": "SportsOrganization", "name": "SHL" }
+      },
+      "isAccessibleForFree": true
+    }
+    </script>
 
     <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <div id="root"></div>
+
+    <!--
+      Vad en robot utan JavaScript ser. Innan det här stod här var svaret noll
+      tecken på varje adress: allt renderas i webbläsaren, och LLM-robotarna
+      hämtar rå HTML. Texten är kort och sann, och en människa med JS avstängt
+      får åtminstone veta vad sidan är och vem som gjort den.
+    -->
+    <noscript>
+      <h1>Sida 377 — Björklöven i siffror</h1>
+      <p>
+        Statistik, matcher och nyheter om IF Björklöven inför och under
+        SHL-säsongen 2026/27. All data kommer från Swehockey Stats och
+        uppdateras flera gånger om dygnet.
+      </p>
+      <ul>
+        <li><a href="/matcher">Matcher</a> — spelprogram, resultat och matchrapporter per match.</li>
+        <li><a href="/statistik">Statistik</a> — poängliga, målvakter och lagets siffror.</li>
+        <li><a href="/trupp">Truppen</a> — spelare, positioner och säsongens utfall.</li>
+        <li><a href="/nyheter">Nyheter</a> — flöde från klubben och svensk hockeymedia.</li>
+        <li><a href="/om">Om</a> — hur siffrorna räknas och varifrån de kommer.</li>
+      </ul>
+      <p>Sajten kräver JavaScript för att visa statistiken. Byggd av Saman Akbarian.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

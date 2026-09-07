@@ -4,3 +4,7 @@ User-agent: *
 Allow: /
 
 Sitemap: https://sida377.se/sitemap.xml
+
+# Beskrivning av sajten i text, for den som last ra HTML och inte kor
+# JavaScript — det galler de flesta sprakmodellernas robotar.
+# https://sida377.se/llms.txt

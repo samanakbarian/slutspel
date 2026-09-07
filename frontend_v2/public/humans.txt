@@ -1,0 +1,22 @@
+/* SIDA 377 */
+
+    Byggd av: Saman Akbarian
+    Vad:      Statistik, matcher och nyheter om IF Björklöven i SHL 2026/27
+    Var:      Umeå, Sverige
+    Sedan:    2026
+
+/* TACK */
+
+    Swehockey Stats — all idrottsdata kommer därifrån.
+
+/* TEKNIK */
+
+    React, TypeScript och Vite på Netlify.
+    FastAPI på Cloud Run, BigQuery som lager.
+    Diagrammen är handritad SVG och canvas, inga bibliotek.
+    Snitten är Inter och Outfit, egenhostade.
+
+/* NOT */
+
+    Ett fanprojekt. Ingen koppling till IF Björklöven, SHL eller Swehockey.
+    Namnet kommer från SVT Text sida 377 — målservicen.
