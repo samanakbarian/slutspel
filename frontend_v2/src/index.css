@@ -1262,6 +1262,64 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* ── andel med jämviktsmarkering ── */
+.an { margin: 0.3rem 0 0.5rem; }
+.an-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+}
+.an-head b {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.an-over { color: var(--data-for); }
+.an-under { color: var(--data-against); }
+
+.an-track {
+  position: relative;
+  height: 10px;
+  border-radius: 3px;
+  background: rgba(172, 199, 186, 0.1);
+  overflow: hidden;
+}
+.an-fill { position: absolute; inset: 0 auto 0 0; background: var(--data-for); border-radius: 3px 0 0 3px; }
+/* Strecket vid jämnt: utan det säger procenttalet inte om det är bra. */
+.an-mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--bg-card); }
+
+.an-axel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── PDO som den summa det är ── */
+.st-sub2 { margin-top: 1.1rem; }
+
+.pdo { display: flex; align-items: baseline; gap: 0.8rem; margin: 0.4rem 0 0.5rem; }
+.pdo-tal {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.pdo-formel {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.pdo-formel b { color: var(--text-secondary); font-weight: 700; margin-right: 0.15rem; }
+.pdo-formel i { font-style: normal; margin: 0 0.35rem; color: var(--glass-border); }
+
 /* ── inför matchen ── */
 
 .im-card {

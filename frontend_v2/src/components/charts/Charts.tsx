@@ -152,6 +152,92 @@ export function PercentileBar({ label, value, hint }: { label: string; value: nu
 }
 
 /** Två värden mot varandra, t.ex. hemma mot borta. */
+export type JamforelseRad = {
+  label: string;
+  vanster: number;
+  hoger: number;
+  format?: (v: number) => string;
+  /** Sant för mått där ett lägre tal är bättre, som insläppta mål. */
+  lagreArBattre?: boolean;
+};
+
+/**
+ * Två storheter ställda mot varandra, med sidorna utskrivna.
+ *
+ * `PairedBar` nedan bär ingen uppgift om vad vänster och höger är — den
+ * informationen låg i en not flera rader bort, och samma stapel användes på
+ * ett ställe för hemma mot borta och på ett annat för egna skott mot
+ * motståndarnas. Ingen kunde läsa det. Här står rubrikerna över staplarna,
+ * en gång per grupp.
+ *
+ * Båda halvorna skalas mot radens största värde, så längden går att jämföra
+ * rakt över. Färgen följer sidan, inte vem som leder: att färga den vinnande
+ * stapeln gjorde att motståndarens orange lästes som "dåligt" även när det
+ * betydde att de var bättre.
+ */
+export function Jamforelse({
+  vanster, hoger, rader,
+}: {
+  vanster: string;
+  hoger: string;
+  rader: JamforelseRad[];
+}) {
+  if (rader.length === 0) return null;
+  return (
+    <div className="du">
+      <div className="du-head">
+        <span className="du-us">{vanster}</span>
+        <span className="du-them">{hoger}</span>
+      </div>
+      {rader.map(r => {
+        const max = Math.max(Math.abs(r.vanster), Math.abs(r.hoger), 1);
+        const fmt = r.format || ((v: number) => String(v));
+        const leder = r.lagreArBattre ? r.vanster < r.hoger : r.vanster > r.hoger;
+        return (
+          <div className="du-row" key={r.label}>
+            <span className={`du-val${leder ? ' du-lead' : ''}`}>{fmt(r.vanster)}</span>
+            <span className="du-track">
+              <span className="du-half du-left">
+                <i style={{ width: `${(Math.abs(r.vanster) / max) * 100}%` }} />
+              </span>
+              <span className="du-label">{r.label}</span>
+              <span className="du-half du-right">
+                <i style={{ width: `${(Math.abs(r.hoger) / max) * 100}%` }} />
+              </span>
+            </span>
+            <span className={`du-val du-valr${!leder ? ' du-lead' : ''}`}>{fmt(r.hoger)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * En andel med 50-procentsmarkering.
+ *
+ * Ett procenttal ensamt säger inte om det är bra. Med strecket vid jämnt
+ * syns det direkt åt vilket håll laget ligger, och hur mycket.
+ */
+export function Andel({ pct, label }: { pct: number; label: string }) {
+  const klamd = Math.max(0, Math.min(100, pct));
+  return (
+    <div className="an">
+      <div className="an-head">
+        <span>{label}</span>
+        <b className={pct >= 50 ? 'an-over' : 'an-under'}>
+          {pct.toFixed(1).replace('.', ',')} %
+        </b>
+      </div>
+      <div className="an-track">
+        <span className="an-fill" style={{ width: `${klamd}%` }} />
+        <span className="an-mid" aria-hidden="true" />
+      </div>
+      <div className="an-axel"><span>0</span><span>50</span><span>100</span></div>
+    </div>
+  );
+}
+
 export function PairedBar({
   label, left, right, leftLabel, rightLabel,
 }: { label: string; left: number; right: number; leftLabel?: string; rightLabel?: string }) {

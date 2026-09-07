@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { EmptySeason } from '../components/EmptySeason';
-import { FormDots, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
+import { Andel, FormDots, Jamforelse, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 
 /**
@@ -322,6 +322,10 @@ async function fetchJson(
 }
 
 /* ── Byggstenar ── */
+/** Svenskt decimaltecken. API:t svarar med punkt, appen skriver komma. */
+const komma = (v: number | null | undefined) =>
+  v == null ? '–' : String(v).replace('.', ',');
+
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
     <div className="st-stat">
@@ -1420,12 +1424,45 @@ function Laget({
       {splits && (splits.home.gp > 0 || splits.away.gp > 0) && (
         <section className="mc-card">
           <p className="mc-kicker">Hemma mot borta</p>
-          <PairedBar label="Poäng" left={splits.home.pts} right={splits.away.pts} />
-          <PairedBar label="Gjorda mål" left={splits.home.gf} right={splits.away.gf} />
-          <PairedBar label="Insläppta mål" left={splits.home.ga} right={splits.away.ga} />
+          <Jamforelse
+            vanster="Hemma"
+            hoger="Borta"
+            rader={[
+              { label: 'Poäng', vanster: splits.home.pts, hoger: splits.away.pts },
+              { label: 'Gjorda mål', vanster: splits.home.gf, hoger: splits.away.gf },
+              // Insläppta mål är bättre lågt; utan flaggan pekas det sämre
+              // laget ut som ledande.
+              { label: 'Insläppta mål', vanster: splits.home.ga, hoger: splits.away.ga, lagreArBattre: true },
+              ...(shots && shots.home.shot_share_pct != null && shots.away.shot_share_pct != null
+                ? [{
+                    label: 'Skottandel',
+                    vanster: shots.home.shot_share_pct,
+                    hoger: shots.away.shot_share_pct,
+                    format: (v: number) => `${v.toFixed(1).replace('.', ',')} %`,
+                  }]
+                : []),
+              ...(shots && shots.home.pdo != null && shots.away.pdo != null
+                ? [{
+                    label: 'PDO',
+                    vanster: shots.home.pdo,
+                    hoger: shots.away.pdo,
+                    format: (v: number) => v.toFixed(1).replace('.', ','),
+                  }]
+                : []),
+            ]}
+          />
+          {/* Vinster och förluster summeras så raden alltid går ihop med
+              antalet matcher. Förut stod "18–5" av 26 hemmamatcher: talen var
+              alla vinster mot bara förluster i ordinarie tid, och de tre
+              övertidsförlusterna föll bort. Skrivet så här stämmer det både
+              före och efter att backend delar upp vinsterna. */}
           <p className="mc-note">
-            Hemma {splits.home.gp} matcher ({splits.home.w}–{splits.home.l}), borta {splits.away.gp} ({splits.away.w}–{splits.away.l}).
-            Grön stapel är hemma.
+            <b>Hemma</b> {splits.home.gp} matcher: {splits.home.w + splits.home.otw} vinster,
+            {' '}{splits.home.l + splits.home.otl} förluster
+            {splits.home.otl > 0 && ` (${splits.home.otl} efter förlängning)`}.
+            {' '}<b>Borta</b> {splits.away.gp}: {splits.away.w + splits.away.otw} vinster,
+            {' '}{splits.away.l + splits.away.otl} förluster
+            {splits.away.otl > 0 && ` (${splits.away.otl} efter förlängning)`}.
           </p>
         </section>
       )}
@@ -1435,52 +1472,39 @@ function Laget({
       {shots && (
         <section className="mc-card">
           <p className="mc-kicker">Skott och tur</p>
-          <PairedBar
-            label="Skott per match"
-            left={shots.totals.shots_for_per_game ?? 0}
-            right={shots.totals.shots_against_per_game ?? 0}
-            leftLabel={String(shots.totals.shots_for_per_game ?? '–')}
-            rightLabel={String(shots.totals.shots_against_per_game ?? '–')}
-          />
-          <div className="st-stats st-stats-tight">
-            <Stat
-              label="Skottandel"
-              value={shots.totals.shot_share_pct !== null ? `${shots.totals.shot_share_pct} %` : '–'}
-              tone={pdoTone(shots.totals.shot_share_pct, 50)}
-            />
-            <Stat label="Skjut%" value={shots.totals.shooting_pct ?? '–'} />
-            <Stat label="Rädd%" value={shots.totals.save_pct ?? '–'} />
-            <Stat
-              label="PDO"
-              value={shots.totals.pdo ?? '–'}
-              tone={pdoTone(shots.totals.pdo, 100)}
-            />
+
+          {/* Två frågor, i tur och ordning: styrde laget spelet, och hade det
+              tur? Förut låg fyra råa tal i rad med två stycken förklaring
+              under, och sambandet mellan dem stod ingenstans. */}
+          <h2 className="mc-title">Styrde laget spelet?</h2>
+          <Andel pct={shots.totals.shot_share_pct ?? 0} label="Skottandel" />
+          <p className="mc-note">
+            {shots.totals.shots_for} skott mot {shots.totals.shots_against} över
+            {' '}{shots.totals.games} matcher. Över 50 % betyder att laget sköt mer än
+            motståndarna. Det är skott på mål — inte alla skottförsök, så det är
+            inte Corsi.
+          </p>
+
+          <h2 className="mc-title st-sub2">Hade laget tur?</h2>
+          <div className="pdo">
+            {/* Decimalkomma som i resten av appen; talen kom som punkt ur API:t. */}
+            <span className="pdo-tal" style={{ color: pdoTone(shots.totals.pdo, 100) }}>
+              {komma(shots.totals.pdo)}
+            </span>
+            <span className="pdo-formel">
+              {/* PDO är summan av de två talen. Att visa dem som additionen de
+                  är gör måttet begripligt utan en förklarande mening. */}
+              <b>S%</b> {komma(shots.totals.shooting_pct)}
+              <i>+</i>
+              <b>SV%</b> {komma(shots.totals.save_pct)}
+            </span>
           </div>
           <p className="mc-note">
-            <b>Skottandelen</b> är hur stor del av matchernas skott som var lagets egna,
-            {' '}{shots.totals.shots_for} mot {shots.totals.shots_against} över {shots.totals.games} matcher.
-            Över 50 betyder att laget styrde spelet.
+            <b>S%</b> är hur stor del av skotten som blev mål, <b>SV%</b> hur stor del
+            av motståndarnas skott målvakterna räddade. PDO är summan. Runt 100 är
+            normalläget: klart över betyder att pucken varit vänlig, och över tid dras
+            talet mot 100 igen.
           </p>
-          <p className="mc-note">
-            <b>PDO</b> är skjutprocent plus räddningsprocent, det närmaste ett turmått som finns.
-            Runt 100 är normalt. Klart över betyder att pucken varit vänlig — och över tid
-            dras talet mot 100 igen.
-          </p>
-          <p className="mc-kicker st-sub">Hemma mot borta</p>
-          <PairedBar
-            label="Skottandel"
-            left={shots.home.shot_share_pct ?? 0}
-            right={shots.away.shot_share_pct ?? 0}
-            leftLabel={`${shots.home.shot_share_pct ?? '–'} %`}
-            rightLabel={`${shots.away.shot_share_pct ?? '–'} %`}
-          />
-          <PairedBar
-            label="PDO"
-            left={shots.home.pdo ?? 0}
-            right={shots.away.pdo ?? 0}
-            leftLabel={String(shots.home.pdo ?? '–')}
-            rightLabel={String(shots.away.pdo ?? '–')}
-          />
         </section>
       )}
 
