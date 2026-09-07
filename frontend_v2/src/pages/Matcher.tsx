@@ -278,7 +278,7 @@ export function Matcher() {
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
         const all: Season[] = Array.isArray(d?.seasons) ? d.seasons : [];
-        const known = all.filter(x => x.has_team_data === true);
+        const known = all.filter(x => x.has_team_data === true && x.key !== 'ha_2324');
         const list = known.length > 0 ? known : all;
         setSeasons(list);
         setActiveKey(d?.active || '');
