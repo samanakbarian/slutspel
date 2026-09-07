@@ -9,6 +9,7 @@ import { Spelare } from './pages/Spelare';
 import { XFeedPage } from './pages/XFeed';
 import { StatisticsPage } from './pages/Statistics';
 import { useLageStore } from './store/useLageStore';
+import { Sidhuvud } from './lib/sidhuvud';
 
 // De avpublicerade sidorna är de enda som använder Recharts. Laddas de lazy
 // hamnar biblioteket i en egen chunk i stället för i huvudbundlen, som alla
@@ -88,6 +89,10 @@ function App() {
             <span>{freshness.text}</span>
           </div>
         </header>
+
+        {/* Sätter titel, beskrivning och canonical efter vilken vy som visas.
+            Ligger innanför routern, för den läser sökvägen. */}
+        <Sidhuvud />
 
         <main className="content-area">
           <Suspense fallback={<div className="page"><section className="mc-card"><p className="mc-kicker">Laddar</p></section></div>}>

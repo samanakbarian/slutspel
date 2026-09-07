@@ -1,0 +1,6 @@
+# Allt får indexeras. Sajten har inget att dölja och inga tunga vägar att
+# skydda — API:t ligger på en egen värd och nås inte härifrån.
+User-agent: *
+Allow: /
+
+Sitemap: https://sida377.se/sitemap.xml
