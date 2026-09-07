@@ -2863,3 +2863,23 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 }
 
 .ny-underrubrik { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem; }
+
+/* Sidnumret i topbaren. Text-TV skrev numret först på varje sida, och det är
+   den detaljen som gör adressen begriplig: sida377.se är inte ett hittepånamn
+   utan var sidan ligger. Monospace och gult för att numret ska läsas som ett
+   nummer, inte som ett ord. */
+.topbar-brand { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+
+.topbar-sida {
+  flex: none;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #FFD44D;
+  background: #000;
+  border: 1px solid rgba(255, 212, 77, 0.35);
+  border-radius: 5px;
+  padding: 0.18rem 0.42rem;
+  line-height: 1.15;
+}

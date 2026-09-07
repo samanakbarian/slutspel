@@ -80,9 +80,15 @@ function App() {
     <Router>
       <div className="controlroom-shell">
         <header className="topbar">
-          <div>
-            <p className="topbar-kicker">Lövenläget</p>
-            <h1 className="topbar-title">SHL 26/27</h1>
+          {/* Sidnumret först, som på Text-TV: "377 SVT TEXT" står i den
+              ordningen, och det är numret som bär igenkänningen. Lövenläget är
+              vad sidan heter, 377 är var den finns. */}
+          <div className="topbar-brand">
+            <span className="topbar-sida" aria-label="Sida 377">377</span>
+            <div>
+              <p className="topbar-kicker">Lövenläget</p>
+              <h1 className="topbar-title">SHL 26/27</h1>
+            </div>
           </div>
           <div className={`freshness freshness-${freshness.tone}`}>
             {freshness.tone !== 'ok' && <AlertTriangle size={14} />}
