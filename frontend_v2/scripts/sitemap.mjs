@@ -17,6 +17,14 @@
  */
 import fs from 'node:fs/promises';
 
+/**
+ * Byggloggen på Netlify är inte åtkomlig härifrån, så varje steg skrivs också
+ * in i kartan som en kommentar. Går hämtningen fel räcker en curl mot
+ * sitemap.xml för att se varför, i stället för att gissa.
+ */
+const logg = [];
+const skriv = (rad) => { logg.push(rad); console.log(`  ${rad}`); };
+
 const BAS = 'https://sida377.se';
 const API = process.env.VITE_API_URL
   || 'https://loven-stats-api-324947473206.europe-west1.run.app';
@@ -30,6 +38,8 @@ const STATISKA = [
   ['/x', 'hourly', '0.5'],
   ['/om', 'monthly', '0.3'],
 ];
+
+const KARTA = new URL('../public/sitemap.xml', import.meta.url);
 
 const hamta = async (vag) => {
   const svar = await fetch(`${API}${vag}`, { signal: AbortSignal.timeout(60000) });
@@ -46,7 +56,7 @@ async function sasonger() {
       .map(s => s.key);
     if (nycklar.length) return nycklar;
   } catch (e) {
-    console.log(`  kunde inte lista säsonger (${e.message}) — provar den aktiva`);
+    skriv(`kunde inte lista säsonger (${e.message}) — provar den aktiva`);
   }
   return [''];
 }
@@ -66,22 +76,46 @@ async function matcher() {
         ]);
         n++;
       }
-      console.log(`  ${key || 'aktiv säsong'}: ${n} matchrapporter`);
+      skriv(`${key || 'aktiv säsong'}: ${n} matchrapporter`);
     } catch (e) {
-      console.log(`  ${key || 'aktiv säsong'}: kunde inte hämta matcher (${e.message})`);
+      skriv(`${key || 'aktiv säsong'}: kunde inte hämta matcher (${e.message})`);
     }
   }
   return [...rader.values()].sort((a, b) => (b[3] || '').localeCompare(a[3] || ''));
 }
 
-const alla = [...STATISKA, ...await matcher()];
+const rapporter = await matcher();
+
+// Ett bygge där API:t inte svarar får inte radera femtiotvå fungerande
+// adresser ur kartan. Google tolkar en sida som försvinner ur den som ett
+// besked, och en tillfällig blipp under ett bygge är inget besked. Den gamla
+// filen ligger kvar i repot och är bättre än basen.
+if (!rapporter.length) {
+  const gammal = await fs.readFile(KARTA, 'utf-8').catch(() => '');
+  const antal = (gammal.match(/<url>/g) || []).length;
+  if (antal > STATISKA.length) {
+    skriv(`inga rapporter hämtade — behåller de ${antal} adresser som redan låg i kartan`);
+    // Loggblocket byts ut, inte staplas — annars växer kartan en kommentar
+    // per misslyckat bygge.
+    await fs.writeFile(KARTA, gammal.replace(
+      /(<!-- Genererad[^]*?-->)[^]*?(?=<urlset)/,
+      `$1\n<!--\n  ${new Date().toISOString()}\n  ${logg.join('\n  ')}\n-->\n`));
+    process.exit(0);
+  }
+}
+
+const alla = [...STATISKA, ...rapporter];
+skriv(`sitemap.xml: ${alla.length} adresser`);
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Genererad av scripts/sitemap.mjs vid bygget. Redigera inte för hand. -->
+<!--
+  ${new Date().toISOString()}
+  ${logg.join('\n  ')}
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${alla.map(([vag, takt, vikt, datum]) =>
   `  <url><loc>${BAS}${vag}</loc>${datum ? `<lastmod>${datum}</lastmod>` : ''}` +
   `<changefreq>${takt}</changefreq><priority>${vikt}</priority></url>`).join('\n')}
 </urlset>
 `;
-await fs.writeFile(new URL('../public/sitemap.xml', import.meta.url), xml);
-console.log(`  sitemap.xml: ${alla.length} adresser`);
+await fs.writeFile(KARTA, xml);
