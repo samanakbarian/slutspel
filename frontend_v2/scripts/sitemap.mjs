@@ -6,6 +6,12 @@
  * djurgården resultat", inte på "björklöven statistik". Utan dem är den mest
  * sökta delen av sajten osynlig för Google.
  *
+ * Rapporterna måste hämtas per säsong. /api/v1/statistics utan parameter
+ * svarar med den aktiva säsongen, och just nu är det SHL 26/27 där ingen
+ * match är spelad — alltså noll rapporter. De spelade matcherna ligger kvar
+ * i de gamla säsongerna och deras sidor fungerar fortfarande, så kartan
+ * går igenom varje säsong som har lagdata.
+ *
  * Misslyckas hämtningen skrivs basen ändå. Ett bygge får aldrig falla för att
  * ett API är nere — då står hela sajten still för en kartas skull.
  */
@@ -25,22 +31,47 @@ const STATISKA = [
   ['/om', 'monthly', '0.3'],
 ];
 
-async function matcher() {
+const hamta = async (vag) => {
+  const svar = await fetch(`${API}${vag}`, { signal: AbortSignal.timeout(60000) });
+  if (!svar.ok) throw new Error(`${vag} svarade ${svar.status}`);
+  return svar.json();
+};
+
+/** Säsongsnycklar med lagdata, nyaste först. Faller tillbaka på den aktiva. */
+async function sasonger() {
   try {
-    const svar = await fetch(`${API}/api/v1/statistics`, { signal: AbortSignal.timeout(60000) });
-    if (!svar.ok) throw new Error(`API svarade ${svar.status}`);
-    const data = await svar.json();
-    // Bara spelade matcher med game_id har en rapport att visa. En adress i
-    // kartan som svarar "rapport saknas" är sämre än ingen adress alls.
-    const rader = (data.games || [])
-      .filter(g => g.game_id && /\d+\s*-\s*\d+/.test(g.result || ''))
-      .map(g => [`/matcher/${g.game_id}`, 'monthly', '0.6', String(g.match_date || '').slice(0, 10)]);
-    console.log(`  ${rader.length} matchrapporter från API:t`);
-    return rader;
+    const data = await hamta('/api/v1/seasons');
+    const nycklar = (data.seasons || [])
+      .filter(s => s.has_team_data && s.key)
+      .map(s => s.key);
+    if (nycklar.length) return nycklar;
   } catch (e) {
-    console.log(`  kunde inte hämta matcher (${e.message}) — skriver bara de statiska`);
-    return [];
+    console.log(`  kunde inte lista säsonger (${e.message}) — provar den aktiva`);
   }
+  return [''];
+}
+
+async function matcher() {
+  const rader = new Map();
+  for (const key of await sasonger()) {
+    try {
+      const data = await hamta(`/api/v1/statistics${key ? `?season=${encodeURIComponent(key)}` : ''}`);
+      // Bara spelade matcher med game_id har en rapport att visa. En adress i
+      // kartan som svarar "rapport saknas" är sämre än ingen adress alls.
+      let n = 0;
+      for (const g of data.games || []) {
+        if (!g.game_id || !/\d+\s*-\s*\d+/.test(g.result || '')) continue;
+        rader.set(String(g.game_id), [
+          `/matcher/${g.game_id}`, 'monthly', '0.6', String(g.match_date || '').slice(0, 10),
+        ]);
+        n++;
+      }
+      console.log(`  ${key || 'aktiv säsong'}: ${n} matchrapporter`);
+    } catch (e) {
+      console.log(`  ${key || 'aktiv säsong'}: kunde inte hämta matcher (${e.message})`);
+    }
+  }
+  return [...rader.values()].sort((a, b) => (b[3] || '').localeCompare(a[3] || ''));
 }
 
 const alla = [...STATISKA, ...await matcher()];

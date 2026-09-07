@@ -83,30 +83,43 @@ function satt(vad: string, till: string, attribut: 'name' | 'property' = 'name')
   el.setAttribute('content', till);
 }
 
+/**
+ * Skriver titel, beskrivning och canonical.
+ *
+ * Exporterad för att vyer med hämtad data ska kunna skärpa sin egen text när
+ * den kommit. Matchrapporterna är femtiotvå sidor och delade en enda titel —
+ * för Google är det femtiotvå kopior av samma sida, och då väljer den en och
+ * struntar i resten. Rubriken måste innehålla lagen och resultatet, för det
+ * är den strängen folk söker på.
+ */
+export function skrivSidhuvud(titel: string, text: string, sokvag: string) {
+  // Roten pekar vidare till /matcher. Canonical måste peka på den adress som
+  // faktiskt visas, annars konkurrerar två adresser om samma innehåll.
+  const url = `${BAS}${sokvag === '/' ? '/matcher' : sokvag}`;
+
+  document.title = titel;
+  satt('description', text);
+  satt('og:title', titel, 'property');
+  satt('og:description', text, 'property');
+  satt('og:url', url, 'property');
+  satt('twitter:title', titel);
+  satt('twitter:description', text);
+
+  let lank = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!lank) {
+    lank = document.createElement('link');
+    lank.rel = 'canonical';
+    document.head.appendChild(lank);
+  }
+  lank.href = url;
+}
+
 export function Sidhuvud() {
   const { pathname } = useLocation();
 
   useEffect(() => {
     const { titel, text } = slaUpp(pathname);
-    // Roten pekar vidare till /matcher. Canonical måste peka på den adress som
-    // faktiskt visas, annars konkurrerar två adresser om samma innehåll.
-    const url = `${BAS}${pathname === '/' ? '/matcher' : pathname}`;
-
-    document.title = titel;
-    satt('description', text);
-    satt('og:title', titel, 'property');
-    satt('og:description', text, 'property');
-    satt('og:url', url, 'property');
-    satt('twitter:title', titel);
-    satt('twitter:description', text);
-
-    let lank = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!lank) {
-      lank = document.createElement('link');
-      lank.rel = 'canonical';
-      document.head.appendChild(lank);
-    }
-    lank.href = url;
+    skrivSidhuvud(titel, text, pathname);
   }, [pathname]);
 
   return null;

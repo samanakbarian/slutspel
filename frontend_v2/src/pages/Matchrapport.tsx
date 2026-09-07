@@ -6,6 +6,7 @@ import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isDefence, isOurs, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
+import { skrivSidhuvud } from '../lib/sidhuvud';
 
 /* ── kontext: vad matchen betydde ── */
 
@@ -748,6 +749,16 @@ function Penalties({ penalties, goals }: { penalties: Penalty[]; goals: Goal[] }
   );
 }
 
+const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni',
+  'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
+
+/** "2026-03-06" → "6 mars 2026". ISO-datum läser sig illa i en beskrivningstext. */
+function svenskDatum(iso?: string | null): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return '';
+  return `${Number(m[3])} ${MANADER[Number(m[2]) - 1]} ${m[1]}`;
+}
+
 /* ── sida ── */
 export function Matchrapport() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -774,6 +785,24 @@ export function Matchrapport() {
 
     return () => { window.clearTimeout(timer); ctrl.abort(); };
   }, [gameId]);
+
+  // Rapporterna är ett femtiotal sidor och Sidhuvud kan bara ge dem alla samma
+  // titel — den vet inget om matchen förrän den hämtats. "Björklöven Västerås
+  // resultat" är sökningen som ska hitta hit, alltså måste lagen och siffrorna
+  // stå i titeln. Effekten ligger efter Sidhuvuds och skriver därför över den.
+  useEffect(() => {
+    if (!data) return;
+    const mote = `${data.home_team} – ${data.away_team}`;
+    const siffror = String(data.result || '').replace(/\s*-\s*/, '–').trim();
+    const rubrik = [mote, siffror].filter(Boolean).join(' ');
+    const datum = svenskDatum(data.date);
+    skrivSidhuvud(
+      `${rubrik} · Matchrapport — Sida 377`,
+      `Matchrapport ${rubrik}${datum ? `, ${datum}` : ''}. `
+        + 'Mål, utvisningar, målvakter och spelarnas siffror, händelse för händelse.',
+      `/matcher/${gameId}`,
+    );
+  }, [data, gameId]);
 
   if (loading) {
     return (
