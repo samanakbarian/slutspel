@@ -193,12 +193,21 @@ function ProgramTextTv({ games, season }: { games: Game[]; season: string }) {
                 </span>
               )
               : <span className="tt-tid">{(g.time || '').replace(':', '.')}</span>}
+            {/* Text-TV färgkodade sina sidhänvisningar. En länk såg tidigare ut
+                precis som en rad som inte gick att trycka på. */}
+            <span className={`tt-pil${linkable ? '' : ' tt-pil-av'}`} aria-hidden="true">▸</span>
           </>
         );
         return linkable
           ? <Link key={i} to={`/matcher/${g.gameId}`} className="tt-rad tt-rad-pg tt-rad-lank">{inner}</Link>
           : <div key={i} className="tt-rad tt-rad-pg">{inner}</div>;
       })}
+      {games.some(g => g.played && g.gameId !== null) && (
+        <div className="tt-rad tt-hjalp">
+          <span className="tt-pil" aria-hidden="true">▸</span>
+          <span>TRYCK FÖR MATCHRAPPORT</span>
+        </div>
+      )}
     </TextTvSida>
   );
 }
@@ -434,17 +443,21 @@ export function Matcher() {
           )}
           </span>
         </div>
+        {/* Ovanför listan, inte under. Noten satt tidigare efter 52 rader, och
+            en bruksanvisning som kräver att man redan scrollat förbi det den
+            förklarar är ingen bruksanvisning. */}
+        {shown.some(g => g.played && g.gameId !== null) && !texttv && (
+          <p className="mc-hint">
+            <span className="mc-chevron-inline">›</span>
+            Tryck på en spelad match för hela rapporten — mål, utvisningar,
+            målvakter och spelarnas siffror.
+          </p>
+        )}
         {shown.length === 0
           ? <p className="mc-text">{view === 'spelade' ? 'Inga matcher spelade än.' : 'Inga fler matcher inlagda.'}</p>
           : texttv
             ? <ProgramTextTv games={shown} season={seasonName} />
             : shown.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
-        {view === 'spelade' && played.length > 0 && !texttv && (
-          <p className="mc-note">
-            Rader med <span className="mc-chevron-inline">›</span> öppnar matchrapporten:
-            mål, utvisningar, specialteam och tid i ledning.
-          </p>
-        )}
       </section>
 
       {/* Utan spelade matcher finns inga rapporter att öppna. Hellre en väg

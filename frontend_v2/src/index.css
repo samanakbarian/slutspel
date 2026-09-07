@@ -1130,7 +1130,9 @@ a {
 .tt-rad-pl .tt-lag { max-width: 9.4rem; }
 
 /* Spelprogrammet: datum, hemma/borta, motståndare, och resultat eller tid. */
-.tt-rad-pg { grid-template-columns: 2.9rem 1rem auto 1fr 3.4rem; }
+/* Sista kolumnen är tryckpilen. Utan den spiller den över på egen rad — ett
+   rutnät med fem kolumner och sex barn lägger det sjätte under. */
+.tt-rad-pg { grid-template-columns: 2.9rem 1rem auto 1fr 3.4rem 0.8rem; }
 .tt-rad-pg .tt-lag { max-width: 9.6rem; }
 .tt-datum { text-align: left; color: var(--tt-svag); }
 .tt-ha { text-align: center; color: var(--tt-svag); font-weight: 700; }
@@ -2182,10 +2184,12 @@ a {
   font-size: 1rem;
   line-height: 1;
   color: var(--brand-green-light);
-  opacity: 0.75;
+  /* Full opacitet i vila. Tidigare 0,75 med en höjning vid hovring — men på en
+     telefon finns ingen hovring, så markören var permanent nedtonad just där
+     den behövdes mest. */
+  opacity: 1;
 }
 .mc-chevron-off { visibility: hidden; }
-.mc-row-link:hover .mc-chevron { opacity: 1; }
 .mc-chevron-inline { color: var(--brand-green-light); font-weight: 700; }
 
 /* Länkraden ska läsa som tryckbar även i vila, inte bara vid hovring. */
@@ -2992,3 +2996,22 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .is-plats-mellan { background: rgba(245, 192, 69, 0.3); color: var(--brand-gold-light); }
 .is-plats-lag { background: rgba(255, 255, 255, 0.07); color: var(--text-secondary); }
 .is-plats-tom { color: var(--text-muted); }
+
+/* Bruksanvisningen för matchlistan. Ligger ovanför raderna och ska läsas en
+   gång, inte varje gång — därför dämpad och utan ram. */
+.mc-hint {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  padding: 0.1rem 0 0.6rem;
+}
+
+/* Text-TV färgkodade sina sidhänvisningar; pilen gör samma sak här. */
+.tt-pil { color: var(--tt-cyan); text-align: right; }
+.tt-pil-av { visibility: hidden; }
+/* Hjälpraden följer inte matchrutnätet — den är två celler, inte sex. */
+.tt-hjalp { grid-template-columns: 0.8rem 1fr; color: var(--tt-svag); letter-spacing: 0.04em; }
+.tt-hjalp .tt-pil { text-align: left; }
