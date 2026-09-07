@@ -288,10 +288,11 @@ export function Nyheter() {
     return () => { avbruten = true; };
   }, []);
 
+  const utanX = useMemo(() => (data?.items || []).filter(p => p.type !== 'x'), [data]);
+
   const poster = useMemo(() => {
-    const alla = (data?.items || []).filter(p => p.type !== 'x');
-    return filter === 'allt' ? alla : alla.filter(p => p.tag === filter);
-  }, [data, filter]);
+    return filter === 'allt' ? utanX : utanX.filter(p => p.tag === filter);
+  }, [utanX, filter]);
 
   // Dagrubriker kräver att raderna kommer i ordning; API:t sorterar redan, men
   // filtret får inte kunna bryta det och fallbackformen sorterar själv.
@@ -305,6 +306,14 @@ export function Nyheter() {
     });
     return grupper;
   }, [poster]);
+
+  const antal = useMemo(() => {
+    const r: Record<string, number> = {};
+    utanX.forEach(p => { r[p.tag] = (r[p.tag] || 0) + 1; });
+    return r;
+  }, [utanX]);
+  const totalt = utanX.length;
+  const kallor = new Set(utanX.map(p => p.sources?.[0]?.name).filter(Boolean)).size;
 
   if (laddar) {
     return (
@@ -325,15 +334,6 @@ export function Nyheter() {
       </div>
     );
   }
-
-  const utanX = useMemo(() => (data?.items || []).filter(p => p.type !== 'x'), [data]);
-  const antal = useMemo(() => {
-    const r: Record<string, number> = {};
-    utanX.forEach(p => { r[p.tag] = (r[p.tag] || 0) + 1; });
-    return r;
-  }, [utanX]);
-  const totalt = utanX.length;
-  const kallor = new Set(utanX.map(p => p.sources?.[0]?.name).filter(Boolean)).size;
   // Ett inlägg är inte en nyhet och får inte bära sidan. Toppen är den
   // färskaste artikeln om A-laget; snacket och ungdomsraderna ligger kvar i
   // flödet där de hör hemma, med varsitt eget filter. Regeln är avsiktligt
