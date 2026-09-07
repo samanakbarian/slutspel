@@ -2883,3 +2883,70 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   padding: 0.18rem 0.42rem;
   line-height: 1.15;
 }
+
+/* klipp */
+.ny-rad-klipp { border-left: 3px solid rgba(245, 192, 69, 0.45); }
+
+/* Fasaden: miniatyren är en knapp, inte en bild med en länk ovanpå. Det ger
+   tangentbord och skärmläsare rätt beteende gratis. */
+.ny-tumnagel {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  margin: 0.15rem 0 0.5rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+}
+
+.ny-tumnagel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ny-tumnagel:hover { border-color: var(--brand-gold); }
+.ny-tumnagel:focus-visible { outline: 2px solid var(--brand-gold-light); outline-offset: 2px; }
+.ny-tumnagel:disabled { cursor: default; opacity: 0.6; }
+
+.ny-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+
+/* Cirkeln bakom pilen. Ritad med en pseudoelement i stället för en bild, så
+   den väger noll och skalar med texten. */
+.ny-play::before {
+  content: '';
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(7, 17, 13, 0.72);
+  border: 1.5px solid rgba(245, 192, 69, 0.75);
+}
+
+.ny-play { z-index: 1; }
+.ny-tumnagel:hover .ny-play::before { background: rgba(7, 17, 13, 0.55); }
+
+.ny-spelare { aspect-ratio: 16 / 9; margin: 0.15rem 0 0.5rem; border-radius: 10px; overflow: hidden; }
+.ny-spelare iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+.ny-tagg-klipp { background: rgba(245, 192, 69, 0.16); color: var(--brand-gold); }
+
+/* Fankanalen är läsvärd men är inte klubben. */
+.ny-inofficiell {
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 3px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}

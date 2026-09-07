@@ -13,10 +13,10 @@
  * här filen ändras.
  */
 
-export type FeedType = 'press' | 'x' | 'generated';
+export type FeedType = 'press' | 'video' | 'x' | 'generated';
 
 /** Ämnet, inte tonen. Fyra ämnen räcker för att hitta rätt i flödet. */
-export type FeedTag = 'match' | 'trupp' | 'klubb' | 'ungdom' | 'snack';
+export type FeedTag = 'match' | 'trupp' | 'klubb' | 'ungdom' | 'snack' | 'klipp';
 
 export type FeedSource = {
   name: string;
@@ -30,6 +30,8 @@ export type FeedItem = {
   ts: string;
   title: string;
   body?: string | null;
+  /** Bara på klipp: YouTubes miniatyr. */
+  thumbnail?: string | null;
   tag: FeedTag | string;
   links?: { kind: string; key: string }[];
   sources?: FeedSource[];
@@ -49,6 +51,7 @@ export const TAGGAR: { nyckel: FeedTag; etikett: string }[] = [
   { nyckel: 'trupp', etikett: 'Truppen' },
   { nyckel: 'klubb', etikett: 'Klubben' },
   { nyckel: 'ungdom', etikett: 'Ungdom' },
+  { nyckel: 'klipp', etikett: 'Klipp' },
   { nyckel: 'snack', etikett: 'Snacket' },
 ];
 

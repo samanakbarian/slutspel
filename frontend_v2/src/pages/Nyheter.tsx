@@ -200,6 +200,67 @@ function Rad({ post }: { post: FeedItem }) {
     : <div className="ny-rad">{inre}</div>;
 }
 
+/**
+ * Ett klipp, med fasad.
+ *
+ * YouTubes inbäddning väger dryg megabyte och sätter kakor innan någon bett om
+ * det. Här ligger bara miniatyren tills man trycker play — då byts den mot
+ * spelaren, på nocookie-domänen och med autostart så trycket inte behöver
+ * upprepas. Den som scrollar förbi betalar ingenting.
+ */
+function Klipp({ post }: { post: FeedItem }) {
+  const [spelar, setSpelar] = useState(false);
+  const kalla = post.sources?.[0];
+  const id = (kalla?.url || '').match(/[?&]v=([\w-]{6,})/)?.[1];
+
+  return (
+    <div className="ny-rad ny-rad-klipp">
+      <div className="ny-radhuvud">
+        <Tagg tag={post.tag} />
+        <span className="ny-tid">{klockan(post.ts)}</span>
+      </div>
+
+      {spelar && id ? (
+        <div className="ny-spelare">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`}
+            title={post.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <button
+          className="ny-tumnagel"
+          onClick={() => setSpelar(true)}
+          disabled={!id}
+          aria-label={`Spela: ${post.title}`}
+        >
+          {/* Faller miniatyren bort blir det en svart ruta med en spelknapp,
+              inte en trasig bildikon. */}
+          {post.thumbnail && (
+            <img
+              src={post.thumbnail}
+              alt=""
+              loading="lazy"
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
+          )}
+          <span className="ny-play" aria-hidden="true">▶</span>
+        </button>
+      )}
+
+      <p className="ny-titel">{post.title}</p>
+      <span className={`ny-kalla${kalla?.official ? ' ny-kalla-officiell' : ''}`}>
+        {kalla?.official && <span className="ny-prick" aria-hidden="true" />}
+        {kalla?.name}
+        {/* Fankanalen är läsvärd men är inte klubben, och det ska synas. */}
+        {kalla && !kalla.official && <span className="ny-inofficiell">fankanal</span>}
+      </span>
+    </div>
+  );
+}
+
 /** Ett inlägg är inte en artikel och ska inte se ut som en. */
 function Inlagg({ post }: { post: FeedItem }) {
   const kalla = post.sources?.[0];
@@ -218,6 +279,7 @@ function Inlagg({ post }: { post: FeedItem }) {
 }
 
 function Post({ post }: { post: FeedItem }) {
+  if (post.type === 'video') return <Klipp post={post} />;
   if (post.type === 'x') return <Inlagg post={post} />;
   return <Rad post={post} />;
 }
