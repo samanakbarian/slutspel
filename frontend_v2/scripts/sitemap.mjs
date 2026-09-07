@@ -26,8 +26,19 @@ const logg = [];
 const skriv = (rad) => { logg.push(rad); console.log(`  ${rad}`); };
 
 const BAS = 'https://sida377.se';
-const API = process.env.VITE_API_URL
-  || 'https://loven-stats-api-324947473206.europe-west1.run.app';
+const STANDARD_API = 'https://loven-stats-api-324947473206.europe-west1.run.app';
+
+/**
+ * VITE_API_URL i Netlify pekar på en tjänst som inte finns längre
+ * (loven-api…europe-north1, svarar 404). Appen märker det inte, för
+ * src/config/api.ts har en hårdkodad vakt mot just den adressen — men det här
+ * skriptet läste variabeln rakt av och fick 404 på varje anrop.
+ *
+ * I stället för att spegla vakten provas adresserna tills en svarar. Då
+ * spelar det ingen roll vilken död adress variabeln råkar innehålla
+ * härnäst; en karta som byggs på ett API som inte svarar är ändå värdelös.
+ */
+const KANDIDATER = [...new Set([process.env.VITE_API_URL, STANDARD_API].filter(Boolean))];
 
 const STATISKA = [
   ['/', 'daily', '1.0'],
@@ -41,10 +52,26 @@ const STATISKA = [
 
 const KARTA = new URL('../public/sitemap.xml', import.meta.url);
 
+let API = '';
+
 const hamta = async (vag) => {
-  const svar = await fetch(`${API}${vag}`, { signal: AbortSignal.timeout(60000) });
-  if (!svar.ok) throw new Error(`${vag} svarade ${svar.status}`);
-  return svar.json();
+  for (const bas of API ? [API] : KANDIDATER) {
+    let svar;
+    try {
+      svar = await fetch(`${bas}${vag}`, { signal: AbortSignal.timeout(60000) });
+    } catch (e) {
+      skriv(`${bas} nåddes inte (${e.message})`);
+      continue;
+    }
+    if (!svar.ok) {
+      skriv(`${bas}${vag} svarade ${svar.status}`);
+      continue;
+    }
+    if (!API) skriv(`API: ${bas}`);
+    API = bas;
+    return svar.json();
+  }
+  throw new Error(`ingen adress svarade på ${vag}`);
 };
 
 /** Säsongsnycklar med lagdata, nyaste först. Faller tillbaka på den aktiva. */
