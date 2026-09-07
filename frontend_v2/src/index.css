@@ -2703,3 +2703,152 @@ a {
   cursor: pointer;
 }
 .sp-more:focus-visible { outline: 2px solid var(--brand-green-light); outline-offset: 2px; }
+
+/* ── Nyheter ──────────────────────────────────────────── */
+/* Flödet ska läsas uppifrån och ner utan att ögat behöver leta: en rubrikrad
+   per dag, en rad per nyhet, ämnet till vänster och tiden till höger. Färgen
+   bär ämnet, inte tonen — en förlust är inte röd här, det är en match. */
+
+.ny-huvud { margin-bottom: 0.6rem; }
+.ny-status { font-size: 0.74rem; color: var(--text-muted); }
+
+.ny-filter {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.ny-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.ny-chip:hover { border-color: var(--brand-green); }
+.ny-chip:focus-visible { outline: 2px solid var(--brand-gold-light); outline-offset: 2px; }
+
+.ny-chip-vald {
+  border-color: var(--brand-green);
+  background: rgba(37, 163, 90, 0.14);
+  color: var(--text-primary);
+}
+
+.ny-chipantal {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ny-chip-vald .ny-chipantal { color: var(--brand-green-light); }
+
+/* toppnyheten */
+.ny-topp {
+  display: block;
+  background: linear-gradient(150deg, rgba(37, 163, 90, 0.16), rgba(14, 26, 21, 0.92) 62%);
+  border: 1px solid rgba(37, 163, 90, 0.3);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ny-toppmeta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+
+.ny-topptitel {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 0.45rem;
+  overflow-wrap: anywhere;
+}
+
+/* dagen */
+.ny-dag { margin-bottom: 1.1rem; }
+
+.ny-dagrubrik {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* raden */
+.ny-rad {
+  display: block;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+a.ny-rad:hover, a.ny-topp:hover { border-color: var(--brand-green); }
+a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand-gold-light); outline-offset: 2px; }
+
+.ny-radhuvud { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.35rem; }
+
+.ny-titel { font-size: 0.9rem; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.ny-brod { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; margin-top: 0.25rem; }
+
+.ny-tid { font-size: 0.68rem; color: var(--text-muted); font-variant-numeric: tabular-nums; flex: none; }
+
+.ny-kalla {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.ny-kalla-officiell { color: var(--brand-green-light); }
+
+/* Klubbens egen sida. Pricken bär inte informationen ensam — färgen och
+   ordningen gör det också, så den fungerar i gråskala. */
+.ny-prick { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-green); flex: none; }
+
+/* ämnesmärket */
+.ny-tagg {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  flex: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.ny-tagg-match { background: rgba(37, 163, 90, 0.18); color: var(--brand-green-light); }
+.ny-tagg-trupp { background: rgba(245, 192, 69, 0.16); color: var(--brand-gold); }
+.ny-tagg-ungdom { background: rgba(120, 160, 255, 0.16); color: #9db8ff; }
+.ny-tagg-snack { background: rgba(167, 139, 250, 0.16); color: #c4b5fd; }
+
+/* inlägg */
+.ny-rad-x { border-left: 3px solid rgba(167, 139, 250, 0.5); }
+.ny-handtag { font-size: 0.7rem; font-weight: 700; color: #c4b5fd; }
+.ny-inlaggstext { font-size: 0.84rem; line-height: 1.4; color: var(--text-secondary); overflow-wrap: anywhere; }
+
+.ny-tomt { font-size: 0.82rem; color: var(--text-muted); font-style: italic; margin: 0.8rem 0; }
