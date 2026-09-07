@@ -49,15 +49,53 @@ function freshnessLabel(meta: { freshness_status?: string; source_updated_at?: s
   }
 }
 
+/**
+ * Om-sidan.
+ *
+ * Att sajten är ett fanprojekt stod tidigare bara i humans.txt och llms.txt —
+ * alltså för robotar, inte för människor. Den som undrar om det är klubben som
+ * talar ska få svaret här, och källorna ska stå utskrivna: en sajt som bygger
+ * på andras arbete ska säga vems.
+ */
 function OmSida() {
   return (
     <div className="page animate-fade-up">
       <section className="mc-card">
         <p className="mc-kicker">Om</p>
-        <h2 className="mc-title">Frågor eller synpunkter?</h2>
+        <h2 className="mc-title">Sida 377</h2>
         <p className="mc-text" style={{ marginTop: 6 }}>
-          Lövenläget samlar statistik, matcher och nyheter om IF Björklöven i SHL 2026/27.
-          Data kommer från Swehockey Stats.
+          Lövenläget samlar statistik, matcher och nyheter om IF Björklöven i
+          SHL 2026/27. Namnet kommer från SVT Text sida 377 — målservicen, där
+          resultaten tickade in medan matcherna pågick.
+        </p>
+        <p className="mc-text" style={{ marginTop: 10 }}>
+          <b>Det här är ett fanprojekt.</b> Sajten drivs av en supporter och har
+          ingen koppling till IF Björklöven, SHL eller Swehockey. Inget här är
+          officiellt, och klubben ansvarar inte för innehållet.
+        </p>
+      </section>
+
+      <section className="mc-card">
+        <p className="mc-kicker">Varifrån siffrorna kommer</p>
+        <p className="mc-text">
+          All matchdata — resultat, mål, utvisningar, skott, spelarstatistik —
+          hämtas från <b>Swehockey Stats</b>, och räknas om här till det som
+          visas. Plus/minus följer regelboken: bara spel fem mot fem och i
+          numerärt underläge, aldrig powerplaymål, och straffar räknas inte alls.
+        </p>
+        <p className="mc-text" style={{ marginTop: 10 }}>
+          Nyheterna är rubriker från klubbens egen sida och svensk hockeymedia.
+          Varje rad länkar till källan — texten står kvar där den skrevs.
+          Klippen spelas från YouTube, från klubbens kanal och från fankanalen
+          Björklöven Inofficiell, märkta så att man ser vilken som är vilken.
+        </p>
+      </section>
+
+      <section className="mc-card">
+        <p className="mc-kicker">Kontakt</p>
+        <p className="mc-text">
+          Fel i en siffra, en källa som inte vill vara med, eller bara en idé —
+          hör av dig.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
           <a href="mailto:saman.akbarian@gmail.com">Skicka e-post</a>
