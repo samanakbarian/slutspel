@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GoalieLine, MatchReport } from '../../lib/match';
-import { isOurs, parsePeriods, surname } from '../../lib/match';
+import { isOurs, ordinal, parsePeriods, surname } from '../../lib/match';
 import { CARD_SIZE, cardBlob, cardFontsReady, drawMatchCard } from './matchCard';
 import type { CardModel, CardStat, CardStep } from './matchCard';
 
@@ -134,7 +134,9 @@ function statsFor(data: MatchReport, periods: [number, number][], ourSide: 'home
     const [h, a] = periods[bestIdx];
     const ours = ourSide === 'home' ? h : a;
     const theirs = ourSide === 'home' ? a : h;
-    out.push({ label: `Period ${bestIdx + 1}`, value: `${ours}–${theirs}` });
+    // Etiketten måste säga vad siffran är. "PERIOD 2 · 1–0" bredvid "SKOTT
+    // 37–22" läses som en godtycklig period, inte som den ni vann tydligast.
+    out.push({ label: 'Bästa perioden', value: `${ordinal(bestIdx + 1)} · ${ours}–${theirs}` });
   }
 
   if (out.length < 4) {

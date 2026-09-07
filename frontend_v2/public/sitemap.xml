@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  De fem flikarna plus omsidan. Matchrapporter och spelarsidor står inte här:
-  de är hundratals adresser som ändras varje omgång, och en sitemap som ljuger
-  är värre än ingen. De hittas via länkarna på matchsidan.
-
-  Ekonomi och preseason är avpublicerade ur navigeringen och ska inte heller
-  indexeras.
--->
+<!-- Genererad av scripts/sitemap.mjs vid bygget. Redigera inte för hand. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://sida377.se/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://sida377.se/matcher</loc><changefreq>daily</changefreq><priority>0.9</priority></url>

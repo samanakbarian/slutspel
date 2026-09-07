@@ -306,6 +306,18 @@ export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
   ctx.textAlign = 'right';
   ctx.fillText(widest(ctx, m.when, 560), right, PAD + 30);
 
+  // Adressen, direkt under avsändaren. En bild reser längre än en länk i ett
+  // supportergäng, och utan den bär den ingen väg tillbaka. Dämpad med flit:
+  // den ska gå att hitta, inte tränga sig på.
+  //
+  // Raden ligger mellan varumärket (PAD+30) och rubrikbrickan (PAD+84). Nere
+  // vid foten fanns ingen plats: de fyra talen har sin baslinje på 986 och
+  // ramen slutar på 1022.
+  ctx.fillStyle = INK_3;
+  ctx.font = `500 22px ${SANS}`;
+  ctx.textAlign = 'left';
+  tracked(ctx, 'SIDA377.SE', PAD, PAD + 58, 3.4);
+
   /* rubrikbrickan */
   let y = PAD + 84;
   if (m.eyebrow) {
