@@ -55,8 +55,33 @@ function franGammalForm(artiklar: GammalArtikel[]): FeedItem[] {
     .sort((a, b) => b.ts.localeCompare(a.ts));
 }
 
+/**
+ * Nästa match, för rubriken.
+ *
+ * Ett nyhetsflöde utan rubrik är en lista. Rubriken måste däremot vara sann
+ * varje gång sidan öppnas, och den enda uppgift som är det utan att någon
+ * skriver den är vad som väntar härnäst — den ändrar sig själv varje dygn.
+ * Faller den bort står "Nyhetsflödet" kvar; sidan är inte beroende av den.
+ */
+type NastaMatch = {
+  status?: string;
+  game?: { date?: string; time?: string | null; opponent?: string; is_home?: boolean; venue?: string | null };
+  is_premiere?: boolean;
+};
+
+async function hamtaNasta(): Promise<NastaMatch | null> {
+  try {
+    const svar = await fetch(`${API_URL}/api/v1/next-match`, { cache: 'no-store' });
+    if (!svar.ok) return null;
+    const data: NastaMatch = await svar.json();
+    return data.status === 'ok' && data.game?.date ? data : null;
+  } catch {
+    return null;
+  }
+}
+
 async function hamtaFlodet(): Promise<FeedResponse> {
-  const svar = await fetch(`${API_URL}/api/v1/feed?limit=120&ts=${Date.now()}`, { cache: 'no-store' });
+  const svar = await fetch(`${API_URL}/api/v1/feed?limit=200&ts=${Date.now()}`, { cache: 'no-store' });
   if (svar.ok) {
     const data: FeedResponse = await svar.json();
     if (data.status !== 'error' && (data.items?.length || 0) > 0) return data;
@@ -72,6 +97,50 @@ async function hamtaFlodet(): Promise<FeedResponse> {
 }
 
 /* ── delkomponenter ── */
+
+const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni',
+  'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
+
+/** Dygn kvar, räknat på datum och inte på timmar: matchdag är matchdag. */
+function dygnTill(datum: string, nu: Date = new Date()): number | null {
+  const d = new Date(`${datum}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  const dag = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  return Math.round((dag(d) - dag(nu)) / 86400000);
+}
+
+function Rubrik({ nasta, status }: { nasta: NastaMatch | null; status: string }) {
+  const match = nasta?.game;
+  const kvar = match?.date ? dygnTill(match.date) : null;
+
+  let rubrik = 'Nyhetsflödet';
+  if (kvar !== null && kvar >= 0) {
+    const vad = nasta?.is_premiere ? 'premiären' : 'nästa match';
+    rubrik = kvar === 0 ? 'Matchdag'
+      : kvar === 1 ? `I morgon: ${nasta?.is_premiere ? 'premiär' : 'match'}`
+        : `${kvar} dagar till ${vad}`;
+  }
+
+  const d = match?.date ? new Date(`${match.date}T00:00:00`) : null;
+  const nar = d && !Number.isNaN(d.getTime()) ? `${d.getDate()} ${MANADER[d.getMonth()]}` : '';
+  const rad = match
+    ? [
+      `${match.opponent?.replace(/^IF\s+/, '') || ''} ${match.is_home ? 'hemma' : 'borta'}`.trim(),
+      nar,
+      (match.time || '').replace(':', '.'),
+      match.venue || '',
+    ].filter(Boolean).join(' · ')
+    : '';
+
+  return (
+    <section className="ny-huvud">
+      <p className="mc-kicker">Runt Björklöven</p>
+      <h1 className="ny-rubrik">{rubrik}</h1>
+      {rad && <p className="ny-underrubrik">{rad}</p>}
+      <p className="ny-status">{status}</p>
+    </section>
+  );
+}
 
 function Tagg({ tag }: { tag: string }) {
   return <span className={`ny-tagg ny-tagg-${tag}`}>{taggEtikett(tag)}</span>;
@@ -157,6 +226,7 @@ function Post({ post }: { post: FeedItem }) {
 
 export function Nyheter() {
   const [data, setData] = useState<FeedResponse | null>(null);
+  const [nasta, setNasta] = useState<NastaMatch | null>(null);
   const [fel, setFel] = useState<string | null>(null);
   const [laddar, setLaddar] = useState(true);
   const [filter, setFilter] = useState<string>('allt');
@@ -169,6 +239,8 @@ export function Nyheter() {
       .then(d => { if (!avbruten) { setData(d); setFel(null); } })
       .catch(e => { if (!avbruten) setFel(e instanceof Error ? e.message : 'Okänt fel'); })
       .finally(() => { if (!avbruten) setLaddar(false); });
+    // Rubriken är fristående: den får hämtas parallellt och misslyckas tyst.
+    hamtaNasta().then(n => { if (!avbruten) setNasta(n); });
     return () => { avbruten = true; };
   }, []);
 
@@ -230,13 +302,11 @@ export function Nyheter() {
 
   return (
     <div className="page animate-fade-up">
-      <section className="ny-huvud">
-        <p className="mc-kicker">Runt Björklöven</p>
-        <p className="ny-status">
-          {totalt} rader från {kallor} källor
-          {data.updated_at && <> · uppdaterat {klockan(data.updated_at)}</>}
-        </p>
-      </section>
+      <Rubrik
+        nasta={nasta}
+        status={`${totalt} rader från ${kallor} källor`
+          + (data.updated_at ? ` · uppdaterat ${klockan(data.updated_at)}` : '')}
+      />
 
       <div className="ny-filter" role="tablist" aria-label="Ämnen">
         <button
