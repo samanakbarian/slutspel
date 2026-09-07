@@ -431,17 +431,35 @@ a {
   animation: fadeUp 0.28s ease-out forwards;
 }
 
+/* ── Skrivbord ─────────────────────────────────────────────
+   Sidan var inte obruten på en stor skärm, den var fel anpassad. Tre fel
+   samverkade: innehållet sträcktes till 980 px medan texten stod kvar på
+   mobilstorlek, så en matchrad hade datumet i ena kanten och placeringen i den
+   andra med en halv skärm emellan. Topbaren låg dessutom mot fönsterkanten
+   medan korten var centrerade — rubrik och innehåll delade ingen axel. Och
+   navigeringen hade sex kolumner för fem länkar.
+
+   Lösningen är inte fler kolumner utan färre pixlar per rad: en smalare
+   spalt och större text ger samma täthet som på telefonen, men läsbar. Ett
+   flerkolumnsläge är en egen designfråga och ligger i backloggen som WEB-008. */
 @media (min-width: 860px) {
+  /* Rotstorleken skalar allt rem-baserat på en gång — text, luft och
+     radhöjder tillsammans — i stället för en regel per klass. */
+  html { font-size: 17px; }
+
   .topbar {
-    padding: 1rem 1.25rem;
+    /* Samma vänsterkant som korten. Utan detta börjar rubriken vid
+       fönsterkanten och innehållet 250 px in. */
+    padding: 1rem max(1.25rem, calc((100% - 50rem) / 2));
   }
 
-  .topbar-title {
-    font-size: 1.45rem;
-  }
+  .topbar-title { font-size: 1.45rem; }
 
   .content-area {
-    padding: 1.2rem 1.2rem 1.3rem;
+    /* 50rem följer rotstorleken, så spalten växer med texten i stället för
+       att bli en allt längre rad. */
+    max-width: 50rem;
+    padding: 1.2rem 1.25rem 1.3rem;
   }
 
   .signal-grid {
@@ -450,7 +468,7 @@ a {
 
   .bottom-nav {
     position: static;
-    max-width: 980px;
+    max-width: 50rem;
     width: 100%;
     margin: 0 auto 1rem;
     border: 1px solid var(--glass-border);
@@ -458,6 +476,14 @@ a {
     background: rgba(6, 11, 9, 0.95);
   }
 }
+
+@media (min-width: 1280px) {
+  html { font-size: 18px; }
+}
+
+/* Kolumnerna följer antalet länkar. Rutnätet stod på sex medan navigeringen
+   har fem, så den sjätte kolumnen låg tom och sköt raden ur mitten. */
+.bottom-nav { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
 
 /* ── Tomt säsongstillstånd ────────────────────────────────
    Ersätter det tidigare tysta bytet till en annan säsong. */
@@ -2968,7 +2994,7 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .is-schema { margin-top: 0.5rem; display: flex; flex-direction: column; }
 .is-rad {
   display: grid;
-  grid-template-columns: 3.6rem 1.1rem 1fr 1.6rem;
+  grid-template-columns: 3.6rem 1.1rem auto 1fr 1.6rem;
   gap: 0.45rem;
   align-items: center;
   padding: 0.32rem 0;
@@ -2980,6 +3006,12 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .is-ha { font-size: 0.66rem; font-weight: 800; color: var(--text-muted); text-align: center; }
 .is-ha-h { color: var(--brand-green-light); }
 .is-mot { overflow-wrap: anywhere; }
+.is-prickar {
+  border-bottom: 1px dotted var(--text-muted);
+  opacity: 0.35;
+  transform: translateY(-0.25em);
+  min-width: 0.6rem;
+}
 
 /* Placeringen bär svårighet, inte utfall — ett topplag är inte "dåligt".
    Därför intensitet i samma kulör i stället för grönt mot rött, och siffran

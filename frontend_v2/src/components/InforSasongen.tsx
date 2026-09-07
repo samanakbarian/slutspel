@@ -12,6 +12,10 @@ import { API_URL } from '../config/api';
  * Truppkortet är premiärinnehåll och försvinner när säsongen börjat — då är
  * frågan "vad tog vi med oss upp" besvarad av matcherna själva. Schemakortet
  * står kvar hela säsongen; det pekar bara framåt i stället för in.
+ *
+ * Båda gäller SHL 2026/27 och ingenting annat. Väljer läsaren en spelad
+ * säsong försvinner de helt — ett kort som beskriver ett annat år än det
+ * sidan visar är värre än inget kort.
  */
 
 type Spelare = {
@@ -99,22 +103,38 @@ function Rad({ m }: { m: Match }) {
       <span className="is-datum">{datum(m.date)}</span>
       <span className={`is-ha${m.is_home ? ' is-ha-h' : ''}`}>{m.is_home ? 'H' : 'B'}</span>
       <span className="is-mot">{m.opponent.replace(/^IF\s+/, '')}</span>
+      {/* Prickarna binder ihop lagnamn och placering. På en telefon är gapet
+          några millimeter; på en skrivbordsskärm blev det fyra centimeter, och
+          då tappar ögat raden på vägen. Samma grepp som Text-TV-läget. */}
+      <span className="is-prickar" aria-hidden="true" />
       <Placering rank={m.opponent_rank} />
     </div>
   );
 }
 
-export function InforSasongen({ sasongenBorjat }: { sasongenBorjat: boolean }) {
+export function InforSasongen({
+  sasongenBorjat, aktuellSasong,
+}: {
+  sasongenBorjat: boolean;
+  /** Korten handlar om SHL 26/27. Väljer man en gammal säsong hör de inte hemma. */
+  aktuellSasong: boolean;
+}) {
   const [data, setData] = useState<Svar | null>(null);
 
   useEffect(() => {
+    if (!aktuellSasong) return;
     let avbruten = false;
     fetch(`${API_URL}/api/v1/season-preview`, { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (!avbruten && d?.status === 'ok') setData(d); })
       .catch(() => { /* korten är komplement och får utebli tyst */ });
     return () => { avbruten = true; };
-  }, []);
+  }, [aktuellSasong]);
+
+  // Byter man till en spelad säsong beskriver korten fel år: "Vägen in" är
+  // 26/27:s spelprogram och truppkortet 26/27:s trupp. De hörde tidigare bara
+  // ihop med sidan, inte med säsongsvalet, och följde därför med.
+  if (!aktuellSasong) return null;
 
   const trupp = data?.squad;
   const schema = data?.schedule;

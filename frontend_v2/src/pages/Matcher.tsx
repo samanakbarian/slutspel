@@ -376,7 +376,10 @@ export function Matcher() {
       {/* Inför säsongen. Truppkortet är premiärinnehåll och tar sig självt ur
           vägen när matcherna börjat tala; schemakortet står kvar. */}
       <Guard name="Inför säsongen">
-        <InforSasongen sasongenBorjat={games.some(g => g.played)} />
+        <InforSasongen
+          sasongenBorjat={games.some(g => g.played)}
+          aktuellSasong={!season || season === activeKey}
+        />
       </Guard>
 
       {played.length > 0 && (
