@@ -2950,3 +2950,45 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   letter-spacing: 0.06em;
   color: var(--text-muted);
 }
+
+/* ── Inför säsongen ───────────────────────────────────────── */
+.is-tal { font-family: var(--font-display); font-size: 2rem; font-weight: 900; line-height: 1; margin-bottom: 0.25rem; }
+.is-tal b { color: var(--brand-green-light); }
+
+.is-lista { margin-top: 0.7rem; display: flex; flex-direction: column; gap: 0.28rem; }
+.is-sp { display: grid; grid-template-columns: 1fr auto auto; gap: 0.6rem; align-items: baseline; font-size: 0.84rem; }
+.is-sp-namn { overflow-wrap: anywhere; }
+.is-sp-tal { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--brand-gold); }
+.is-sp-mal { font-size: 0.72rem; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 3.4rem; text-align: right; }
+
+.is-schema { margin-top: 0.5rem; display: flex; flex-direction: column; }
+.is-rad {
+  display: grid;
+  grid-template-columns: 3.6rem 1.1rem 1fr 1.6rem;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.32rem 0;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.84rem;
+}
+.is-rad:last-child { border-bottom: none; }
+.is-datum { font-size: 0.72rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.is-ha { font-size: 0.66rem; font-weight: 800; color: var(--text-muted); text-align: center; }
+.is-ha-h { color: var(--brand-green-light); }
+.is-mot { overflow-wrap: anywhere; }
+
+/* Placeringen bär svårighet, inte utfall — ett topplag är inte "dåligt".
+   Därför intensitet i samma kulör i stället för grönt mot rött, och siffran
+   står alltid utskriven så att brickan aldrig är enda bäraren. */
+.is-plats {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: center;
+  border-radius: 4px;
+  padding: 0.1rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.is-plats-hog { background: rgba(245, 192, 69, 0.9); color: #1a1204; }
+.is-plats-mellan { background: rgba(245, 192, 69, 0.3); color: var(--brand-gold-light); }
+.is-plats-lag { background: rgba(255, 255, 255, 0.07); color: var(--text-secondary); }
+.is-plats-tom { color: var(--text-muted); }

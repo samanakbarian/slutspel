@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
+import { InforSasongen } from '../components/InforSasongen';
 import { Guard } from '../components/Guard';
 import { Tabellen } from '../components/Tabellen';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from '../components/texttv';
@@ -362,6 +363,12 @@ export function Matcher() {
           Före seriestart beskrivs motståndaren med förra säsongen i stället —
           tabellen säger ingenting då. Faller kortet bort visas nedräkningen. */}
       {next && <Guard name="Inför matchen"><InforMatchen season={season} /></Guard>}
+
+      {/* Inför säsongen. Truppkortet är premiärinnehåll och tar sig självt ur
+          vägen när matcherna börjat tala; schemakortet står kvar. */}
+      <Guard name="Inför säsongen">
+        <InforSasongen sasongenBorjat={games.some(g => g.played)} />
+      </Guard>
 
       {played.length > 0 && (
         <section className="mc-card">
