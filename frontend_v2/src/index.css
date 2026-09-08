@@ -52,8 +52,8 @@
   --brand-gold-light: #ffda73;
 
   --text-primary: #f1f7f4;
-  --text-secondary: #9bb2a8;
-  --text-muted: #6f857c;
+  --text-secondary: #a8c0b6;
+  --text-muted: #8a9f96;
 
   --impact-positive: #25c06d;
   --impact-negative: #ff4d4d;
@@ -147,6 +147,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  transition: padding 0.2s ease;
 }
 
 .topbar-kicker {
@@ -155,12 +156,22 @@ a {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.09em;
+  transition: opacity 0.2s ease, max-height 0.2s ease;
+  max-height: 1.5em;
+  overflow: hidden;
 }
 
 .topbar-title {
   font-size: 1.25rem;
   font-weight: 800;
+  transition: font-size 0.2s ease;
 }
+
+.topbar-compact { padding-top: 0.4rem; padding-bottom: 0.4rem; }
+.topbar-compact .topbar-kicker { opacity: 0; max-height: 0; }
+.topbar-compact .topbar-title { font-size: 0.95rem; }
+.topbar-compact .topbar-sida { font-size: 0.85rem; padding: 0.12rem 0.32rem; }
+.topbar-compact .freshness { font-size: 0.65rem; padding: 0.2rem 0.45rem; }
 
 .freshness {
   display: inline-flex;
@@ -173,6 +184,7 @@ a {
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 700;
+  transition: font-size 0.2s ease, padding 0.2s ease;
 }
 
 .content-area {
@@ -2867,6 +2879,7 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   border-radius: 5px;
   padding: 0.18rem 0.42rem;
   line-height: 1.15;
+  transition: font-size 0.2s ease, padding 0.2s ease;
 }
 
 /* klipp */

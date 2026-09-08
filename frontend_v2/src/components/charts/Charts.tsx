@@ -296,15 +296,18 @@ export function PeriodBars({ periods }: { periods: { label: string; gf: number; 
 }
 
 /** Formprickar: senaste matcherna som färgade punkter. */
+const FD_LABELS: Record<string, string> = { W: 'Vinst', L: 'Förlust', OTW: 'ÖT-vinst', OTL: 'ÖT-förlust', D: 'Oavgjort' };
+
 export function FormDots({ results }: { results: string[] }) {
   if (results.length === 0) return null;
   const w = results.filter(r => r === 'W').length;
+  const otw = results.filter(r => r === 'OTW').length;
+  const otl = results.filter(r => r === 'OTL').length;
   const l = results.filter(r => r === 'L').length;
-  const o = results.filter(r => r === 'OTL' || r === 'OTW').length;
   return (
     <div className="fd-wrap">
-      {results.map((r, i) => <span key={i} className={`fd-dot fd-${r.toLowerCase()}`} title={r} />)}
-      <span className="fd-text">{w}V–{l}F{o > 0 ? `–${o}ÖT` : ''}</span>
+      {results.map((r, i) => <span key={i} className={`fd-dot fd-${r.toLowerCase()}`} aria-label={FD_LABELS[r] ?? r} title={FD_LABELS[r] ?? r} />)}
+      <span className="fd-text">{w} V · {otw} ÖV · {otl} ÖF · {l} F</span>
     </div>
   );
 }

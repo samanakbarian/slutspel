@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { AlertTriangle, CalendarDays, LineChart, MessageSquare, Newspaper, Users } from 'lucide-react';
 import { Matcher } from './pages/Matcher';
@@ -107,17 +107,33 @@ function OmSida() {
 
 function App() {
   const { data, fetchLage } = useLageStore();
+  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
     void fetchLage();
   }, [fetchLage]);
+
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => {
+          setCompact(window.scrollY > 60);
+          ticking = false;
+        });
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const freshness = freshnessLabel(data?.meta);
 
   return (
     <Router>
       <div className="controlroom-shell">
-        <header className="topbar">
+        <header className={`topbar${compact ? ' topbar-compact' : ''}`}>
           {/* Sidnumret först, som på Text-TV: "377 SVT TEXT" står i den
               ordningen, och det är numret som bär igenkänningen. Lövenläget är
               vad sidan heter, 377 är var den finns. */}

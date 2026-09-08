@@ -253,7 +253,7 @@ function normSkater(p: Record<string, unknown>): Skater {
     team, pos: String(p.position || ''), num: Number(num) || 0,
     gp: Number(gp) || 0,
     g: Number(p.goals ?? 0), a: Number(p.assists ?? 0), p: Number(pts) || 0,
-    ppg: gp ? (Number(pts) / Number(gp)).toFixed(2) : '–',
+    ppg: gp ? svNum(Number(pts) / Number(gp), 2) : '–',
     pim: Number(p.pim ?? 0), pm: String(p.plus_minus ?? ''),
     isBjk: BJK.test(team),
   };
@@ -266,8 +266,8 @@ function normGoalie(g: Record<string, unknown>): Goalie {
     name: String(g.goalie_name || g.name || ''), team,
     gp: Number(g.games_played ?? g.gp ?? 0),
     ga: Number(g.goals_against ?? g.ga ?? 0),
-    gaa: g.gaa != null && g.gaa !== '' ? Number(g.gaa).toFixed(2) : '–',
-    svp: svp !== '' && svp != null ? Number(svp).toFixed(2) : '–',
+    gaa: g.gaa != null && g.gaa !== '' ? svNum(Number(g.gaa), 2) : '–',
+    svp: svp !== '' && svp != null ? svNum(Number(svp), 2) : '–',
     so: Number(g.shutouts ?? g.so ?? 0),
     w: Number(g.wins ?? 0), l: Number(g.losses ?? 0),
     isBjk: BJK.test(team),
@@ -278,7 +278,7 @@ function apiPlayerToSkater(p: ApiPlayer): Skater {
   return {
     name: p.name, team: 'IF Björklöven', pos: p.position, num: p.jersey_number ?? 0,
     gp: p.games_played, g: p.goals, a: p.assists, p: p.points,
-    ppg: p.points_per_game.toFixed(2), pim: p.pim,
+    ppg: svNum(p.points_per_game, 2), pim: p.pim,
     pm: p.plus_minus > 0 ? `+${p.plus_minus}` : String(p.plus_minus),
     isBjk: true,
   };
@@ -326,6 +326,12 @@ async function fetchJson(
 const komma = (v: number | null | undefined) =>
   v == null ? '–' : String(v).replace('.', ',');
 
+const svNum = (v: number | null | undefined, decimaler = 1) =>
+  v == null ? '–' : v.toLocaleString('sv-SE', {
+    minimumFractionDigits: decimaler,
+    maximumFractionDigits: decimaler,
+  });
+
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
     <div className="st-stat">
@@ -356,7 +362,7 @@ function pdoTone(value: number | null, normal: number): string | undefined {
 }
 
 const rec = (r: StateRecord | undefined) =>
-  r ? `${r.w}–${r.l}${r.otl ? `–${r.otl}` : ''}` : '–';
+  r ? `${r.w}–${r.l}–${r.otl ?? 0}` : '–';
 
 type SortKey = 'num' | 'name' | 'gp' | 'g' | 'a' | 'p' | 'ppg' | 'pm' | 'onice' | 'share';
 
@@ -1140,10 +1146,10 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
   return (
     <section className="mc-card">
       <p className="mc-kicker">Femmorna</p>
-      <h2 className="mc-title">Vilken femma vinner sina byten?</h2>
+      <h2 className="mc-title">Målbalans per femma</h2>
       <Tornado
         leftLabel="Mål emot"
-        rightLabel="Mål med femman på isen"
+        rightLabel="Mål för, tilldelade femman"
         rows={data.lines.map(l => ({
           key: String(l.line),
           label: `Femma ${l.line}`,
@@ -1222,9 +1228,11 @@ function Motstandare({
               <thead>
                 <tr>
                   <th scope="col">Lag</th>
+                  <th scope="col" className="opp-num">M</th>
                   <th scope="col" className="opp-num">V–F</th>
                   <th scope="col" className="opp-num">Mål</th>
                   <th scope="col" className="opp-num">Diff</th>
+                  <th scope="col" className="opp-num">Diff/M</th>
                   <th scope="col" className="opp-bar" aria-label="Målskillnad som stapel" />
                 </tr>
               </thead>
@@ -1232,9 +1240,11 @@ function Motstandare({
                 {data.opponents.map(o => (
                   <tr key={o.opponent}>
                     <td className="opp-team">{shortTeam(o.opponent)}</td>
+                    <td className="opp-num">{o.games}</td>
                     <td className="opp-num">{o.wins}–{o.losses}</td>
                     <td className="opp-num">{o.goals_for}–{o.goals_against}</td>
                     <td className="opp-num">{o.diff > 0 ? `+${o.diff}` : o.diff}</td>
+                    <td className="opp-num">{o.games ? svNum(o.diff / o.games, 1) : '–'}</td>
                     <td className="opp-bar">
                       <i
                         style={{
@@ -1383,13 +1393,13 @@ function Laget({
         <p className="mc-kicker">Facit</p>
         <div className="st-stats">
           <Stat label="Matcher" value={record.gp} />
-          <Stat label="Vinster" value={record.w} tone="var(--impact-positive)" />
-          {record.otw > 0 && <Stat label="ÖT-vinst" value={record.otw} tone="var(--impact-warning)" />}
-          {record.otl > 0 && <Stat label="ÖT-förlust" value={record.otl} tone="var(--impact-warning)" />}
-          <Stat label="Förluster" value={record.l} tone="var(--impact-negative)" />
+          <Stat label="Reg. vinster" value={record.w} tone="var(--impact-positive)" />
+          {record.otw > 0 && <Stat label="ÖT/SO-vinster" value={record.otw} tone="var(--impact-warning)" />}
+          {record.otl > 0 && <Stat label="ÖT/SO-förluster" value={record.otl} tone="var(--impact-warning)" />}
+          <Stat label="Reg. förluster" value={record.l} tone="var(--impact-negative)" />
           <Stat label="Poäng" value={record.pts} tone="var(--brand-gold)" />
           <Stat label="Målskillnad" value={record.diff > 0 ? `+${record.diff}` : record.diff} />
-          <Stat label="P/match" value={record.gp ? (record.pts / record.gp).toFixed(2) : '–'} tone="var(--brand-green-light)" />
+          <Stat label="P/match" value={record.gp ? svNum(record.pts / record.gp, 2) : '–'} tone="var(--brand-green-light)" />
         </div>
         {last10.length > 0 && (
           <>
@@ -1436,7 +1446,7 @@ function Laget({
                     label: 'Skottandel',
                     vanster: shots.home.shot_share_pct,
                     hoger: shots.away.shot_share_pct,
-                    format: (v: number) => `${v.toFixed(1).replace('.', ',')} %`,
+                    format: (v: number) => `${svNum(v, 1)} %`,
                   }]
                 : []),
               ...(shots && shots.home.pdo != null && shots.away.pdo != null
@@ -1444,7 +1454,7 @@ function Laget({
                     label: 'PDO',
                     vanster: shots.home.pdo,
                     hoger: shots.away.pdo,
-                    format: (v: number) => v.toFixed(1).replace('.', ','),
+                    format: (v: number) => svNum(v, 1),
                   }]
                 : []),
             ]}
@@ -1510,17 +1520,17 @@ function Laget({
         <section className="mc-card">
           <p className="mc-kicker">Mål per period</p>
           <PeriodBars periods={periods} />
-          <p className="mc-note">Grön stapel gjorda mål, röd insläppta. Siffran under är skillnaden.</p>
+          <p className="mc-note">Ordinarie perioder, exkl. förlängning. Grön stapel gjorda mål, röd insläppta. Siffran under är skillnaden.</p>
         </section>
       )}
 
       {st && st.pp_opportunities > 0 && (
         <section className="mc-card">
           <p className="mc-kicker">Specialteam</p>
-          <KV label="Powerplay" value={`${st.pp_pct} %`} hint={`${st.pp_goals} mål på ${st.pp_opportunities} spel`} />
-          <KV label="Boxplay" value={`${st.pk_pct} %`} hint={`${st.pk_goals_against} insläppta på ${st.pk_times} underlägen`} />
-          <KV label="Index" value={String(st.special_teams_index)} hint="PP% + PK%. Över 100 räknas som starkt." />
-          <KV label="Utvisningar" value={`${st.avg_pim_per_game} min/match`} hint={`${st.total_pim} minuter totalt`} />
+          <KV label="Powerplay" value={`${komma(st.pp_pct)} %`} hint={`${st.pp_goals} mål på ${st.pp_opportunities} spel`} />
+          <KV label="Boxplay" value={`${komma(st.pk_pct)} %`} hint={`${st.pk_goals_against} insläppta på ${st.pk_times} numerära underlägen`} />
+          <KV label="Special teams-index" value={komma(st.special_teams_index)} hint="PP% + PK%. 100 är neutralnivån, över räknas som starkt." />
+          <KV label="Utvisningar" value={`${komma(st.avg_pim_per_game)} min/match`} hint={`${st.total_pim} minuter totalt`} />
         </section>
       )}
 
@@ -1531,6 +1541,7 @@ function Laget({
           <KV label="Oavgjort efter period 1" value={rec(gs.tied_after_1)} />
           <KV label="Underläge efter period 1" value={rec(gs.trail_after_1)} />
           <KV label="Ledning efter period 2" value={rec(gs.lead_after_2)} />
+          <KV label="Oavgjort efter period 2" value={rec(gs.tied_after_2)} />
           <KV label="Underläge efter period 2" value={rec(gs.trail_after_2)} />
           {gs.game_types && (
             <>
@@ -1540,7 +1551,7 @@ function Laget({
               <KV label="Tre mål eller mer" value={rec(gs.game_types.three_plus_goals)} />
             </>
           )}
-          <p className="mc-note">Läses vinster–förluster–övertidsförluster.</p>
+          <p className="mc-note">Läses V–F–ÖF (vinster–förluster–övertidsförluster).</p>
         </section>
       )}
 
@@ -1723,7 +1734,7 @@ function GoalieCard({ g }: { g: GoalieFull }) {
       {curve.length > 1 && (
         <>
           <p className="mc-kicker st-sub">Räddningsprocent match för match</p>
-          <Sparkline points={curve} height={100} unit=" %" format={v => v.toFixed(1)} colour="var(--brand-gold)" fill="rgba(245,192,69,0.12)" />
+          <Sparkline points={curve} height={100} unit=" %" format={v => svNum(v, 1)} colour="var(--brand-gold)" fill="rgba(245,192,69,0.12)" />
         </>
       )}
 
@@ -1860,11 +1871,11 @@ function Utveckling({
           <div className="st-twin">
             <div>
               <p className="st-minilbl">Gjorda mål per match</p>
-              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.gf_avg }))} height={92} format={v => v.toFixed(1)} />
+              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.gf_avg }))} height={92} format={v => svNum(v, 1)} />
             </div>
             <div>
               <p className="st-minilbl st-minilbl-bad">Insläppta mål per match</p>
-              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.ga_avg }))} height={92} format={v => v.toFixed(1)} colour="var(--impact-negative)" fill="rgba(255,77,77,0.10)" />
+              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.ga_avg }))} height={92} format={v => svNum(v, 1)} colour="var(--impact-negative)" fill="rgba(255,77,77,0.10)" />
             </div>
           </div>
           <p className="mc-note">
@@ -1881,7 +1892,7 @@ function Utveckling({
             height={100}
             colour="var(--brand-gold)"
             fill="rgba(245,192,69,0.12)"
-            format={v => v.toFixed(1)}
+            format={v => svNum(v, 1)}
           />
           <p className="mc-note">
             Skjutprocent plus räddningsprocent. 100 är normalläget — toppar betyder att
@@ -1891,7 +1902,7 @@ function Utveckling({
           <Sparkline
             points={shots.rolling.filter(r => r.shot_share_pct !== null).map(r => ({ label: shortDate(r.date), value: r.shot_share_pct as number }))}
             height={100}
-            format={v => v.toFixed(1)}
+            format={v => svNum(v, 1)}
           />
           <p className="mc-note">
             Andel av skotten. Över 50 betyder att laget sköt mer än motståndarna —
