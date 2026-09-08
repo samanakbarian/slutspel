@@ -329,92 +329,59 @@ a {
   border: 1px solid rgba(66, 216, 131, 0.35);
 }
 
-.x-hero {
-  border-left-color: #64748b;
-}
-
-.x-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.x-stat {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  padding: 8px;
-}
-
-.x-stat-value {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1rem;
-  color: var(--text-primary);
-}
-
-.x-chip-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.x-chip {
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: transparent;
-  color: var(--text-secondary);
+/* ── X-flödet ── */
+.xf-header { padding-bottom: 0.5rem; }
+.xf-subtitle {
   font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
 }
-
-.x-chip.active {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
+.xf-post { padding: 0.7rem 0.85rem; }
+.xf-author {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
-
-.x-top-item {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.x-top-meta {
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.x-top-text {
-  margin-top: 2px;
-}
-
-.x-feed-item {
-  padding: 0.85rem;
-}
-
-.x-feed-author {
-  color: #cbd5e1;
-}
-
-.x-feed-text {
+.xf-tid { font-weight: 400; color: var(--text-muted); }
+.xf-text {
   color: var(--text-primary);
   white-space: pre-wrap;
-  line-height: 1.55;
+  word-break: break-word;
+  line-height: 1.5;
+  font-size: 0.88rem;
+  margin-top: 0.25rem;
 }
-
-.x-feed-meta {
-  margin-top: 8px;
-  font-size: 0.8rem;
+.xf-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.xf-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 0.2rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.xf-toggle:hover { color: var(--text-secondary); }
+.xf-meta {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
-
-.x-link {
-  margin-top: 7px;
-  display: inline-block;
-  color: #e2e8f0;
-  text-decoration: underline;
+.xf-ext {
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-left: auto;
 }
+.xf-ext:hover { color: var(--text-secondary); }
 
 @keyframes fadeUp {
   from {
