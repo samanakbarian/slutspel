@@ -2549,7 +2549,8 @@ a {
   white-space: nowrap;
 }
 .opp-tbl tr:last-child td { border-bottom: 0; }
-.opp-num { font-variant-numeric: tabular-nums; text-align: right; padding-left: 0.6rem; color: var(--text-secondary); }
+th.opp-num { text-align: right; padding-left: 0.6rem; }
+td.opp-num { font-variant-numeric: tabular-nums; text-align: right; padding-left: 0.6rem; color: var(--text-secondary); }
 .opp-team { color: var(--text-primary); font-weight: 500; }
 .opp-bar { width: 5.5rem; padding-left: 0.7rem; }
 .opp-bar i { display: block; height: 8px; border-radius: 2px; background: var(--data-for); }
