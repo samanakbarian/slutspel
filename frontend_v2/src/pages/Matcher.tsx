@@ -456,7 +456,7 @@ export function Matcher() {
           : texttv
             ? <ProgramTextTv games={synliga} season={seasonName} />
             : synliga.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
-        {trunkerad && !texttv && (
+        {trunkerad && (
           <button className="mc-visa-alla" onClick={() => setVisaAllt(true)}>
             Visa hela spelprogrammet ({shown.length})
           </button>
