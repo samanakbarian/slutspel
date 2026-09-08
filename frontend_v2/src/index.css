@@ -331,26 +331,42 @@ a {
 
 /* ── X-flödet ── */
 .xf-header { padding-bottom: 0.5rem; }
-.xf-subtitle {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
+.xf-subtitle { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+.xf-feed {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  overflow: hidden;
 }
-.xf-post { padding: 0.85rem 0.85rem; }
-.xf-author {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--text-secondary);
+.xf-post {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 0.6rem;
+  padding: 0.85rem;
 }
-.xf-tid { font-weight: 400; color: var(--text-muted); opacity: 0.7; font-size: 0.72rem; }
-.xf-sep { margin: 0 0.15rem; color: var(--text-muted); opacity: 0.5; }
+.xf-post:not(:last-child) { border-bottom: 1px solid var(--glass-border); }
+
+.xf-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--brand-green); color: #04140c;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; font-weight: 700; flex-shrink: 0;
+  grid-row: 1 / -1;
+}
+.xf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem; }
+.xf-name { font-size: 0.84rem; font-weight: 700; color: var(--text-primary); }
+.xf-handle { font-size: 0.78rem; font-weight: 400; color: var(--text-muted); }
+.xf-sep { color: var(--text-muted); opacity: 0.5; font-size: 0.76rem; }
+.xf-tid { font-size: 0.76rem; font-weight: 400; color: var(--text-muted); opacity: 0.7; }
+
 .xf-text {
   color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.6;
-  font-size: 0.88rem;
-  margin-top: 0.25rem;
+  font-size: 0.92rem;
+  margin-top: 0.2rem;
 }
 .xf-clamp {
   display: -webkit-box;
@@ -359,30 +375,25 @@ a {
   overflow: hidden;
 }
 .xf-toggle {
-  background: none;
-  border: none;
-  padding: 0.25rem 0;
-  margin-top: 0.2rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
+  background: none; border: none;
+  padding: 0.25rem 0; margin-top: 0.15rem;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--text-secondary); cursor: pointer;
 }
 .xf-toggle:hover { color: var(--text-primary); }
-.xf-meta {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  margin-top: 0.5rem;
-  font-size: 0.72rem;
-  color: var(--text-muted);
+
+.xf-actions {
+  display: flex; gap: 0.75rem; align-items: center;
+  margin-top: 0.4rem; font-size: 0.76rem; color: var(--text-muted);
 }
-.xf-ext {
-  color: var(--text-muted);
-  text-decoration: none;
+.xf-stat { display: inline-flex; align-items: center; gap: 0.2rem; }
+.xf-stat svg { vertical-align: -1px; }
+.xf-open {
   margin-left: auto;
+  color: var(--text-secondary); text-decoration: none;
+  font-size: 0.76rem; font-weight: 600;
 }
-.xf-ext:hover { color: var(--text-secondary); }
+.xf-open:hover { color: var(--text-primary); }
 
 @keyframes fadeUp {
   from {

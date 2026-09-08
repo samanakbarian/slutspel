@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Heart, MessageCircle, Repeat2 } from 'lucide-react';
 import { API_URL } from '../config/api';
 import { dagrubrik, klockan } from '../lib/feed';
 
@@ -150,44 +151,55 @@ export function XFeedPage() {
         </button>
       </div>
 
-      {poster.map(item => {
-        const m = item.public_metrics;
-        const likes = m?.like_count ?? 0;
-        const reposts = m?.retweet_count ?? 0;
-        const svar = m?.reply_count ?? 0;
-        const lang = item.text.length > 280;
-        const expanded = expanderade.has(item.id);
+      {poster.length > 0 ? (
+        <div className="xf-feed">
+          {poster.map(item => {
+            const m = item.public_metrics;
+            const likes = m?.like_count ?? 0;
+            const reposts = m?.retweet_count ?? 0;
+            const svar = m?.reply_count ?? 0;
+            const lang = item.text.length > 280;
+            const expanded = expanderade.has(item.id);
+            const displayName = item.author_name || item.author_username;
 
-        return (
-          <section key={item.id} className="mc-card xf-post">
-            <p className="xf-author">
-              @{item.author_username || item.author_name}
-              <span className="xf-sep">·</span>
-              <span className="xf-tid">{xTid(item.created_at)}</span>
-            </p>
-            <p className={`xf-text${lang && !expanded ? ' xf-clamp' : ''}`}>
-              {item.text}
-            </p>
-            {lang && (
-              <button className="xf-toggle" onClick={() => toggleExpand(item.id)}>
-                {expanded ? 'Visa mindre' : 'Visa mer ›'}
-              </button>
-            )}
-            <p className="xf-meta">
-              {likes > 0 && <span>♥ {likes}</span>}
-              {reposts > 0 && <span>↻ {reposts}</span>}
-              {svar > 0 && <span>💬 {svar}</span>}
-              {item.url && (
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="xf-ext">
-                  X ↗
-                </a>
-              )}
-            </p>
-          </section>
-        );
-      })}
-
-      {poster.length === 0 && (
+            return (
+              <article key={item.id} className="xf-post">
+                <span className="xf-avatar">
+                  {(displayName || '?')[0].toUpperCase()}
+                </span>
+                <div>
+                  <p className="xf-head">
+                    <span className="xf-name">{displayName}</span>
+                    {item.author_name && item.author_username && (
+                      <span className="xf-handle">@{item.author_username}</span>
+                    )}
+                    <span className="xf-sep">·</span>
+                    <span className="xf-tid">{xTid(item.created_at)}</span>
+                  </p>
+                  <p className={`xf-text${lang && !expanded ? ' xf-clamp' : ''}`}>
+                    {item.text}
+                  </p>
+                  {lang && (
+                    <button className="xf-toggle" onClick={() => toggleExpand(item.id)}>
+                      {expanded ? 'Visa mindre' : 'Visa mer ›'}
+                    </button>
+                  )}
+                  <p className="xf-actions">
+                    {likes > 0 && <span className="xf-stat"><Heart size={14} strokeWidth={1.5} /> {likes}</span>}
+                    {reposts > 0 && <span className="xf-stat"><Repeat2 size={14} strokeWidth={1.5} /> {reposts}</span>}
+                    {svar > 0 && <span className="xf-stat"><MessageCircle size={14} strokeWidth={1.5} /> {svar}</span>}
+                    {item.url && (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="xf-open">
+                        Öppna på X <span aria-hidden="true">↗</span>
+                      </a>
+                    )}
+                  </p>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
         <section className="mc-card">
           <p className="mc-text">Inga inlägg just nu.</p>
         </section>
