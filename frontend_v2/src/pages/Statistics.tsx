@@ -1228,11 +1228,9 @@ function Motstandare({
               <thead>
                 <tr>
                   <th scope="col">Lag</th>
-                  <th scope="col" className="opp-num">M</th>
                   <th scope="col" className="opp-num">V–F</th>
                   <th scope="col" className="opp-num">Mål</th>
                   <th scope="col" className="opp-num">Diff</th>
-                  <th scope="col" className="opp-num">±/M</th>
                   <th scope="col" className="opp-bar" aria-label="Målskillnad som stapel" />
                 </tr>
               </thead>
@@ -1240,11 +1238,9 @@ function Motstandare({
                 {data.opponents.map(o => (
                   <tr key={o.opponent}>
                     <td className="opp-team">{shortTeam(o.opponent)}</td>
-                    <td className="opp-num">{o.games}</td>
                     <td className="opp-num">{o.wins}–{o.losses}</td>
                     <td className="opp-num">{o.goals_for}–{o.goals_against}</td>
                     <td className="opp-num">{o.diff > 0 ? `+${o.diff}` : o.diff}</td>
-                    <td className="opp-num">{o.games ? svNum(o.diff / o.games, 1) : '–'}</td>
                     <td className="opp-bar">
                       <i
                         style={{
