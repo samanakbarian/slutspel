@@ -141,3 +141,44 @@ Vecka 6:
 - 0 kritiska UI-fel i huvudfloden Laget/Trupp/Rykten/Ekonomi
 - alla huvudvyer visar freshness och datastatus
 - inga huvudsiffror hardkodade i UI
+
+---
+
+## Matcher-sidan — Backlogg (sep 2026)
+
+### Designregel
+
+All utveckling ska folja ordningen: **Vad hande? -> Vad hander harnast? -> Vad sager siffrorna?**
+Det ar beslutsregeln nar nya kort eller datapunkter ska in.
+
+### Hog prioritet
+
+**Flytta "Vagen in" under spelprogrammet**
+Syfte: anvandaren ska na nasta/kommande matcher snabbare; "Vagen in" ar analys och ska komma efter primar matchinformation.
+Klart nar ordningen fore premiar ar: Infor nasta match -> Spelprogram -> Vagen in -> Tabell.
+
+**Gor "Infor matchen" kompakt som standard**
+Visa direkt: motstandare, hemma/borta, datum/tid, arena, tabellplacering och kort form. Lagg djupare statistik bakom "Mer infor matchen" eller expanderbar sektion.
+Syfte: undvika att startsidan blir en hel matchpreview innan spelprogrammet.
+
+**Anpassa startsidans ordning efter sasongsfas**
+Fore premiar: Nasta match -> Kommande matcher -> Sasongsanalys -> Tabell.
+Under sasong: Senaste match -> Nasta match -> Form -> Tabell -> Spelade/Kommande.
+Syfte: startsidan ska svara pa det som ar mest relevant just nu.
+
+### Medium prioritet
+
+**Behal och forstarke vagen till matchrapport**
+Spelade matcher ska fortsatt vara tydligt klickbara. CTA:n pa senaste matchen och chevronen i matchlistan ska vara konsekventa.
+Syfte: matchrapporterna ska kannas som en central del av produkten.
+
+**Minska duplicerad information mellan "Infor matchen" och spelprogrammet**
+Om nasta match redan visas tydligt i hero-kortet behover den inte ta oproportionerligt mycket plats igen direkt under. Spelprogrammet ska fortfarande vara komplett, men hierarkin ska vara tydlig.
+
+### Behall som de ar
+
+**Behall matchlistan kompakt**
+Fortsatt visa endast motstandare + H/B + datum + resultat/tid, i stallet for bada lagnamnen. Det passar 377-konceptet valdigt bra.
+
+**Behall Text-TV som frivilligt speciallage**
+Ingen redesign av hela sajten till Text-TV. 377-identiteten ligger i varumarket, medan Text-TV-vyn ar ett extra lage for den som vill ha det.
