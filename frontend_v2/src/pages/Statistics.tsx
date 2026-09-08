@@ -1232,7 +1232,7 @@ function Motstandare({
                   <th scope="col" className="opp-num">V–F</th>
                   <th scope="col" className="opp-num">Mål</th>
                   <th scope="col" className="opp-num">Diff</th>
-                  <th scope="col" className="opp-num">Diff/M</th>
+                  <th scope="col" className="opp-num">±/M</th>
                   <th scope="col" className="opp-bar" aria-label="Målskillnad som stapel" />
                 </tr>
               </thead>
@@ -1451,7 +1451,7 @@ function Laget({
                 : []),
               ...(shots && shots.home.pdo != null && shots.away.pdo != null
                 ? [{
-                    label: 'PDO',
+                    label: 'PDO (S% + SV%)',
                     vanster: shots.home.pdo,
                     hoger: shots.away.pdo,
                     format: (v: number) => svNum(v, 1),
