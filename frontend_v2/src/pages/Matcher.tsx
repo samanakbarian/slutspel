@@ -368,17 +368,7 @@ export function Matcher() {
           fallback={played[0].gameId === null ? played.find(g => g.gameId !== null) || null : null}
         />
       )}
-      {/* Nästa match med sammanhang: placering, form för båda lagen, inbördes.
-          Före seriestart beskrivs motståndaren med förra säsongen i stället —
-          tabellen säger ingenting då. Faller kortet bort visas nedräkningen. */}
       {next && <Guard name="Inför matchen"><InforMatchen season={season} /></Guard>}
-
-      {/* Inför säsongen: årets öppning och tuffaste period. */}
-      <Guard name="Inför säsongen">
-        <InforSasongen
-          aktuellSasong={!season || season === activeKey}
-        />
-      </Guard>
 
       {played.length > 0 && (
         <section className="mc-card">
@@ -386,8 +376,6 @@ export function Matcher() {
           <FormDots games={played} />
         </section>
       )}
-
-      <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} /></Guard>
 
       <div className="mc-seg" role="tablist">
         <button
@@ -412,8 +400,6 @@ export function Matcher() {
 
       <section className={`mc-card${texttv ? ' mc-card-tt' : ''}`}>
         <div className="st-head">
-          {/* Växeln måste synas i båda lägena — annars går läget inte att slå
-              på, bara av. */}
           {texttv ? <span /> : <p className="mc-kicker">{seasonName || 'Spelprogram'}</p>}
           <span className="st-headhoger">
             <TextTvVaxel sida={SIDA.spelschema} pa={texttv} onClick={vaxlaTexttv} />
@@ -444,9 +430,6 @@ export function Matcher() {
           )}
           </span>
         </div>
-        {/* Ovanför listan, inte under. Noten satt tidigare efter 52 rader, och
-            en bruksanvisning som kräver att man redan scrollat förbi det den
-            förklarar är ingen bruksanvisning. */}
         {shown.some(g => g.played && g.gameId !== null) && !texttv && (
           <p className="mc-hint">
             <span className="mc-chevron-inline">›</span>
@@ -461,8 +444,6 @@ export function Matcher() {
             : shown.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
       </section>
 
-      {/* Utan spelade matcher finns inga rapporter att öppna. Hellre en väg
-          till den senaste säsongen som har dem än en tom lista. */}
       {played.length === 0 && lastPlayedSeason && (
         <section className="mc-card">
           <p className="mc-kicker">Matchrapporter</p>
@@ -475,6 +456,14 @@ export function Matcher() {
           </button>
         </section>
       )}
+
+      <Guard name="Inför säsongen">
+        <InforSasongen
+          aktuellSasong={!season || season === activeKey}
+        />
+      </Guard>
+
+      <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} /></Guard>
     </div>
   );
 }
