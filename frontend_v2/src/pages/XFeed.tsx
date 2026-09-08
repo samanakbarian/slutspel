@@ -162,14 +162,15 @@ export function XFeedPage() {
           <section key={item.id} className="mc-card xf-post">
             <p className="xf-author">
               @{item.author_username || item.author_name}
-              <span className="xf-tid"> · {xTid(item.created_at)}</span>
+              <span className="xf-sep">·</span>
+              <span className="xf-tid">{xTid(item.created_at)}</span>
             </p>
             <p className={`xf-text${lang && !expanded ? ' xf-clamp' : ''}`}>
               {item.text}
             </p>
             {lang && (
               <button className="xf-toggle" onClick={() => toggleExpand(item.id)}>
-                {expanded ? 'Visa mindre' : 'Visa mer'}
+                {expanded ? 'Visa mindre' : 'Visa mer ›'}
               </button>
             )}
             <p className="xf-meta">
