@@ -1954,6 +1954,15 @@ a {
 .fd-d { background: var(--impact-neutral); }
 .fd-text { margin-left: 0.35rem; font-size: 0.7rem; color: var(--text-muted); }
 
+.pd-scored {
+  background: var(--impact-positive);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+.pd-blank {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--text-muted);
+}
+
 /* ── Statistiksidan ── */
 .st-head {
   display: flex;

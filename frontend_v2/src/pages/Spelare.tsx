@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
-import { FormDots, PercentileBar, Sparkline } from '../components/charts/Charts';
+import { PercentileBar, Sparkline } from '../components/charts/Charts';
 
 /**
  * Spelarsidan.
@@ -143,6 +143,31 @@ const shortTeam = (t: string) => String(t || '').replace(/^(IF|IK|HC|BIK)\s+/, '
 function eliteProspectsUrl(p: PlayerStats): string {
   return p.eliteprospects?.url
     || `https://www.eliteprospects.com/search/player?name=${encodeURIComponent(humanName(p.name))}`;
+}
+
+const komma = (v: number | string | null | undefined) =>
+  v == null ? '–' : String(v).replace('.', ',');
+
+const svNum = (v: number | null | undefined, decimaler = 1) =>
+  v == null ? '–' : v.toLocaleString('sv-SE', {
+    minimumFractionDigits: decimaler,
+    maximumFractionDigits: decimaler,
+  });
+
+function PointDots({ games }: { games: { points: number }[] }) {
+  if (games.length === 0) return null;
+  const scored = games.filter(g => g.points > 0).length;
+  return (
+    <div className="fd-wrap">
+      {games.map((g, i) => (
+        <span key={i}
+          className={`fd-dot ${g.points > 0 ? 'pd-scored' : 'pd-blank'}`}
+          aria-label={g.points > 0 ? `Poäng (${g.points})` : 'Utan poäng'}
+          title={g.points > 0 ? `${g.points} poäng` : 'Utan poäng'} />
+      ))}
+      <span className="fd-text">{scored} med poäng · {games.length - scored} utan</span>
+    </div>
+  );
 }
 
 const FORWARD = /^(lw|rw|ce|c|f|fw)$/i;
@@ -381,6 +406,10 @@ export function Spelare() {
   const isDefence = DEFENCE.test(pos);
   const takesFaceoffs = (p.faceoffs_won || 0) + (p.faceoffs_lost || 0) >= 20;
 
+  const gfOn = log.reduce((s, g) => s + g.gf_on, 0);
+  const gaOn = log.reduce((s, g) => s + g.ga_on, 0);
+  const shotsGoals = log.filter(g => g.has_report).reduce((s, g) => s + g.goals, 0);
+
   const idx = squad.findIndex(n => n === p.name);
   const prev = idx > 0 ? squad[idx - 1] : null;
   const next = idx >= 0 && idx < squad.length - 1 ? squad[idx + 1] : null;
@@ -403,7 +432,7 @@ export function Spelare() {
       }).filter(Boolean) as { label: string; value: number }[]
     : [];
 
-  const last10 = log.slice(-10).map(g => (g.points > 0 ? 'W' : 'L'));
+  const last10 = log.slice(-10);
   const cov = data.report_coverage;
   const sit = data.situations;
   const sp = data.splits;
@@ -444,7 +473,7 @@ export function Spelare() {
           <div><span className="sp-val">{p.games_played}</span><span className="sp-lbl">Matcher</span></div>
           <div><span className="sp-val sp-gold">{p.points}</span><span className="sp-lbl">Poäng</span></div>
           <div><span className="sp-val">{p.goals}+{p.assists}</span><span className="sp-lbl">M+A</span></div>
-          <div><span className="sp-val sp-green">{p.points_per_game.toFixed(2)}</span><span className="sp-lbl">P/match</span></div>
+          <div><span className="sp-val sp-green">{svNum(p.points_per_game, 2)}</span><span className="sp-lbl">P/match</span></div>
         </div>
       </section>
 
@@ -454,29 +483,27 @@ export function Spelare() {
         <div className="sp-stats">
           <Stat label="Plus/minus" value={p.plus_minus > 0 ? `+${p.plus_minus}` : String(p.plus_minus)}
                 hint="Swehockeys officiella" />
-          <Stat label="På isen" value={
+          <Stat label="On-ice ±" value={
             (p.plus_minus_on_ice ?? 0) > 0 ? `+${p.plus_minus_on_ice}` : String(p.plus_minus_on_ice ?? 0)}
-                hint="Härlett ur målhändelserna" />
+                hint={`${gfOn}–${gaOn} mål med spelaren på isen`} />
           {p.shots != null && <Stat label="Skott" value={String(p.shots)} />}
           {isForward && p.shooting_pct != null && (
-            <Stat label="Skjutprocent" value={`${p.shooting_pct} %`} tone="var(--brand-green-light)"
-                  hint={cov && cov.games_with_report < cov.games_total
-                    ? `${cov.games_with_report} matcher` : undefined} />
+            <Stat label="Skjutprocent" value={`${komma(p.shooting_pct)} %`} tone="var(--brand-green-light)"
+                  hint={cov ? `${shotsGoals} mål på ${p.shots} skott · ${cov.games_with_report} matcher med skottdata` : undefined} />
           )}
           {takesFaceoffs && p.faceoff_pct != null && (
-            <Stat label="Tekningar" value={`${p.faceoff_pct} %`}
+            <Stat label="Tekningar" value={`${komma(p.faceoff_pct)} %`}
                   hint={`${p.faceoffs_won}–${p.faceoffs_lost}`} tone="var(--brand-gold)" />
           )}
-          {isDefence && <Stat label="Utv.min" value={String(p.pim)} />}
-          {!isDefence && <Stat label="Utv.min" value={String(p.pim)} />}
+          <Stat label="Utv.min" value={String(p.pim)} />
           {sit && <Stat label="PP-mål" value={String(sit.power_play)} />}
         </div>
-        {cov && cov.games_with_report < cov.games_total && (
-          <p className="mc-note">
-            Skott och tekningar finns för {cov.games_with_report} av {cov.games_total} matcher.
-            Säsongens första matchrapporter saknas hos Swehockey.
-          </p>
-        )}
+        <p className="mc-note">
+          Plus/minus är Swehockeys officiella (5v5 + numerärt underläge). On-ice ±
+          räknar alla mål medan spelaren var på isen, oavsett spelform.
+          {cov && cov.games_with_report < cov.games_total &&
+            ` Skott och tekningar finns för ${cov.games_with_report} av ${cov.games_total} matcher.`}
+        </p>
       </section>
 
       {curve.length > 1 && (
@@ -485,8 +512,9 @@ export function Spelare() {
           <Sparkline points={curve} height={112} unit=" p" guide={pace} guideLabel="takt" />
           <p className="mc-note">
             {p.points} poäng på {p.games_played} matcher. X-axeln är matchnummer, så en platt
-            sträcka är matcher utan poäng. Den streckade linjen är säsongens egen takt
-            ({p.points_per_game.toFixed(2)} per match) — under den betyder en svacka.
+            sträcka är matcher utan poäng. Den streckade linjen visar den genomsnittliga
+            säsongstakten ({svNum(p.points_per_game, 2)} per match) — perioder under linjen
+            innebär lägre takt än säsongssnittet.
           </p>
         </section>
       )}
@@ -499,8 +527,8 @@ export function Spelare() {
           {last10.length > 0 && (
             <>
               <p className="mc-kicker st-sub">Senaste {last10.length}</p>
-              <FormDots results={last10} />
-              <p className="mc-note">Fylld prick är en match med poäng.</p>
+              <PointDots games={last10} />
+              <p className="mc-note">Grön prick = match med poäng.</p>
             </>
           )}
         </section>
@@ -524,16 +552,26 @@ export function Spelare() {
             </div>
           )}
           {sit && (
-            <div className="sp-stats sp-stats-tight">
-              <Stat label="Lika styrka" value={String(sit.even_strength)} />
-              <Stat label="Powerplay" value={String(sit.power_play)} />
-              {sit.short_handed > 0 && <Stat label="Underläge" value={String(sit.short_handed)} />}
-              {sit.game_winning > 0 && <Stat label="Avgörande" value={String(sit.game_winning)} tone="var(--brand-gold)" />}
-              {sit.first_goal_of_game > 0 && <Stat label="Första målet" value={String(sit.first_goal_of_game)} />}
-              {sit.empty_net > 0 && <Stat label="Tomt mål" value={String(sit.empty_net)} />}
-            </div>
+            <>
+              <p className="mc-kicker st-sub">Spelform</p>
+              <div className="sp-stats sp-stats-tight">
+                <Stat label="Lika styrka" value={String(sit.even_strength)} />
+                <Stat label="Powerplay" value={String(sit.power_play)} />
+                {sit.short_handed > 0 && <Stat label="Boxplay" value={String(sit.short_handed)} />}
+                {sit.empty_net > 0 && <Stat label="Tom bur" value={String(sit.empty_net)} />}
+              </div>
+              {(sit.game_winning > 0 || sit.first_goal_of_game > 0) && (
+                <>
+                  <p className="mc-kicker st-sub">Måltyp</p>
+                  <div className="sp-stats sp-stats-tight">
+                    {sit.game_winning > 0 && <Stat label="Matchavgörande" value={String(sit.game_winning)} tone="var(--brand-gold)" />}
+                    {sit.first_goal_of_game > 0 && <Stat label="Första målet" value={String(sit.first_goal_of_game)} />}
+                  </div>
+                </>
+              )}
+            </>
           )}
-          <p className="mc-note">Målen fördelade på spelsituation, ur målhändelserna.</p>
+          <p className="mc-note">Spelform och måltyp kan överlappa — en powerplayträff kan samtidigt vara matchavgörande.</p>
         </section>
       )}
 
@@ -541,7 +579,7 @@ export function Spelare() {
         <section className="mc-card">
           <p className="mc-kicker">Sviter</p>
           <div className="sp-stats sp-stats-tight">
-            <Stat label="Just nu" value={st.current_points > 0 ? `${st.current_points} matcher` : 'Ingen'}
+            <Stat label="Aktuell poängsvit" value={st.current_points > 0 ? `${st.current_points} matcher` : '0 matcher'}
                   tone={st.current_points > 0 ? 'var(--impact-positive)' : undefined} />
             <Stat label="Längsta poängsvit" value={`${st.longest_points} matcher`} />
             <Stat label="Längsta torka" value={`${st.longest_drought} matcher`} />
@@ -552,11 +590,11 @@ export function Spelare() {
 
       {mates && (mates.assisted_by.length > 0 || mates.assists_to.length > 0) && (
         <section className="mc-card">
-          <p className="mc-kicker">Kedjekompisar</p>
+          <p className="mc-kicker">Poängpartners</p>
           <div className="sp-mates">
             {mates.assisted_by.length > 0 && (
               <div>
-                <p className="sp-mates-h">Lade fram åt {display.split(' ')[0]}</p>
+                <p className="sp-mates-h">Assisterade {display.split(' ')[0]}s mål</p>
                 {mates.assisted_by.map(m => (
                   <div className="sp-mate" key={`b${m.name}`}>
                     <Link to={`/statistik/spelare/${encodeURIComponent(m.name)}${season ? `?season=${season}` : ''}`}>
@@ -569,7 +607,7 @@ export function Spelare() {
             )}
             {mates.assists_to.length > 0 && (
               <div>
-                <p className="sp-mates-h">{display.split(' ')[0]} lade fram åt</p>
+                <p className="sp-mates-h">{display.split(' ')[0]} assisterade deras mål</p>
                 {mates.assists_to.map(m => (
                   <div className="sp-mate" key={`t${m.name}`}>
                     <Link to={`/statistik/spelare/${encodeURIComponent(m.name)}${season ? `?season=${season}` : ''}`}>
@@ -592,10 +630,10 @@ export function Spelare() {
             <PercentileBar label="Mål" value={p.percentiles.goals} />
             <PercentileBar label="Assist" value={p.percentiles.assists} />
             <PercentileBar label="Plus/minus" value={p.percentiles.plus_minus} />
-            <PercentileBar label="Utv.min" value={p.percentiles.pim} hint="Färre utvisningsminuter ger högre percentil." />
+            <PercentileBar label="Disciplin" value={p.percentiles.pim} hint="Hög percentil = få utvisningsminuter jämfört med andra." />
             <p className="mc-note">
-              Jämfört med alla utespelare i serien, oavsett position. En back på hög
-              poängpercentil är alltså jämförd med forwards också.
+              Jämfört med alla utespelare i serien, oavsett position. Baserat på
+              totala tal, inte per match.
             </p>
           </>
         ) : (
@@ -628,7 +666,7 @@ export function Spelare() {
                   <th scope="col" className="opp-num">M+A</th>
                   <th scope="col" className="opp-num">Skott</th>
                   <th scope="col" className="opp-num">+/−</th>
-                  <th scope="col" className="opp-num">Pim</th>
+                  <th scope="col" className="opp-num">Utv</th>
                 </tr>
               </thead>
               <tbody>
@@ -646,12 +684,12 @@ export function Spelare() {
                         {g.result === 'W' ? 'V' : 'F'}{g.beyond_regulation ? '*' : ''} {g.goals_for}–{g.goals_against}
                       </span>
                     </td>
-                    <td className="opp-num">{g.points > 0 ? `${g.goals}+${g.assists}` : '–'}</td>
+                    <td className="opp-num">{`${g.goals}+${g.assists}`}</td>
                     <td className="opp-num">{g.has_report ? (g.shots ?? 0) : '·'}</td>
                     <td className="opp-num">
                       {g.plus_minus_on_ice > 0 ? `+${g.plus_minus_on_ice}` : g.plus_minus_on_ice}
                     </td>
-                    <td className="opp-num">{g.pim || '–'}</td>
+                    <td className="opp-num">{g.pim || '0'}</td>
                   </tr>
                 ))}
               </tbody>
