@@ -1539,40 +1539,21 @@ a {
 }
 .im-fact b { color: var(--text-primary); font-weight: 700; }
 
-.im-start { padding-top: 0.6rem; }
-.im-startlabel {
+.mc-visa-alla {
   display: block;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 0.25rem;
-}
-.im-startrows { display: flex; flex-direction: column; }
-.im-startrow {
-  display: grid;
-  grid-template-columns: 3.2rem 1.1rem 1fr auto;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.28rem 0;
-  border-bottom: 1px solid rgba(172, 199, 186, 0.06);
-  font-size: 0.74rem;
-}
-.im-startrow:last-child { border-bottom: none; }
-.im-startnext .im-startopp { color: var(--text-primary); font-weight: 700; }
-.im-startdate { font-size: 0.68rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.im-startha {
-  font-size: 0.58rem;
-  font-weight: 800;
-  text-align: center;
-  color: var(--text-muted);
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.25rem;
+  background: rgba(172, 199, 186, 0.08);
   border: 1px solid var(--glass-border);
-  border-radius: 3px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-.im-startha-h { color: var(--brand-green-light); border-color: rgba(66, 216, 131, 0.35); }
-.im-startopp { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.im-starttime { font-size: 0.66rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.mc-visa-alla:hover { background: rgba(172, 199, 186, 0.14); }
 
 /* boxscore: plus/minus som namnrader, plus spelartabellen */
 

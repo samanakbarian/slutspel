@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from './texttv';
 
 /**
@@ -137,14 +138,25 @@ function TextTv({ rows, season }: { rows: Standing[]; season: string }) {
 
 export function Tabellen({ rows, season }: { rows: Standing[]; season?: string }) {
   const [texttv, vaxla] = useTextTv('tabell');
+  const [expanderad, setExpanderad] = useState(false);
 
-  // En ensam rad är ingen tabell. Så länge backend bara exponerar lagets egen
-  // rad blir "#1 av 1" mer vilseledande än upplysande — visa den inte då.
   if (rows.length < 2) return null;
 
   const sorted = [...rows].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
   const started = sorted.some(r => (r.games_played ?? 0) > 0);
   const lead = Math.max(1, ...sorted.map(r => r.points ?? 0));
+
+  if (!started && !expanderad) {
+    return (
+      <section className="mc-card">
+        <p className="mc-kicker">Tabellen</p>
+        <p className="mc-text">Serien har inte startat.</p>
+        <button className="mc-visa-alla" onClick={() => setExpanderad(true)}>
+          Visa starttabellen
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className={`mc-card${texttv ? ' mc-card-tt' : ''}`}>

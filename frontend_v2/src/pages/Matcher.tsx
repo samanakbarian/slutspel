@@ -260,6 +260,7 @@ export function Matcher() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'kommande' | 'spelade'>('kommande');
+  const [visaAllt, setVisaAllt] = useState(false);
   const [texttv, vaxlaTexttv] = useTextTv('spelprogram');
   const [seasons, setSeasons] = useState<Season[]>([]);
   // Tom sträng betyder "den säsong API:t självt väljer".
@@ -330,6 +331,8 @@ export function Matcher() {
     return () => { window.clearTimeout(timer); ctrl.abort(); };
   }, [season]);
 
+  useEffect(() => { setVisaAllt(false); }, [view, season]);
+
   if (loading) {
     return (
       <div className="page animate-fade-up">
@@ -357,6 +360,8 @@ export function Matcher() {
   const upcoming = games.filter(g => !g.played).sort((a, b) => a.date.localeCompare(b.date));
   const next = upcoming[0];
   const shown = view === 'spelade' ? played : upcoming;
+  const trunkerad = !visaAllt && shown.length > 8;
+  const synliga = trunkerad ? shown.slice(0, 8) : shown;
 
   return (
     <div className="page animate-fade-up">
@@ -430,7 +435,7 @@ export function Matcher() {
           )}
           </span>
         </div>
-        {shown.some(g => g.played && g.gameId !== null) && !texttv && (
+        {synliga.some(g => g.played && g.gameId !== null) && !texttv && (
           <p className="mc-hint">
             <span className="mc-chevron-inline">›</span>
             Tryck på en spelad match för hela rapporten — mål, utvisningar,
@@ -438,24 +443,25 @@ export function Matcher() {
           </p>
         )}
         {shown.length === 0
-          ? <p className="mc-text">{view === 'spelade' ? 'Inga matcher spelade än.' : 'Inga fler matcher inlagda.'}</p>
+          ? (
+            <div className="mc-text">
+              <p>{view === 'spelade' ? 'Inga SHL-matcher spelade ännu.' : 'Inga fler matcher inlagda.'}</p>
+              {view === 'spelade' && lastPlayedSeason && (
+                <button className="empty-season-btn" onClick={() => setSeason(lastPlayedSeason.key)}>
+                  Visa {lastPlayedSeason.name || lastPlayedSeason.key} →
+                </button>
+              )}
+            </div>
+          )
           : texttv
-            ? <ProgramTextTv games={shown} season={seasonName} />
-            : shown.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
-      </section>
-
-      {played.length === 0 && lastPlayedSeason && (
-        <section className="mc-card">
-          <p className="mc-kicker">Matchrapporter</p>
-          <p className="mc-text">
-            {seasonName || 'Säsongen'} har inga spelade matcher än, så det finns inga
-            rapporter att öppna. Matcherna från {lastPlayedSeason.name || lastPlayedSeason.key} ligger kvar.
-          </p>
-          <button className="empty-season-btn" onClick={() => setSeason(lastPlayedSeason.key)}>
-            Visa {lastPlayedSeason.name || lastPlayedSeason.key}
+            ? <ProgramTextTv games={synliga} season={seasonName} />
+            : synliga.map((g, i) => <GameRow key={`${g.date}-${i}`} game={g} />)}
+        {trunkerad && !texttv && (
+          <button className="mc-visa-alla" onClick={() => setVisaAllt(true)}>
+            Visa hela spelprogrammet ({shown.length})
           </button>
-        </section>
-      )}
+        )}
+      </section>
 
       <Guard name="Inför säsongen">
         <InforSasongen

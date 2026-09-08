@@ -259,21 +259,9 @@ export function InforMatchen({ season }: { season: string | null }) {
       )}
 
       {duels.length === 0 && upcoming.length > 1 && (
-        <div className="im-start">
-          <span className="im-startlabel">Inledningen</span>
-          <div className="im-startrows">
-            {upcoming.map((g, i) => (
-              <div className={`im-startrow${i === 0 ? ' im-startnext' : ''}`} key={i}>
-                <span className="im-startdate">{shortDate(g.date)}</span>
-                <span className={`im-startha${g.is_home ? ' im-startha-h' : ''}`}>
-                  {g.is_home ? 'H' : 'B'}
-                </span>
-                <span className="im-startopp">{g.opponent.replace(/^IF\s+/, '')}</span>
-                <span className="im-starttime">{g.time || ''}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <p className="im-fact im-next-after">
+          Därefter: {upcoming[1].opponent.replace(/^IF\s+/, '')} {upcoming[1].is_home ? 'hemma' : 'borta'}
+        </p>
       )}
 
       <Form games={usForm} label="Form · Björklöven" />
