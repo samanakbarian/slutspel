@@ -171,7 +171,6 @@ function PointDots({ games }: { games: { points: number }[] }) {
 }
 
 const FORWARD = /^(lw|rw|ce|c|f|fw)$/i;
-const DEFENCE = /^(ld|rd|d)$/i;
 
 type Filter = 'all' | 'home' | 'away' | 'points';
 
@@ -403,7 +402,6 @@ export function Spelare() {
   const display = humanName(p.name);
   const pos = String(p.detailed_position || p.position || '');
   const isForward = FORWARD.test(pos);
-  const isDefence = DEFENCE.test(pos);
   const takesFaceoffs = (p.faceoffs_won || 0) + (p.faceoffs_lost || 0) >= 20;
 
   const gfOn = log.reduce((s, g) => s + g.gf_on, 0);
