@@ -99,5 +99,13 @@
       <p>Sajten kräver JavaScript för att visa statistiken. Byggd av Saman Akbarian.</p>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Cloudflare Web Analytics. Netlifys egen statistik raknar requests och
+         unika IP-adresser, vilket inte gar att skilja fran botar: matt 9 sep
+         var 1 700 av traffiken "direct" utan referrer, och /wp-admin/install.php
+         lag trea bland sidvisningarna pa en sajt utan WordPress. Beaconen kor
+         bara nar JavaScript kor i en riktig webblasare, sa skannrarna raknas
+         inte. Cookiefri, alltsa ingen samtyckesruta. Token ar publik. -->
+    <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4b58f638aa5242a494d063f069de6d3c"}'></script>
   </body>
 </html>
