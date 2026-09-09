@@ -947,23 +947,31 @@ export function StatisticsPage() {
         )}
       </section>
 
-      <div className="mc-seg" role="tablist" aria-label="Statistikvyer">
-        {([
-          ['laget', 'Laget'],
-          ['spelare', 'Spelare'],
-          ['utveckling', 'Utveckling'],
-        ] as const).map(([key, label]) => (
-          <button
-            key={key}
-            role="tab"
-            aria-selected={segment === key}
-            className={`mc-segbtn${segment === key ? ' mc-on' : ''}`}
-            onClick={() => setSegment(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* Flikarna visas bara nar det finns nagot bakom dem. Alla tre panelerna
+          nedan ar gated pa hasPlayed, sa fore seriestart markerades knappen som
+          vald utan att innehallet kunde byta — det sag ut som att vaxlingen var
+          trasig. Samma hallning som slutplaceringen: en kontroll som inte gor
+          nagot ska inte erbjudas. De kommer tillbaka nar forsta matchen spelats,
+          och nar EmptySeason vaxlar till en sasong med data. */}
+      {hasPlayed && (
+        <div className="mc-seg" role="tablist" aria-label="Statistikvyer">
+          {([
+            ['laget', 'Laget'],
+            ['spelare', 'Spelare'],
+            ['utveckling', 'Utveckling'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={segment === key}
+              className={`mc-segbtn${segment === key ? ' mc-on' : ''}`}
+              onClick={() => setSegment(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {!hasPlayed && (
         <>
