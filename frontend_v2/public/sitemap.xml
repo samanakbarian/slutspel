@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Genererad av scripts/sitemap.mjs vid bygget. Redigera inte för hand. -->
 <!--
-  2026-09-11T06:49:02.441Z
+  2026-09-11T12:26:29.463Z
   API: https://loven-stats-api-324947473206.europe-west1.run.app
   shl_2627: 0 matchrapporter
   ha_2526: 52 matchrapporter
   ha_2324: 52 matchrapporter
-  sitemap.xml: 111 adresser
+  sitemap.xml: 112 adresser
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://sida377.se/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
@@ -16,6 +16,7 @@
   <url><loc>https://sida377.se/nyheter</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
   <url><loc>https://sida377.se/x</loc><changefreq>hourly</changefreq><priority>0.5</priority></url>
   <url><loc>https://sida377.se/om</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://sida377.se/metod</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://sida377.se/matcher/1005981</loc><lastmod>2026-03-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://sida377.se/matcher/1005977</loc><lastmod>2026-03-04</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://sida377.se/matcher/1005967</loc><lastmod>2026-03-01</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>

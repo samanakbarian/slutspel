@@ -48,6 +48,7 @@ const STATISKA = [
   ['/nyheter', 'hourly', '0.8'],
   ['/x', 'hourly', '0.5'],
   ['/om', 'monthly', '0.3'],
+  ['/metod', 'monthly', '0.4'],
 ];
 
 const KARTA = new URL('../public/sitemap.xml', import.meta.url);

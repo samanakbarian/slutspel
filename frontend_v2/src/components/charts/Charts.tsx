@@ -6,6 +6,7 @@
  * färger kommer från temats tokens, aldrig hårdkodade värden.
  */
 
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 type Point = { label: string; value: number };
@@ -375,70 +376,159 @@ export function RankLines({
   rounds,
   teams,
   teamCount = 14,
-  height = 200,
+  height = 210,
 }: {
   rounds: number[];
-  teams: { team: string; ranks: (number | null)[]; colour: string; short: string; finalRank: number }[];
+  teams: { team: string; ranks: (number | null)[]; short: string; finalRank: number; ours: boolean; namnge: boolean }[];
   teamCount?: number;
   height?: number;
 }) {
+  // Hovrad omgång, eller null för "ingen". Krysshåret är det enda sättet att
+  // läsa av en enskild omgång i en kurva med 52 punkter.
+  const [vald, setVald] = useState<number | null>(null);
+
   if (rounds.length < 2 || teams.length === 0) return null;
+
   // Smal viewBox med flit: samma textstorlek i SVG-enheter blir fler faktiska
-  // pixlar nar bilden skalas till ~340 px pa en telefon.
+  // pixlar när bilden skalas till ~340 px på en telefon.
   const W = 360;
-  const L = 26, R = 62, T = 14, B = 34;
+  const L = 22, R = 74, T = 12, B = 30;
   const plotW = W - L - R;
   const plotH = height - T - B;
-  const x = (i: number) => L + (i / (rounds.length - 1)) * plotW;
-  const y = (rank: number) => T + ((rank - 1) / Math.max(1, teamCount - 1)) * plotH;
 
-  const guides = [1, 4, 8, teamCount].filter((v, i, a) => a.indexOf(v) === i);
-  const ticks = [0, Math.floor(rounds.length / 4), Math.floor(rounds.length / 2),
-                 Math.floor((rounds.length * 3) / 4), rounds.length - 1]
-    .filter((v, i, a) => a.indexOf(v) === i);
+  // Hela serien ritas, inte bara fyra lag. Med fyra kurvor låg allt i den
+  // översta fjärdedelen och resten av ytan stod tom; med alla fjorton blir
+  // botten ett myller som vår kurva syns mot, och skalan är seriens riktiga.
+  const ritade = teams.flatMap(t => t.ranks.filter((r): r is number => r != null));
+  const max = Math.min(teamCount, Math.max(4, ...ritade));
+
+  const x = (n: number) => L + (n / (rounds.length - 1)) * plotW;
+  const y = (rank: number) => T + ((rank - 1) / Math.max(1, max - 1)) * plotH;
+
+  // Rutnätet ska gå att räkna, inte läsas av.
+  const guides = Array.from(new Set([1, Math.round((1 + max) / 2), max]));
+  const ticks = Array.from(new Set([0, Math.floor((rounds.length - 1) / 3),
+    Math.floor(((rounds.length - 1) * 2) / 3), rounds.length - 1]));
+
+  // Etiketterna får inte lägga sig på varandra när två lag slutar intill
+  // varandra. De hålls isär med minsta radavstånd, i slutplaceringens ordning.
+  const sorterade = teams.filter(t => t.namnge).sort((a, b) => a.finalRank - b.finalRank);
+  const LINJE = 11;
+  const etiketter: { t: (typeof teams)[number]; y: number }[] = [];
+  for (const t of sorterade) {
+    const onskad = y(t.finalRank);
+    const forra = etiketter[etiketter.length - 1];
+    etiketter.push({ t, y: forra ? Math.max(onskad, forra.y + LINJE) : onskad });
+  }
+
+  const las = (e: React.PointerEvent<SVGSVGElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const enhet = ((e.clientX - box.left) / box.width) * W;
+    const n = Math.round(((enhet - L) / plotW) * (rounds.length - 1));
+    setVald(n >= 0 && n < rounds.length ? n : null);
+  };
 
   return (
-    <svg
-      className="rl"
-      viewBox={`0 0 ${W} ${height + 16}`}
-      role="img"
-      aria-label={`Tabellplacering per omgång. ${teams
-        .map(t => `${t.team} slutade ${t.finalRank}:a`)
-        .join('. ')}.`}
-    >
-      {guides.map(g => (
-        <line key={g} className="rl-grid" x1={L} y1={y(g)} x2={L + plotW} y2={y(g)} />
-      ))}
-      <line className="rl-axis" x1={L} y1={T} x2={L} y2={T + plotH} />
-      {guides.map(g => (
-        <text key={`t${g}`} className="rl-tick" x={L - 5} y={y(g) + 3} textAnchor="end">{g}</text>
-      ))}
-      {ticks.map(i => (
-        <text key={`x${i}`} className="rl-tick" x={x(i)} y={T + plotH + 14} textAnchor="middle">
-          {rounds[i]}
-        </text>
-      ))}
-      <text className="rl-tick" x={L + plotW / 2} y={T + plotH + 26} textAnchor="middle">Omgång</text>
+    <>
+      <svg
+        className="rl"
+        viewBox={`0 0 ${W} ${height}`}
+        role="img"
+        onPointerMove={las}
+        onPointerDown={las}
+        onPointerLeave={() => setVald(null)}
+        aria-label={`Tabellplacering per omgång. ${teams
+          .map(t => `${t.team} slutade ${t.finalRank}:a`)
+          .join('. ')}.`}
+      >
+        {guides.map(g => (
+          <line key={g} className="rl-grid" x1={L} y1={y(g)} x2={L + plotW} y2={y(g)} />
+        ))}
+        {guides.map(g => (
+          <text key={`t${g}`} className="rl-tick" x={L - 5} y={y(g) + 3} textAnchor="end">{g}</text>
+        ))}
+        {ticks.map(n => (
+          <text key={`x${n}`} className="rl-tick" x={x(n)} y={T + plotH + 13} textAnchor="middle">
+            {rounds[n]}
+          </text>
+        ))}
+        <text className="rl-tick" x={L + plotW / 2} y={T + plotH + 25} textAnchor="middle">Omgång</text>
 
-      {teams.map(t => {
-        const pts = t.ranks
-          .map((r, i) => (r == null ? null : `${x(i).toFixed(1)},${y(r).toFixed(1)}`))
-          .filter(Boolean)
-          .join(' ');
-        return <polyline key={t.team} className="rl-series" stroke={t.colour} points={pts} />;
-      })}
+        {vald != null && (
+          <line className="rl-kryss" x1={x(vald)} y1={T} x2={x(vald)} y2={T + plotH} />
+        )}
 
-      {teams.map(t => (
-        <text
-          key={`l${t.team}`}
-          className="rl-end"
-          x={L + plotW + 7}
-          y={y(t.finalRank) + 3}
-          fill={t.colour}
-        >
-          {t.finalRank} {t.short}
-        </text>
-      ))}
-    </svg>
+        {/* Kontexten först, vårt lag sist: accenten ska ligga överst där de korsar. */}
+        {[...teams].sort((a, b) => Number(a.ours) - Number(b.ours)).map(t => {
+          const pts = t.ranks
+            .map((r, n) => (r == null ? null : `${x(n).toFixed(1)},${y(r).toFixed(1)}`))
+            .filter(Boolean)
+            .join(' ');
+          return (
+            <polyline
+              key={t.team}
+              className={
+                t.ours ? 'rl-series rl-ours'
+                  : t.namnge ? 'rl-series rl-context'
+                    : 'rl-series rl-bakgrund'
+              }
+              points={pts}
+            />
+          );
+        })}
+
+        {vald != null && sorterade.map(t => {
+          const r = t.ranks[vald];
+          if (r == null) return null;
+          return (
+            <circle
+              key={`p${t.team}`}
+              className={t.ours ? 'rl-dot rl-dot-ours' : 'rl-dot'}
+              cx={x(vald)}
+              cy={y(r)}
+              r={t.ours ? 3.4 : 2.4}
+            />
+          );
+        })}
+
+        {/* Direktetiketter i textfärg, med en prick som bär identiteten. */}
+        {etiketter.map(({ t, y: ly }) => (
+          <g key={`l${t.team}`}>
+            <circle
+              className={t.ours ? 'rl-dot rl-dot-ours' : 'rl-dot'}
+              cx={L + plotW + 7}
+              cy={ly - 2.5}
+              r={2.6}
+            />
+            <text
+              className={t.ours ? 'rl-end rl-end-ours' : 'rl-end'}
+              x={L + plotW + 13}
+              y={ly + 1}
+            >
+              {t.finalRank} {t.short}
+            </text>
+          </g>
+        ))}
+      </svg>
+
+      {/* Avläsningen ligger i en fast rad under diagrammet i stället för i en
+          svävande ruta. På en telefon hamnar en tooltip antingen under fingret
+          eller utanför kortet; den här raden gör varken. */}
+      <div className="rl-avlas" aria-live="polite">
+        {vald == null ? (
+          <span className="rl-avlas-tom">Dra för att läsa av en omgång.</span>
+        ) : (
+          <>
+            <b>Omgång {rounds[vald]}</b>
+            {sorterade.map(t => (
+              <span key={`a${t.team}`} className={t.ours ? 'rl-avlas-ours' : undefined}>
+                <i className={t.ours ? 'rl-swatch rl-swatch-ours' : 'rl-swatch'} />
+                {t.short} {t.ranks[vald] ?? '–'}
+              </span>
+            ))}
+          </>
+        )}
+      </div>
+    </>
   );
 }

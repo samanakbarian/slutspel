@@ -227,6 +227,11 @@ function humanName(n: string): string {
 
 const shortTeam = (t: string) => String(t || '').replace(/^(IF|IK|HC|BIK)\s+/, '');
 
+/** Kortaste formen som fortfarande pekar ut laget — för direktetiketter i
+ *  diagram, där "MoDo Hockey" och "Kalmar HC" annars skjuter ut ur ytan. */
+const lagEtikett = (t: string) =>
+  shortTeam(t).replace(/\s+(HC|IF|IK|BK|AIK|Hockey|Lakers HC|Vikings IF)$/, '').trim();
+
 /**
  * Efternamnet ur "Efternamn, Förnamn". Två fulla namn på samma rad ryms inte
  * på en telefon, och efternamnet är det som skiljer spelarna åt.
@@ -1298,37 +1303,50 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
       </section>
     );
   }
-  const palette = ['var(--data-t1)', 'var(--data-t2)', 'var(--data-t3)', 'var(--data-t4)'];
-  // Vårt lag först, sedan de bästa. Färgen följer laget, inte placeringen.
+  // Fyra likvärdiga färger tvingade läsaren att följa varje linje för sig. Det
+  // här är Lövenläget: frågan är var VI låg, inte att skilja fyra lag åt. Vårt
+  // lag i accent, de andra i dämpad grå som sammanhang.
+  // En omgång ger ingen kurva, och "låg etta efter 0 av 0 omgångar" är inget
+  // att visa. Utvecklingsfliken fångar normalt fallet tidigare, men kortet ska
+  // stå på egna ben.
+  if (data.rounds.length < 2) return null;
   const ours = data.teams.filter(t => t.is_bjk);
-  const rest = data.teams.filter(t => !t.is_bjk).slice(0, 3);
-  const shown = [...ours, ...rest].slice(0, 4);
+  const bjk = ours[0];
+  // Namnges: vårt lag plus de tre som slutade högst. Resten ritas ändå, som
+  // bakgrund — utan dem stod nedre halvan av diagrammet tom.
+  const namngivna = new Set([...ours, ...data.teams.filter(t => !t.is_bjk).slice(0, 3)]
+    .slice(0, 4).map(t => t.team));
+  const ledde = bjk ? bjk.ranks.filter(r => r === 1).length : 0;
   return (
     <section className="mc-card">
       <p className="mc-kicker">Tabellen över tid</p>
       <h2 className="mc-title">Hur såg serien ut vecka för vecka?</h2>
+      {bjk && (
+        <p className="mc-text tor-sammanfattning">
+          Björklöven låg etta efter <b>{ledde} av {data.rounds.length}</b> omgångar.
+        </p>
+      )}
       <div className="tor-legend">
-        {shown.map((t, i) => (
-          <span key={t.team}><i style={{ background: palette[i] }} />{shortTeam(t.team)}</span>
-        ))}
+        <span><i className="rl-swatch rl-swatch-ours" />Björklöven</span>
+        <span><i className="rl-swatch" />Övriga i topp fyra</span>
+        <span><i className="rl-swatch rl-swatch-bak" />Resten av serien</span>
       </div>
       <RankLines
         rounds={data.rounds}
         teamCount={data.teams.length}
-        teams={shown.map((t, i) => ({
+        teams={data.teams.map(t => ({
           team: t.team,
           ranks: t.ranks,
-          colour: palette[i],
-          short: shortTeam(t.team).slice(0, 4),
+          short: lagEtikett(t.team),
           finalRank: t.final_rank,
+          ours: !!t.is_bjk,
+          namnge: namngivna.has(t.team),
         }))}
       />
       <p className="mc-note">
-        Räknas ur matchresultaten: 3 poäng för vinst, 2 efter förlängning, 1 för förlust efter
-        förlängning.
+        Ställningen efter varje omgång Björklöven spelat.
         {data.table_settled_after_last_round && (
-          <> Sluttabellen avgjordes efter vår sista omgång, så kurvans slut är inte samma sak som
-          slutplaceringen.</>
+          <> Serien spelade klart efter vår sista match, så kurvans slut är inte slutplaceringen.</>
         )}
       </p>
     </section>

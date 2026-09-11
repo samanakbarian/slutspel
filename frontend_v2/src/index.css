@@ -2511,13 +2511,62 @@ a {
 
 /* ── Placering per omgång ────────────────────────────────────────────── */
 
-.rl { width: 100%; height: auto; display: block; }
+/* Tabellen över tid. Formen är emphasis, inte kategorisk: vårt lag i accent,
+   de tre andra i dämpad grå. Fyra likvärdiga färger tvingade läsaren att följa
+   varje linje för sig för att hitta den enda som sajten handlar om. Paret är
+   validerat mot ytan #0e1814 — ΔE 21,5 för deuteranopi, 25,2 för normalseende. */
+.rl { width: 100%; height: auto; display: block; touch-action: pan-y; cursor: crosshair; }
 .rl text { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
 .rl-grid { stroke: rgba(172, 199, 186, 0.09); stroke-width: 1; }
-.rl-axis { stroke: var(--glass-border); stroke-width: 1; }
 .rl-tick { fill: var(--text-muted); font-size: 9.5px; }
-.rl-end { font-size: 9.5px; font-weight: 600; }
-.rl-series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+
+/* Etiketten bär textfärg; prickan bredvid bär identiteten. */
+.rl-end { font-size: 9.5px; font-weight: 600; fill: var(--text-muted); }
+.rl-end-ours { fill: var(--text-primary); font-weight: 800; }
+
+.rl-series { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.rl-context { stroke: #6b8078; stroke-width: 1.4; opacity: 0.75; }
+.rl-ours { stroke: var(--brand-green-light); stroke-width: 2.4; }
+.rl-bakgrund { stroke: #6b8078; stroke-width: 1; opacity: 0.26; }
+
+.rl-dot { fill: #6b8078; }
+.rl-dot-ours { fill: var(--brand-green-light); }
+.rl-kryss { stroke: rgba(172, 199, 186, 0.28); stroke-width: 1; }
+
+/* Avläsningen: en fast rad, inte en svävande ruta. På en telefon hamnar en
+   tooltip antingen under fingret eller utanför kortet. */
+.rl-avlas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.7rem;
+  /* Två rader reserverade: avläsningen bryter rad på en telefon, och utan
+     plats för den skulle kortet hoppa i höjd medan fingret drar. */
+  min-height: 2.6rem;
+  align-content: flex-start;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.rl-avlas b { color: var(--text-primary); font-weight: 700; }
+.rl-avlas-tom { color: var(--text-muted); }
+.rl-avlas-ours { color: var(--text-primary); font-weight: 700; }
+
+.rl-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+  background: #6b8078;
+}
+
+.rl-swatch-ours { background: var(--brand-green-light); }
+.rl-swatch-bak { background: #6b8078; opacity: 0.4; }
+
+.tor-sammanfattning { margin: 0.1rem 0 0.7rem; color: var(--text-secondary); }
 
 /* ── Motståndartabell ────────────────────────────────────────────────── */
 
