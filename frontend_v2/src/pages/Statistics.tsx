@@ -344,9 +344,9 @@ const svNum = (v: number | null | undefined, decimaler = 1) =>
     maximumFractionDigits: decimaler,
   });
 
-/** "Så räknas det" sist i en not, med ankare rakt ner till rätt mått. */
+/** Liten hänvisning sist i en not, med ankare rakt ner till rätt mått. */
 function Formel({ till }: { till: string }) {
-  return <Link className="md-lank" to={`/metod#${till}`}>Så räknas det →</Link>;
+  return <Link className="md-lank" to={`/metod#${till}`}>Formel</Link>;
 }
 
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {

@@ -42,7 +42,7 @@ export function MetodSida() {
 
   return (
     <div className="page animate-fade-up">
-      {/* Ingen rubrikruta. Man kommer hit från "Så räknas det" i en not och vet
+      {/* Ingen rubrikruta. Man kommer hit från en Formel-länk i en not och vet
           redan vad sidan är; en titel plus en inledande mening var två skärmar
           att skrolla förbi för att nå formeln man kom för. */}
       <section className="mc-card">
