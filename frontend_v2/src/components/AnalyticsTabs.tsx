@@ -977,15 +977,12 @@ function SHLTransitionTab({ transition, ageCurve, projectedTable, aiCoach }: { t
         </div>
       </div>
 
-      {/* AI Sportchefen */}
-      <div style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(15,23,42,0.8))', borderRadius: 12, padding: 20, borderLeft: '4px solid #ec4899', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#ec4899', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>💼</span> AI-Sportchefen (Preseason SHL-Scouting)
-        </div>
-        <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.6, fontStyle: 'italic' }}>
-          "{aiCoach || "Analytikern håller på att förbereda SHL-rapporten..."}"
-        </div>
-      </div>
+      {/* AI-rutan stod kvar och lovade en rapport som aldrig kom: LLM-anropet
+          togs bort i september, så aiCoach är alltid undefined och reservtexten
+          "håller på att förbereda" blev permanent. En ruta som aldrig levererar
+          är sämre än ingen ruta. AICoachCard har rätt mönster (if (!text) return
+          null) och används om texten någon gång kommer tillbaka. */}
+      {aiCoach && <AICoachCard title="Analytikern (Preseason SHL)" text={aiCoach} />}
 
       <div style={{ background: chartTheme.bg, borderRadius: 12, padding: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>

@@ -118,7 +118,12 @@ type GoalieFull = {
   home: GoalieSide; away: GoalieSide; game_log: GoalieGame[];
 };
 
-type GoalieData = { status: string; games_with_log: number; goalies: GoalieFull[] };
+type GoalieData = {
+  status: string; games_with_log: number;
+  /** Seriens räddningsprocent, vägd över alla skott. Underlaget till GSAA. */
+  league_sv_pct?: number | null;
+  goalies: GoalieFull[];
+};
 
 type Split = { gp: number; w: number; l: number; otw: number; otl: number; gf: number; ga: number; pts: number };
 type StateRecord = { w: number; l: number; otl?: number };
@@ -141,7 +146,14 @@ type Modules = {
     lead_after_2: StateRecord; trail_after_2: StateRecord; tied_after_2: StateRecord;
     game_types?: { one_goal: StateRecord; two_goals: StateRecord; three_plus_goals: StateRecord };
   };
-  predictions?: { elo_history?: { date: string; elo: number }[]; scoring_timeline?: { interval: string; gf: number; ga: number }[] };
+  predictions?: {
+    elo_history?: { date: string; elo: number }[];
+    scoring_timeline?: { interval: string; gf: number; ga: number }[];
+    /** Poäng laget borde ha fått av sin målskillnad. Lag utan mål i tabellen
+     *  utelämnas av API:t, så listan kan vara tom även när säsongen är spelad. */
+    pythagorean?: { team: string; gp: number; pts: number; exp_pts: number; diff: number; is_bjk: boolean }[];
+    first_goal_impact?: { scored_first: StateRecord; conceded_first: StateRecord };
+  };
 };
 
 type LineRow = {
@@ -1390,6 +1402,15 @@ function Laget({
   const gs = modules?.game_state;
   const att = modules?.attendance;
   const periods = (modules?.periods || []).map(p => ({ label: p.label, gf: p.gf, ga: p.ga }));
+  // Tur/otur enligt Pythagoras: poangen laget faktiskt fick mot dem malskillnaden
+  // forutsager. Lag vars mal saknas i tabellen utelamnas av API:t, sa raden kan
+  // saknas aven for en spelad sasong.
+  const pyth = (modules?.predictions?.pythagorean || []).find(p => p.is_bjk) || null;
+  const forst = modules?.predictions?.first_goal_impact;
+  // Skottdata samlades inte in for alla sasonger. Da svarar API:t med nollor
+  // och null, inte med ett tomt objekt — utan den har kontrollen renderades
+  // "0 skott mot 0 over 0 matcher" och ett PDO utan varde.
+  const harSkott = !!shots && (shots.totals.games ?? 0) > 0;
 
   return (
     <>
@@ -1481,13 +1502,16 @@ function Laget({
 
       {proj && proj.games_remaining > 0 && <Slutplacering proj={proj} />}
 
-      {shots && (
+      {(harSkott || pyth) && (
         <section className="mc-card">
-          <p className="mc-kicker">Skott och tur</p>
+          <p className="mc-kicker">{harSkott ? 'Skott och tur' : 'Tur'}</p>
 
-          {/* Två frågor, i tur och ordning: styrde laget spelet, och hade det
-              tur? Förut låg fyra råa tal i rad med två stycken förklaring
-              under, och sambandet mellan dem stod ingenstans. */}
+          {/* Tre frågor, i tur och ordning: styrde laget spelet, gjorde det mål
+              på sina skott, och blev målen poäng? Förut låg fyra råa tal i rad
+              med två stycken förklaring under, och sambandet mellan dem stod
+              ingenstans. De två sista kan peka åt olika håll — det är inte en
+              motsägelse, de mäter olika led i samma kedja. */}
+          {harSkott && shots && (<>
           <h2 className="mc-title">Styrde laget spelet?</h2>
           <Andel pct={shots.totals.shot_share_pct ?? 0} label="Skottandel" />
           <p className="mc-note">
@@ -1517,6 +1541,34 @@ function Laget({
             normalläget: klart över betyder att pucken varit vänlig, och över tid dras
             talet mot 100 igen.
           </p>
+          </>)}
+
+          {pyth && (
+            <>
+              <h2 className={`mc-title${harSkott ? ' st-sub2' : ''}`}>Blev målen poäng?</h2>
+              <div className="st-stats">
+                <Stat label="Poäng" value={pyth.pts} tone="var(--brand-gold)" />
+                <Stat label="Förväntat" value={svNum(pyth.exp_pts, 1)} />
+                <Stat
+                  label="Skillnad"
+                  value={`${pyth.diff > 0 ? '+' : ''}${svNum(pyth.diff, 1)}`}
+                  tone={pdoTone(pyth.diff, 0)}
+                />
+              </div>
+              <p className="mc-note">
+                Förväntade poäng räknas ur målen med Pythagoras formel: gjorda mål i
+                kvadrat delat med gjorda i kvadrat plus insläppta i kvadrat, gånger
+                {' '}{pyth.gp === 1 ? 'matchen' : `${pyth.gp} matcher`}. Varje match delar
+                ut tre poäng, i förlängning likaväl som i ordinarie tid.
+                {' '}{pyth.diff > 0
+                  ? 'Laget fick fler poäng än målen förutsäger — jämna matcher gick åt rätt håll.'
+                  : pyth.diff < 0
+                    ? 'Laget fick färre poäng än målen förutsäger — det vann stort och förlorade jämnt.'
+                    : 'Poängen ligger precis där målskillnaden förutsäger.'}
+                {harSkott && ' Det här och PDO ovan kan peka åt olika håll: PDO mäter skott som blir mål, det här mäter mål som blir poäng.'}
+              </p>
+            </>
+          )}
         </section>
       )}
 
@@ -1553,6 +1605,15 @@ function Laget({
               <KV label="Enmålsmatcher" value={rec(gs.game_types.one_goal)} />
               <KV label="Tvåmålsmatcher" value={rec(gs.game_types.two_goals)} />
               <KV label="Tre mål eller mer" value={rec(gs.game_types.three_plus_goals)} />
+            </>
+          )}
+          {/* Första målet hör hemma här och ingen annanstans: det är ett matchläge,
+              och raderna läses med samma V–F–ÖF som resten av kortet. */}
+          {forst && (
+            <>
+              <p className="mc-kicker st-sub">Första målet</p>
+              <KV label="Laget gjorde 1–0" value={rec(forst.scored_first)} />
+              <KV label="Motståndarna gjorde 1–0" value={rec(forst.conceded_first)} />
             </>
           )}
           <p className="mc-note">Läses V–F–ÖF (vinster–förluster–övertidsförluster).</p>
@@ -1679,7 +1740,9 @@ function Spelare({
       )}
 
       {loven && keepers ? (
-        keepers.goalies.filter(g => g.games_played > 0).map(g => <GoalieCard key={g.name} g={g} />)
+        keepers.goalies.filter(g => g.games_played > 0).map(g => (
+          <GoalieCard key={g.name} g={g} ligaSv={keepers.league_sv_pct ?? null} />
+        ))
       ) : (
         <section className="mc-card">
           <p className="mc-kicker">Målvakter ({goalies.length})</p>
@@ -1701,7 +1764,14 @@ function Spelare({
  * Tabellen ger bara totaler. Kurvan är det som säger något om formen, och
  * hemma/borta-delningen finns inte i källan utan räknas ur matchloggen.
  */
-function GoalieCard({ g }: { g: GoalieFull }) {
+function GoalieCard({ g, ligaSv }: { g: GoalieFull; ligaSv: number | null }) {
+  // Raddningar over seriens snitt. Ett mal ar cirka tre poang over en sasong,
+  // sa talet gar att lasa som "sa har manga mal har malvakten sparat laget".
+  // Seriens snitt kommer fran API:t och ar vagt over alla skott — inte 90 %,
+  // som ar ett runt tal utan forankring i nagon serie.
+  const gsaa = ligaSv !== null && g.shots_against > 0
+    ? g.saves - g.shots_against * (ligaSv / 100)
+    : null;
   // Hela loggen gjorde sidan orimligt lang — tva malvakter med 30 respektive
   // 25 matcher lade till narmare 4000 px. De senaste racker som overblick.
   const [showAll, setShowAll] = useState(false);
@@ -1733,7 +1803,21 @@ function GoalieCard({ g }: { g: GoalieFull }) {
         <Stat label="Nollor" value={g.shutouts} />
         <Stat label="V–F" value={`${g.wins}–${g.losses}`} />
         <Stat label="Räddningar" value={g.saves} />
+        {gsaa !== null && (
+          <Stat
+            label="Mål räddade"
+            value={`${gsaa > 0 ? '+' : ''}${svNum(gsaa, 1)}`}
+            tone={pdoTone(gsaa, 0)}
+          />
+        )}
       </div>
+      {gsaa !== null && (
+        <p className="mc-note">
+          <b>Mål räddade</b> är hur många fler mål målvakten räddat än en målvakt på
+          seriens snitt hade gjort på samma {g.shots_against} skott. Seriens snitt är
+          {' '}{svNum(ligaSv, 2)} %, vägt över alla skott i serien.
+        </p>
+      )}
 
       {curve.length > 1 && (
         <>

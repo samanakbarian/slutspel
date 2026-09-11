@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Genererad av scripts/sitemap.mjs vid bygget. Redigera inte för hand. -->
 <!--
-  2026-09-07T16:36:27.032Z
-  https://loven-stats-api-324947473206.europe-west1.run.app/api/v1/seasons svarade 403
-  kunde inte lista säsonger (ingen adress svarade på /api/v1/seasons) — provar den aktiva
-  https://loven-stats-api-324947473206.europe-west1.run.app/api/v1/statistics svarade 403
-  aktiv säsong: kunde inte hämta matcher (ingen adress svarade på /api/v1/statistics)
-  inga rapporter hämtade — behåller de 59 adresser som redan låg i kartan
+  2026-09-11T06:03:45.758Z
+  API: https://loven-stats-api-324947473206.europe-west1.run.app
+  shl_2627: 0 matchrapporter
+  ha_2526: 52 matchrapporter
+  ha_2324: 52 matchrapporter
+  sitemap.xml: 111 adresser
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://sida377.se/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
@@ -68,4 +68,56 @@
   <url><loc>https://sida377.se/matcher/1005627</loc><lastmod>2025-09-26</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://sida377.se/matcher/1005620</loc><lastmod>2025-09-24</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://sida377.se/matcher/1005615</loc><lastmod>2025-09-19</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775333</loc><lastmod>2024-03-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775322</loc><lastmod>2024-03-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775315</loc><lastmod>2024-03-01</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775311</loc><lastmod>2024-02-28</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775306</loc><lastmod>2024-02-26</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775294</loc><lastmod>2024-02-23</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775280</loc><lastmod>2024-02-16</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775273</loc><lastmod>2024-02-14</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775259</loc><lastmod>2024-02-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775252</loc><lastmod>2024-02-07</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775250</loc><lastmod>2024-02-05</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775242</loc><lastmod>2024-02-02</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775232</loc><lastmod>2024-01-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775225</loc><lastmod>2024-01-28</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775217</loc><lastmod>2024-01-26</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775211</loc><lastmod>2024-01-24</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775207</loc><lastmod>2024-01-19</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775202</loc><lastmod>2024-01-17</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775287</loc><lastmod>2024-01-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775189</loc><lastmod>2024-01-12</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775182</loc><lastmod>2024-01-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775178</loc><lastmod>2024-01-05</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775168</loc><lastmod>2023-12-29</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775162</loc><lastmod>2023-12-27</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775153</loc><lastmod>2023-12-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775140</loc><lastmod>2023-12-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775137</loc><lastmod>2023-12-13</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775126</loc><lastmod>2023-12-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775119</loc><lastmod>2023-12-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775114</loc><lastmod>2023-12-01</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775105</loc><lastmod>2023-11-29</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775091</loc><lastmod>2023-11-24</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775085</loc><lastmod>2023-11-22</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775266</loc><lastmod>2023-11-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775077</loc><lastmod>2023-11-17</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775071</loc><lastmod>2023-11-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775098</loc><lastmod>2023-11-07</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775066</loc><lastmod>2023-11-05</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775048</loc><lastmod>2023-11-03</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775035</loc><lastmod>2023-11-01</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775015</loc><lastmod>2023-10-27</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775003</loc><lastmod>2023-10-25</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774991</loc><lastmod>2023-10-20</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774975</loc><lastmod>2023-10-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774971</loc><lastmod>2023-10-13</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774957</loc><lastmod>2023-10-11</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774935</loc><lastmod>2023-10-06</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774922</loc><lastmod>2023-10-04</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/775154</loc><lastmod>2023-10-01</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774908</loc><lastmod>2023-09-29</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774901</loc><lastmod>2023-09-27</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://sida377.se/matcher/774892</loc><lastmod>2023-09-22</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>
