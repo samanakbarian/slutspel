@@ -1139,7 +1139,6 @@ function Slutplacering({ proj }: { proj: Projection }) {
         som återstår. Utfallen dras ur lagens styrketal, och{' '}
         {proj.ot_rate_pct} % av matcherna avgörs efter full tid — hämtat ur säsongens egna matcher.
         {proj.reliability === 'low' && ' Få omgångar är spelade, så styrketalen är osäkra och intervallen breda.'}
-        {' '}<Formel till="slutplacering" />
       </p>
     </section>
   );

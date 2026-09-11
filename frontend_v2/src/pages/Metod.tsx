@@ -139,12 +139,6 @@ export function MetodSida() {
           formel="R ← R + 20 × (utfall − förväntat),  förväntat hemma = 1 ÷ (1 + 10^((R borta − (R hemma + 40)) ÷ 400))"
           rad="Start 1500, nollställs varje säsong. Ser resultat, aldrig truppen."
         />
-        <Matt
-          id="slutplacering"
-          namn="Simulerad slutplacering"
-          formel="5 000 simuleringar av matcherna som återstår; styrketalet dras per simulering ur en normalfördelning kring lagets Elo, sigma 55"
-          rad="Fältet i stapeln är åtta av tio utfall. Sigma 55 kalibrerad mot HA 25/26."
-        />
       </section>
     </div>
   );
