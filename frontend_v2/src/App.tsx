@@ -185,7 +185,7 @@ function App() {
           <footer className="app-footer">
             <NavLink to="/om">Om Lövenläget</NavLink>
             <span aria-hidden="true">·</span>
-            <NavLink to="/metod">Så räknar vi</NavLink>
+            <NavLink to="/metod">Metod</NavLink>
             <span aria-hidden="true">·</span>
             <span>Data från Swehockey Stats</span>
           </footer>

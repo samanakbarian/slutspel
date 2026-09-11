@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 /**
- * Så räknar vi: formlerna bakom måtten.
+ * Metod: formlerna bakom måtten.
  *
  * Sidan finns för att måtten står på flera ställen — PDO i både Laget och
  * Utveckling, percentiler i både Spelare och på varje profil — och en
@@ -42,16 +42,11 @@ export function MetodSida() {
 
   return (
     <div className="page animate-fade-up">
+      {/* Ingen rubrikruta. Man kommer hit från "Så räknas det" i en not och vet
+          redan vad sidan är; en titel plus en inledande mening var två skärmar
+          att skrolla förbi för att nå formeln man kom för. */}
       <section className="mc-card">
-        <p className="mc-kicker">Metod</p>
-        <h2 className="mc-title">Så räknar vi</h2>
-        <p className="mc-text" style={{ marginTop: 6 }}>
-          Siffrorna kommer från Swehockey Stats. Det här är de som räknas fram.
-        </p>
-      </section>
-
-      <section className="mc-card">
-        <p className="mc-kicker">Laget</p>
+        <p className="mc-kicker">Metod · Laget</p>
 
         <Matt
           id="skottandel"
