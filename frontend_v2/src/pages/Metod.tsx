@@ -52,7 +52,7 @@ export function MetodSida() {
           id="skottandel"
           namn="Skottandel"
           formel="skott för ÷ (skott för + skott emot)"
-          rad="Skott på mål, inte skottförsök. Alltså inte Corsi."
+          rad="Skott på mål, inte skottförsök."
         />
         <Matt
           id="pdo"

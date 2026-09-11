@@ -1522,8 +1522,8 @@ function Laget({
           <p className="mc-note">
             {shots.totals.shots_for} skott mot {shots.totals.shots_against} över
             {' '}{shots.totals.games} matcher. Över 50 % betyder att laget sköt mer än
-            motståndarna. Det är skott på mål — inte alla skottförsök, så det är
-            inte Corsi. <Formel till="skottandel" />
+            motståndarna. Det är skott på mål, inte alla skottförsök.
+            {' '}<Formel till="skottandel" />
           </p>
 
           <h2 className="mc-title st-sub2">Hade laget tur?</h2>
