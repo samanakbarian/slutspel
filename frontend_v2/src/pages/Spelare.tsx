@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { PercentileBar, Sparkline } from '../components/charts/Charts';
+import { matcher } from '../lib/sprak';
 
 /**
  * Spelarsidan.
@@ -510,7 +511,7 @@ export function Spelare() {
           <p className="mc-kicker">Poäng ackumulerat</p>
           <Sparkline points={curve} height={112} unit=" p" guide={pace} guideLabel="takt" />
           <p className="mc-note">
-            {p.points} poäng på {p.games_played} matcher. X-axeln är matchnummer, så en platt
+            {p.points} poäng på {matcher(p.games_played)}. X-axeln är matchnummer, så en platt
             sträcka är matcher utan poäng. Den streckade linjen visar den genomsnittliga
             säsongstakten ({svNum(p.points_per_game, 2)} per match) — perioder under linjen
             innebär lägre takt än säsongssnittet.
@@ -541,12 +542,12 @@ export function Spelare() {
               <div>
                 <span className="sp-split-h">Hemma</span>
                 <b>{sp.home.points} p</b>
-                <span>{sp.home.goals}+{sp.home.assists} på {sp.home.games} matcher</span>
+                <span>{sp.home.goals}+{sp.home.assists} på {matcher(sp.home.games)}</span>
               </div>
               <div>
                 <span className="sp-split-h">Borta</span>
                 <b>{sp.away.points} p</b>
-                <span>{sp.away.goals}+{sp.away.assists} på {sp.away.games} matcher</span>
+                <span>{sp.away.goals}+{sp.away.assists} på {matcher(sp.away.games)}</span>
               </div>
             </div>
           )}
@@ -578,10 +579,10 @@ export function Spelare() {
         <section className="mc-card">
           <p className="mc-kicker">Sviter</p>
           <div className="sp-stats sp-stats-tight">
-            <Stat label="Aktuell poängsvit" value={st.current_points > 0 ? `${st.current_points} matcher` : '0 matcher'}
+            <Stat label="Aktuell poängsvit" value={st.current_points > 0 ? matcher(st.current_points) : '0 matcher'}
                   tone={st.current_points > 0 ? 'var(--impact-positive)' : undefined} />
-            <Stat label="Längsta poängsvit" value={`${st.longest_points} matcher`} />
-            <Stat label="Längsta torka" value={`${st.longest_drought} matcher`} />
+            <Stat label="Längsta poängsvit" value={matcher(st.longest_points)} />
+            <Stat label="Längsta torka" value={matcher(st.longest_drought)} />
           </div>
           <p className="mc-note">Räknat över alla matcher spelaren var med i, inte bara de med poäng.</p>
         </section>

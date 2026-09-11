@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
+import { matcher } from '../lib/sprak';
 
 /** Svarsformat från /api/v1/roster — Swehockey som källa, kontrakt som berikning. */
 type Player = {
@@ -82,7 +83,7 @@ function PlayerRow({ p }: { p: Player }) {
     p.position,
     p.age ? `${p.age} år` : null,
     p.contract_until ? `kontrakt t.o.m. ${p.contract_until}` : null,
-    p.games_played > 0 ? `${p.games_played} matcher, ${p.points} p` : null,
+    p.games_played > 0 ? `${matcher(p.games_played)}, ${p.points} p` : null,
   ].filter(Boolean).join(' · ');
 
   return (

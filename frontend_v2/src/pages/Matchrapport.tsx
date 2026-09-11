@@ -7,6 +7,7 @@ import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isDefence, isOurs, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
 import { skrivSidhuvud } from '../lib/sidhuvud';
+import { matcher } from '../lib/sprak';
 
 /* ── kontext: vad matchen betydde ── */
 
@@ -40,7 +41,7 @@ function Kontext({ ctx, opponent }: { ctx: MatchContext | null | undefined; oppo
         <div className="ctx-rank">
           <span className="ctx-rankbig">{after.rank}<i>{ordinalSuffix(after.rank)}</i></span>
           <span className="ctx-rankbody">
-            <b>{after.points} poäng</b> efter {after.games_played} matcher
+            <b>{after.points} poäng</b> efter {matcher(after.games_played)}
             {before && (
               <span className="ctx-move">
                 {moved > 0

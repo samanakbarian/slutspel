@@ -4,6 +4,7 @@ import { API_URL } from '../config/api';
 import { EmptySeason } from '../components/EmptySeason';
 import { Andel, FormDots, Jamforelse, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
+import { matcher } from '../lib/sprak';
 
 /**
  * Statistiken i tre ytor i stället för fem flikar:
@@ -1087,7 +1088,7 @@ function Slutplacering({ proj }: { proj: Projection }) {
 
   return (
     <section className="mc-card">
-      <p className="mc-kicker">Slutplacering · {proj.games_remaining} matcher kvar</p>
+      <p className="mc-kicker">Slutplacering · {matcher(proj.games_remaining)} kvar</p>
 
       {us && (
         <>
@@ -1284,7 +1285,7 @@ function Motstandare({
               </tbody>
             </table>
           </div>
-          <p className="mc-note">{data.games} matcher i urvalet.</p>
+          <p className="mc-note">{matcher(data.games)} i urvalet.</p>
         </>
       )}
     </section>
@@ -1511,7 +1512,7 @@ function Laget({
               övertidsförlusterna föll bort. Skrivet så här stämmer det både
               före och efter att backend delar upp vinsterna. */}
           <p className="mc-note">
-            <b>Hemma</b> {splits.home.gp} matcher: {splits.home.w + splits.home.otw} vinster,
+            <b>Hemma</b> {matcher(splits.home.gp)}: {splits.home.w + splits.home.otw} vinster,
             {' '}{splits.home.l + splits.home.otl} förluster
             {splits.home.otl > 0 && ` (${splits.home.otl} efter förlängning)`}.
             {' '}<b>Borta</b> {splits.away.gp}: {splits.away.w + splits.away.otw} vinster,
@@ -1537,7 +1538,7 @@ function Laget({
           <Andel pct={shots.totals.shot_share_pct ?? 0} label="Skottandel" />
           <p className="mc-note">
             {shots.totals.shots_for} skott mot {shots.totals.shots_against} över
-            {' '}{shots.totals.games} matcher. Skott på mål, inte skottförsök.
+            {' '}{matcher(shots.totals.games)}. Skott på mål, inte skottförsök.
             {' '}<Formel till="skottandel" />
           </p>
 
@@ -1859,7 +1860,7 @@ function GoalieCard({ g, ligaSv }: { g: GoalieFull; ligaSv: number | null }) {
             rightLabel={g.away.save_pct !== null ? `${g.away.save_pct} %` : '–'}
           />
           <p className="mc-note">
-            Hemma {g.home.games} matcher, {g.home.goals_against} insläppta på {g.home.shots_against} skott.
+            Hemma {matcher(g.home.games)}, {g.home.goals_against} insläppta på {g.home.shots_against} skott.
             Borta {g.away.games}, {g.away.goals_against} på {g.away.shots_against}. Grön stapel är hemma.
           </p>
         </>
@@ -1963,16 +1964,35 @@ function Utveckling({
 
   return (
     <>
+      {/* De första omgångarna har nästan inget att visa: kurvorna kräver två
+          punkter, formfönstret fem matcher, publiken två hemmamatcher. Utan
+          den här raden ser fliken trasig ut premiärkvällen i stället för ny. */}
+      {timeline.length < 5 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Utveckling</p>
+          <p className="mc-text">
+            {matcher(timeline.length)} spelad{timeline.length === 1 ? '' : 'a'} av säsongen.
+            Kurvorna växer fram efterhand — form, styrketal och publiksnitt
+            behöver några matcher innan de säger något.
+          </p>
+        </section>
+      )}
+
       <TabellenOverTid data={history} state={historyState} />
 
-      <section className="mc-card">
-        <p className="mc-kicker">Poäng ackumulerat</p>
-        <Sparkline points={pointCurve} height={104} unit=" p" />
-        <p className="mc-note">
-          {timeline.length} matcher, {pointCurve[pointCurve.length - 1]?.value ?? 0} poäng.
-          En brantare kurva betyder fler poäng per match.
-        </p>
-      </section>
+      {/* Sparkline ritar inget under två punkter, och kortet stod då kvar med
+          en text om en kurva som inte fanns — synligt hela premiärkvällen, när
+          en match är spelad. Alla andra kort i fliken hade redan sin spärr. */}
+      {pointCurve.length > 1 && (
+        <section className="mc-card">
+          <p className="mc-kicker">Poäng ackumulerat</p>
+          <Sparkline points={pointCurve} height={104} unit=" p" />
+          <p className="mc-note">
+            {matcher(timeline.length)}, {pointCurve[pointCurve.length - 1]?.value ?? 0} poäng.
+            En brantare kurva betyder fler poäng per match.
+          </p>
+        </section>
+      )}
 
       {rolling.length > 1 && (
         <section className="mc-card">
