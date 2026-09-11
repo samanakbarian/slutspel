@@ -344,6 +344,11 @@ const svNum = (v: number | null | undefined, decimaler = 1) =>
     maximumFractionDigits: decimaler,
   });
 
+/** "Så räknas det" sist i en not, med ankare rakt ner till rätt mått. */
+function Formel({ till }: { till: string }) {
+  return <Link className="md-lank" to={`/metod#${till}`}>Så räknas det →</Link>;
+}
+
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
     <div className="st-stat">
@@ -1134,6 +1139,7 @@ function Slutplacering({ proj }: { proj: Projection }) {
         som återstår. Utfallen dras ur lagens styrketal, och{' '}
         {proj.ot_rate_pct} % av matcherna avgörs efter full tid — hämtat ur säsongens egna matcher.
         {proj.reliability === 'low' && ' Få omgångar är spelade, så styrketalen är osäkra och intervallen breda.'}
+        {' '}<Formel till="slutplacering" />
       </p>
     </section>
   );
@@ -1518,7 +1524,7 @@ function Laget({
             {shots.totals.shots_for} skott mot {shots.totals.shots_against} över
             {' '}{shots.totals.games} matcher. Över 50 % betyder att laget sköt mer än
             motståndarna. Det är skott på mål — inte alla skottförsök, så det är
-            inte Corsi.
+            inte Corsi. <Formel till="skottandel" />
           </p>
 
           <h2 className="mc-title st-sub2">Hade laget tur?</h2>
@@ -1539,7 +1545,7 @@ function Laget({
             <b>S%</b> är hur stor del av skotten som blev mål, <b>SV%</b> hur stor del
             av motståndarnas skott målvakterna räddade. PDO är summan. Runt 100 är
             normalläget: klart över betyder att pucken varit vänlig, och över tid dras
-            talet mot 100 igen.
+            talet mot 100 igen. <Formel till="pdo" />
           </p>
           </>)}
 
@@ -1568,8 +1574,7 @@ function Laget({
                     ? `Laget fick ${svNum(Math.abs(pyth.diff), 1)} poäng mindre än så — det vann stort och förlorade jämnt, och stora vinster ger inte fler än tre poäng.`
                     : 'Laget fick precis så många poäng.'}
                 {harSkott && ' PDO ovan kan peka åt andra hållet utan att motsäga det här: PDO mäter skott som blir mål, det här mäter mål som blir tabellpoäng.'}
-                {' '}Formeln heter Pythagoras: gjorda mål i kvadrat delat med gjorda i
-                kvadrat plus insläppta i kvadrat, gånger de tre poäng varje match delar ut.
+                {' '}Formeln heter Pythagoras. <Formel till="turindex" />
               </p>
             </>
           )}
@@ -1591,6 +1596,10 @@ function Laget({
           <KV label="Boxplay" value={`${komma(st.pk_pct)} %`} hint={`${st.pk_goals_against} insläppta på ${st.pk_times} numerära underlägen`} />
           <KV label="Special teams-index" value={komma(st.special_teams_index)} hint="PP% + PK%. 100 är neutralnivån, över räknas som starkt." />
           <KV label="Utvisningar" value={`${komma(st.avg_pim_per_game)} min/match`} hint={`${st.total_pim} minuter totalt`} />
+          <p className="mc-note">
+            Räknat på antalet utvisningar, inte på speltid i överläge.
+            {' '}<Formel till="specialteam" />
+          </p>
         </section>
       )}
 
@@ -1714,6 +1723,7 @@ function Spelare({
             {' '}{onIce.team_goals_for} mål där Swehockey angett vilka som var ute — inte
             av säsongens alla mål, eftersom uppgiften saknas för en del av dem.
             Talen sammanfaller inte alltid med tabellens plus/minus, som står i egen kolumn.
+            {' '}<Formel till="onice" />
           </p>
         )}
       </section>
@@ -1753,7 +1763,9 @@ function Spelare({
           {goalies.length === 0
             ? <p className="mc-text">Ingen målvaktsstatistik för säsongen ännu.</p>
             : <GoalieTable rows={goalies} showTeam={!loven} />}
-          <p className="mc-note">IM insläppta mål, Rp% räddningsprocent, NC nollor.</p>
+          <p className="mc-note">
+            IM insläppta mål, Rp% räddningsprocent, NC nollor. <Formel till="raddningsprocent" />
+          </p>
         </section>
       )}
     </>
@@ -1820,6 +1832,7 @@ function GoalieCard({ g, ligaSv }: { g: GoalieFull; ligaSv: number | null }) {
           <b>Mål räddade</b> är hur många fler mål målvakten räddat än en målvakt på
           seriens snitt hade gjort på samma {g.shots_against} skott. Seriens snitt är
           {' '}{svNum(ligaSv, 2)} %, vägt över alla skott i serien.
+          {' '}<Formel till="malraddade" />
         </p>
       )}
 
@@ -2009,7 +2022,7 @@ function Utveckling({
           <Sparkline points={elo.map(e => ({ label: shortDate(e.date), value: Math.round(e.elo) }))} height={100} colour="var(--impact-neutral)" fill="rgba(119,181,255,0.10)" />
           <p className="mc-note">
             Elo startar på 1500 och rör sig efter varje resultat, viktat mot motståndets styrka.
-            Nu {Math.round(elo[elo.length - 1].elo)}.
+            Nu {Math.round(elo[elo.length - 1].elo)}. <Formel till="elo" />
           </p>
         </section>
       )}

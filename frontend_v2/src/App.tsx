@@ -16,6 +16,7 @@ import { Sidhuvud } from './lib/sidhuvud';
 // besökare betalar för.
 const EkonomiPage = lazy(() => import('./pages/Ekonomi').then(m => ({ default: m.EkonomiPage })));
 const PreseasonShlPage = lazy(() => import('./pages/PreseasonShl').then(m => ({ default: m.PreseasonShlPage })));
+const MetodSida = lazy(() => import('./pages/Metod').then(m => ({ default: m.MetodSida })));
 
 /**
  * Fem flikar. Ekonomi och Preseason ligger kvar som rutter men är
@@ -170,6 +171,9 @@ function App() {
             <Route path="/ekonomi" element={<EkonomiPage />} />
             <Route path="/preseason-shl" element={<PreseasonShlPage />} />
             <Route path="/om" element={<OmSida />} />
+            {/* Uppslagsverk, inte destination: ligger utanför bottenmenyn och
+                nås från noterna som använder måtten, plus sidfoten. */}
+            <Route path="/metod" element={<MetodSida />} />
 
             {/* Gamla adresser */}
             <Route path="/silly" element={<Navigate to="/nyheter" replace />} />
@@ -180,6 +184,8 @@ function App() {
 
           <footer className="app-footer">
             <NavLink to="/om">Om Lövenläget</NavLink>
+            <span aria-hidden="true">·</span>
+            <NavLink to="/metod">Så räknar vi</NavLink>
             <span aria-hidden="true">·</span>
             <span>Data från Swehockey Stats</span>
           </footer>

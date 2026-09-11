@@ -499,6 +499,7 @@ export function Spelare() {
         <p className="mc-note">
           Plus/minus är Swehockeys officiella (5v5 + numerärt underläge). On-ice ±
           räknar alla mål medan spelaren var på isen, oavsett spelform.
+          {' '}<Link className="md-lank" to="/metod#plusminus">Så räknas det →</Link>
           {cov && cov.games_with_report < cov.games_total &&
             ` Skott och tekningar finns för ${cov.games_with_report} av ${cov.games_total} matcher.`}
         </p>
@@ -632,6 +633,7 @@ export function Spelare() {
             <p className="mc-note">
               Jämfört med alla utespelare i serien, oavsett position. Baserat på
               totala tal, inte per match.
+              {' '}<Link className="md-lank" to="/metod#percentiler">Så räknas det →</Link>
             </p>
           </>
         ) : (
