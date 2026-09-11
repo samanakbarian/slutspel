@@ -9,26 +9,22 @@ import { useLocation } from 'react-router-dom';
  * förklaring som upprepas glider isär. Här står den en gång, och noterna
  * länkar hit med ankare.
  *
- * Håll posterna korta. Formeln är det sidan finns för; texten ska bara säga
- * vad talet betyder och var det tar slut. Första versionen var tre gånger så
- * lång och läste som en lärobok.
+ * En rad per mått. Formeln är vad man kom hit för; raden under finns bara om
+ * formeln kan missförstås. Två tidigare versioner hade ett stycke om vad
+ * varje mått inte fångar och läste som en lärobok.
  */
 
-function Matt({
-  id, namn, formel, betyder, saknar,
-}: {
+function Matt({ id, namn, formel, rad }: {
   id: string;
   namn: string;
   formel: string;
-  betyder: React.ReactNode;
-  saknar: string;
+  rad?: string;
 }) {
   return (
     <div className="md-matt" id={id}>
       <h3 className="md-namn">{namn}</h3>
       <p className="md-formel">{formel}</p>
-      <p className="mc-text">{betyder}</p>
-      <p className="mc-note"><b>Fångar inte:</b> {saknar}</p>
+      {rad && <p className="mc-note">{rad}</p>}
     </div>
   );
 }
@@ -50,8 +46,7 @@ export function MetodSida() {
         <p className="mc-kicker">Metod</p>
         <h2 className="mc-title">Så räknar vi</h2>
         <p className="mc-text" style={{ marginTop: 6 }}>
-          Siffrorna kommer från Swehockey Stats. En del står där som de är, andra
-          räknas fram här — och då ska det gå att se hur.
+          Siffrorna kommer från Swehockey Stats. Det här är de som räknas fram.
         </p>
       </section>
 
@@ -62,49 +57,30 @@ export function MetodSida() {
           id="skottandel"
           namn="Skottandel"
           formel="skott för ÷ (skott för + skott emot)"
-          betyder={<>Hur stor del av matchens skott laget stod för.</>}
-          saknar="Bara skott på mål. Missar och blockerade skott saknas i källan, så det här är inte Corsi och går inte att jämföra med Corsi."
+          rad="Skott på mål, inte skottförsök. Alltså inte Corsi."
         />
-
         <Matt
           id="pdo"
           namn="PDO"
           formel="S% + SV%,  där S% = mål ÷ skott för  och  SV% = (skott emot − insläppta) ÷ skott emot"
-          betyder={<>
-            Hur vänlig pucken varit. Runt 100 är normalläget, och över tid dras
-            talet dit igen.
-          </>}
-          saknar="Skillnaden mellan tur och en genuint bra målvakt."
+          rad="Runt 100 är normalläget. Över tid dras talet dit."
         />
-
         <Matt
           id="turindex"
           namn="Turindex (Pythagoras)"
-          formel="förväntade poäng = gjorda² ÷ (gjorda² + insläppta²) × matcher × 3"
-          betyder={<>
-            Tabellpoängen målskillnaden förutsäger, mot vad laget faktiskt fick.
-            Ett minustal betyder stora vinster och jämna förluster — extra mål i
-            en storseger ger inte en fjärde poäng.
-          </>}
-          saknar="Vem motståndaren var och när målen föll."
+          formel="gjorda² ÷ (gjorda² + insläppta²) × matcher × 3"
+          rad="Tabellpoängen målskillnaden förutsäger. Minus betyder stora vinster och jämna förluster."
         />
-
         <Matt
           id="specialteam"
           namn="Special teams-index"
           formel="PP% + PK%,  där PP% = powerplaymål ÷ motståndarnas utvisningar  och  PK% = (egna utvisningar − insläppta powerplaymål) ÷ egna utvisningar"
-          betyder={<>Ett tal för båda specialteamen. 100 är neutralnivån.</>}
-          saknar="Speltid i överläge. En utvisning som bryts efter tio sekunder väger lika tungt som två hela minuter."
+          rad="100 är neutralnivån. Räknar utvisningar, inte speltid i överläge."
         />
-
         <Matt
           id="form"
           namn="Formkurvan"
           formel="rullande fönster om 10 matcher"
-          betyder={<>
-            Varje punkt är de tio senaste matcherna fram till och med den matchen.
-          </>}
-          saknar="Motståndets styrka. Ett rullande fönster släpar dessutom efter en formvändning."
         />
       </section>
 
@@ -115,30 +91,19 @@ export function MetodSida() {
           id="plusminus"
           namn="Plus/minus"
           formel="mål för − mål emot på isen, i lika styrka och i numerärt underläge"
-          betyder={<>
-            Regelbokens tal, samma som i Swehockeys protokoll. Powerplaymål och
-            straffar räknas inte.
-          </>}
-          saknar="Vem som bidrog. Alla fem på isen får samma plus."
+          rad="Samma tal som i Swehockeys protokoll. Powerplaymål och straffar räknas inte."
         />
-
         <Matt
           id="onice"
           namn="On-ice ±"
           formel="alla mål för − alla mål emot på isen, oavsett spelform"
-          betyder={<>
-            Rent målsaldo för tiden på isen, powerplay inräknat. En spelare med
-            mycket powerplaytid ser bättre ut här än i plus/minus.
-          </>}
-          saknar="Jämförbarhet med det officiella plus/minus. De svarar på olika frågor och står därför bredvid varandra."
+          rad="Powerplay inräknat, och därför inte samma tal som plus/minus."
         />
-
         <Matt
           id="percentiler"
           namn="Percentiler"
           formel="andel av serien med minst 10 matcher som ligger under spelarens värde"
-          betyder={<>85 betyder bättre än 85 % av serien i det måttet.</>}
-          saknar="Position. En back jämförs med forwards."
+          rad="85 = bättre än 85 % av serien. Jämför inte position mot position."
         />
       </section>
 
@@ -149,28 +114,19 @@ export function MetodSida() {
           id="raddningsprocent"
           namn="Räddningsprocent (Rp%)"
           formel="räddningar ÷ skott mot × 100"
-          betyder={<>Hur stor del av skotten målvakten räddade.</>}
-          saknar="Skottkvalitet. Ett skott från blålinjen väger lika tungt som ett friläge."
+          rad="Alla skott väger lika — skottkvalitet saknas i källan."
         />
-
         <Matt
           id="gaa"
           namn="GAA"
           formel="insläppta mål × 60 ÷ spelade minuter"
-          betyder={<>Insläppta mål per hel match, oavsett hur länge målvakten stod.</>}
-          saknar="Laget framför. Ett defensivt starkt lag ger bättre GAA utan bättre målvakt."
+          rad="Beror lika mycket på laget framför som på målvakten."
         />
-
         <Matt
           id="malraddade"
           namn="Mål räddade (GSAA)"
           formel="räddningar − skott mot × seriens räddningsprocent"
-          betyder={<>
-            Mål räddade utöver vad en genomsnittlig målvakt i serien gjort på
-            samma skott. Seriens snitt vägs över alla skott, och bara målvakter
-            med minst tio matcher räknas in.
-          </>}
-          saknar="Skottkvalitet. Snittet gäller den aktuella serien, så tal från olika serier går inte att jämföra."
+          rad="Seriens snitt vägs över alla skott, målvakter med minst tio matcher."
         />
       </section>
 
@@ -181,25 +137,13 @@ export function MetodSida() {
           id="elo"
           namn="Elo"
           formel="R ← R + 20 × (utfall − förväntat),  förväntat hemma = 1 ÷ (1 + 10^((R borta − (R hemma + 40)) ÷ 400))"
-          betyder={<>
-            Styrketal som börjar på 1500 och flyttas efter varje match, viktat mot
-            motståndets styrka. Hemmaplan är värd 40 punkter, och en vinst efter
-            förlängning räknas som 0,65 i stället för 1,0.
-          </>}
-          saknar="Truppen. Alla lag nollställs till 1500 varje säsong, så värvningar och skador finns inte i talet."
+          rad="Start 1500, nollställs varje säsong. Ser resultat, aldrig truppen."
         />
-
         <Matt
           id="slutplacering"
           namn="Simulerad slutplacering"
-          formel="5 000 simuleringar av matcherna som återstår; varje lags styrketal dras per simulering ur en normalfördelning kring dess Elo, sigma 55"
-          betyder={<>
-            Resten av säsongen spelas 5 000 gånger. Det färgade fältet i stapeln är
-            var laget hamnar i åtta av tio. Sigma 55 är kalibrerat mot HA 25/26:
-            11,2 av 14 slutresultat hamnade inom p10–p90, mot 9,8 utan — och 11,2
-            är vad ett åttioprocentigt intervall ska ge.
-          </>}
-          saknar="Allt Elo inte ser. Det här är inte en förutsägelse, utan hur utfallen fördelar sig om resten liknar det som spelats."
+          formel="5 000 simuleringar av matcherna som återstår; styrketalet dras per simulering ur en normalfördelning kring lagets Elo, sigma 55"
+          rad="Fältet i stapeln är åtta av tio utfall. Sigma 55 kalibrerad mot HA 25/26."
         />
       </section>
     </div>
