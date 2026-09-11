@@ -1521,8 +1521,7 @@ function Laget({
           <Andel pct={shots.totals.shot_share_pct ?? 0} label="Skottandel" />
           <p className="mc-note">
             {shots.totals.shots_for} skott mot {shots.totals.shots_against} över
-            {' '}{shots.totals.games} matcher. Över 50 % betyder att laget sköt mer än
-            motståndarna. Det är skott på mål, inte alla skottförsök.
+            {' '}{shots.totals.games} matcher. Skott på mål, inte skottförsök.
             {' '}<Formel till="skottandel" />
           </p>
 
@@ -1541,10 +1540,9 @@ function Laget({
             </span>
           </div>
           <p className="mc-note">
-            <b>S%</b> är hur stor del av skotten som blev mål, <b>SV%</b> hur stor del
-            av motståndarnas skott målvakterna räddade. PDO är summan. Runt 100 är
-            normalläget: klart över betyder att pucken varit vänlig, och över tid dras
-            talet mot 100 igen. <Formel till="pdo" />
+            Andel skott som blev mål, plus andel räddade skott. Runt 100 är
+            normalläget — över betyder att pucken varit vänlig.
+            {' '}<Formel till="pdo" />
           </p>
           </>)}
 
@@ -1564,16 +1562,13 @@ function Laget({
                 />
               </div>
               <p className="mc-note">
-                Hur mycket laget gjort och släppt in förutsäger ganska väl var i
-                tabellen det hamnar. <b>Förväntat</b> är den placeringen i poäng, räknad
-                ur säsongens mål.
+                Poängen målskillnaden förutsäger.
                 {' '}{pyth.diff > 0
-                  ? `Laget fick ${svNum(pyth.diff, 1)} poäng mer än så — jämna matcher gick åt rätt håll.`
+                  ? 'Laget fick fler — jämna matcher gick åt rätt håll.'
                   : pyth.diff < 0
-                    ? `Laget fick ${svNum(Math.abs(pyth.diff), 1)} poäng mindre än så — det vann stort och förlorade jämnt, och stora vinster ger inte fler än tre poäng.`
-                    : 'Laget fick precis så många poäng.'}
-                {harSkott && ' PDO ovan kan peka åt andra hållet utan att motsäga det här: PDO mäter skott som blir mål, det här mäter mål som blir tabellpoäng.'}
-                {' '}Formeln heter Pythagoras. <Formel till="turindex" />
+                    ? 'Laget fick färre — det vann stort och förlorade jämnt.'
+                    : 'Laget fick precis så många.'}
+                {' '}<Formel till="turindex" />
               </p>
             </>
           )}
@@ -1717,12 +1712,9 @@ function Spelare({
         </p>
         {loven && onIce && (
           <p className="mc-note">
-            <b>På is</b> är mål för minus mål emot medan spelaren stod på isen, över
-            {' '}{onIce.games_with_events} matcher. <b>Andel</b> är hur stor del av de
+            <b>På is</b> är målsaldo på isen, <b>Andel</b> hur stor del av de
             {' '}{onIce.team_goals_for} mål där Swehockey angett vilka som var ute — inte
-            av säsongens alla mål, eftersom uppgiften saknas för en del av dem.
-            Talen sammanfaller inte alltid med tabellens plus/minus, som står i egen kolumn.
-            {' '}<Formel till="onice" />
+            av alla säsongens mål. <Formel till="onice" />
           </p>
         )}
       </section>
@@ -1828,10 +1820,8 @@ function GoalieCard({ g, ligaSv }: { g: GoalieFull; ligaSv: number | null }) {
       </div>
       {gsaa !== null && (
         <p className="mc-note">
-          <b>Mål räddade</b> är hur många fler mål målvakten räddat än en målvakt på
-          seriens snitt hade gjort på samma {g.shots_against} skott. Seriens snitt är
-          {' '}{svNum(ligaSv, 2)} %, vägt över alla skott i serien.
-          {' '}<Formel till="malraddade" />
+          <b>Mål räddade</b> är mot seriens snitt på {svNum(ligaSv, 2)} %, räknat på
+          samma {g.shots_against} skott. <Formel till="malraddade" />
         </p>
       )}
 
