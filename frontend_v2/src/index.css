@@ -2527,7 +2527,6 @@ a {
 .rl-series { fill: none; stroke-linejoin: round; stroke-linecap: round; }
 .rl-context { stroke: #6b8078; stroke-width: 1.4; opacity: 0.75; }
 .rl-ours { stroke: var(--brand-green-light); stroke-width: 2.4; }
-.rl-bakgrund { stroke: #6b8078; stroke-width: 1; opacity: 0.26; }
 
 .rl-dot { fill: #6b8078; }
 .rl-dot-ours { fill: var(--brand-green-light); }
@@ -2564,7 +2563,6 @@ a {
 }
 
 .rl-swatch-ours { background: var(--brand-green-light); }
-.rl-swatch-bak { background: #6b8078; opacity: 0.4; }
 
 .tor-sammanfattning { margin: 0.1rem 0 0.7rem; color: var(--text-secondary); }
 

@@ -1312,10 +1312,10 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
   if (data.rounds.length < 2) return null;
   const ours = data.teams.filter(t => t.is_bjk);
   const bjk = ours[0];
-  // Namnges: vårt lag plus de tre som slutade högst. Resten ritas ändå, som
-  // bakgrund — utan dem stod nedre halvan av diagrammet tom.
-  const namngivna = new Set([...ours, ...data.teams.filter(t => !t.is_bjk).slice(0, 3)]
-    .slice(0, 4).map(t => t.team));
+  // Vårt lag plus de tre som slutade högst. Hela serien ritades ett tag som
+  // bakgrund, men de tio kurvorna fanns bara för att fylla tomrummet under
+  // topp fyra — de sa ingenting om något läsaren frågat efter.
+  const visade = [...ours, ...data.teams.filter(t => !t.is_bjk).slice(0, 3)].slice(0, 4);
   const ledde = bjk ? bjk.ranks.filter(r => r === 1).length : 0;
   return (
     <section className="mc-card">
@@ -1329,18 +1329,16 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
       <div className="tor-legend">
         <span><i className="rl-swatch rl-swatch-ours" />Björklöven</span>
         <span><i className="rl-swatch" />Övriga i topp fyra</span>
-        <span><i className="rl-swatch rl-swatch-bak" />Resten av serien</span>
       </div>
       <RankLines
         rounds={data.rounds}
         teamCount={data.teams.length}
-        teams={data.teams.map(t => ({
+        teams={visade.map(t => ({
           team: t.team,
           ranks: t.ranks,
           short: lagEtikett(t.team),
           finalRank: t.final_rank,
           ours: !!t.is_bjk,
-          namnge: namngivna.has(t.team),
         }))}
       />
       <p className="mc-note">

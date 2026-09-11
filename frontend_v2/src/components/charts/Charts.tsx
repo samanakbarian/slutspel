@@ -379,7 +379,7 @@ export function RankLines({
   height = 210,
 }: {
   rounds: number[];
-  teams: { team: string; ranks: (number | null)[]; short: string; finalRank: number; ours: boolean; namnge: boolean }[];
+  teams: { team: string; ranks: (number | null)[]; short: string; finalRank: number; ours: boolean }[];
   teamCount?: number;
   height?: number;
 }) {
@@ -396,11 +396,15 @@ export function RankLines({
   const plotW = W - L - R;
   const plotH = height - T - B;
 
-  // Hela serien ritas, inte bara fyra lag. Med fyra kurvor låg allt i den
-  // översta fjärdedelen och resten av ytan stod tom; med alla fjorton blir
-  // botten ett myller som vår kurva syns mot, och skalan är seriens riktiga.
-  const ritade = teams.flatMap(t => t.ranks.filter((r): r is number => r != null));
-  const max = Math.min(teamCount, Math.max(4, ...ritade));
+  // Skalan sätts av var lagen ligger när tabellen börjat betyda något, inte av
+  // de två första omgångarna. Ett lag som spelat EN match kan stå på plats 12
+  // utan att det säger något, och den enda punkten tvingade annars ner axeln
+  // till 12 — varpå halva ytan stod tom. Punkten ritas ändå: kurvan går ur bild
+  // i underkanten och tillbaka, vilket är sant och syns.
+  const SATTNING = 2;
+  const efter = teams.flatMap(t => t.ranks.slice(SATTNING).filter((r): r is number => r != null));
+  const alla = teams.flatMap(t => t.ranks.filter((r): r is number => r != null));
+  const max = Math.min(teamCount, Math.max(4, ...(efter.length ? efter : alla)));
 
   const x = (n: number) => L + (n / (rounds.length - 1)) * plotW;
   const y = (rank: number) => T + ((rank - 1) / Math.max(1, max - 1)) * plotH;
@@ -412,7 +416,7 @@ export function RankLines({
 
   // Etiketterna får inte lägga sig på varandra när två lag slutar intill
   // varandra. De hålls isär med minsta radavstånd, i slutplaceringens ordning.
-  const sorterade = teams.filter(t => t.namnge).sort((a, b) => a.finalRank - b.finalRank);
+  const sorterade = [...teams].sort((a, b) => a.finalRank - b.finalRank);
   const LINJE = 11;
   const etiketter: { t: (typeof teams)[number]; y: number }[] = [];
   for (const t of sorterade) {
@@ -441,6 +445,11 @@ export function RankLines({
           .map(t => `${t.team} slutade ${t.finalRank}:a`)
           .join('. ')}.`}
       >
+        <defs>
+          <clipPath id="rl-yta">
+            <rect x={L} y={T - 2} width={plotW} height={plotH + 4} />
+          </clipPath>
+        </defs>
         {guides.map(g => (
           <line key={g} className="rl-grid" x1={L} y1={y(g)} x2={L + plotW} y2={y(g)} />
         ))}
@@ -459,6 +468,7 @@ export function RankLines({
         )}
 
         {/* Kontexten först, vårt lag sist: accenten ska ligga överst där de korsar. */}
+        <g clipPath="url(#rl-yta)">
         {[...teams].sort((a, b) => Number(a.ours) - Number(b.ours)).map(t => {
           const pts = t.ranks
             .map((r, n) => (r == null ? null : `${x(n).toFixed(1)},${y(r).toFixed(1)}`))
@@ -467,19 +477,16 @@ export function RankLines({
           return (
             <polyline
               key={t.team}
-              className={
-                t.ours ? 'rl-series rl-ours'
-                  : t.namnge ? 'rl-series rl-context'
-                    : 'rl-series rl-bakgrund'
-              }
+              className={t.ours ? 'rl-series rl-ours' : 'rl-series rl-context'}
               points={pts}
             />
           );
         })}
+        </g>
 
         {vald != null && sorterade.map(t => {
           const r = t.ranks[vald];
-          if (r == null) return null;
+          if (r == null || r > max) return null;
           return (
             <circle
               key={`p${t.team}`}
