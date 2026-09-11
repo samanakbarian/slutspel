@@ -1545,9 +1545,12 @@ function Laget({
 
           {pyth && (
             <>
-              <h2 className={`mc-title${harSkott ? ' st-sub2' : ''}`}>Blev målen poäng?</h2>
+              {/* "Poäng" betyder två saker i hockey — spelarpoäng och tabellpoäng
+                  — och rubriken lästes som det första. Ordet tabellpoäng står
+                  därför både i rubriken och på etiketten. */}
+              <h2 className={`mc-title${harSkott ? ' st-sub2' : ''}`}>Gav målen tabellpoäng?</h2>
               <div className="st-stats">
-                <Stat label="Poäng" value={pyth.pts} tone="var(--brand-gold)" />
+                <Stat label="Tabellpoäng" value={pyth.pts} tone="var(--brand-gold)" />
                 <Stat label="Förväntat" value={svNum(pyth.exp_pts, 1)} />
                 <Stat
                   label="Skillnad"
@@ -1556,16 +1559,17 @@ function Laget({
                 />
               </div>
               <p className="mc-note">
-                Förväntade poäng räknas ur målen med Pythagoras formel: gjorda mål i
-                kvadrat delat med gjorda i kvadrat plus insläppta i kvadrat, gånger
-                {' '}{pyth.gp === 1 ? 'matchen' : `${pyth.gp} matcher`}. Varje match delar
-                ut tre poäng, i förlängning likaväl som i ordinarie tid.
+                Hur mycket laget gjort och släppt in förutsäger ganska väl var i
+                tabellen det hamnar. <b>Förväntat</b> är den placeringen i poäng, räknad
+                ur säsongens mål.
                 {' '}{pyth.diff > 0
-                  ? 'Laget fick fler poäng än målen förutsäger — jämna matcher gick åt rätt håll.'
+                  ? `Laget fick ${svNum(pyth.diff, 1)} poäng mer än så — jämna matcher gick åt rätt håll.`
                   : pyth.diff < 0
-                    ? 'Laget fick färre poäng än målen förutsäger — det vann stort och förlorade jämnt.'
-                    : 'Poängen ligger precis där målskillnaden förutsäger.'}
-                {harSkott && ' Det här och PDO ovan kan peka åt olika håll: PDO mäter skott som blir mål, det här mäter mål som blir poäng.'}
+                    ? `Laget fick ${svNum(Math.abs(pyth.diff), 1)} poäng mindre än så — det vann stort och förlorade jämnt, och stora vinster ger inte fler än tre poäng.`
+                    : 'Laget fick precis så många poäng.'}
+                {harSkott && ' PDO ovan kan peka åt andra hållet utan att motsäga det här: PDO mäter skott som blir mål, det här mäter mål som blir tabellpoäng.'}
+                {' '}Formeln heter Pythagoras: gjorda mål i kvadrat delat med gjorda i
+                kvadrat plus insläppta i kvadrat, gånger de tre poäng varje match delar ut.
               </p>
             </>
           )}
