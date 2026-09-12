@@ -7,3 +7,30 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Netlifys förval är max-age=0, must-revalidate på ALLT — även på filer vars
+# namn innehåller en innehållshash. Varje återbesök gjorde därför ett
+# villkorat anrop per fil: HTML, två JS, en CSS och två typsnitt. Sex
+# rundresor som alla svarar 304 och inte kan innehålla något nytt.
+#
+# Vite hashar filnamnen i /assets, så innehållet där kan aldrig ändras utan
+# att namnet gör det. Ett år och immutable är rätt svar.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    cache-control = "public, max-age=31536000, immutable"
+
+# Typsnitten ligger i public/ och hashas INTE av bygget. De cachas lika länge
+# ändå — ett typsnitt byts aldrig — men byter du ut en fil måste den få ett
+# nytt filnamn, annars sitter besökare kvar på den gamla i upp till ett år.
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    cache-control = "public, max-age=31536000, immutable"
+
+# index.html måste däremot revalideras varje gång. Det är den som pekar ut
+# vilka hashade filer som gäller; cachas den lever en gammal deploy vidare.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    cache-control = "public, max-age=0, must-revalidate"
