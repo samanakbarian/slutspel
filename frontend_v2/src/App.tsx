@@ -53,10 +53,14 @@ function freshnessLabel(meta: { freshness_status?: string; source_updated_at?: s
 /**
  * Om-sidan.
  *
- * Att sajten är ett fanprojekt stod tidigare bara i humans.txt och llms.txt —
- * alltså för robotar, inte för människor. Den som undrar om det är klubben som
- * talar ska få svaret här, och källorna ska stå utskrivna: en sajt som bygger
- * på andras arbete ska säga vems.
+ * Att sajten är ett fanprojekt stod tidigare bara i humans.txt och llms.txt,
+ * alltså för robotar och inte för människor. Den som undrar om det är klubben
+ * som talar ska få svaret här, och källorna ska stå utskrivna: en sajt som
+ * bygger på andras arbete ska säga vems.
+ *
+ * Skriven i jag-form. Det är en enskild supporters sida, och den enda sidan
+ * där den får låta som en. Tidigare stod det "sajten drivs av en supporter",
+ * vilket är samma sak sagt av ingen.
  */
 function OmSida() {
   return (
@@ -65,13 +69,13 @@ function OmSida() {
         <p className="mc-kicker">Om</p>
         <h2 className="mc-title">Sida 377</h2>
         <p className="mc-text" style={{ marginTop: 6 }}>
-          Lövenläget samlar statistik, matcher och nyheter om IF Björklöven i
-          SHL 2026/27. Namnet kommer från SVT Text sida 377, målservicen där
-          resultaten tickade in medan matcherna pågick.
+          377 var målservicen på SVT Text. Där tickade resultaten in medan
+          matcherna pågick, och det var den sidan man satt och uppdaterade.
+          Den här gör samma sak för Björklöven, med fler siffror.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
-          <b>Det här är ett fanprojekt.</b> Sajten drivs av en supporter och har
-          ingen koppling till IF Björklöven, SHL eller Swehockey. Inget här är
+          <b>Det är ett fanprojekt.</b> Jag driver det på fritiden. Sidan har
+          ingen koppling till IF Björklöven, SHL eller Swehockey, inget här är
           officiellt, och klubben ansvarar inte för innehållet.
         </p>
       </section>
@@ -79,24 +83,28 @@ function OmSida() {
       <section className="mc-card">
         <p className="mc-kicker">Varifrån siffrorna kommer</p>
         <p className="mc-text">
-          Resultat, mål, utvisningar, skott och spelarstatistik hämtas från
-          {' '}<b>Swehockey Stats</b> och räknas om här till det som visas.
+          Allt som räknas kommer från <b>Swehockey Stats</b>: resultat, mål,
+          utvisningar, skott och spelarstatistik. Sidan hämtar det fyra gånger
+          om dygnet och räknar om det till tabellerna och kurvorna du ser.
+          Undrar du hur ett tal räknas fram står formeln under <b>Metod</b>.
+        </p>
+        <p className="mc-text" style={{ marginTop: 10 }}>
           Plus/minus följer regelboken. Bara spel fem mot fem och i numerärt
           underläge räknas, aldrig powerplaymål, och straffar inte alls.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
-          Nyheterna är rubriker från klubbens egen sida och svensk hockeymedia.
-          Varje rad länkar till källan. Texten står kvar där den skrevs.
-          Klippen spelas från YouTube, från klubbens kanal och från fankanalen
-          Björklöven Inofficiell, märkta så att man ser vilken som är vilken.
+          Nyheterna är rubriker från klubbens sida och svensk hockeymedia.
+          Varje rad länkar vidare, och texten står kvar där den skrevs. Klippen
+          kommer från två YouTube-kanaler: klubbens egen och fankanalen
+          Björklöven Inofficiell, som är märkt så att du ser skillnaden.
         </p>
       </section>
 
       <section className="mc-card">
         <p className="mc-kicker">Kontakt</p>
         <p className="mc-text">
-          Har du hittat ett fel, vill du inte vara med som källa, eller har du
-          en idé? Hör av dig.
+          Hittar du en siffra som är fel vill jag gärna veta. Samma sak om du
+          är källa och inte vill vara med, eller om du har en idé.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
           <a href="mailto:saman.akbarian@gmail.com">Skicka e-post</a>
