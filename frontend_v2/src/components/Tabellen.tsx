@@ -171,7 +171,7 @@ export function Tabellen({ rows, season }: { rows: Standing[]; season?: string }
 
       {!started && (
         <p className="mc-note">
-          Serien har inte startat — placeringen är preliminär tills omgång 1 är spelad.
+          Serien har inte startat. Placeringen är preliminär tills omgång 1 är spelad.
         </p>
       )}
     </section>

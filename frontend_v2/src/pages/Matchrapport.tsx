@@ -298,8 +298,8 @@ function Momentum({
         ))}
       </svg>
       <p className="mr-note">
-        Över linjen betyder att Björklöven leder. Gula streck är utvisningar —
-        uppåt när motståndaren satt, nedåt när vi gjorde det.
+        Över linjen betyder att Björklöven leder. Gula streck är utvisningar,
+        uppåt när motståndaren satt och nedåt när vi gjorde det.
         {missing !== 0 && ' Avgörandet på straffar räknas inte som en matchhändelse och syns därför inte i kurvan.'}
       </p>
     </section>
@@ -464,8 +464,9 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
       </details>
 
       <p className="mr-note">
-        Plus/minus räknas ur vilka som stod på isen — mål i lika styrka och i
-        underläge räknas, powerplaymål inte — alltså samma regel som Swehockey.
+        Plus/minus räknas ur vilka som stod på isen. Mål i lika styrka och i
+        underläge ger utslag, powerplaymål gör det inte. Samma regel som
+        Swehockey använder.
         {!hasReport && ' Skott och tekningar saknas här; matchrapporten fanns inte när matchen skördades.'}
       </p>
     </section>

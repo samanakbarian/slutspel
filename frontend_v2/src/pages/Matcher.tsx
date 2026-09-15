@@ -438,7 +438,7 @@ export function Matcher() {
         {synliga.some(g => g.played && g.gameId !== null) && !texttv && (
           <p className="mc-hint">
             <span className="mc-chevron-inline">›</span>
-            Tryck på en spelad match för hela rapporten — mål, utvisningar,
+            Tryck på en spelad match för hela rapporten med mål, utvisningar,
             målvakter och spelarnas siffror.
           </p>
         )}

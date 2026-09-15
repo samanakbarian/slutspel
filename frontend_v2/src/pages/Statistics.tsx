@@ -1079,8 +1079,8 @@ function Slutplacering({ proj }: { proj: Projection }) {
         <p className="mc-kicker">Slutplacering</p>
         <p className="mc-text">
           Serien har inte startat. Innan någon match är spelad delar alla lag samma
-          styrketal, så en simulering skulle bara beskriva spelschemat — inte vem
-          som är bäst. Prognosen kommer när omgångarna börjar rulla.
+          styrketal. En simulering skulle då bara beskriva spelschemat, inte vem
+          som är bäst. Prognosen kommer när omgångarna börjat rulla.
         </p>
       </section>
     );
@@ -1143,7 +1143,7 @@ function Slutplacering({ proj }: { proj: Projection }) {
       <p className="mc-note">
         {proj.simulations.toLocaleString('sv-SE')} simuleringar av de {proj.games_remaining} matcher
         som återstår. Utfallen dras ur lagens styrketal, och{' '}
-        {proj.ot_rate_pct} % av matcherna avgörs efter full tid — hämtat ur säsongens egna matcher.
+        {proj.ot_rate_pct} % av matcherna avgörs efter full tid, hämtat ur säsongens egna matcher.
         {proj.reliability === 'low' && ' Få omgångar är spelade, så styrketalen är osäkra och intervallen breda.'}
       </p>
     </section>
@@ -1200,13 +1200,11 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
         }))}
       />
       <p className="mc-note">
-        Swehockeys uppställning grupperar hela femman under en rubrik — tre
-        forwards och ett backpar — och målet räknas till den femma flest av
-        spelarna på isen tillhörde.
+        Målet räknas till den femma som flest av spelarna på isen tillhörde.
         {rotated > 0 && <> {rotated} spelare till har hoppat in i en femma under säsongen.</>}
         {' '}Summa {t.goals_for} mål för, {t.goals_against} emot.
         {(t.without_line_for + t.without_line_against) > 0 && (
-          <> {t.without_line_for + t.without_line_against} mål gjordes utan femma på isen — tomt mål.</>
+          <> {t.without_line_for + t.without_line_against} mål gjordes med tomt mål, utan femma på isen.</>
         )}
       </p>
     </section>
@@ -1558,7 +1556,7 @@ function Laget({
           </div>
           <p className="mc-note">
             Andel skott som blev mål, plus andel räddade skott. Runt 100 är
-            normalläget — över betyder att pucken varit vänlig.
+            normalläget. Ligger laget högre har pucken varit vänlig.
             {' '}<Formel till="pdo" />
           </p>
           </>)}
@@ -1581,9 +1579,9 @@ function Laget({
               <p className="mc-note">
                 Poängen målskillnaden förutsäger.
                 {' '}{pyth.diff > 0
-                  ? 'Laget fick fler — jämna matcher gick åt rätt håll.'
+                  ? 'Laget fick fler. De jämna matcherna gick åt rätt håll.'
                   : pyth.diff < 0
-                    ? 'Laget fick färre — det vann stort och förlorade jämnt.'
+                    ? 'Laget fick färre. Det vann stort och förlorade jämnt, och en storseger ger inte mer än tre poäng.'
                     : 'Laget fick precis så många.'}
                 {' '}<Formel till="turindex" />
               </p>
@@ -1608,7 +1606,7 @@ function Laget({
           <KV label="Special teams-index" value={komma(st.special_teams_index)} hint="PP% + PK%. 100 är neutralnivån, över räknas som starkt." />
           <KV label="Utvisningar" value={`${komma(st.avg_pim_per_game)} min/match`} hint={`${st.total_pim} minuter totalt`} />
           <p className="mc-note">
-            Räknat på antalet utvisningar, inte på speltid i överläge.
+            Räknat på antal utvisningar, inte på speltid.
             {' '}<Formel till="specialteam" />
           </p>
         </section>
@@ -1729,9 +1727,9 @@ function Spelare({
         </p>
         {loven && onIce && (
           <p className="mc-note">
-            <b>På is</b> är målsaldo på isen, <b>Andel</b> hur stor del av de
-            {' '}{onIce.team_goals_for} mål där Swehockey angett vilka som var ute — inte
-            av alla säsongens mål. <Formel till="onice" />
+            <b>På is</b> är målsaldo medan spelaren var ute. <b>Andel</b> räknas på de
+            {' '}{onIce.team_goals_for} mål där Swehockey angett vilka som stod på isen,
+            inte på alla säsongens mål. <Formel till="onice" />
           </p>
         )}
       </section>
@@ -1972,8 +1970,8 @@ function Utveckling({
           <p className="mc-kicker">Utveckling</p>
           <p className="mc-text">
             {matcher(timeline.length)} spelad{timeline.length === 1 ? '' : 'a'} av säsongen.
-            Kurvorna växer fram efterhand — form, styrketal och publiksnitt
-            behöver några matcher innan de säger något.
+            Kurvorna växer fram efterhand. Form, styrketal och publiksnitt behöver
+            några matcher innan de säger något.
           </p>
         </section>
       )}
@@ -2025,8 +2023,8 @@ function Utveckling({
             format={v => svNum(v, 1)}
           />
           <p className="mc-note">
-            Skjutprocent plus räddningsprocent. 100 är normalläget — toppar betyder att
-            pucken gick lagets väg, och kurvan brukar söka sig tillbaka.
+            Skjutprocent plus räddningsprocent. 100 är normalläget. Toppar brukar
+            jämna ut sig över tid.
           </p>
           <p className="mc-kicker st-sub">Skottandel — rullande {shots.window} matcher</p>
           <Sparkline
@@ -2035,8 +2033,7 @@ function Utveckling({
             format={v => svNum(v, 1)}
           />
           <p className="mc-note">
-            Andel av skotten. Över 50 betyder att laget sköt mer än motståndarna —
-            till skillnad från PDO säger det något om spelet, inte om turen.
+            Andel av skotten. Över 50 betyder att laget sköt mer än motståndarna.
           </p>
         </section>
       )}

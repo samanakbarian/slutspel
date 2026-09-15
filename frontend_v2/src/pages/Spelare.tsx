@@ -237,7 +237,7 @@ function Malvakt({ data }: { data: PlayerResponse }) {
         <p className="mc-note">
           {g.gaa_basis === 'speltid'
             ? 'GAA räknas på verklig istid ur matchrapporten, inte på antal matcher.'
-            : 'GAA räknas på antal matcher — speltiden saknas för den här säsongen.'}
+            : 'GAA räknas på antal matcher. Speltiden saknas för den här säsongen.'}
         </p>
       </section>
 
@@ -246,8 +246,8 @@ function Malvakt({ data }: { data: PlayerResponse }) {
           <p className="mc-kicker">Räddningsprocent per match</p>
           <Sparkline points={curve} height={110} unit=" %" format={v => v.toFixed(1)} />
           <p className="mc-note">
-            X-axeln är matchnummer. Enstaka matcher svänger kraftigt — en match med få
-            skott ger stort utslag åt båda håll.
+            X-axeln är matchnummer. En match med få skott ger stort utslag åt båda
+            håll, så enstaka toppar och dalar säger lite.
           </p>
         </section>
       )}
@@ -513,8 +513,8 @@ export function Spelare() {
           <p className="mc-note">
             {p.points} poäng på {matcher(p.games_played)}. X-axeln är matchnummer, så en platt
             sträcka är matcher utan poäng. Den streckade linjen visar den genomsnittliga
-            säsongstakten ({svNum(p.points_per_game, 2)} per match) — perioder under linjen
-            innebär lägre takt än säsongssnittet.
+            säsongstakten, {svNum(p.points_per_game, 2)} per match. Sträckor under linjen
+            är perioder med lägre takt än så.
           </p>
         </section>
       )}
@@ -571,7 +571,7 @@ export function Spelare() {
               )}
             </>
           )}
-          <p className="mc-note">Spelform och måltyp kan överlappa — en powerplayträff kan samtidigt vara matchavgörande.</p>
+          <p className="mc-note">Spelform och måltyp kan överlappa. En powerplayträff kan samtidigt vara matchavgörande.</p>
         </section>
       )}
 

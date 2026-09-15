@@ -58,19 +58,19 @@ export function MetodSida() {
           id="pdo"
           namn="PDO"
           formel="S% + SV%,  där S% = mål ÷ skott för  och  SV% = (skott emot − insläppta) ÷ skott emot"
-          rad="Runt 100 är normalläget. Över tid dras talet dit."
+          rad="Runt 100 är normalläget. Avvikelser brukar jämna ut sig."
         />
         <Matt
           id="turindex"
           namn="Turindex (Pythagoras)"
           formel="gjorda² ÷ (gjorda² + insläppta²) × matcher × 3"
-          rad="Tabellpoängen målskillnaden förutsäger. Minus betyder stora vinster och jämna förluster."
+          rad="Tabellpoängen målskillnaden förutsäger. Minustal betyder stora vinster och jämna förluster."
         />
         <Matt
           id="specialteam"
           namn="Special teams-index"
           formel="PP% + PK%,  där PP% = powerplaymål ÷ motståndarnas utvisningar  och  PK% = (egna utvisningar − insläppta powerplaymål) ÷ egna utvisningar"
-          rad="100 är neutralnivån. Räknar utvisningar, inte speltid i överläge."
+          rad="100 är neutralnivån. Räknat på antal utvisningar, inte på speltid."
         />
         <Matt
           id="form"
@@ -92,13 +92,13 @@ export function MetodSida() {
           id="onice"
           namn="On-ice ±"
           formel="alla mål för − alla mål emot på isen, oavsett spelform"
-          rad="Powerplay inräknat, och därför inte samma tal som plus/minus."
+          rad="Powerplay inräknat, så talet skiljer sig från plus/minus."
         />
         <Matt
           id="percentiler"
           namn="Percentiler"
           formel="andel av serien med minst 10 matcher som ligger under spelarens värde"
-          rad="85 = bättre än 85 % av serien. Jämför inte position mot position."
+          rad="85 = bättre än 85 % av serien. Backar jämförs med forwards."
         />
       </section>
 
@@ -109,7 +109,7 @@ export function MetodSida() {
           id="raddningsprocent"
           namn="Räddningsprocent (Rp%)"
           formel="räddningar ÷ skott mot × 100"
-          rad="Alla skott väger lika — skottkvalitet saknas i källan."
+          rad="Alla skott väger lika. Skottkvalitet finns inte i källan."
         />
         <Matt
           id="gaa"
@@ -132,7 +132,7 @@ export function MetodSida() {
           id="elo"
           namn="Elo"
           formel="R ← R + 20 × (utfall − förväntat),  förväntat hemma = 1 ÷ (1 + 10^((R borta − (R hemma + 40)) ÷ 400))"
-          rad="Start 1500, nollställs varje säsong. Ser resultat, aldrig truppen."
+          rad="Startar på 1500 varje säsong. Bygger på resultat, så värvningar syns inte."
         />
       </section>
     </div>

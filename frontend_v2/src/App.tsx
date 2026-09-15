@@ -66,7 +66,7 @@ function OmSida() {
         <h2 className="mc-title">Sida 377</h2>
         <p className="mc-text" style={{ marginTop: 6 }}>
           Lövenläget samlar statistik, matcher och nyheter om IF Björklöven i
-          SHL 2026/27. Namnet kommer från SVT Text sida 377 — målservicen, där
+          SHL 2026/27. Namnet kommer från SVT Text sida 377, målservicen där
           resultaten tickade in medan matcherna pågick.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
@@ -79,14 +79,14 @@ function OmSida() {
       <section className="mc-card">
         <p className="mc-kicker">Varifrån siffrorna kommer</p>
         <p className="mc-text">
-          All matchdata — resultat, mål, utvisningar, skott, spelarstatistik —
-          hämtas från <b>Swehockey Stats</b>, och räknas om här till det som
-          visas. Plus/minus följer regelboken: bara spel fem mot fem och i
-          numerärt underläge, aldrig powerplaymål, och straffar räknas inte alls.
+          Resultat, mål, utvisningar, skott och spelarstatistik hämtas från
+          {' '}<b>Swehockey Stats</b> och räknas om här till det som visas.
+          Plus/minus följer regelboken. Bara spel fem mot fem och i numerärt
+          underläge räknas, aldrig powerplaymål, och straffar inte alls.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
           Nyheterna är rubriker från klubbens egen sida och svensk hockeymedia.
-          Varje rad länkar till källan — texten står kvar där den skrevs.
+          Varje rad länkar till källan. Texten står kvar där den skrevs.
           Klippen spelas från YouTube, från klubbens kanal och från fankanalen
           Björklöven Inofficiell, märkta så att man ser vilken som är vilken.
         </p>
@@ -95,8 +95,8 @@ function OmSida() {
       <section className="mc-card">
         <p className="mc-kicker">Kontakt</p>
         <p className="mc-text">
-          Fel i en siffra, en källa som inte vill vara med, eller bara en idé —
-          hör av dig.
+          Har du hittat ett fel, vill du inte vara med som källa, eller har du
+          en idé? Hör av dig.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
           <a href="mailto:saman.akbarian@gmail.com">Skicka e-post</a>
