@@ -51,63 +51,30 @@ function freshnessLabel(meta: { freshness_status?: string; source_updated_at?: s
 }
 
 /**
- * Om-sidan.
+ * Kontaktsidan.
  *
- * Att sajten är ett fanprojekt stod tidigare bara i humans.txt och llms.txt,
- * alltså för robotar och inte för människor. Den som undrar om det är klubben
- * som talar ska få svaret här, och källorna ska stå utskrivna: en sajt som
- * bygger på andras arbete ska säga vems.
+ * Var tidigare en Om-sida med tre kort: vad sajten är, varifrån siffrorna
+ * kommer och hur man hör av sig. De två första förklarade sådant som antingen
+ * står under Metod eller som ingen frågat efter.
  *
- * Skriven i jag-form. Det är en enskild supporters sida, och den enda sidan
- * där den får låta som en. Tidigare stod det "sajten drivs av en supporter",
- * vilket är samma sak sagt av ingen.
+ * Raden om att det är ett fanprojekt står kvar. Den är inte utfyllnad: en sida
+ * som använder klubbens namn och någon annans data ska säga att den inte är
+ * officiell, och det stod annars bara i humans.txt.
  */
 function OmSida() {
   return (
     <div className="page animate-fade-up">
       <section className="mc-card">
-        <p className="mc-kicker">Om</p>
-        <h2 className="mc-title">Sida 377</h2>
-        <p className="mc-text" style={{ marginTop: 6 }}>
-          377 var målservicen på SVT Text. Där tickade resultaten in medan
-          matcherna pågick, och det var den sidan man satt och uppdaterade.
-          Den här gör samma sak för Björklöven, med fler siffror.
-        </p>
-        <p className="mc-text" style={{ marginTop: 10 }}>
-          <b>Det är ett fanprojekt.</b> Jag driver det på fritiden. Sidan har
-          ingen koppling till IF Björklöven, SHL eller Swehockey, inget här är
-          officiellt, och klubben ansvarar inte för innehållet.
-        </p>
-      </section>
-
-      <section className="mc-card">
-        <p className="mc-kicker">Varifrån siffrorna kommer</p>
-        <p className="mc-text">
-          Allt som räknas kommer från <b>Swehockey Stats</b>: resultat, mål,
-          utvisningar, skott och spelarstatistik. Sidan hämtar det fyra gånger
-          om dygnet och räknar om det till tabellerna och kurvorna du ser.
-          Undrar du hur ett tal räknas fram står formeln under <b>Metod</b>.
-        </p>
-        <p className="mc-text" style={{ marginTop: 10 }}>
-          Plus/minus följer regelboken. Bara spel fem mot fem och i numerärt
-          underläge räknas, aldrig powerplaymål, och straffar inte alls.
-        </p>
-        <p className="mc-text" style={{ marginTop: 10 }}>
-          Nyheterna är rubriker från klubbens sida och svensk hockeymedia.
-          Varje rad länkar vidare, och texten står kvar där den skrevs. Klippen
-          kommer från två YouTube-kanaler: klubbens egen och fankanalen
-          Björklöven Inofficiell, som är märkt så att du ser skillnaden.
-        </p>
-      </section>
-
-      <section className="mc-card">
         <p className="mc-kicker">Kontakt</p>
         <p className="mc-text">
-          Hittar du en siffra som är fel vill jag gärna veta. Samma sak om du
-          är källa och inte vill vara med, eller om du har en idé.
+          Hittar du en siffra som är fel vill jag gärna veta.
         </p>
         <p className="mc-text" style={{ marginTop: 10 }}>
           <a href="mailto:saman.akbarian@gmail.com">Skicka e-post</a>
+        </p>
+        <p className="mc-note" style={{ marginTop: 14 }}>
+          Fanprojekt utan koppling till IF Björklöven, SHL eller Swehockey.
+          Siffrorna kommer från Swehockey Stats.
         </p>
       </section>
     </div>
@@ -191,7 +158,7 @@ function App() {
           </Suspense>
 
           <footer className="app-footer">
-            <NavLink to="/om">Om Lövenläget</NavLink>
+            <NavLink to="/om">Kontakt</NavLink>
             <span aria-hidden="true">·</span>
             <NavLink to="/metod">Metod</NavLink>
             <span aria-hidden="true">·</span>
