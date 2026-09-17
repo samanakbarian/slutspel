@@ -31,8 +31,20 @@ const navItems = [
   { to: '/x', label: 'X-flöde', icon: MessageSquare },
 ] as const;
 
-function freshnessLabel(meta: { freshness_status?: string; source_updated_at?: string | null } | undefined) {
-  const updated = meta?.source_updated_at;
+/**
+ * Märket i sidhuvudet. En besökare läser "Uppdaterad 22:14" som "matchsiffrorna
+ * är inne", så tiden ska komma från hockeydatat. Den kom tidigare från
+ * nyhetsskörden, som går sin egen takt: på en matchkväll kunde märket lysa
+ * grönt för att en rubrik hämtats, medan Swehockey-skörden aldrig gått igenom.
+ * stats_updated_at är när serietabellen senast skrevs om. Saknas den faller vi
+ * tillbaka på den gamla tiden i stället för att visa ingenting.
+ */
+function freshnessLabel(meta: {
+  freshness_status?: string;
+  source_updated_at?: string | null;
+  stats_updated_at?: string | null;
+} | undefined) {
+  const updated = meta?.stats_updated_at ?? meta?.source_updated_at;
   const time = updated
     ? new Date(updated).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
     : null;

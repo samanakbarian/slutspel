@@ -1088,7 +1088,9 @@ function Slutplacering({ proj }: { proj: Projection }) {
 
   return (
     <section className="mc-card">
-      <p className="mc-kicker">Slutplacering · {matcher(proj.games_remaining)} kvar</p>
+      {/* games_remaining är hela seriens kvarvarande matcher, inte våra. Utan
+          "i serien" läses 364 som Björklövens egna, vilket är fel gånger sju. */}
+      <p className="mc-kicker">Slutplacering · {matcher(proj.games_remaining)} kvar i serien</p>
 
       {us && (
         <>
@@ -1142,7 +1144,7 @@ function Slutplacering({ proj }: { proj: Projection }) {
       </p>
       <p className="mc-note">
         {proj.simulations.toLocaleString('sv-SE')} simuleringar av de {proj.games_remaining} matcher
-        som återstår. Utfallen dras ur lagens styrketal, och{' '}
+        som återstår i serien. Utfallen dras ur lagens styrketal, och{' '}
         {proj.ot_rate_pct} % av matcherna avgörs efter full tid, hämtat ur säsongens egna matcher.
         {proj.reliability === 'low' && ' Få omgångar är spelade, så styrketalen är osäkra och intervallen breda.'}
       </p>

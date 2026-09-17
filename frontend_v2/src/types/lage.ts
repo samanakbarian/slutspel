@@ -27,6 +27,8 @@ export interface LageSnapshot {
     schema_version: string;
     generated_at: string;
     source_updated_at?: string | null;
+    /** När serietabellen senast skrevs om. Det är den tid sidhuvudet visar. */
+    stats_updated_at?: string | null;
     freshness_status: 'fresh' | 'stale' | 'critical' | 'unknown';
     new_signals: number;
     scraped_articles: number;
