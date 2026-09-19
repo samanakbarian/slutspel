@@ -45,9 +45,16 @@ function freshnessLabel(meta: {
   stats_updated_at?: string | null;
 } | undefined) {
   const updated = meta?.stats_updated_at ?? meta?.source_updated_at;
-  const time = updated
-    ? new Date(updated).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
-    : null;
+  // Bara HH:MM när det är i dag. En tidsstämpel från förra veckan renderad som
+  // "19:07" ser ut som en tid i kväll, vilket är värre än att inte visa något.
+  // Är den äldre än så skrivs datumet ut och talet kan inte missförstås.
+  const d = updated ? new Date(updated) : null;
+  const idag = d ? d.toDateString() === new Date().toDateString() : false;
+  const time = !d || Number.isNaN(d.getTime())
+    ? null
+    : idag
+      ? d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
 
   switch (meta?.freshness_status) {
     case 'fresh':
