@@ -124,22 +124,10 @@ function timeSplit(goals: Goal[], totalMin: number) {
   return { ...acc, biggest };
 }
 
-function Matchbild({ goals, penalties, totalMin }: { goals: Goal[]; penalties: Penalty[]; totalMin: number }) {
+function Matchbild({ goals, totalMin }: { goals: Goal[]; totalMin: number }) {
   if (goals.length === 0) return null;
   const t = timeSplit(goals, totalMin);
   const mins = (v: number) => `${Math.round(v)} min`;
-
-  // Ett powerplay uppstår ur motståndarens utvisning. Utvisningar utan
-  // minuter är straffslag och lagstraff, som inte ger något spel i numerärt
-  // överläge — de ska inte räknas som tillfällen.
-  const ourPpChances = penalties.filter(p => !isOurs(p.team_code) && p.minutes > 0).length;
-  const theirPpChances = penalties.filter(p => isOurs(p.team_code) && p.minutes > 0).length;
-  const ourPpGoals = goals.filter(g => isOurs(g.team_code) && g.is_power_play).length;
-  const theirPpGoals = goals.filter(g => !isOurs(g.team_code) && g.is_power_play).length;
-  const ourShort = goals.filter(g => isOurs(g.team_code) && g.is_short_handed).length;
-
-  const pim = (ours: boolean) =>
-    penalties.filter(p => isOurs(p.team_code) === ours).reduce((n, p) => n + (p.minutes || 0), 0);
 
   return (
     <>
@@ -166,35 +154,6 @@ function Matchbild({ goals, penalties, totalMin }: { goals: Goal[]; penalties: P
         </p>
       </section>
 
-      {(ourPpChances > 0 || theirPpChances > 0) && (
-        <section className="mr-card">
-          <p className="mr-kicker">Specialteam</p>
-          <div className="st-kv">
-            <span className="st-kvlabel">Powerplay</span>
-            <span className="st-kvvalue">{ourPpGoals} / {ourPpChances}</span>
-            <span className="st-kvhint">
-              {ourPpChances > 0 ? `${Math.round((ourPpGoals / ourPpChances) * 100)} % utdelning` : 'Inga tillfällen'}
-            </span>
-          </div>
-          <div className="st-kv">
-            <span className="st-kvlabel">Boxplay</span>
-            <span className="st-kvvalue">{theirPpChances - theirPpGoals} / {theirPpChances}</span>
-            <span className="st-kvhint">
-              {theirPpChances > 0 ? `${Math.round(((theirPpChances - theirPpGoals) / theirPpChances) * 100)} % räddade` : 'Inga underlägen'}
-            </span>
-          </div>
-          {ourShort > 0 && (
-            <div className="st-kv">
-              <span className="st-kvlabel">Mål i underläge</span>
-              <span className="st-kvvalue">{ourShort}</span>
-            </div>
-          )}
-          <div className="st-kv">
-            <span className="st-kvlabel">Utvisningsminuter</span>
-            <span className="st-kvvalue">{pim(true)} mot {pim(false)}</span>
-          </div>
-        </section>
-      )}
     </>
   );
 }
@@ -775,9 +734,30 @@ function svenskDatum(iso?: string | null): string {
  * Motstandarnas spelare finns inte i `skaters`, sa deras tekningar harleds ur
  * vara: det vi forlorade vann de.
  */
-function LagMotLag({ teams, skaters }: { teams: MatchReport['teams']; skaters: Skater[] }) {
+function LagMotLag({
+  teams, skaters, goals, penalties,
+}: {
+  teams: MatchReport['teams']; skaters: Skater[]; goals: Goal[]; penalties: Penalty[];
+}) {
   if (!teams?.ours || !teams?.theirs) return null;
   const v = teams.ours, m = teams.theirs;
+
+  // Ett powerplay for oss ar en utvisning pa dem, och tvartom. Bada lagens
+  // boxplay ar alltsa den andres powerplay speglat, sa raderna raknas ur
+  // samma tva tal.
+  //
+  // Utvisningar utan minuter ar straffslag och lagstraff. De ger inget spel i
+  // numerart overlage och far darfor inte raknas som tillfallen.
+  const vartPp = penalties.filter(p => !isOurs(p.team_code) && p.minutes > 0).length;
+  const derasPp = penalties.filter(p => isOurs(p.team_code) && p.minutes > 0).length;
+  const vartPpMal = goals.filter(g => isOurs(g.team_code) && g.is_power_play).length;
+  const derasPpMal = goals.filter(g => !isOurs(g.team_code) && g.is_power_play).length;
+  const vartUnderlagsmal = goals.filter(g => isOurs(g.team_code) && g.is_short_handed).length;
+  const derasUnderlagsmal = goals.filter(g => !isOurs(g.team_code) && g.is_short_handed).length;
+  const specialteam = vartPp > 0 || derasPp > 0;
+  const underlagsmal = vartUnderlagsmal > 0 || derasUnderlagsmal > 0;
+  const andel = (mal: number, chanser: number) =>
+    chanser > 0 ? `${String((mal / chanser * 100).toFixed(1)).replace('.', ',')} %` : '–';
 
   const vunna = skaters.reduce((n, s) => n + (s.faceoffs_won || 0), 0);
   const forlorade = skaters.reduce((n, s) => n + (s.faceoffs_lost || 0), 0);
@@ -807,6 +787,23 @@ function LagMotLag({ teams, skaters }: { teams: MatchReport['teams']; skaters: S
       )}
       <PairedBar label="Utvisningsminuter" left={v.pim ?? 0} right={m.pim ?? 0}
         leftLabel={tal(v.pim)} rightLabel={tal(m.pim)} />
+      {specialteam && (
+        <>
+          <PairedBar label="Powerplaymål" left={vartPpMal} right={derasPpMal}
+            leftLabel={`${vartPpMal} / ${vartPp}`} rightLabel={`${derasPpMal} / ${derasPp}`} />
+          <PairedBar label="Powerplay" left={vartPp > 0 ? vartPpMal / vartPp : 0}
+            right={derasPp > 0 ? derasPpMal / derasPp : 0}
+            leftLabel={andel(vartPpMal, vartPp)} rightLabel={andel(derasPpMal, derasPp)} />
+          <PairedBar label="Boxplay" left={derasPp > 0 ? (derasPp - derasPpMal) / derasPp : 0}
+            right={vartPp > 0 ? (vartPp - vartPpMal) / vartPp : 0}
+            leftLabel={andel(derasPp - derasPpMal, derasPp)}
+            rightLabel={andel(vartPp - vartPpMal, vartPp)} />
+        </>
+      )}
+      {underlagsmal && (
+        <PairedBar label="Mål i underläge" left={vartUnderlagsmal} right={derasUnderlagsmal}
+          leftLabel={String(vartUnderlagsmal)} rightLabel={String(derasUnderlagsmal)} />
+      )}
     </section>
   );
 }
@@ -907,7 +904,8 @@ export function Matchrapport() {
         </p>
       </section>
 
-      <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []} /></Guard>
+      <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []}
+        goals={data.goals || []} penalties={data.penalties || []} /></Guard>
       <Guard name="Sammanhang"><Kontext
         ctx={data.context}
         opponent={(ourSide === 'home' ? data.away_team : data.home_team).replace(/^IF\s+/, '')}
@@ -916,11 +914,7 @@ export function Matchrapport() {
       {/* Förlängningen är fem minuter och straffläggningen ingen speltid alls.
           Räknat som 20 minuter per period blev en straffmatch 100 minuter lång,
           och tiden i ledning därmed nästan dubbelt så lång som den var. */}
-      <Matchbild
-        goals={data.goals}
-        penalties={data.penalties}
-        totalMin={periods.length > 3 ? 65 : 60}
-      />
+      <Matchbild goals={data.goals} totalMin={periods.length > 3 ? 65 : 60} />
       <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
       <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} /></Guard>
       <Guard name="Målvakter"><Malvakter goalies={data.goalies} /></Guard>
