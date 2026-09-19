@@ -3118,3 +3118,16 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 }
 
 .md-lank:hover, .md-lank:focus-visible { border-bottom-color: currentColor; }
+
+/* Lag mot lag i matchrapporten: lagnamnen över staplarna, så att det inte
+   råder tvivel om vilken sida som är vilken. */
+.lml-lag {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.2rem 0 0.7rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.lml-lag b:first-child { color: var(--brand-green-light); }

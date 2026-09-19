@@ -765,6 +765,52 @@ function svenskDatum(iso?: string | null): string {
 }
 
 /* ── sida ── */
+/**
+ * Lag mot lag i en vy.
+ *
+ * Rapporten har fjorton sektioner och svarar bra pa "vad hande", men daligt pa
+ * "hur gick det". Talen har lag redan i svaret, utspridda over perioder,
+ * specialteam, malvakter och spelartabellen. Har star de bredvid varandra.
+ *
+ * Motstandarnas spelare finns inte i `skaters`, sa deras tekningar harleds ur
+ * vara: det vi forlorade vann de.
+ */
+function LagMotLag({ teams, skaters }: { teams: MatchReport['teams']; skaters: Skater[] }) {
+  if (!teams?.ours || !teams?.theirs) return null;
+  const v = teams.ours, m = teams.theirs;
+
+  const vunna = skaters.reduce((n, s) => n + (s.faceoffs_won || 0), 0);
+  const forlorade = skaters.reduce((n, s) => n + (s.faceoffs_lost || 0), 0);
+  const tekningar = vunna + forlorade > 0;
+
+  const pct = (x: number | null) => (x == null ? '–' : `${String(x.toFixed(1)).replace('.', ',')} %`);
+  const tal = (x: number | null) => (x == null ? '–' : String(x));
+
+  return (
+    <section className="mr-card">
+      <p className="mr-kicker">Lag mot lag</p>
+      <div className="lml-lag">
+        <b>{(v.team_name || '').replace(/^IF\s+/, '')}</b>
+        <b>{(m.team_name || '').replace(/^IF\s+/, '')}</b>
+      </div>
+      <PairedBar label="Skott på mål" left={v.shots ?? 0} right={m.shots ?? 0}
+        leftLabel={tal(v.shots)} rightLabel={tal(m.shots)} />
+      <PairedBar label="Skott som blev mål" left={v.shooting_pct ?? 0} right={m.shooting_pct ?? 0}
+        leftLabel={pct(v.shooting_pct)} rightLabel={pct(m.shooting_pct)} />
+      <PairedBar label="Räddningar" left={v.saves ?? 0} right={m.saves ?? 0}
+        leftLabel={tal(v.saves)} rightLabel={tal(m.saves)} />
+      <PairedBar label="Räddningsprocent" left={v.save_pct ?? 0} right={m.save_pct ?? 0}
+        leftLabel={pct(v.save_pct)} rightLabel={pct(m.save_pct)} />
+      {tekningar && (
+        <PairedBar label="Tekningar" left={vunna} right={forlorade}
+          leftLabel={String(vunna)} rightLabel={String(forlorade)} />
+      )}
+      <PairedBar label="Utvisningsminuter" left={v.pim ?? 0} right={m.pim ?? 0}
+        leftLabel={tal(v.pim)} rightLabel={tal(m.pim)} />
+    </section>
+  );
+}
+
 export function Matchrapport() {
   const { gameId } = useParams<{ gameId: string }>();
   const [data, setData] = useState<MatchReport | null>(null);
@@ -861,6 +907,7 @@ export function Matchrapport() {
         </p>
       </section>
 
+      <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []} /></Guard>
       <Guard name="Sammanhang"><Kontext
         ctx={data.context}
         opponent={(ourSide === 'home' ? data.away_team : data.home_team).replace(/^IF\s+/, '')}
