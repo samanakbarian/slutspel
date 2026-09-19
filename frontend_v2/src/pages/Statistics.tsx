@@ -1173,6 +1173,16 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
     );
   }
   const t = data.totals;
+
+  // Måttet är målbalans med enheten på isen, inte vem som var inblandad: den
+  // som råkar stå ute när det blir mål får sin femma krediterad. Över en
+  // säsong jämnar det ut sig och säger något om vilka som spelar med pucken.
+  // Över tre mål säger det bara vem som råkade vara ute — efter premiären mot
+  // Djurgården var Nilsson inne på två av tre mål utan att vara inblandad i
+  // något. Kortet ser ut som ett facit och läses som ett facit, så det får
+  // vänta tills det finns mål att fördela.
+  if (t.goals_for + t.goals_against < 30) return null;
+
   // Distinkta spelare, från API:t. En summa av radernas `rotated` räknade
   // samma back en gång per femma han hoppat in i — 41 där sanningen var 20.
   const rotated = t.rotated_players ?? 0;
@@ -1202,7 +1212,8 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
         }))}
       />
       <p className="mc-note">
-        Målet räknas till den femma som flest av spelarna på isen tillhörde.
+        Målet räknas till den femma som flest av spelarna på isen tillhörde,
+        vid lika till målskyttens.
         {rotated > 0 && <> {rotated} spelare till har hoppat in i en femma under säsongen.</>}
         {' '}Summa {t.goals_for} mål för, {t.goals_against} emot.
         {(t.without_line_for + t.without_line_against) > 0 && (
