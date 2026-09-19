@@ -3130,4 +3130,4 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   color: var(--text-secondary);
 }
 
-.lml-lag b:first-child { color: var(--brand-green-light); }
+.lml-vart { color: var(--brand-green-light); }

@@ -756,8 +756,6 @@ function LagMotLag({
   const derasUnderlagsmal = goals.filter(g => !isOurs(g.team_code) && g.is_short_handed).length;
   const specialteam = vartPp > 0 || derasPp > 0;
   const underlagsmal = vartUnderlagsmal > 0 || derasUnderlagsmal > 0;
-  const andel = (mal: number, chanser: number) =>
-    chanser > 0 ? `${String((mal / chanser * 100).toFixed(1)).replace('.', ',')} %` : '–';
 
   const vunna = skaters.reduce((n, s) => n + (s.faceoffs_won || 0), 0);
   const forlorade = skaters.reduce((n, s) => n + (s.faceoffs_lost || 0), 0);
@@ -765,45 +763,50 @@ function LagMotLag({
 
   const pct = (x: number | null) => (x == null ? '–' : `${String(x.toFixed(1)).replace('.', ',')} %`);
   const tal = (x: number | null) => (x == null ? '–' : String(x));
+  const namn = (x: string | null) => (x || '').replace(/^IF\s+/, '');
+
+  // Rubriken ovanför kortet skriver hemmalaget först. Gjorde inte det här
+  // kortet samma sak stod lagen i omvänd ordning två kort i rad, vilket är
+  // precis så fel det låter. Grönt följer laget i stället för positionen.
+  const viHemma = !!v.is_home;
+  const rad = (
+    etikett: string, vart: number, deras: number, vartText: string, derasText: string,
+  ) => (
+    <PairedBar
+      key={etikett}
+      label={etikett}
+      left={viHemma ? vart : deras}
+      right={viHemma ? deras : vart}
+      leftLabel={viHemma ? vartText : derasText}
+      rightLabel={viHemma ? derasText : vartText}
+      gronSida={viHemma ? 'vanster' : 'hoger'}
+    />
+  );
 
   return (
     <section className="mr-card">
       <p className="mr-kicker">Lag mot lag</p>
       <div className="lml-lag">
-        <b>{(v.team_name || '').replace(/^IF\s+/, '')}</b>
-        <b>{(m.team_name || '').replace(/^IF\s+/, '')}</b>
+        <b className={viHemma ? 'lml-vart' : undefined}>{namn(viHemma ? v.team_name : m.team_name)}</b>
+        <b className={viHemma ? undefined : 'lml-vart'}>{namn(viHemma ? m.team_name : v.team_name)}</b>
       </div>
-      <PairedBar label="Skott på mål" left={v.shots ?? 0} right={m.shots ?? 0}
-        leftLabel={tal(v.shots)} rightLabel={tal(m.shots)} />
-      <PairedBar label="Skott som blev mål" left={v.shooting_pct ?? 0} right={m.shooting_pct ?? 0}
-        leftLabel={pct(v.shooting_pct)} rightLabel={pct(m.shooting_pct)} />
-      <PairedBar label="Räddningar" left={v.saves ?? 0} right={m.saves ?? 0}
-        leftLabel={tal(v.saves)} rightLabel={tal(m.saves)} />
-      <PairedBar label="Räddningsprocent" left={v.save_pct ?? 0} right={m.save_pct ?? 0}
-        leftLabel={pct(v.save_pct)} rightLabel={pct(m.save_pct)} />
-      {tekningar && (
-        <PairedBar label="Tekningar" left={vunna} right={forlorade}
-          leftLabel={String(vunna)} rightLabel={String(forlorade)} />
-      )}
-      <PairedBar label="Utvisningsminuter" left={v.pim ?? 0} right={m.pim ?? 0}
-        leftLabel={tal(v.pim)} rightLabel={tal(m.pim)} />
+      {rad('Skott på mål', v.shots ?? 0, m.shots ?? 0, tal(v.shots), tal(m.shots))}
+      {rad('Skott som blev mål', v.shooting_pct ?? 0, m.shooting_pct ?? 0, pct(v.shooting_pct), pct(m.shooting_pct))}
+      {rad('Räddningar', v.saves ?? 0, m.saves ?? 0, tal(v.saves), tal(m.saves))}
+      {rad('Räddningsprocent', v.save_pct ?? 0, m.save_pct ?? 0, pct(v.save_pct), pct(m.save_pct))}
+      {tekningar && rad('Tekningar', vunna, forlorade, String(vunna), String(forlorade))}
+      {rad('Utvisningsminuter', v.pim ?? 0, m.pim ?? 0, tal(v.pim), tal(m.pim))}
       {specialteam && (
         <>
-          <PairedBar label="Powerplaymål" left={vartPpMal} right={derasPpMal}
-            leftLabel={`${vartPpMal} / ${vartPp}`} rightLabel={`${derasPpMal} / ${derasPp}`} />
-          <PairedBar label="Powerplay" left={vartPp > 0 ? vartPpMal / vartPp : 0}
-            right={derasPp > 0 ? derasPpMal / derasPp : 0}
-            leftLabel={andel(vartPpMal, vartPp)} rightLabel={andel(derasPpMal, derasPp)} />
-          <PairedBar label="Boxplay" left={derasPp > 0 ? (derasPp - derasPpMal) / derasPp : 0}
-            right={vartPp > 0 ? (vartPp - vartPpMal) / vartPp : 0}
-            leftLabel={andel(derasPp - derasPpMal, derasPp)}
-            rightLabel={andel(vartPp - vartPpMal, vartPp)} />
+          {rad('Powerplay', vartPp > 0 ? vartPpMal / vartPp : 0, derasPp > 0 ? derasPpMal / derasPp : 0,
+            `${vartPpMal} / ${vartPp}`, `${derasPpMal} / ${derasPp}`)}
+          {rad('Boxplay', derasPp > 0 ? (derasPp - derasPpMal) / derasPp : 0,
+            vartPp > 0 ? (vartPp - vartPpMal) / vartPp : 0,
+            `${derasPp - derasPpMal} / ${derasPp}`, `${vartPp - vartPpMal} / ${vartPp}`)}
         </>
       )}
-      {underlagsmal && (
-        <PairedBar label="Mål i underläge" left={vartUnderlagsmal} right={derasUnderlagsmal}
-          leftLabel={String(vartUnderlagsmal)} rightLabel={String(derasUnderlagsmal)} />
-      )}
+      {underlagsmal && rad('Mål i underläge', vartUnderlagsmal, derasUnderlagsmal,
+        String(vartUnderlagsmal), String(derasUnderlagsmal))}
     </section>
   );
 }

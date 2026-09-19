@@ -240,9 +240,21 @@ export function Andel({ pct, label }: { pct: number; label: string }) {
 }
 
 export function PairedBar({
-  label, left, right, leftLabel, rightLabel,
-}: { label: string; left: number; right: number; leftLabel?: string; rightLabel?: string }) {
-  const total = Math.max(left + right, 1);
+  label, left, right, leftLabel, rightLabel, gronSida = 'vanster',
+}: {
+  label: string; left: number; right: number; leftLabel?: string; rightLabel?: string;
+  /** Vilken sida som är vår. Grönt följer laget, inte positionen: i en
+   *  matchrapport står hemmalaget till vänster även när det är motståndaren. */
+  gronSida?: 'vanster' | 'hoger';
+}) {
+  // Andelar, inte råa tal: `flex` fördelar bara det som summerar till ett.
+  // Med råa värden och en rad där båda lagen står på noll — 0/3 i powerplay
+  // är en vanlig matchbild — blev spåret nästan tomt med två stumpar till
+  // vänster. Står båda på noll delas raden i stället mitt itu.
+  const summa = left + right;
+  const del = Math.min(0.96, Math.max(0.04, summa > 0 ? left / summa : 0.5));
+  const gron = 'var(--brand-green)';
+  const gra = 'rgba(255,255,255,0.14)';
   return (
     <div className="pb-row">
       <div className="pb-head">
@@ -251,8 +263,8 @@ export function PairedBar({
         <b>{rightLabel ?? right}</b>
       </div>
       <div className="pb-track">
-        <span style={{ flex: Math.max(left, 0.04 * total), background: 'var(--brand-green)' }} />
-        <span style={{ flex: Math.max(right, 0.04 * total), background: 'rgba(255,255,255,0.14)' }} />
+        <span style={{ flex: del, background: gronSida === 'vanster' ? gron : gra }} />
+        <span style={{ flex: 1 - del, background: gronSida === 'hoger' ? gron : gra }} />
       </div>
     </div>
   );
