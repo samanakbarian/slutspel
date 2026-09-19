@@ -90,7 +90,10 @@ function Kontext({ ctx, opponent }: { ctx: MatchContext | null | undefined; oppo
 
       {avg != null && (
         <p className="mr-note">
-          Arenan drar {avg.toLocaleString('sv-SE')} i snitt över {ctx.venue_games} hemmamatcher.
+          {/* "1 hemmamatcher" stod på premiärrapporten. Plural-genomgången
+              missade den här raden; den bygger sitt substantiv själv. */}
+          Arenan drar {avg.toLocaleString('sv-SE')} i snitt över {ctx.venue_games}
+          {' '}{ctx.venue_games === 1 ? 'hemmamatch' : 'hemmamatcher'}.
         </p>
       )}
     </section>
