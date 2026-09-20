@@ -49,6 +49,9 @@ type Skater = {
 type Goalie = {
   name: string; team: string; gp: number; ga: number; gaa: string;
   svp: string; so: number; w: number; l: number; isBjk: boolean;
+  /** Spelad tid i hela minuter. 0 för säsonger som skördats före fältet fanns. */
+  min: number;
+  shots: number;
 };
 
 type ApiPlayer = {
@@ -304,6 +307,8 @@ function normGoalie(g: Record<string, unknown>): Goalie {
     so: Number(g.shutouts ?? g.so ?? 0),
     w: Number(g.wins ?? 0), l: Number(g.losses ?? 0),
     isBjk: BJK.test(team),
+    min: Number(g.toi_minutes ?? 0) || 0,
+    shots: Number(g.shots_against ?? 0) || 0,
   };
 }
 
@@ -646,6 +651,9 @@ function SkaterTable({
 }
 
 function GoalieTable({ rows, showTeam }: { rows: Goalie[]; showTeam: boolean }) {
+  // Spelad tid kom in i skörden hösten 2026. Äldre säsonger har nollor hela
+  // vägen, och en kolumn med bara streck är sämre än ingen kolumn.
+  const harTid = rows.some(g => g.min > 0);
   return (
     <div className="mc-tablewrap">
       <table className="mc-table">
@@ -654,6 +662,7 @@ function GoalieTable({ rows, showTeam }: { rows: Goalie[]; showTeam: boolean }) 
             <th className="mc-left">Målvakt</th>
             {showTeam && <th>Lag</th>}
             <th>GP</th>
+            {harTid && <th title="Spelad tid i minuter">Tid</th>}
             <th>IM</th>
             <th>GAA</th>
             <th>Rp%</th>
@@ -668,6 +677,7 @@ function GoalieTable({ rows, showTeam }: { rows: Goalie[]; showTeam: boolean }) 
               <td className="mc-left st-pname">{humanName(g.name)}</td>
               {showTeam && <td>{shortTeam(g.team)}</td>}
               <td>{g.gp}</td>
+              {harTid && <td>{g.min || '–'}</td>}
               <td>{g.ga}</td>
               <td>{g.gaa}</td>
               <td className="mc-pts">{g.svp}</td>
@@ -1879,7 +1889,8 @@ function Spelare({
             ? <p className="mc-text">Ingen målvaktsstatistik för säsongen ännu.</p>
             : <GoalieTable rows={goalies} showTeam={!loven} />}
           <p className="mc-note">
-            IM insläppta mål, Rp% räddningsprocent, NC nollor. <Formel till="raddningsprocent" />
+            Tid spelade minuter, IM insläppta mål, Rp% räddningsprocent, NC nollor.
+            {' '}<Formel till="raddningsprocent" />
           </p>
         </section>
       )}
