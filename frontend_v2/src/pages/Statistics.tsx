@@ -379,6 +379,83 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
   );
 }
 
+/**
+ * Facit som en stapel i stället för fyra tal.
+ *
+ * Segmenten ligger i fallande ordning från vinst till förlust, med 2 px hål i
+ * kortfärgen emellan — ett hål skiljer två gröna åt bättre än en ram gör.
+ * Siffran står i segmentet när den får plats; smala segment får den i
+ * förklaringsraden under, som ändå alltid finns. Vinst och vinst efter
+ * övertid skiljer sig bara i ljushet, så de lutar sig på siffran och
+ * etiketten, aldrig på färgen ensam.
+ */
+function Resultatstapel({ w, otw, otl, l }: { w: number; otw: number; otl: number; l: number }) {
+  const delar = [
+    { nyckel: 'v', etikett: 'Vinst', antal: w },
+    { nyckel: 'ov', etikett: 'Vinst ÖT', antal: otw },
+    { nyckel: 'of', etikett: 'Förlust ÖT', antal: otl },
+    { nyckel: 'f', etikett: 'Förlust', antal: l },
+  ].filter(d => d.antal > 0);
+  const summa = delar.reduce((n, d) => n + d.antal, 0);
+  if (summa === 0) return null;
+
+  return (
+    <>
+      <div className="rs-stapel" role="img"
+           aria-label={delar.map(d => `${d.etikett}: ${d.antal}`).join(', ')}>
+        {delar.map(d => (
+          <span key={d.nyckel} className={`rs-del rs-${d.nyckel}`} style={{ flex: d.antal }}>
+            {/* Under en åttondel av stapeln ryms ingen siffra utan att kapas. */}
+            {d.antal / summa >= 0.08 ? d.antal : ''}
+          </span>
+        ))}
+      </div>
+      <div className="rs-nyckel">
+        {delar.map(d => (
+          <span key={d.nyckel}>
+            <i className={`rs-prick rs-${d.nyckel}`} aria-hidden="true" />
+            {d.etikett} {d.antal}
+          </span>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/**
+ * Målskillnaden som avvikelse från noll.
+ *
+ * Stapeln mäter målskillnad per match, inte totalen: +95 på en säsong och +3
+ * på en match är samma takt, och en skala byggd på totalen hade gjort den
+ * första full och den andra osynlig. Två mål per match är ytterlägena —
+ * ingen serie går utanför det över en säsong. Talet bredvid är totalen, som
+ * är den man känner igen från tabellen.
+ */
+function Malskillnad({ diff, gp }: { diff: number; gp: number }) {
+  if (!gp) return null;
+  const takt = Math.max(-2, Math.min(2, diff / gp));
+  const andel = Math.abs(takt) / 2 * 50;
+  const plus = diff >= 0;
+  return (
+    <div className="rs-diffrad">
+      <span className="rs-difflbl">Målskillnad</span>
+      <span className="rs-difftrack">
+        <span
+          className="rs-difffill"
+          style={{
+            left: plus ? '50%' : `${50 - andel}%`,
+            width: `${Math.max(andel, 1.5)}%`,
+            background: plus ? 'var(--impact-positive)' : 'var(--impact-negative)',
+          }}
+        />
+      </span>
+      <span className="rs-diffval" style={{ color: plus ? 'var(--impact-positive)' : 'var(--impact-negative)' }}>
+        {diff > 0 ? `+${diff}` : diff}
+      </span>
+    </div>
+  );
+}
+
 function KV({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="st-kv">
@@ -1464,18 +1541,21 @@ function Laget({
 
   return (
     <>
+      {/* Åtta likvärdiga tal stod här, varav två gick att räkna ut ur de
+          andra: matcher är summan av resultaten och p/match är poängen delat
+          med dem. Nu bär poängen kortet, stapeln visar vad de består av, och
+          målskillnaden ligger mot noll. */}
       <section className="mc-card">
         <p className="mc-kicker">Facit</p>
-        <div className="st-stats">
-          <Stat label="Matcher" value={record.gp} />
-          <Stat label="Reg. vinster" value={record.w} tone="var(--impact-positive)" />
-          {record.otw > 0 && <Stat label="ÖT/SO-vinster" value={record.otw} tone="var(--impact-warning)" />}
-          {record.otl > 0 && <Stat label="ÖT/SO-förluster" value={record.otl} tone="var(--impact-warning)" />}
-          <Stat label="Reg. förluster" value={record.l} tone="var(--impact-negative)" />
-          <Stat label="Poäng" value={record.pts} tone="var(--brand-gold)" />
-          <Stat label="Målskillnad" value={record.diff > 0 ? `+${record.diff}` : record.diff} />
-          <Stat label="P/match" value={record.gp ? svNum(record.pts / record.gp, 2) : '–'} tone="var(--brand-green-light)" />
+        <div className="rs-hjalte">
+          <b>{record.pts}</b>
+          <span>poäng på {matcher(record.gp)}</span>
         </div>
+        {record.gp > 0 && (
+          <p className="rs-under">{svNum(record.pts / record.gp, 2)} per match</p>
+        )}
+        <Resultatstapel w={record.w} otw={record.otw} otl={record.otl} l={record.l} />
+        <Malskillnad diff={record.diff} gp={record.gp} />
         {last10.length > 0 && (
           <>
             <p className="mc-kicker st-sub">Senaste {last10.length}</p>

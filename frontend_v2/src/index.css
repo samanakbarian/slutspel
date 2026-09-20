@@ -736,6 +736,58 @@ a {
 
 .mc-note { margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted); }
 
+/* ── Facit: poängen som hjältesiffra, resultaten som stapel ── */
+/* Proportionella siffror, inte tabular: i 3 rem ger tabular varje tecken
+   nollans bredd och "119" blir glest. Tabular hör hemma i kolumner. */
+.rs-hjalte { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.1rem; }
+.rs-hjalte b { font-size: 3rem; font-weight: 700; line-height: 1; color: var(--brand-gold); }
+.rs-hjalte span { font-size: 0.8rem; color: var(--text-secondary); }
+.rs-under { margin: 0 0 0.9rem; font-size: 0.75rem; color: var(--text-secondary); }
+
+/* Hålet mellan segmenten är kortets bakgrund, inte en ram. En ram lägger till
+   bläck som inte är data; hålet skiljer ändå två gröna åt. */
+.rs-stapel { display: flex; height: 22px; gap: 2px; margin-bottom: 0.45rem; }
+.rs-del {
+  display: block; border-radius: 2px;
+  font-size: 0.68rem; font-weight: 700; color: var(--bg-dark);
+  line-height: 22px; text-align: center;
+}
+.rs-stapel .rs-del:first-child { border-radius: 5px 2px 2px 5px; }
+.rs-stapel .rs-del:last-child { border-radius: 2px 5px 5px 2px; }
+.rs-stapel .rs-del:only-child { border-radius: 5px; }
+
+.rs-v { background: var(--brand-green-light); }
+.rs-ov { background: var(--brand-green); }
+.rs-of { background: var(--impact-warning); }
+.rs-f { background: var(--impact-negative); }
+
+.rs-nyckel {
+  display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem;
+  font-size: 0.68rem; color: var(--text-secondary);
+}
+.rs-nyckel span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.rs-prick { width: 9px; height: 9px; border-radius: 2px; display: inline-block; flex: none; }
+
+.rs-diffrad { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.85rem; }
+.rs-difflbl {
+  font-size: 0.62rem; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.rs-difftrack {
+  position: relative; flex: 1; height: 8px; border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+}
+/* Nollstrecket. Utan det är en stapel från mitten bara en stapel. */
+.rs-difftrack::after {
+  content: ''; position: absolute; left: 50%; top: -3px; bottom: -3px;
+  width: 1px; background: rgba(168, 192, 182, 0.55);
+}
+.rs-difffill { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.rs-diffval {
+  font-size: 0.8rem; font-weight: 700; min-width: 2.6rem;
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+
 /* segmenterad kontroll */
 .mc-seg {
   display: flex;
