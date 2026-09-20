@@ -234,6 +234,21 @@ const lagEtikett = (t: string) =>
   shortTeam(t).replace(/\s+(HC|IF|IK|BK|AIK|Hockey|Lakers HC|Vikings IF)$/, '').trim();
 
 /**
+ * "Efternamn, Förnamn" → "Efternamn, F".
+ *
+ * Poängligan har elva kolumner och namnet får en dryg tumbredd. Fullt utskrivet
+ * kapades "Christopher Didomenico" mitt i efternamnet — alltså i just den del
+ * som skiljer honom från alla andra. Initialen räcker: två Nilsson i samma
+ * trupp skiljs på förnamnets första bokstav, och i värsta fall på tröjnumret
+ * i kolumnen bredvid.
+ */
+function kortNamn(n: string): string {
+  const clean = String(n || '').replace(/[*†‡]+/g, '').trim();
+  const p = clean.split(',').map(x => x.trim());
+  return p.length === 2 && p[1] ? `${p[0]}, ${p[1][0]}` : clean;
+}
+
+/**
  * Efternamnet ur "Efternamn, Förnamn". Två fulla namn på samma rad ryms inte
  * på en telefon, och efternamnet är det som skiljer spelarna åt.
  */
@@ -526,12 +541,13 @@ function SkaterTable({
                 <td className="mc-left st-pname st-fast st-fast-namn">
                   {s.isBjk
                     ? (
-                      <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>
-                        {humanName(s.name)}
+                      <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}
+                            title={humanName(s.name)}>
+                        {kortNamn(s.name)}
                         <span className="st-plink-arrow" aria-hidden="true">›</span>
                       </Link>
                     )
-                    : humanName(s.name)}
+                    : kortNamn(s.name)}
                 </td>
                 <td>{s.gp}</td>
                 <td>{s.g}</td>
@@ -1082,9 +1098,8 @@ function Slutplacering({ proj }: { proj: Projection }) {
       <section className="mc-card">
         <p className="mc-kicker">Slutplacering</p>
         <p className="mc-text">
-          Serien har inte startat. Innan någon match är spelad delar alla lag samma
-          styrketal. En simulering skulle då bara beskriva spelschemat, inte vem
-          som är bäst. Prognosen kommer när omgångarna börjat rulla.
+          Kommer när serien startat. Före första matchen delar alla lag styrketal,
+          och simuleringen beskriver bara spelschemat.
         </p>
       </section>
     );
@@ -1099,19 +1114,19 @@ function Slutplacering({ proj }: { proj: Projection }) {
       {us && (
         <>
           <div className="st-stats st-stats-tight">
-            <Stat label="Topp 6" value={`${us.top6_pct} %`} tone={pdoTone(us.top6_pct, 50)} />
-            <Stat label="Topp 10" value={`${us.top10_pct} %`} tone={pdoTone(us.top10_pct, 50)} />
-            <Stat label="Vinner serien" value={`${us.win_league_pct} %`} tone="var(--brand-gold)" />
-            <Stat label="Botten 2" value={`${us.bottom2_pct} %`} tone={pdoTone(-us.bottom2_pct, -50)} />
+            <Stat label="Topp 6" value={`${komma(us.top6_pct)} %`} tone={pdoTone(us.top6_pct, 50)} />
+            <Stat label="Topp 10" value={`${komma(us.top10_pct)} %`} tone={pdoTone(us.top10_pct, 50)} />
+            <Stat label="Vinner serien" value={`${komma(us.win_league_pct)} %`} tone="var(--brand-gold)" />
+            <Stat label="Botten 2" value={`${komma(us.bottom2_pct)} %`} tone={pdoTone(-us.bottom2_pct, -50)} />
           </div>
           <div className="st-kv">
             <span className="st-kvlabel">Väntad placering</span>
-            <span className="st-kvvalue">{us.expected_rank}</span>
+            <span className="st-kvvalue">{komma(us.expected_rank)}</span>
             <span className="st-kvhint">plats {us.rank_p10}–{us.rank_p90} i åtta av tio simuleringar</span>
           </div>
           <div className="st-kv">
             <span className="st-kvlabel">Väntad poäng</span>
-            <span className="st-kvvalue">{us.expected_points}</span>
+            <span className="st-kvvalue">{komma(us.expected_points)}</span>
             <span className="st-kvhint">{us.points_p10}–{us.points_p90} poäng, nu {us.current_points}</span>
           </div>
         </>
@@ -1131,7 +1146,7 @@ function Slutplacering({ proj }: { proj: Projection }) {
                 <span className="pj-span" style={{ left: `${left}%`, width: `${width}%` }} />
                 <span className="pj-dot" style={{ left: `${dot}%` }} />
               </span>
-              <span className="pj-rank">{t.expected_rank}</span>
+              <span className="pj-rank">{komma(t.expected_rank)}</span>
             </div>
           );
         })}
@@ -1142,15 +1157,13 @@ function Slutplacering({ proj }: { proj: Projection }) {
         </button>
       )}
 
+      {/* Två stycken på hundra ord stod här och förklarade även att 20 % av
+          matcherna avgörs efter full tid. Ingen läser en metodbilaga under ett
+          diagram; det som måste stå är vad fältet och pricken betyder. */}
       <p className="mc-note">
-        Stapeln är plats {1}–{n} från vänster; det färgade fältet är där laget hamnar i åtta
-        av tio simuleringar och pricken den väntade placeringen.
-      </p>
-      <p className="mc-note">
-        {proj.simulations.toLocaleString('sv-SE')} simuleringar av de {proj.games_remaining} matcher
-        som återstår i serien. Utfallen dras ur lagens styrketal, och{' '}
-        {proj.ot_rate_pct} % av matcherna avgörs efter full tid, hämtat ur säsongens egna matcher.
-        {proj.reliability === 'low' && ' Få omgångar är spelade, så styrketalen är osäkra och intervallen breda.'}
+        Skalan är plats 1–{n}; färgat fält åtta av tio simuleringar, pricken väntat läge.
+        {' '}{proj.simulations.toLocaleString('sv-SE')} körningar.
+        {proj.reliability === 'low' && ' Få omgångar spelade, så talen är osäkra.'}
       </p>
     </section>
   );

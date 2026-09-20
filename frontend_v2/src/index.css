@@ -2201,7 +2201,7 @@ a {
 .mc-table tr.mc-hl td.st-fast { background: #10281c; }
 /* Namnet får ta högst så här mycket. Utan taket blir "Jakob Ihs-Wozniak"
    bredare än allt annat tillsammans, och då finns inget kvar att skrolla i. */
-.mc-table td.st-pname { max-width: 8.5rem; overflow: hidden; text-overflow: ellipsis; }
+.mc-table td.st-pname { max-width: 9.6rem; overflow: hidden; text-overflow: ellipsis; }
 
 /* Tryckmarkör på matchrader som har en rapport. Utan den syns det inte på en
    telefon att raden går att trycka på — det finns ingen hovring där. */
