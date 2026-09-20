@@ -150,10 +150,7 @@ function Matchbild({ goals, totalMin }: { goals: Goal[]; totalMin: number }) {
           <span className="st-kvlabel">Största ledning</span>
           <span className="st-kvvalue">{t.biggest > 0 ? `+${t.biggest}` : '–'}</span>
         </div>
-        <p className="mr-note">
-          Räknat ur måltiderna, så minuterna är spelklocka och inte effektiv tid.
-          Grön stapel är tid i ledning.
-        </p>
+        <p className="mr-note">Spelklocka, räknad ur måltiderna.</p>
       </section>
 
     </>
@@ -262,9 +259,8 @@ function Momentum({
         ))}
       </svg>
       <p className="mr-note">
-        Över linjen betyder att Björklöven leder. Gula streck är utvisningar,
-        uppåt när motståndaren satt och nedåt när vi gjorde det.
-        {missing !== 0 && ' Avgörandet på straffar räknas inte som en matchhändelse och syns därför inte i kurvan.'}
+        Över linjen leder Björklöven. Gula streck är utvisningar, uppåt deras och nedåt våra.
+        {missing !== 0 && ' Straffavgörandet syns inte i kurvan.'}
       </p>
     </section>
   );
@@ -355,7 +351,7 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
   return (
     <section className="mr-card">
       <p className="mr-kicker">Spelarna</p>
-      <h2 className="mr-title">Vem var på isen när det small?</h2>
+      <h2 className="mr-title">På isen vid mål</h2>
 
       {/* En rad per +/--värde, namnen som brickor. Tröjnummer ensamt gick
           inte att läsa utan att kunna truppen utantill, och en stapel per
@@ -428,10 +424,8 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
       </details>
 
       <p className="mr-note">
-        Plus/minus räknas ur vilka som stod på isen. Mål i lika styrka och i
-        underläge ger utslag, powerplaymål gör det inte. Samma regel som
-        Swehockey använder.
-        {!hasReport && ' Skott och tekningar saknas här; matchrapporten fanns inte när matchen skördades.'}
+        Lika styrka och underläge räknas, powerplay inte — som hos Swehockey.
+        {!hasReport && ' Skott och tekningar saknas i protokollet.'}
       </p>
     </section>
   );
@@ -465,7 +459,6 @@ function Malvakter({ goalies }: { goalies: MatchReport['goalies'] }) {
           </div>
         );
       })}
-      <p className="mr-note">Räddningsprocenten kommer ur matchprotokollets målvaktssummering.</p>
     </section>
   );
 }
@@ -514,9 +507,7 @@ function Femmorna({ lineup, squad }: { lineup: MatchReport['lineup']; squad: Mat
           </div>
         );
       })}
-      <p className="mr-note">
-        Klubbens egen indelning på matchsidan. Backparet står efter avdelaren.
-      </p>
+      <p className="mr-note">Klubbens egen indelning. Backparet efter avdelaren.</p>
     </section>
   );
 }
@@ -930,10 +921,7 @@ export function Matchrapport() {
 
       {data.counts.events === 0 && (
         <section className="mr-card">
-          <p className="mr-text">
-            Matchhändelser saknas för den här matchen. De hämtas från Swehockey när
-            matchen har spelats och scrapern har körts.
-          </p>
+          <p className="mr-text">Matchhändelser saknas. De kommer med nästa skörd.</p>
         </section>
       )}
     </div>
