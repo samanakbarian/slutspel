@@ -387,7 +387,7 @@ function pdoTone(value: number | null, normal: number): string | undefined {
 const rec = (r: StateRecord | undefined) =>
   r ? `${r.w}–${r.l}–${r.otl ?? 0}` : '–';
 
-type SortKey = 'num' | 'name' | 'gp' | 'g' | 'a' | 'p' | 'ppg' | 'pm' | 'onice' | 'share';
+type SortKey = 'num' | 'name' | 'gp' | 'g' | 'a' | 'p' | 'ppg' | 'pim' | 'pm' | 'onice';
 
 /** Kolumner som går att sortera på, med riktning som känns naturlig först. */
 const SKATER_COLUMNS: { key: SortKey; label: string; left?: boolean; desc: boolean; title: string }[] = [
@@ -398,9 +398,9 @@ const SKATER_COLUMNS: { key: SortKey; label: string; left?: boolean; desc: boole
   { key: 'a', label: 'A', desc: true, title: 'Assist' },
   { key: 'p', label: 'P', desc: true, title: 'Poäng' },
   { key: 'ppg', label: 'P/M', desc: true, title: 'Poäng per match' },
-  { key: 'pm', label: '+/-', desc: true, title: 'Plus/minus enligt tabellen' },
-  { key: 'onice', label: 'På is', desc: true, title: 'Mål för minus mål emot medan spelaren stod på isen' },
-  { key: 'share', label: 'Andel', desc: true, title: 'Andel av lagets mål spelaren var med på' },
+  { key: 'pim', label: 'PIM', desc: true, title: 'Utvisningsminuter' },
+  { key: 'pm', label: '+/-', desc: true, title: 'Plus/minus: mål för minus mål emot i lika styrka och underläge' },
+  { key: 'onice', label: 'På is', desc: true, title: 'Samma sak men med powerplay inräknat' },
 ];
 
 /**
@@ -456,7 +456,7 @@ function SkaterTable({
 
   const to = (s: Skater) => `/statistik/spelare/${encodeURIComponent(s.name)}${season ? `?season=${season}` : ''}`;
 
-  const columns = SKATER_COLUMNS.filter(c => (c.key === 'onice' || c.key === 'share' ? hasOnIce : true));
+  const columns = SKATER_COLUMNS.filter(c => (c.key === 'onice' ? hasOnIce : true));
 
   const value = (s: Skater, key: SortKey): number | string => {
     const oi = onIceByNumber?.get(s.num);
@@ -468,10 +468,10 @@ function SkaterTable({
       case 'a': return s.a;
       case 'p': return s.p;
       case 'ppg': return s.gp ? s.p / s.gp : -1;
+      case 'pim': return s.pim;
       // Tomt värde ska alltid hamna sist, oavsett riktning.
       case 'pm': return Number(String(s.pm).replace('+', '')) || (s.pm ? 0 : -999);
       case 'onice': return oi ? oi.diff : -999;
-      case 'share': return oi ? oi.gf_share_pct : -1;
     }
   };
 
@@ -497,7 +497,11 @@ function SkaterTable({
         <thead>
           <tr>
             {columns.map(c => (
-              <th key={c.key} className={c.left ? 'mc-left' : undefined}
+              <th key={c.key} className={[
+                    c.left ? 'mc-left' : '',
+                    c.key === 'num' ? 'st-fast st-fast-num' : '',
+                    c.key === 'name' ? 'st-fast st-fast-namn' : '',
+                  ].filter(Boolean).join(' ') || undefined}
                   aria-sort={sort.key === c.key ? (sort.desc ? 'descending' : 'ascending') : 'none'}>
                 <button type="button" className="st-sort" onClick={() => toggle(c)} title={c.title}>
                   {c.label}
@@ -518,8 +522,8 @@ function SkaterTable({
                 className={`${showTeam && s.isBjk ? 'mc-hl ' : ''}${s.isBjk ? 'st-click' : ''}`}
                 onClick={s.isBjk ? () => navigate(to(s)) : undefined}
               >
-                <td>{s.num || '–'}</td>
-                <td className="mc-left st-pname">
+                <td className="st-fast st-fast-num">{s.num || '–'}</td>
+                <td className="mc-left st-pname st-fast st-fast-namn">
                   {s.isBjk
                     ? (
                       <Link className="st-plink" to={to(s)} onClick={e => e.stopPropagation()}>
@@ -534,9 +538,9 @@ function SkaterTable({
                 <td>{s.a}</td>
                 <td className="mc-pts">{s.p}</td>
                 <td>{s.ppg}</td>
+                <td>{s.pim}</td>
                 <td>{s.pm || '–'}</td>
                 {hasOnIce && <td>{oi ? (oi.diff > 0 ? `+${oi.diff}` : oi.diff) : '–'}</td>}
-                {hasOnIce && <td>{oi ? `${oi.gf_share_pct}%` : '–'}</td>}
                 {showTeam && <td>{shortTeam(s.team)}</td>}
                 <td>{s.pos || '–'}</td>
               </tr>
@@ -1740,9 +1744,8 @@ function Spelare({
         </p>
         {loven && onIce && (
           <p className="mc-note">
-            <b>På is</b> är målsaldo medan spelaren var ute. <b>Andel</b> räknas på de
-            {' '}{onIce.team_goals_for} mål där Swehockey angett vilka som stod på isen,
-            inte på alla säsongens mål. <Formel till="onice" />
+            <b>+/-</b> räknar lika styrka och underläge, som Swehockey.
+            {' '}<b>På is</b> räknar även powerplay. <Formel till="onice" />
           </p>
         )}
       </section>

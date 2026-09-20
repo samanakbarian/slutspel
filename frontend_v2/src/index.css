@@ -45,6 +45,9 @@
   --bg-dark: #07110d;
   --bg-darker: #030706;
   --bg-card: rgba(14, 24, 20, 0.9);
+  /* Samma yta som --bg-card men ogenomskinlig. Behovs dar nagot ska skrolla
+     under den i stallet for igenom den. */
+  --bg-card-solid: #0d1713;
 
   --brand-green: #25a35a;
   --brand-green-light: #42d883;
@@ -2181,6 +2184,24 @@ a {
 /* Namn på en rad. Bryts de blir varje rad dubbelt så hög och listan svår att
    överblicka; tabellen får hellre bli bredare och scrollas i sidled. */
 .mc-table td.st-pname { white-space: nowrap; padding-right: 0.75rem; }
+
+/* Nummer och namn står kvar när talen skrollas förbi.
+   Poängligan har elva kolumner och får inte plats på en telefon. Utan det här
+   skrollar namnet ut ur bild först av allt, och kvar står en rad siffror utan
+   någon att höra ihop med — "1 0 2 2" utan spelare säger ingenting. */
+.mc-table .st-fast {
+  position: sticky;
+  background: var(--bg-card-solid);
+  z-index: 1;
+}
+.mc-table .st-fast-num { left: 0; width: 2rem; }
+.mc-table .st-fast-namn { left: 2rem; box-shadow: 1px 0 0 var(--glass-border); }
+/* Markerade rader har egen bakgrund, och en genomskinlig sticky-cell hade
+   låtit resten av tabellen glida igenom den. */
+.mc-table tr.mc-hl td.st-fast { background: #10281c; }
+/* Namnet får ta högst så här mycket. Utan taket blir "Jakob Ihs-Wozniak"
+   bredare än allt annat tillsammans, och då finns inget kvar att skrolla i. */
+.mc-table td.st-pname { max-width: 8.5rem; overflow: hidden; text-overflow: ellipsis; }
 
 /* Tryckmarkör på matchrader som har en rapport. Utan den syns det inte på en
    telefon att raden går att trycka på — det finns ingen hovring där. */
