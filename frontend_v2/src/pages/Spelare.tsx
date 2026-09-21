@@ -309,6 +309,18 @@ function Malvakt({ data }: { data: PlayerResponse }) {
   );
 }
 
+/**
+ * Profiler vi redan hämtat, kvar så länge fliken lever.
+ *
+ * Bläddringen gick mot nätet varje gång, även bakåt till en spelare man
+ * nyss tittat på. På en kall serverinstans tog det tjugo sekunder och
+ * uppåt. En säsongs profiler ändrar sig inte medan man sitter och klickar,
+ * så de får ligga kvar; en omladdning tömmer kartan.
+ */
+const profilCache = new Map<string, PlayerResponse>();
+
+const profilNyckel = (namn: string, season: string) => `${season}|${namn}`;
+
 export function Spelare() {
   const { name } = useParams<{ name: string }>();
   const [params] = useSearchParams();
@@ -325,10 +337,19 @@ export function Spelare() {
 
   useEffect(() => {
     if (!name) return;
-    setLoading(true);
-    setError(null);
     setFilter('all');
     setShowAll(false);
+
+    const traff = profilCache.get(profilNyckel(name, season));
+    if (traff) {
+      setData(traff);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
     const ctrl = new AbortController();
     const timer = window.setTimeout(() => ctrl.abort(), 45000);
 
@@ -342,6 +363,7 @@ export function Spelare() {
       .then((j: PlayerResponse) => {
         if (j.status === 'not_found') throw new Error('Spelaren finns inte i säsongens statistik.');
         if (j.status !== 'ok') throw new Error(j.error || 'Kunde inte läsa spelaren.');
+        profilCache.set(profilNyckel(name, season), j);
         setData(j);
       })
       .catch((e: Error) => setError(
@@ -362,6 +384,29 @@ export function Spelare() {
       .then(j => setSquad(((j?.players || []) as { name: string }[]).map(p => p.name)))
       .catch(() => {});
   }, [season]);
+
+  // Hämtar grannarna i bakgrunden när den här profilen är klar. Bläddringen
+  // går mot nästa och föregående, så de är värda att ha innan man trycker.
+  // Ett tyst misslyckande är rätt här: det är en gissning om vad man ska
+  // göra härnäst, inte data sidan behöver.
+  useEffect(() => {
+    if (!data || squad.length === 0 || !name) return;
+    const i = squad.indexOf(name);
+    if (i < 0) return;
+    const grannar = [squad[i - 1], squad[i + 1]].filter(Boolean) as string[];
+    const q = season ? `?season=${encodeURIComponent(season)}` : '';
+    let avbruten = false;
+    for (const vem of grannar) {
+      if (profilCache.has(profilNyckel(vem, season))) continue;
+      fetch(`${API_URL}/api/v1/player/${encodeURIComponent(vem)}${q}`, { cache: 'no-store' })
+        .then(r => (r.ok ? r.json() : null))
+        .then((j: PlayerResponse | null) => {
+          if (!avbruten && j && j.status === 'ok') profilCache.set(profilNyckel(vem, season), j);
+        })
+        .catch(() => {});
+    }
+    return () => { avbruten = true; };
+  }, [data, squad, name, season]);
 
   const log = useMemo(() => data?.game_log || [], [data]);
 
@@ -403,7 +448,14 @@ export function Spelare() {
   const display = humanName(p.name);
   const pos = String(p.detailed_position || p.position || '');
   const isForward = FORWARD.test(pos);
-  const takesFaceoffs = (p.faceoffs_won || 0) + (p.faceoffs_lost || 0) >= 20;
+  // Tekningar per match i stället för tjugo totalt. Tröskeln fanns för att en
+  // ytter som tagit två tekningar inte ska stå med en procentsats, men tjugo
+  // stycken tar en center två matcher att nå — och då syns rutan inte alls i
+  // seriestarten, när man tittar som mest. Axel Ottosson hade 7–4 efter
+  // premiären och doldes. Fem draken per match skiljer den som tar dem från
+  // den som råkat ställa sig där.
+  const tekningar = (p.faceoffs_won || 0) + (p.faceoffs_lost || 0);
+  const takesFaceoffs = p.games_played > 0 && tekningar / p.games_played >= 5;
 
   const gfOn = log.reduce((s, g) => s + g.gf_on, 0);
   const gaOn = log.reduce((s, g) => s + g.ga_on, 0);
@@ -488,7 +540,7 @@ export function Spelare() {
           {p.shots != null && <Stat label="Skott" value={String(p.shots)} />}
           {isForward && p.shooting_pct != null && (
             <Stat label="Skjutprocent" value={`${komma(p.shooting_pct)} %`} tone="var(--brand-green-light)"
-                  hint={cov ? `${shotsGoals} mål på ${p.shots} skott · ${cov.games_with_report} matcher med skottdata` : undefined} />
+                  hint={cov ? `${shotsGoals} mål på ${p.shots} skott · ${matcher(cov.games_with_report)} med skottdata` : undefined} />
           )}
           {takesFaceoffs && p.faceoff_pct != null && (
             <Stat label="Tekningar" value={`${komma(p.faceoff_pct)} %`}
