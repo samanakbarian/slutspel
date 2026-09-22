@@ -3299,3 +3299,15 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .se-lag { fill: #6b8078; }
 .se-vi { fill: var(--brand-green-light); stroke: var(--bg-card, #0e1512); stroke-width: 2; }
 .se-spridning { cursor: default; }
+
+/* ── truppen: poäng mot byten ── */
+.tr-prick { cursor: pointer; }
+.tr-prick:focus-visible { outline: none; }
+.tr-prick:focus-visible .tr-fwd, .tr-prick:focus-visible .tr-back { stroke: var(--brand-gold); stroke-width: 2; }
+.tr-fwd { fill: var(--brand-green-light); }
+.tr-back { fill: var(--bg-surface, #0e1512); stroke: var(--brand-green-light); stroke-width: 1.8; }
+.tr-legend { display: flex; gap: 1rem; font-size: 0.66rem; color: var(--text-muted); margin-top: 0.3rem; }
+.tr-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.tr-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.tr-fwd-i { background: var(--brand-green-light); }
+.tr-back-i { border: 1.8px solid var(--brand-green-light); }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { SerienKort, SpelOchTur } from '../components/Serien';
+import { Truppen } from '../components/Truppen';
 import { useLeague } from '../lib/serien';
 import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
@@ -1862,6 +1863,17 @@ function Spelare({
           </p>
         )}
       </section>
+
+      {loven && onIce && (
+        <Truppen
+          season={season}
+          spelare={skaters.flatMap(sk => {
+            const oi = onIceByNumber.get(sk.num);
+            return oi ? [{ namn: sk.name, nummer: sk.num, position: sk.pos, matcher: sk.gp,
+              poang: sk.p, gfPa: oi.gf_on_ev, gaPa: oi.ga_on_ev }] : [];
+          })}
+        />
+      )}
 
       {loven && onIce && (
         <>

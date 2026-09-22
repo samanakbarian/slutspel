@@ -44,6 +44,7 @@ type PlayerStats = {
   faceoff_pct?: number | null;
   plus_minus_on_ice?: number | null;
   percentiles: Percentiles | null;
+  percentile_group?: 'F' | 'D' | 'G';
   eliteprospects?: { url: string; confidence: string; ep_team?: string | null; born?: string | null } | null;
 };
 
@@ -321,6 +322,147 @@ const profilCache = new Map<string, PlayerResponse>();
 
 const profilNyckel = (namn: string, season: string) => `${season}|${namn}`;
 
+/** En profil ur cachen eller från API:t. Null när den inte gick att hämta. */
+function hamtaProfil(namn: string, season: string): Promise<PlayerResponse | null> {
+  const traff = profilCache.get(profilNyckel(namn, season));
+  if (traff) return Promise.resolve(traff);
+  const q = season ? `?season=${encodeURIComponent(season)}` : '';
+  return fetch(`${API_URL}/api/v1/player/${encodeURIComponent(namn)}${q}`, { cache: 'no-store' })
+    .then(r => (r.ok ? r.json() : null))
+    .then((j: PlayerResponse | null) => {
+      if (!j || j.status !== 'ok') return null;
+      profilCache.set(profilNyckel(namn, season), j);
+      return j;
+    })
+    .catch(() => null);
+}
+
+type Rad = { label: string; a: number; b: number; fmt: (v: number) => string; lagreBattre?: boolean };
+
+/**
+ * Två lagkamrater bredvid varandra.
+ *
+ * Allt per match: en spelare som missat tio matcher ska inte förlora på
+ * det. Skott och tekningar tas med bara när båda har dem — en back utan
+ * tekningar mot en center är ingen jämförelse, och skott finns bara i
+ * matcher med rapport. Poängkurvorna ritas på lagets matchnummer, så en
+ * frånvaro syns som en platt sträcka i stället för att kurvan krymper.
+ */
+function Jamforelse({ a, season, squad }: { a: PlayerResponse; season: string; squad: string[] }) {
+  const [params, setParams] = useSearchParams();
+  const vem = params.get('jmf') || '';
+  const [b, setB] = useState<{ namn: string; data: PlayerResponse | null } | null>(null);
+
+  useEffect(() => {
+    if (!vem) return;
+    let aktiv = true;
+    hamtaProfil(vem, season).then(d => { if (aktiv) setB({ namn: vem, data: d }); });
+    return () => { aktiv = false; };
+  }, [vem, season]);
+
+  const valj = (namn: string) => {
+    const nya = new URLSearchParams(params);
+    if (namn) nya.set('jmf', namn); else nya.delete('jmf');
+    setParams(nya, { replace: true });
+  };
+
+  const andra = squad.filter(n => n !== a.player.name);
+  if (andra.length === 0) return null;
+  const bd = b && b.namn === vem && b.data && b.data.role !== 'goalie' ? b.data : null;
+
+  const rader: Rad[] = [];
+  let kurva: { points: { label: string; value: number }[]; guide: number[] } | null = null;
+  if (bd) {
+    const pa = a.player, pb = bd.player;
+    const pm = (x: number, gp: number) => (gp ? x / gp : 0);
+    const dec2 = (v: number) => svNum(v, 2);
+    const dec1 = (v: number) => svNum(v, 1);
+    const tecken = (v: number) => (v > 0 ? `+${svNum(v, 2)}` : svNum(v, 2));
+    rader.push(
+      { label: 'Poäng per match', a: pm(pa.points, pa.games_played), b: pm(pb.points, pb.games_played), fmt: dec2 },
+      { label: 'Mål per match', a: pm(pa.goals, pa.games_played), b: pm(pb.goals, pb.games_played), fmt: dec2 },
+      { label: 'Assist per match', a: pm(pa.assists, pa.games_played), b: pm(pb.assists, pb.games_played), fmt: dec2 },
+      { label: 'På isen ± per match', a: pm(pa.plus_minus_on_ice ?? 0, pa.games_played),
+        b: pm(pb.plus_minus_on_ice ?? 0, pb.games_played), fmt: tecken },
+    );
+    const skott = (d: PlayerResponse) => {
+      const med = d.game_log.filter(g => g.has_report && g.shots != null);
+      return med.length ? med.reduce((s, g) => s + (g.shots || 0), 0) / med.length : null;
+    };
+    const sa = skott(a), sb = skott(bd);
+    if (sa != null && sb != null) rader.push({ label: 'Skott per match', a: sa, b: sb, fmt: dec1 });
+    const tek = (x: PlayerStats) => {
+      const n = (x.faceoffs_won || 0) + (x.faceoffs_lost || 0);
+      return x.games_played > 0 && n / x.games_played >= 5 ? ((x.faceoffs_won || 0) / n) * 100 : null;
+    };
+    const ta = tek(pa), tb = tek(pb);
+    if (ta != null && tb != null) rader.push({ label: 'Tekningar', a: ta, b: tb, fmt: v => `${svNum(v, 1)} %` });
+    rader.push({ label: 'Utvisningsmin. per match', a: pm(pa.pim, pa.games_played), b: pm(pb.pim, pb.games_played),
+      fmt: dec1, lagreBattre: true });
+
+    // Kurvorna på lagets matchnummer, med förra värdet kvar i matcher
+    // spelaren inte var med i.
+    const nummer = Array.from(new Set([...a.game_log, ...bd.game_log].map(g => g.game_number))).sort((x, y) => x - y);
+    const ack = (d: PlayerResponse) => {
+      const karta = new Map(d.game_log.map(g => [g.game_number, g.cumulative_points]));
+      let senast = 0;
+      return nummer.map(n => { senast = karta.get(n) ?? senast; return senast; });
+    };
+    const ka = ack(a), kb = ack(bd);
+    if (nummer.length > 1) kurva = { points: nummer.map((n, i) => ({ label: String(n), value: ka[i] })), guide: kb };
+  }
+
+  return (
+    <section className="mc-card">
+      <div className="st-head">
+        <p className="mc-kicker">Jämför</p>
+        <select className="st-season" value={vem} onChange={e => valj(e.target.value)} aria-label="Jämför med lagkamrat">
+          <option value="">Välj lagkamrat</option>
+          {andra.map(n => <option key={n} value={n}>{humanName(n)}</option>)}
+        </select>
+      </div>
+      {vem && !bd && b?.namn === vem && <p className="mc-text">Kunde inte hämta {humanName(vem)}.</p>}
+      {vem && !b && <div className="st-skeleton" />}
+      {bd && (
+        <>
+          <div className="du">
+            <div className="du-head">
+              <span className="du-us">{humanName(a.player.name)}</span>
+              <span className="du-them">{humanName(bd.player.name)}</span>
+            </div>
+            {rader.map(r => {
+              const max = Math.max(Math.abs(r.a), Math.abs(r.b)) || 1;
+              const leder = r.a === r.b ? null : (r.lagreBattre ? r.a < r.b : r.a > r.b);
+              return (
+                <div className="du-row" key={r.label}>
+                  <span className={`du-val${leder === true ? ' du-lead' : ''}`}>{r.fmt(r.a)}</span>
+                  <span className="du-track">
+                    <span className="du-half du-left"><i style={{ width: `${(Math.abs(r.a) / max) * 100}%` }} /></span>
+                    <span className="du-label">{r.label}</span>
+                    <span className="du-half du-right"><i style={{ width: `${(Math.abs(r.b) / max) * 100}%` }} /></span>
+                  </span>
+                  <span className={`du-val du-valr${leder === false ? ' du-lead' : ''}`}>{r.fmt(r.b)}</span>
+                </div>
+              );
+            })}
+          </div>
+          {kurva && (
+            <>
+              <p className="mc-kicker st-sub">Poäng ackumulerat</p>
+              <Sparkline points={kurva.points} height={112} unit=" p" guide={kurva.guide}
+                         guideLabel={humanName(bd.player.name).split(' ').slice(-1)[0]} />
+            </>
+          )}
+          <p className="mc-note">
+            {humanName(a.player.name)} {matcher(a.player.games_played)}, {humanName(bd.player.name)} {matcher(bd.player.games_played)}.
+            {' '}Allt per match. Den streckade kurvan är {humanName(bd.player.name).split(' ')[0]}.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
 export function Spelare() {
   const { name } = useParams<{ name: string }>();
   const [params] = useSearchParams();
@@ -560,6 +702,8 @@ export function Spelare() {
         </p>
       </section>
 
+      <Jamforelse a={data} season={season} squad={squad} />
+
       {curve.length > 1 && (
         <section className="mc-card">
           <p className="mc-kicker">Poäng ackumulerat</p>
@@ -686,15 +830,15 @@ export function Spelare() {
             <PercentileBar label="Plus/minus" value={p.percentiles.plus_minus} />
             <PercentileBar label="Disciplin" value={p.percentiles.pim} hint="Hög percentil = få utvisningsminuter jämfört med andra." />
             <p className="mc-note">
-              Jämfört med alla utespelare i serien, oavsett position. Baserat på
-              totala tal, inte per match.
+              Per match, mot seriens {p.percentile_group === 'D' ? 'backar' : 'forwards'} som spelat
+              minst fyra av tio omgångar.
               {' '}<Link className="md-lank" to="/metod#percentiler">Formel</Link>
             </p>
           </>
         ) : (
           <p className="mc-text">
-            Percentil beräknas först vid tio spelade matcher, eftersom enstaka matcher
-            ger för stort utslag.
+            Percentil visas när spelaren spelat fyra av tio omgångar, minst tre
+            matcher. Färre än så ger för stort utslag.
           </p>
         )}
       </section>
