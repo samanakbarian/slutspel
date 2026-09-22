@@ -96,8 +96,8 @@ function Moten({ moten }: { moten: Mote[] }) {
   );
 }
 
-function Klassisk({ rows, started, lead, streck, moten }: {
-  rows: Standing[]; started: boolean; lead: number; streck: boolean; moten?: Mote[];
+function Klassisk({ rows, streck, moten }: {
+  rows: Standing[]; streck: boolean; moten?: Mote[];
 }) {
   const [oppen, setOppen] = useState<string | null>(null);
   return (
@@ -143,7 +143,6 @@ function Klassisk({ rows, started, lead, streck, moten }: {
               <span className="st-points">{pts}</span>
             </>
           );
-          const stil = { ['--st-fill' as string]: `${started ? (pts / lead) * 100 : 0}%` };
           const klass = `st-row${ours ? ' st-row-ours' : ''}`;
           return (
             <Fragment key={i}>
@@ -152,14 +151,14 @@ function Klassisk({ rows, started, lead, streck, moten }: {
                   <button
                     type="button"
                     className={`${klass} st-row-knapp${visar ? ' st-row-oppen' : ''}`}
-                    style={stil}
+                   
                     aria-expanded={visar}
                     onClick={() => setOppen(visar ? null : lag)}
                   >
                     {cells}
                   </button>
                 )
-                : <div className={klass} style={stil}>{cells}</div>}
+                : <div className={klass}>{cells}</div>}
               {visar && <Moten moten={(moten || []).filter(m => m.opponent === lag).sort((a, b) => a.date.localeCompare(b.date))} />}
               {streckEfter && <div className="st-streck" aria-hidden="true" />}
             </Fragment>
@@ -270,7 +269,6 @@ export function Tabellen({ rows, season, moten }: { rows: Standing[]; season?: s
 
   const sorted = [...rows].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
   const started = sorted.some(r => (r.games_played ?? 0) > 0);
-  const lead = Math.max(1, ...sorted.map(r => r.points ?? 0));
   // Strecken gäller SHL:s fjorton lag. Allsvenskan har andra gränser, och de
   // ritas hellre inte alls än fel.
   const streck = /SHL/.test(season || '') && sorted.length === 14;
@@ -296,7 +294,7 @@ export function Tabellen({ rows, season, moten }: { rows: Standing[]; season?: s
 
       {texttv
         ? <TextTv rows={sorted} season={season || ''} />
-        : <Klassisk rows={sorted} started={started} lead={lead} streck={streck} moten={moten} />}
+        : <Klassisk rows={sorted} streck={streck} moten={moten} />}
 
       {started && streck && !texttv && <Strecken rows={sorted} />}
 

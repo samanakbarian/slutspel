@@ -1249,7 +1249,9 @@ a {
    390 px med små siffror; smalare telefoner scrollar i sidled i sin egen ruta
    i stället för att sidan gör det. */
 .st-scroll { overflow-x: auto; margin: 0 -0.2rem; }
-.st-rows { display: flex; flex-direction: column; min-width: 316px; }
+/* Ingen minsta bredd: hela raden ska rymmas på en telefon, poängen inräknad.
+   Lagnamnet är det som får ge med sig. */
+.st-rows { display: flex; flex-direction: column; }
 
 /* Egen klass, inte .st-head: den namnet var redan taget av sektionsrubriken
    med säsongsväljaren (display: flex) längre ned i filen, som vann kaskaden.
@@ -1258,11 +1260,11 @@ a {
 .st-row {
   display: grid;
   grid-template-columns:
-    1.1rem minmax(3rem, 1fr)
-    1.15rem 1.15rem 1.15rem 1.15rem 1.15rem
-    3.2rem 1.8rem 1.7rem;
+    1.1rem minmax(0, 1fr)
+    1.05rem 1.05rem 1.05rem 1.05rem 1.05rem
+    2.5rem 1.7rem 1.5rem;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.12rem;
 }
 
 .st-kol {
@@ -1284,18 +1286,13 @@ a {
   position: relative;
   padding: 0.38rem 0.25rem;
   border-bottom: 1px solid rgba(172, 199, 186, 0.06);
-  background: linear-gradient(
-    90deg,
-    rgba(37, 163, 90, 0.15) 0,
-    rgba(37, 163, 90, 0.15) var(--st-fill, 0%),
-    transparent var(--st-fill, 0%)
-  );
 }
 .st-row:last-child { border-bottom: none; }
 
 /* Raderna för de andra lagen är knappar som fäller ut våra möten. */
 .st-row-knapp {
   width: 100%;
+  background: transparent;
   border: 0;
   border-bottom: 1px solid rgba(172, 199, 186, 0.06);
   color: inherit;
@@ -1336,12 +1333,7 @@ a {
 .st-strecken { margin-top: 0.6rem; }
 
 .st-row-ours {
-  background: linear-gradient(
-    90deg,
-    rgba(66, 216, 131, 0.26) 0,
-    rgba(66, 216, 131, 0.26) var(--st-fill, 0%),
-    rgba(66, 216, 131, 0.05) var(--st-fill, 0%)
-  );
+  background: rgba(66, 216, 131, 0.12);
   box-shadow: inset 3px 0 0 var(--brand-green-light);
 }
 
