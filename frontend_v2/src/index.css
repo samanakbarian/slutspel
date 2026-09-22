@@ -3275,3 +3275,27 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 }
 
 .lml-vart { color: var(--brand-green-light); }
+
+/* ── serien ── */
+
+/* Laget mot resten av serien: namn och värde på en rad, seriens lag på en
+   linje under. Pricken bär identiteten, texten står i textfärg. */
+.se-rader { display: flex; flex-direction: column; }
+.se-rad {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.1rem 0.6rem;
+  padding: 0.42rem 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.07);
+}
+.se-rad:last-child { border-bottom: none; }
+.se-namn { font-size: 0.78rem; color: var(--text-secondary); min-width: 0; overflow-wrap: anywhere; }
+.se-varde { display: inline-flex; align-items: baseline; gap: 0.4rem; white-space: nowrap; }
+.se-varde b { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.se-varde i { font-style: normal; font-size: 0.66rem; color: var(--text-muted); min-width: 3.6rem; text-align: right; }
+.se-linje { grid-column: 1 / -1; width: 100%; height: auto; display: block; overflow: visible; }
+.se-spar { stroke: rgba(172, 199, 186, 0.14); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.se-snitt { stroke: var(--text-muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.se-lag { fill: #6b8078; }
+.se-vi { fill: var(--brand-green-light); stroke: var(--bg-card, #0e1512); stroke-width: 2; }
+.se-spridning { cursor: default; }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 import { ordinal } from '../lib/match';
+import { MINSTA_MATCHER, useLeague } from '../lib/serien';
 
 /**
  * Vad som väntar i nästa match.
@@ -139,9 +140,11 @@ function Duels({ rows, opponent }: { rows: Duel[]; opponent: string }) {
         // Insläppta mål är bättre lågt. Utan det pekades motståndaren ut som
         // ledande på att släppa in flest.
         const lead = r.lowerIsBetter ? r.us < r.them : r.us > r.them;
+        // Lika är ingen ledning åt något håll.
+        const tie = r.us === r.them;
         return (
           <div className="du-row" key={r.label}>
-            <span className={`du-val${lead ? ' du-lead' : ''}`}>{fmt(r.us)}</span>
+            <span className={`du-val${lead && !tie ? ' du-lead' : ''}`}>{fmt(r.us)}</span>
             <span className="du-track">
               <span className="du-half du-left">
                 <i style={{ width: `${(Math.abs(r.us) / max) * 100}%` }} />
@@ -151,7 +154,7 @@ function Duels({ rows, opponent }: { rows: Duel[]; opponent: string }) {
                 <i style={{ width: `${(Math.abs(r.them) / max) * 100}%` }} />
               </span>
             </span>
-            <span className={`du-val du-valr${!lead ? ' du-lead' : ''}`}>{fmt(r.them)}</span>
+            <span className={`du-val du-valr${!lead && !tie ? ' du-lead' : ''}`}>{fmt(r.them)}</span>
           </div>
         );
       })}
@@ -164,6 +167,7 @@ const decimal = (v: number) => v.toFixed(2).replace('.', ',');
 
 export function InforMatchen({ season }: { season: string | null }) {
   const [data, setData] = useState<NextMatch | null>(null);
+  const league = useLeague(season || '');
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -208,6 +212,24 @@ export function InforMatchen({ season }: { season: string | null }) {
         them: themSeason.goals_against_avg, format: decimal, lowerIsBetter: true },
     );
     duelNote = `Efter ${data.us.games_played} respektive ${data.them.games_played} matcher i år.`;
+
+    // Seriens lagstatistik: hur lagen spelar, inte bara vad det gav. Samma
+    // gräns som för placeringarna — efter en match är 100 % i boxplay ingenting.
+    const oss = league?.teams.find(t => t.is_ours);
+    const dem = league?.teams.find(t => t.team === game.opponent);
+    if (oss && dem && oss.gp >= MINSTA_MATCHER && dem.gp >= MINSTA_MATCHER) {
+      for (const [key, label] of [
+        ['shot_share', 'Andel av skotten'],
+        ['pp_pct', 'Powerplay'],
+        ['pk_pct', 'Boxplay'],
+        ['sv_pct', 'Räddningsprocent'],
+      ] as const) {
+        const a = oss.values[key];
+        const b = dem.values[key];
+        // Hela procent: kolumnen rymmer inte "100,0 %" på en telefon.
+        if (a != null && b != null) duels.push({ label, us: a, them: b, format: v => `${Math.round(v)} %` });
+      }
+    }
   }
   // Före omgång 1 finns inga siffror att ställa mot varandra. Att jämföra
   // 119 poäng i Allsvenskan med 73 i SHL vore att låtsas att talen betyder

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
+import { SerienKort, SpelOchTur } from '../components/Serien';
+import { useLeague } from '../lib/serien';
+import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
 import { Andel, FormDots, Jamforelse, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
@@ -739,6 +742,7 @@ export function StatisticsPage() {
   const [venue, setVenue] = useState<VenueFilter>('all');
   const [swings, setSwings] = useState<SwingData | null>(null);
   const [swingsState, setSwingsState] = useState<'idle' | 'loading' | 'missing'>('idle');
+  const league = useLeague(season);
 
   /* Säsonger */
   useEffect(() => {
@@ -1134,6 +1138,7 @@ export function StatisticsPage() {
           opponents={opponents} opponentsState={opponentsState}
           venue={venue}
           onVenue={v => { setVenue(v); loadOpponents(v); }}
+          league={league}
         />
       )}
 
@@ -1518,8 +1523,9 @@ function Svangar({ data, state }: { data: SwingData | null; state: 'idle' | 'loa
 
 function Laget({
   record, timeline, modules, analyticsState, shots, proj,
-  lines, linesState, opponents, opponentsState, venue, onVenue,
+  lines, linesState, opponents, opponentsState, venue, onVenue, league,
 }: {
+  league: LeagueData | null;
   record: { gp: number; w: number; otw: number; otl: number; l: number; pts: number; diff: number; rank: number };
   timeline: NonNullable<Modules['timeline']>;
   modules: Modules | null;
@@ -1573,6 +1579,8 @@ function Laget({
           </>
         )}
       </section>
+
+      {league && <SerienKort data={league} />}
 
       <Kedjorna data={lines} state={linesState} />
 
@@ -1709,6 +1717,8 @@ function Laget({
           )}
         </section>
       )}
+
+      {league && <SpelOchTur data={league} />}
 
       {periods.length > 0 && (
         <section className="mc-card">
