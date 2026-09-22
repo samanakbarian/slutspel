@@ -382,8 +382,9 @@ function Jamforelse({ a, season, squad }: { a: PlayerResponse; season: string; s
       { label: 'Poäng per match', a: pm(pa.points, pa.games_played), b: pm(pb.points, pb.games_played), fmt: dec2 },
       { label: 'Mål per match', a: pm(pa.goals, pa.games_played), b: pm(pb.goals, pb.games_played), fmt: dec2 },
       { label: 'Assist per match', a: pm(pa.assists, pa.games_played), b: pm(pb.assists, pb.games_played), fmt: dec2 },
-      { label: 'På isen ± per match', a: pm(pa.plus_minus_on_ice ?? 0, pa.games_played),
-        b: pm(pb.plus_minus_on_ice ?? 0, pb.games_played), fmt: tecken },
+      // Swehockeys officiella +/-, det som står i varje statistiktabell.
+      { label: 'Plus/minus per match', a: pm(pa.plus_minus, pa.games_played),
+        b: pm(pb.plus_minus, pb.games_played), fmt: tecken },
     );
     const skott = (d: PlayerResponse) => {
       const med = d.game_log.filter(g => g.has_report && g.shots != null);
