@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
-import { InforSasongen } from '../components/InforSasongen';
 import { Guard } from '../components/Guard';
 import { Tabellen } from '../components/Tabellen';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from '../components/texttv';
@@ -462,12 +461,6 @@ export function Matcher() {
           </button>
         )}
       </section>
-
-      <Guard name="Inför säsongen">
-        <InforSasongen
-          aktuellSasong={!season || season === activeKey}
-        />
-      </Guard>
 
       <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} moten={games} /></Guard>
     </div>
