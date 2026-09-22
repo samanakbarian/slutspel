@@ -1859,7 +1859,6 @@ function Spelare({
                 rows={skaters}
                 showTeam={!loven}
                 season={season}
-                onIceByNumber={loven ? onIceByNumber : undefined}
               />
             )}
         <p className="mc-note">
@@ -1871,12 +1870,6 @@ function Spelare({
                   : 'Seriens poängtopp. Lövenspelare går att trycka på.'}
               </>}
         </p>
-        {loven && onIce && (
-          <p className="mc-note">
-            <b>+/-</b> räknar lika styrka och underläge, som Swehockey.
-            {' '}<b>På is</b> räknar även powerplay. <Formel till="onice" />
-          </p>
-        )}
       </section>
 
       {loven && onIce && (

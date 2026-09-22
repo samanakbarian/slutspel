@@ -602,8 +602,6 @@ export function Spelare() {
   const tekningar = (p.faceoffs_won || 0) + (p.faceoffs_lost || 0);
   const takesFaceoffs = p.games_played > 0 && tekningar / p.games_played >= 5;
 
-  const gfOn = log.reduce((s, g) => s + g.gf_on, 0);
-  const gaOn = log.reduce((s, g) => s + g.ga_on, 0);
   const shotsGoals = log.filter(g => g.has_report).reduce((s, g) => s + g.goals, 0);
 
   const idx = squad.findIndex(n => n === p.name);
@@ -679,9 +677,6 @@ export function Spelare() {
         <div className="sp-stats">
           <Stat label="Plus/minus" value={p.plus_minus > 0 ? `+${p.plus_minus}` : String(p.plus_minus)}
                 hint="Swehockeys officiella" />
-          <Stat label="On-ice ±" value={
-            (p.plus_minus_on_ice ?? 0) > 0 ? `+${p.plus_minus_on_ice}` : String(p.plus_minus_on_ice ?? 0)}
-                hint={`${gfOn}–${gaOn} mål med spelaren på isen`} />
           {p.shots != null && <Stat label="Skott" value={String(p.shots)} />}
           {isForward && p.shooting_pct != null && (
             <Stat label="Skjutprocent" value={`${komma(p.shooting_pct)} %`} tone="var(--brand-green-light)"
@@ -695,8 +690,7 @@ export function Spelare() {
           {sit && <Stat label="PP-mål" value={String(sit.power_play)} />}
         </div>
         <p className="mc-note">
-          Plus/minus är Swehockeys officiella (5v5 + numerärt underläge). On-ice ±
-          räknar alla mål medan spelaren var på isen, oavsett spelform.
+          Plus/minus är Swehockeys officiella.
           {' '}<Link className="md-lank" to="/metod#plusminus">Formel</Link>
           {cov && cov.games_with_report < cov.games_total &&
             ` Skott och tekningar finns för ${cov.games_with_report} av ${cov.games_total} matcher.`}
@@ -887,7 +881,8 @@ export function Spelare() {
                     <td className="opp-num">{`${g.goals}+${g.assists}`}</td>
                     <td className="opp-num">{g.has_report ? (g.shots ?? 0) : '·'}</td>
                     <td className="opp-num">
-                      {g.plus_minus_on_ice > 0 ? `+${g.plus_minus_on_ice}` : g.plus_minus_on_ice}
+                      {g.official_plus_minus == null ? '·'
+                        : g.official_plus_minus > 0 ? `+${g.official_plus_minus}` : g.official_plus_minus}
                     </td>
                     <td className="opp-num">{g.pim || '0'}</td>
                   </tr>
