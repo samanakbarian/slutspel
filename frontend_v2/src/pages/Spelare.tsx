@@ -391,7 +391,9 @@ export function Spelare() {
   // göra härnäst, inte data sidan behöver.
   useEffect(() => {
     if (!data || squad.length === 0 || !name) return;
-    const i = squad.indexOf(name);
+    // Profilens egen namnform, inte adressens: truppen länkar ibland med
+    // "Förnamn Efternamn", och då hittades spelaren aldrig i poängligan.
+    const i = squad.indexOf(data.player?.name ?? name);
     if (i < 0) return;
     const grannar = [squad[i - 1], squad[i + 1]].filter(Boolean) as string[];
     const q = season ? `?season=${encodeURIComponent(season)}` : '';

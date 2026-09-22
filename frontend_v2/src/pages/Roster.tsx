@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
+import { spelarsida } from '../lib/lankar';
+import { humanName } from '../lib/match';
 import { matcher } from '../lib/sprak';
 
 /** Svarsformat från /api/v1/roster — Swehockey som källa, kontrakt som berikning. */
@@ -77,7 +80,14 @@ function groupByPosition(players: Player[]) {
   return groups;
 }
 
-function PlayerRow({ p }: { p: Player }) {
+/**
+ * En spelare i truppen.
+ *
+ * Raden leder till spelarens säsong här på sajten; EliteProspects ligger kvar
+ * som en egen länk i kanten. Den som inte spelat ännu har ingen säsong att
+ * visa, och då är raden ingen länk.
+ */
+function PlayerRow({ p, namn }: { p: Player; namn: string }) {
   const colour = p.status ? STATUS_COLORS[p.status] || 'var(--text-muted)' : 'var(--glass-border)';
   const meta = [
     p.position,
@@ -86,15 +96,8 @@ function PlayerRow({ p }: { p: Player }) {
     p.games_played > 0 ? `${matcher(p.games_played)}, ${p.points} p` : null,
   ].filter(Boolean).join(' · ');
 
-  return (
-    <a
-      className="rs-player"
-      href={eliteProspectsUrl(p)}
-      target="_blank"
-      rel="noreferrer"
-      style={{ borderLeftColor: colour }}
-      title={`Öppna ${p.name} på EliteProspects`}
-    >
+  const inner = (
+    <>
       <span className="rs-num">{p.jersey_number ?? '–'}</span>
       <span className="rs-body">
         <span className="rs-name">{p.name}</span>
@@ -105,8 +108,24 @@ function PlayerRow({ p }: { p: Player }) {
           {STATUS_LABELS[p.status] || p.status}
         </span>
       )}
-      <span className="rs-ep" aria-hidden="true">EP ↗</span>
-    </a>
+    </>
+  );
+
+  return (
+    <div className="rs-player" style={{ borderLeftColor: colour }}>
+      {p.games_played > 0
+        ? <Link className="rs-main" to={spelarsida(namn)}>{inner}</Link>
+        : <div className="rs-main">{inner}</div>}
+      <a
+        className="rs-ep"
+        href={eliteProspectsUrl(p)}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`${p.name} på EliteProspects`}
+      >
+        EP ↗
+      </a>
+    </div>
   );
 }
 
@@ -114,6 +133,20 @@ export function Roster() {
   const [data, setData] = useState<RosterResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Poängligans namnform, "Efternamn, Förnamn", nycklad på truppens
+  // "Förnamn Efternamn". Spelarsidan tar båda, men resten av sajten länkar med
+  // poängligans — samma spelare ska inte ha två adresser.
+  const [namnform, setNamnform] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/players`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const namn = ((d?.players || []) as { name: string }[]).map(x => x.name);
+        setNamnform(new Map(namn.map(n => [humanName(n).toLowerCase(), n])));
+      })
+      .catch(() => { /* länkarna får truppens namnform */ });
+  }, []);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -187,13 +220,15 @@ export function Roster() {
           <section key={name} className="mc-card">
             <p className="mc-kicker">{name} ({list.length})</p>
             <div className="rs-list">
-              {list.map((p, i) => <PlayerRow key={`${p.name}-${i}`} p={p} />)}
+              {list.map((p, i) => (
+                <PlayerRow key={`${p.name}-${i}`} p={p} namn={namnform.get(p.name.toLowerCase()) || p.name} />
+              ))}
             </div>
           </section>
         ) : null,
       )}
 
-      <p className="rs-foot">Tryck på en spelare för att öppna profilen på EliteProspects.</p>
+      <p className="rs-foot">Tryck på en spelare för säsongens siffror. EP ↗ öppnar EliteProspects.</p>
     </div>
   );
 }

@@ -469,7 +469,7 @@ export function Matcher() {
         />
       </Guard>
 
-      <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} /></Guard>
+      <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} moten={games} /></Guard>
     </div>
   );
 }

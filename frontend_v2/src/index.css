@@ -1005,6 +1005,16 @@ a {
 .mr-goal-scorer { display: block; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
 .mr-goal-assists { display: block; font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; overflow-wrap: anywhere; }
 
+/* Våra spelares namn leder till spelarsidan. En telefon har ingen hovring som
+   avslöjar länken, så en svag understrykning står där hela tiden. */
+.mr-namnlank {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(172, 199, 186, 0.35);
+  text-underline-offset: 2px;
+}
+.mr-namnlank:hover { text-decoration-color: currentColor; }
+
 .mr-goal-state {
   flex: none;
   font-family: var(--font-display);
@@ -1282,6 +1292,48 @@ a {
   );
 }
 .st-row:last-child { border-bottom: none; }
+
+/* Raderna för de andra lagen är knappar som fäller ut våra möten. */
+.st-row-knapp {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.06);
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.st-row-knapp:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: -2px; }
+.st-row-oppen .st-team { color: var(--text-primary); }
+
+.st-moten {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.35rem 0.25rem 0.45rem 1.4rem;
+  border-bottom: 1px solid rgba(172, 199, 186, 0.06);
+}
+.st-mote {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.14rem 0.45rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  font-size: 0.66rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.st-mote-lank { text-decoration: none; color: var(--text-primary); }
+.st-mote-lank:hover { border-color: var(--text-muted); }
+.st-mote-datum { color: var(--text-muted); }
+.st-mote-res { font-weight: 700; }
+
+/* Strecket mellan två rader. Syns utan färg, som i en tryckt tabell. */
+.st-streck { border-top: 1px dashed rgba(172, 199, 186, 0.4); margin: -1px 0 0; }
+
+.st-strecken { margin-top: 0.6rem; }
 
 .st-row-ours {
   background: linear-gradient(
@@ -1668,6 +1720,8 @@ a {
 .pm-row-neg .pm-chip { background: rgba(217, 89, 38, 0.14); border-color: rgba(217, 89, 38, 0.32); }
 
 .pm-empty { font-size: 0.7rem; color: var(--text-muted); font-style: italic; }
+.pm-chip-lank { text-decoration: none; }
+.pm-chip-lank:hover { border-color: var(--text-muted); }
 
 .bx-details { margin-bottom: 0.6rem; }
 .bx-summary {
@@ -1894,10 +1948,10 @@ a {
 
 .rs-player {
   display: grid;
-  grid-template-columns: 26px 1fr auto auto;
-  align-items: center;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
   gap: 0.55rem;
-  padding: 0.5rem 0.6rem;
+  padding: 0 0.6rem 0 0;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--glass-border);
   border-left: 3px solid var(--text-muted);
@@ -1908,7 +1962,21 @@ a {
 }
 
 .rs-player:hover { background: rgba(255, 255, 255, 0.05); }
-.rs-player:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 1px; }
+
+/* Raden är två länkar: spelarsidan och EliteProspects. En länk i en länk är
+   inte giltig HTML, så de ligger bredvid varandra i samma ram. */
+.rs-main {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0 0.5rem 0.6rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.rs-main:focus-visible,
+.rs-ep:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 1px; border-radius: 6px; }
 .rs-left { border-left-color: var(--impact-negative); }
 
 .rs-num {
@@ -1933,14 +2001,17 @@ a {
 }
 
 .rs-ep {
+  display: flex;
+  align-items: center;
   font-family: var(--font-sans);
   font-size: 0.58rem;
   font-weight: 700;
   color: var(--text-muted);
   white-space: nowrap;
+  text-decoration: none;
 }
 
-.rs-player:hover .rs-ep { color: var(--brand-gold); }
+.rs-ep:hover { color: var(--brand-gold); }
 
 .rs-foot {
   margin-top: 0.6rem;

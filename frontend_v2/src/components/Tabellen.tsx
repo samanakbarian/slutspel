@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from './texttv';
 
 /**
@@ -33,13 +34,72 @@ export type Standing = {
   goals_against?: number | null;
 };
 
+/** En av lagets matcher, som spelprogrammet redan har dem. */
+export type Mote = {
+  gameId: number | null;
+  date: string;
+  time: string;
+  opponent: string;
+  isHome: boolean;
+  played: boolean;
+  gf: number;
+  ga: number;
+};
+
 const BJK = /bj[oö]rkl[oö]ven/i;
+const MANADER = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+const kortDatum = (d: string) => {
+  const m = d.match(/^\d{4}-(\d{2})-(\d{2})/);
+  return m ? `${Number(m[2])} ${MANADER[Number(m[1]) - 1]}` : d;
+};
+const kortLag = (n: string | undefined) => (n || '').replace(/^IF\s+/, '');
+
+/**
+ * Strecken i SHL, samma tre som slutplaceringen räknar sannolikheter för.
+ * Strecket ligger under den sista platsen på den övre sidan.
+ */
+const STRECK = [
+  { plats: 6, namn: 'Topp 6' },
+  { plats: 10, namn: 'Topp 10' },
+  { plats: 12, namn: 'Botten 2' },
+];
 /** Riktigt minustecken; ett bindestreck sitter för högt bland tabellsiffror. */
 const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${Math.abs(v)}` : '0');
 
 /* ── klassiska läget ─────────────────────────────────────────────────── */
 
-function Klassisk({ rows, started, lead }: { rows: Standing[]; started: boolean; lead: number }) {
+/**
+ * Våra möten med ett lag, under dess rad.
+ *
+ * En tabellrad säger var laget ligger men inte hur det gått mot oss. Spelade
+ * möten leder till rapporten, kommande visar avslaget.
+ */
+function Moten({ moten }: { moten: Mote[] }) {
+  if (moten.length === 0) return <div className="st-moten"><span className="st-mote">Inga möten i spelprogrammet.</span></div>;
+  return (
+    <div className="st-moten">
+      {moten.map((m, i) => {
+        const inner = (
+          <>
+            <span className="st-mote-datum">{kortDatum(m.date)}</span>
+            <span className={`mc-ha${m.isHome ? ' mc-ha-home' : ''}`}>{m.isHome ? 'H' : 'B'}</span>
+            {m.played
+              ? <span className={`st-mote-res${m.gf > m.ga ? ' st-difftext-pos' : m.gf < m.ga ? ' st-difftext-neg' : ''}`}>{m.gf}–{m.ga}</span>
+              : <span className="st-mote-tid">{m.time.replace(':', '.')}</span>}
+          </>
+        );
+        return m.played && m.gameId !== null
+          ? <Link key={i} to={`/matcher/${m.gameId}`} className="st-mote st-mote-lank">{inner}<span aria-hidden="true">›</span></Link>
+          : <span key={i} className="st-mote">{inner}</span>;
+      })}
+    </div>
+  );
+}
+
+function Klassisk({ rows, started, lead, streck, moten }: {
+  rows: Standing[]; started: boolean; lead: number; streck: boolean; moten?: Mote[];
+}) {
+  const [oppen, setOppen] = useState<string | null>(null);
   return (
     <div className="st-scroll">
       <div className="st-rows">
@@ -58,12 +118,13 @@ function Klassisk({ rows, started, lead }: { rows: Standing[]; started: boolean;
           const pts = r.points ?? 0;
           const diff = r.goal_diff ?? 0;
           const ours = BJK.test(r.team_name || '');
-          return (
-            <div
-              key={i}
-              className={`st-row${ours ? ' st-row-ours' : ''}`}
-              style={{ ['--st-fill' as string]: `${started ? (pts / lead) * 100 : 0}%` }}
-            >
+          const lag = r.team_name || '';
+          const klickbar = Boolean(moten) && !ours && lag !== '';
+          const visar = klickbar && oppen === lag;
+          const plats = r.rank ?? i + 1;
+          const streckEfter = streck ? STRECK.find(x => x.plats === plats) : undefined;
+          const cells = (
+            <>
               <span className="st-rank">{r.rank ?? i + 1}</span>
               <span className="st-team">{(r.team_name || '').replace(/^IF\s+/, '')}</span>
               <span className="st-n">{r.games_played ?? 0}</span>
@@ -80,10 +141,75 @@ function Klassisk({ rows, started, lead }: { rows: Standing[]; started: boolean;
                 {signed(diff)}
               </span>
               <span className="st-points">{pts}</span>
-            </div>
+            </>
+          );
+          const stil = { ['--st-fill' as string]: `${started ? (pts / lead) * 100 : 0}%` };
+          const klass = `st-row${ours ? ' st-row-ours' : ''}`;
+          return (
+            <Fragment key={i}>
+              {klickbar
+                ? (
+                  <button
+                    type="button"
+                    className={`${klass} st-row-knapp${visar ? ' st-row-oppen' : ''}`}
+                    style={stil}
+                    aria-expanded={visar}
+                    onClick={() => setOppen(visar ? null : lag)}
+                  >
+                    {cells}
+                  </button>
+                )
+                : <div className={klass} style={stil}>{cells}</div>}
+              {visar && <Moten moten={(moten || []).filter(m => m.opponent === lag).sort((a, b) => a.date.localeCompare(b.date))} />}
+              {streckEfter && <div className="st-streck" aria-hidden="true" />}
+            </Fragment>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Avståndet till strecken, i poäng.
+ *
+ * Som nyuppflyttade är det avståndet till gränserna som betyder något, inte
+ * placeringen i sig. Talet räknas mot laget närmast på andra sidan strecket,
+ * och skiljer sig antalet spelade matcher står det med.
+ */
+function Strecken({ rows }: { rows: Standing[] }) {
+  const vi = rows.findIndex(r => BJK.test(r.team_name || ''));
+  if (vi < 0) return null;
+  const oss = rows[vi];
+  const vara = oss.points ?? 0;
+
+  return (
+    <div className="st-strecken">
+      {STRECK.map(({ plats, namn }) => {
+        const ovanfor = vi < plats;
+        // Närmast på andra sidan: första laget under strecket om vi är över,
+        // sista laget över det om vi är under.
+        const mot = rows[ovanfor ? plats : plats - 1];
+        if (!mot) return null;
+        const deras = mot.points ?? 0;
+        const p = Math.abs(vara - deras);
+        const text = p === 0
+          ? `lika med ${kortLag(mot.team_name)}`
+          : `${p} p ${ovanfor ? 'före' : 'bakom'} ${kortLag(mot.team_name)}`;
+        const skillnad = (mot.games_played ?? 0) - (oss.games_played ?? 0);
+        const matcher = Math.abs(skillnad) === 1 ? 'en match' : `${Math.abs(skillnad)} matcher`;
+        return (
+          <div className="st-kv" key={plats}>
+            <span className="st-kvlabel">{namn}</span>
+            <span className={`st-kvvalue${ovanfor ? '' : ' st-difftext-neg'}`}>{text}</span>
+            {skillnad !== 0 && (
+              <span className="st-kvhint">
+                {kortLag(mot.team_name)} har spelat {matcher} {skillnad > 0 ? 'mer' : 'mindre'}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -136,7 +262,7 @@ function TextTv({ rows, season }: { rows: Standing[]; season: string }) {
 
 /* ── kortet ──────────────────────────────────────────────────────────── */
 
-export function Tabellen({ rows, season }: { rows: Standing[]; season?: string }) {
+export function Tabellen({ rows, season, moten }: { rows: Standing[]; season?: string; moten?: Mote[] }) {
   const [texttv, vaxla] = useTextTv('tabell');
   const [expanderad, setExpanderad] = useState(false);
 
@@ -145,6 +271,9 @@ export function Tabellen({ rows, season }: { rows: Standing[]; season?: string }
   const sorted = [...rows].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
   const started = sorted.some(r => (r.games_played ?? 0) > 0);
   const lead = Math.max(1, ...sorted.map(r => r.points ?? 0));
+  // Strecken gäller SHL:s fjorton lag. Allsvenskan har andra gränser, och de
+  // ritas hellre inte alls än fel.
+  const streck = /SHL/.test(season || '') && sorted.length === 14;
 
   if (!started && !expanderad) {
     return (
@@ -167,7 +296,9 @@ export function Tabellen({ rows, season }: { rows: Standing[]; season?: string }
 
       {texttv
         ? <TextTv rows={sorted} season={season || ''} />
-        : <Klassisk rows={sorted} started={started} lead={lead} />}
+        : <Klassisk rows={sorted} started={started} lead={lead} streck={streck} moten={moten} />}
+
+      {started && streck && !texttv && <Strecken rows={sorted} />}
 
       {!started && (
         <p className="mc-note">

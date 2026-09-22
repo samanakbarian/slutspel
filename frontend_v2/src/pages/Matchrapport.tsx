@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { PairedBar } from '../components/charts/Charts';
@@ -6,6 +7,7 @@ import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isDefence, isOurs, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
+import { sasongForDatum, spelarsida } from '../lib/lankar';
 import { skrivSidhuvud } from '../lib/sidhuvud';
 import { matcher } from '../lib/sprak';
 
@@ -326,7 +328,22 @@ function Periods({
  * straffläggningen inte alls. Talet stämmer med Swehockeys officiella i 233
  * av 233 spelarrader under HockeyAllsvenskan 2025/26.
  */
-function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: MatchReport['squad'] }) {
+/** Bygger adressen till spelarsidan, eller saknas när säsongen inte är känd. */
+type TillSpelare = ((namn: string) => string) | null;
+
+/**
+ * Ett namn i rapporten som leder till spelarens säsong.
+ *
+ * Efter en match är nästa fråga ofta hur det går för spelaren i stort, och
+ * svaret låg en sida bort utan väg dit. Bara våra spelare får länk: vi har
+ * ingen sida för motståndarna.
+ */
+function Namn({ namn, till, children }: { namn: string | null; till: TillSpelare; children: ReactNode }) {
+  if (!till || !namn) return <>{children}</>;
+  return <Link to={till(namn)} className="mr-namnlank">{children}</Link>;
+}
+
+function Boxscore({ skaters, squad, till }: { skaters: Skater[] | undefined; squad: MatchReport['squad']; till: TillSpelare }) {
   const [open, setOpen] = useState(false);
   const list = (skaters || []).filter(p => p.in_lineup || p.points > 0 || p.gf_on + p.ga_on > 0);
   if (list.length === 0) return null;
@@ -363,16 +380,18 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
             <span className="pm-value">{r.value > 0 ? '+' : ''}{r.value}</span>
             <span className="pm-chips">
               {r.players.length === 0 && <span className="pm-empty">ingen</span>}
-              {r.players.map(p => (
-                <span
-                  className="pm-chip"
-                  key={p.name}
-                  title={`${humanName(p.name)} — ${p.gf_on_ev} mål för, ${p.ga_on_ev} emot på isen`}
-                >
-                  <b>{p.number ?? '–'}</b> {surname(p.name)}
-                  {p.points > 0 && <i>{p.points}p</i>}
-                </span>
-              ))}
+              {r.players.map(p => {
+                const inner = (
+                  <>
+                    <b>{p.number ?? '–'}</b> {surname(p.name)}
+                    {p.points > 0 && <i>{p.points}p</i>}
+                  </>
+                );
+                const title = `${humanName(p.name)} — ${p.gf_on_ev} mål för, ${p.ga_on_ev} emot på isen`;
+                return till
+                  ? <Link className="pm-chip pm-chip-lank" key={p.name} to={till(p.name)} title={title}>{inner}</Link>
+                  : <span className="pm-chip" key={p.name} title={title}>{inner}</span>;
+              })}
             </span>
           </div>
         ))}
@@ -393,7 +412,7 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
             {list.map(p => (
               <tr key={p.name}>
                 <td className="bx-l">
-                  {p.number != null && <b>{p.number}</b>} {surname(p.name)}
+                  {p.number != null && <b>{p.number}</b>} <Namn namn={p.name} till={till}>{surname(p.name)}</Namn>
                   {pos(p) && <span className="bx-pos-tag">{pos(p)}</span>}
                 </td>
                 <td>{p.goals}</td>
@@ -437,7 +456,7 @@ function Boxscore({ skaters, squad }: { skaters: Skater[] | undefined; squad: Ma
  * En förlust med 0–4 och 35 räddningar är en annan match än en förlust med
  * 0–4 och 15. Utan de här raderna gick det inte att se skillnaden.
  */
-function Malvakter({ goalies }: { goalies: MatchReport['goalies'] }) {
+function Malvakter({ goalies, till }: { goalies: MatchReport['goalies']; till: TillSpelare }) {
   const list = (goalies || []).filter(g => g.shots_against != null);
   if (list.length === 0) return null;
   return (
@@ -448,7 +467,8 @@ function Malvakter({ goalies }: { goalies: MatchReport['goalies'] }) {
         return (
           <div key={i} className={`mr-gk${g.is_ours ? ' mr-gk-ours' : ''}`}>
             <span className="mr-gk-name">
-              {g.number != null ? `${g.number}. ` : ''}{humanName(g.name)}
+              {g.number != null ? `${g.number}. ` : ''}
+              <Namn namn={g.name} till={g.is_ours ? till : null}>{humanName(g.name)}</Namn>
               {!g.is_ours && <span className="mr-gk-team">{g.team || 'motståndaren'}</span>}
             </span>
             <span className="mr-gk-line">
@@ -470,7 +490,7 @@ function Malvakter({ goalies }: { goalies: MatchReport['goalies'] }) {
  * forwards och backparet — så raden är inte en kedja i ordets vanliga mening.
  * Positionerna kommer ur truppen, så de går att skilja åt.
  */
-function Femmorna({ lineup, squad }: { lineup: MatchReport['lineup']; squad: MatchReport['squad'] }) {
+function Femmorna({ lineup, squad, till }: { lineup: MatchReport['lineup']; squad: MatchReport['squad']; till: TillSpelare }) {
   const blocks = (lineup || []).filter(b => b.players.length > 0);
   if (blocks.length === 0) return null;
   const isBack = (p: { number: number | null; name: string }) =>
@@ -490,7 +510,7 @@ function Femmorna({ lineup, squad }: { lineup: MatchReport['lineup']; squad: Mat
             <span className="lu-players">
               {fwd.map(p => (
                 <span className="lu-p" key={p.number ?? p.name}>
-                  <b>{p.number}</b> {surname(p.name)}
+                  <b>{p.number}</b> <Namn namn={p.name} till={till}>{surname(p.name)}</Namn>
                 </span>
               ))}
               {def.length > 0 && (
@@ -498,7 +518,7 @@ function Femmorna({ lineup, squad }: { lineup: MatchReport['lineup']; squad: Mat
                   <span className="lu-sep" aria-hidden="true" />
                   {def.map(p => (
                     <span className="lu-p lu-p-d" key={p.number ?? p.name}>
-                      <b>{p.number}</b> {surname(p.name)}
+                      <b>{p.number}</b> <Namn namn={p.name} till={till}>{surname(p.name)}</Namn>
                     </span>
                   ))}
                 </>
@@ -594,7 +614,7 @@ function TeamMark({ code }: { code: string | null }) {
   );
 }
 
-function Goals({ goals, squad }: { goals: Goal[]; squad: MatchReport['squad'] }) {
+function Goals({ goals, squad, till }: { goals: Goal[]; squad: MatchReport['squad']; till: TillSpelare }) {
   if (goals.length === 0) {
     return (
       <section className="mr-card">
@@ -606,23 +626,31 @@ function Goals({ goals, squad }: { goals: Goal[]; squad: MatchReport['squad'] })
   return (
     <section className="mr-card">
       <p className="mr-kicker">Målkronologi</p>
-      {goals.map((g, i) => (
+      {goals.map((g, i) => {
+        const vara = isOurs(g.team_code) ? till : null;
+        return (
         <div key={i} className={`mr-goal${isOurs(g.team_code) ? ' mr-goal-ours' : ''}`}>
           <span className="mr-goal-time">{g.time}</span>
           <TeamMark code={g.team_code} />
           <span className="mr-goal-body">
             <span className="mr-goal-scorer">
-              {g.scorer_number ? `${g.scorer_number}. ` : ''}{humanName(g.scorer)}
+              {g.scorer_number ? `${g.scorer_number}. ` : ''}
+              <Namn namn={g.scorer} till={vara}>{humanName(g.scorer)}</Namn>
               <Form goal={g} />
             </span>
             {g.assists.length > 0 && (
-              <span className="mr-goal-assists">{g.assists.map(humanName).join(', ')}</span>
+              <span className="mr-goal-assists">
+                {g.assists.map((a, j) => (
+                  <span key={a}>{j > 0 && ', '}<Namn namn={a} till={vara}>{humanName(a)}</Namn></span>
+                ))}
+              </span>
             )}
             <OnIce goal={g} squad={squad} />
           </span>
           <span className="mr-goal-state">{(g.score_state || '').replace(/\s*\([A-Z]+\)/, '')}</span>
         </div>
-      ))}
+        );
+      })}
     </section>
   );
 }
@@ -809,6 +837,16 @@ export function Matchrapport() {
   const [data, setData] = useState<MatchReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Säsongslistan, för att spelarlänkarna ska peka på matchens säsong och inte
+  // bara den aktiva. Saknas den blir namnen vanlig text.
+  const [sasonger, setSasonger] = useState<{ list: { key: string; has_team_data?: boolean | null }[]; active: string } | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/seasons`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d && Array.isArray(d.seasons)) setSasonger({ list: d.seasons, active: d.active || '' }); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!gameId) return;
@@ -878,6 +916,8 @@ export function Matchrapport() {
   const theirGoals = ourSide === 'home' ? ag : hg;
   const outcome = ourGoals > theirGoals ? 'Vinst' : ourGoals < theirGoals ? 'Förlust' : 'Oavgjort';
   const extra = periods.length > 3;
+  const sasong = sasonger ? sasongForDatum(data.date, sasonger.list, sasonger.active) : null;
+  const till: TillSpelare = sasong === null ? null : (namn: string) => spelarsida(namn, sasong);
 
   return (
     <div className="page animate-fade-up">
@@ -912,10 +952,10 @@ export function Matchrapport() {
           och tiden i ledning därmed nästan dubbelt så lång som den var. */}
       <Matchbild goals={data.goals} totalMin={periods.length > 3 ? 65 : 60} />
       <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
-      <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} /></Guard>
-      <Guard name="Målvakter"><Malvakter goalies={data.goalies} /></Guard>
-      <Guard name="Uppställning"><Femmorna lineup={data.lineup} squad={data.squad} /></Guard>
-      <Goals goals={data.goals} squad={data.squad} />
+      <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} till={till} /></Guard>
+      <Guard name="Målvakter"><Malvakter goalies={data.goalies} till={till} /></Guard>
+      <Guard name="Uppställning"><Femmorna lineup={data.lineup} squad={data.squad} till={till} /></Guard>
+      <Goals goals={data.goals} squad={data.squad} till={till} />
       <Penalties penalties={data.penalties} goals={data.goals} />
       <Guard name="Dela matchen"><DelaMatchen data={data} /></Guard>
 
