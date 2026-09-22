@@ -3307,3 +3307,17 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 /* Växeln inuti ett kort: mindre, så den inte konkurrerar med sidans flikar. */
 .mc-seg-liten { padding: 0.18rem; margin-bottom: 0.6rem; background: transparent; }
 .mc-seg-liten .mc-segbtn { padding: 0.32rem 0.2rem; font-size: 0.7rem; }
+
+/* ── prognos inför matchen ── */
+.pg { margin: 0.2rem 0 0.9rem; }
+.pg-head { display: grid; grid-template-columns: 1fr auto 1fr; font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; }
+.pg-vi { color: var(--brand-green-light); }
+.pg-mitt { text-align: center; }
+.pg-de { text-align: right; }
+.pg-bar { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
+.pg-f { display: flex; align-items: center; justify-content: center; min-width: 2.4rem;
+  font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pg-f-vi { background: var(--data-for); color: #04140c; }
+.pg-f-ot { background: rgba(172, 199, 186, 0.22); color: var(--text-primary); }
+.pg-f-de { background: rgba(172, 199, 186, 0.4); color: var(--text-primary); }

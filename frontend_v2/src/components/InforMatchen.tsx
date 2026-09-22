@@ -162,11 +162,55 @@ function Duels({ rows, opponent }: { rows: Duel[]; opponent: string }) {
   );
 }
 
+type Prognos = {
+  date: string;
+  home_team: string;
+  away_team: string;
+  home_games: number;
+  away_games: number;
+  p_home_regulation: number;
+  p_overtime: number;
+  p_away_regulation: number;
+};
+
+/**
+ * Matchmodellens bild av matchen, som en stapel.
+ *
+ * Björklöven till vänster oavsett hemma eller borta, som i jämförelsen
+ * ovanför. Tre fält: vinst i ordinarie tid, förlängning, förlust i
+ * ordinarie tid. Procenten står i fälten; en mening under hade upprepat dem.
+ */
+function Prognosstapel({ p, opponent }: { p: Prognos; opponent: string }) {
+  const hemma = BJK_RE.test(p.home_team);
+  const vi = hemma ? p.p_home_regulation : p.p_away_regulation;
+  const de = hemma ? p.p_away_regulation : p.p_home_regulation;
+  const ot = p.p_overtime;
+  const pct = (v: number) => `${Math.round(v * 100)} %`;
+  return (
+    <div className="pg">
+      <div className="pg-head">
+        <span className="pg-vi">Björklöven</span>
+        <span className="pg-mitt">Förlängning</span>
+        <span className="pg-de">{opponent}</span>
+      </div>
+      <div className="pg-bar" role="img"
+        aria-label={`Prognos: Björklöven vinner i ordinarie tid ${pct(vi)}, förlängning ${pct(ot)}, ${opponent} vinner i ordinarie tid ${pct(de)}.`}>
+        <span className="pg-f pg-f-vi" style={{ flexGrow: vi }}>{pct(vi)}</span>
+        <span className="pg-f pg-f-ot" style={{ flexGrow: ot }}>{pct(ot)}</span>
+        <span className="pg-f pg-f-de" style={{ flexGrow: de }}>{pct(de)}</span>
+      </div>
+    </div>
+  );
+}
+
+const BJK_RE = /bj[oö]rkl[oö]ven/i;
+
 const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `\u2212${Math.abs(v)}` : '0');
 const decimal = (v: number) => v.toFixed(2).replace('.', ',');
 
 export function InforMatchen({ season }: { season: string | null }) {
   const [data, setData] = useState<NextMatch | null>(null);
+  const [prognos, setPrognos] = useState<Prognos | null>(null);
   const league = useLeague(season || '');
 
   useEffect(() => {
@@ -177,6 +221,18 @@ export function InforMatchen({ season }: { season: string | null }) {
       .then((j: NextMatch) => setData(j.status === 'ok' ? j : null))
       // Kortet är en bonus på startsidan. Faller det bort ska spelprogrammet
       // och tabellen ändå visas.
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [season]);
+
+  // Matchmodellen. Får saknas: ett äldre API har inte endpointen, och kortet
+  // ska fungera utan den.
+  useEffect(() => {
+    const ctrl = new AbortController();
+    const q = season ? `?season=${encodeURIComponent(season)}` : '';
+    fetch(`${API_URL}/api/v1/prediction${q}`, { signal: ctrl.signal })
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => setPrognos(j?.status === 'ok' && j.next ? j.next : null))
       .catch(() => {});
     return () => ctrl.abort();
   }, [season]);
@@ -269,6 +325,14 @@ export function InforMatchen({ season }: { season: string | null }) {
           </span>
         </span>
       </div>
+
+      {/* Samma gräns som seriekorten: efter en match vet modellen för lite om
+          ett lag den inte sett förra säsongen. Prognosen gäller nästa match
+          och bara om den är densamma som kortet handlar om. */}
+      {prognos && prognos.date === String(game.date).slice(0, 10)
+        && (BJK_RE.test(prognos.home_team) ? prognos.home_games : prognos.away_games) >= MINSTA_MATCHER && (
+        <Prognosstapel p={prognos} opponent={opponent} />
+      )}
 
       <Duels rows={duels} opponent={opponent} />
       {duelNote && <p className="mr-note im-duelnote">{duelNote}</p>}
