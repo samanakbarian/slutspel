@@ -3311,3 +3311,7 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .tr-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
 .tr-fwd-i { background: var(--brand-green-light); }
 .tr-back-i { border: 1.8px solid var(--brand-green-light); }
+
+/* Växeln inuti ett kort: mindre, så den inte konkurrerar med sidans flikar. */
+.mc-seg-liten { padding: 0.18rem; margin-bottom: 0.6rem; background: transparent; }
+.mc-seg-liten .mc-segbtn { padding: 0.32rem 0.2rem; font-size: 0.7rem; }

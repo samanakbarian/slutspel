@@ -95,7 +95,7 @@ export function Truppen({ spelare, season }: { spelare: TruppSpelare[]; season: 
         <span><i className="tr-back-i" />Back</span>
       </div>
       <p className="mc-note">
-        Mål i lika styrka och underläge, som +/−. Den vågräta linjen är truppens snitt. Tryck på en prick för spelaren.
+        Mål i lika styrka och underläge. Linjen är truppens snitt.
       </p>
     </section>
   );

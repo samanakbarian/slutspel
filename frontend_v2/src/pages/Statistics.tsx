@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { SerienKort, SpelOchTur } from '../components/Serien';
 import { Truppen } from '../components/Truppen';
-import { useLeague } from '../lib/serien';
+import { harSpelOchTur, useLeague } from '../lib/serien';
 import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
 import { Andel, FormDots, Jamforelse, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
@@ -1254,10 +1255,42 @@ function Slutplacering({ proj }: { proj: Projection }) {
           matcherna avgörs efter full tid. Ingen läser en metodbilaga under ett
           diagram; det som måste stå är vad fältet och pricken betyder. */}
       <p className="mc-note">
-        Skalan är plats 1–{n}; färgat fält åtta av tio simuleringar, pricken väntat läge.
-        {' '}{proj.simulations.toLocaleString('sv-SE')} körningar.
-        {proj.reliability === 'low' && ' Få omgångar spelade, så talen är osäkra.'}
+        Fältet är åtta av tio simuleringar, pricken väntad plats.
+        {proj.reliability === 'low' && ' Få omgångar spelade, talen är osäkra.'}
       </p>
+    </section>
+  );
+}
+
+/**
+ * Laget mot serien, mot sig självt i spelet och hemma mot borta, i ett kort.
+ *
+ * Tre kort under varandra gav en lång sida där samma fråga — hur står laget
+ * sig? — fick tre rubriker. Växeln visar bara vyer som har något att visa.
+ */
+function Jamforelser({ league, hemma }: { league: LeagueData | null; hemma: ReactNode }) {
+  const vyer = [
+    league && { key: 'serien', label: 'Serien', node: <SerienKort data={league} bar /> },
+    league && harSpelOchTur(league) && { key: 'tur', label: 'Skott och tur', node: <SpelOchTur data={league} bar /> },
+    hemma && { key: 'hemma', label: 'Hemma–borta', node: hemma },
+  ].filter(Boolean) as { key: string; label: string; node: ReactNode }[];
+  const [vald, setVald] = useState('');
+  if (vyer.length === 0) return null;
+  const aktiv = vyer.find(v => v.key === vald) || vyer[0];
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Jämförelse</p>
+      {vyer.length > 1 && (
+        <div className="mc-seg mc-seg-liten" role="tablist" aria-label="Jämförelse">
+          {vyer.map(v => (
+            <button key={v.key} role="tab" aria-selected={v.key === aktiv.key}
+              className={`mc-segbtn${v.key === aktiv.key ? ' mc-on' : ''}`} onClick={() => setVald(v.key)}>
+              {v.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {aktiv.node}
     </section>
   );
 }
@@ -1293,9 +1326,6 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
   // vänta tills det finns mål att fördela.
   if (t.goals_for + t.goals_against < 30) return null;
 
-  // Distinkta spelare, från API:t. En summa av radernas `rotated` räknade
-  // samma back en gång per femma han hoppat in i — 41 där sanningen var 20.
-  const rotated = t.rotated_players ?? 0;
   return (
     <section className="mc-card">
       <p className="mc-kicker">Femmorna</p>
@@ -1322,12 +1352,9 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
         }))}
       />
       <p className="mc-note">
-        Målet räknas till den femma som flest av spelarna på isen tillhörde,
-        vid lika till målskyttens.
-        {rotated > 0 && <> {rotated} spelare till har hoppat in i en femma under säsongen.</>}
-        {' '}Summa {t.goals_for} mål för, {t.goals_against} emot.
+        Målet räknas till femman med flest spelare på isen.
         {(t.without_line_for + t.without_line_against) > 0 && (
-          <> {t.without_line_for + t.without_line_against} mål gjordes med tomt mål, utan femma på isen.</>
+          <> {t.without_line_for + t.without_line_against} mål i tom bur räknas inte.</>
         )}
       </p>
     </section>
@@ -1464,10 +1491,9 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
         }))}
       />
       <p className="mc-note">
-        Ställningen efter varje omgång Björklöven spelat.
-        {data.table_settled_after_last_round && (
-          <> Serien spelade klart efter vår sista match, så kurvans slut är inte slutplaceringen.</>
-        )}
+        {data.table_settled_after_last_round
+          ? 'Serien spelade klart efter vår sista match, så kurvans slut är inte slutplaceringen.'
+          : 'Efter varje omgång Björklöven spelat.'}
       </p>
     </section>
   );
@@ -1556,6 +1582,45 @@ function Laget({
   // "0 skott mot 0 over 0 matcher" och ett PDO utan varde.
   const harSkott = !!shots && (shots.totals.games ?? 0) > 0;
 
+  // Hemma mot borta, som en av vyerna i jämförelsekortet.
+  const hemma = splits && (splits.home.gp > 0 || splits.away.gp > 0) ? (
+    <>
+            <Jamforelse
+              vanster="Hemma"
+              hoger="Borta"
+              rader={[
+                { label: 'Poäng', vanster: splits.home.pts, hoger: splits.away.pts },
+                { label: 'Gjorda mål', vanster: splits.home.gf, hoger: splits.away.gf },
+                // Insläppta mål är bättre lågt; utan flaggan pekas det sämre
+                // laget ut som ledande.
+                { label: 'Insläppta mål', vanster: splits.home.ga, hoger: splits.away.ga, lagreArBattre: true },
+                ...(shots && shots.home.shot_share_pct != null && shots.away.shot_share_pct != null
+                  ? [{
+                      label: 'Skottandel',
+                      vanster: shots.home.shot_share_pct,
+                      hoger: shots.away.shot_share_pct,
+                      format: (v: number) => `${svNum(v, 1)} %`,
+                    }]
+                  : []),
+                ...(shots && shots.home.pdo != null && shots.away.pdo != null
+                  ? [{
+                      label: 'PDO (S% + SV%)',
+                      vanster: shots.home.pdo,
+                      hoger: shots.away.pdo,
+                      format: (v: number) => svNum(v, 1),
+                    }]
+                  : []),
+              ]}
+            />
+      {/* Vinster och förluster summeras, så raden alltid går ihop med antalet
+          matcher — övertidsförlusterna föll annars bort. */}
+      <p className="mc-note">
+        Hemma {splits.home.w + splits.home.otw}–{splits.home.l + splits.home.otl},
+        {' '}borta {splits.away.w + splits.away.otw}–{splits.away.l + splits.away.otl} i vinster och förluster.
+      </p>
+    </>
+  ) : null;
+
   return (
     <>
       {/* Åtta likvärdiga tal stod här, varav två gick att räkna ut ur de
@@ -1581,7 +1646,7 @@ function Laget({
         )}
       </section>
 
-      {league && <SerienKort data={league} />}
+      <Jamforelser league={league} hemma={hemma} />
 
       <Kedjorna data={lines} state={linesState} />
 
@@ -1603,52 +1668,6 @@ function Laget({
         </section>
       )}
 
-      {splits && (splits.home.gp > 0 || splits.away.gp > 0) && (
-        <section className="mc-card">
-          <p className="mc-kicker">Hemma mot borta</p>
-          <Jamforelse
-            vanster="Hemma"
-            hoger="Borta"
-            rader={[
-              { label: 'Poäng', vanster: splits.home.pts, hoger: splits.away.pts },
-              { label: 'Gjorda mål', vanster: splits.home.gf, hoger: splits.away.gf },
-              // Insläppta mål är bättre lågt; utan flaggan pekas det sämre
-              // laget ut som ledande.
-              { label: 'Insläppta mål', vanster: splits.home.ga, hoger: splits.away.ga, lagreArBattre: true },
-              ...(shots && shots.home.shot_share_pct != null && shots.away.shot_share_pct != null
-                ? [{
-                    label: 'Skottandel',
-                    vanster: shots.home.shot_share_pct,
-                    hoger: shots.away.shot_share_pct,
-                    format: (v: number) => `${svNum(v, 1)} %`,
-                  }]
-                : []),
-              ...(shots && shots.home.pdo != null && shots.away.pdo != null
-                ? [{
-                    label: 'PDO (S% + SV%)',
-                    vanster: shots.home.pdo,
-                    hoger: shots.away.pdo,
-                    format: (v: number) => svNum(v, 1),
-                  }]
-                : []),
-            ]}
-          />
-          {/* Vinster och förluster summeras så raden alltid går ihop med
-              antalet matcher. Förut stod "18–5" av 26 hemmamatcher: talen var
-              alla vinster mot bara förluster i ordinarie tid, och de tre
-              övertidsförlusterna föll bort. Skrivet så här stämmer det både
-              före och efter att backend delar upp vinsterna. */}
-          <p className="mc-note">
-            <b>Hemma</b> {matcher(splits.home.gp)}: {splits.home.w + splits.home.otw} vinster,
-            {' '}{splits.home.l + splits.home.otl} förluster
-            {splits.home.otl > 0 && ` (${splits.home.otl} efter förlängning)`}.
-            {' '}<b>Borta</b> {splits.away.gp}: {splits.away.w + splits.away.otw} vinster,
-            {' '}{splits.away.l + splits.away.otl} förluster
-            {splits.away.otl > 0 && ` (${splits.away.otl} efter förlängning)`}.
-          </p>
-        </section>
-      )}
-
       {proj && proj.games_remaining > 0 && <Slutplacering proj={proj} />}
 
       {(harSkott || pyth) && (
@@ -1664,8 +1683,7 @@ function Laget({
           <h2 className="mc-title">Styrde laget spelet?</h2>
           <Andel pct={shots.totals.shot_share_pct ?? 0} label="Skottandel" />
           <p className="mc-note">
-            {shots.totals.shots_for} skott mot {shots.totals.shots_against} över
-            {' '}{matcher(shots.totals.games)}. Skott på mål, inte skottförsök.
+            {shots.totals.shots_for}–{shots.totals.shots_against} i skott på mål.
             {' '}<Formel till="skottandel" />
           </p>
 
@@ -1684,8 +1702,7 @@ function Laget({
             </span>
           </div>
           <p className="mc-note">
-            Andel skott som blev mål, plus andel räddade skott. Runt 100 är
-            normalläget. Ligger laget högre har pucken varit vänlig.
+            Skjut- plus räddningsprocent. Över 100 har pucken varit vänlig.
             {' '}<Formel till="pdo" />
           </p>
           </>)}
@@ -1706,12 +1723,12 @@ function Laget({
                 />
               </div>
               <p className="mc-note">
-                Poängen målskillnaden förutsäger.
+                Mot poängen målskillnaden förutsäger.
                 {' '}{pyth.diff > 0
-                  ? 'Laget fick fler. De jämna matcherna gick åt rätt håll.'
+                  ? 'De jämna matcherna gick åt rätt håll.'
                   : pyth.diff < 0
-                    ? 'Laget fick färre. Det vann stort och förlorade jämnt, och en storseger ger inte mer än tre poäng.'
-                    : 'Laget fick precis så många.'}
+                    ? 'Storsegrar ger inte mer än tre poäng.'
+                    : ''}
                 {' '}<Formel till="turindex" />
               </p>
             </>
@@ -1719,13 +1736,11 @@ function Laget({
         </section>
       )}
 
-      {league && <SpelOchTur data={league} />}
-
       {periods.length > 0 && (
         <section className="mc-card">
           <p className="mc-kicker">Mål per period</p>
           <PeriodBars periods={periods} />
-          <p className="mc-note">Ordinarie perioder, exkl. förlängning. Grön stapel gjorda mål, röd insläppta. Siffran under är skillnaden.</p>
+          <p className="mc-note">Grön gjorda, röd insläppta. Utan förlängning.</p>
         </section>
       )}
 
@@ -1851,9 +1866,9 @@ function Spelare({
           {texttv
             ? 'Sida 365 är en ren lista, som på Text-TV. Slå av läget för sortering och spelarprofiler.'
             : <>
-                Tryck på en rubrik för att sortera. {loven
-                  ? 'Tryck på en spelare för profil med percentil mot serien och poäng match för match.'
-                  : `Lövenspelare är markerade och går att trycka på. Poängtoppen är serieledande spelare, inte hela ${leagueName}.`}
+                {loven
+                  ? 'Tryck på en rubrik för att sortera, på en spelare för profilen.'
+                  : 'Seriens poängtopp. Lövenspelare går att trycka på.'}
               </>}
         </p>
         {loven && onIce && (
@@ -1894,7 +1909,7 @@ function Spelare({
                   </div>
                 );
               })}
-              <p className="mc-note">Antal mål laget gjort med båda på isen. Målvakter är inte medräknade.</p>
+              <p className="mc-note">Mål laget gjort med båda på isen.</p>
             </section>
           )}
         </>
@@ -2128,8 +2143,7 @@ function Utveckling({
           <p className="mc-kicker">Poäng ackumulerat</p>
           <Sparkline points={pointCurve} height={104} unit=" p" />
           <p className="mc-note">
-            {matcher(timeline.length)}, {pointCurve[pointCurve.length - 1]?.value ?? 0} poäng.
-            En brantare kurva betyder fler poäng per match.
+            {pointCurve[pointCurve.length - 1]?.value ?? 0} poäng på {matcher(timeline.length)}.
           </p>
         </section>
       )}
@@ -2165,8 +2179,7 @@ function Utveckling({
             format={v => svNum(v, 1)}
           />
           <p className="mc-note">
-            Skjutprocent plus räddningsprocent. 100 är normalläget. Toppar brukar
-            jämna ut sig över tid.
+            Skjut- plus räddningsprocent. 100 är normalt.
           </p>
           <p className="mc-kicker st-sub">Skottandel — rullande {shots.window} matcher</p>
           <Sparkline
@@ -2175,7 +2188,7 @@ function Utveckling({
             format={v => svNum(v, 1)}
           />
           <p className="mc-note">
-            Andel av skotten. Över 50 betyder att laget sköt mer än motståndarna.
+            Över 50 sköt laget mer än motståndarna.
           </p>
         </section>
       )}
@@ -2185,8 +2198,7 @@ function Utveckling({
           <p className="mc-kicker">Styrketal över säsongen</p>
           <Sparkline points={elo.map(e => ({ label: shortDate(e.date), value: Math.round(e.elo) }))} height={100} colour="var(--impact-neutral)" fill="rgba(119,181,255,0.10)" />
           <p className="mc-note">
-            Elo startar på 1500 och rör sig efter varje resultat, viktat mot motståndets styrka.
-            Nu {Math.round(elo[elo.length - 1].elo)}. <Formel till="elo" />
+            Startar på 1500. Nu {Math.round(elo[elo.length - 1].elo)}. <Formel till="elo" />
           </p>
         </section>
       )}
@@ -2195,7 +2207,7 @@ function Utveckling({
         <section className="mc-card">
           <p className="mc-kicker">När målen faller</p>
           <PeriodBars periods={scoring.map(s => ({ label: s.interval, gf: s.gf, ga: s.ga }))} />
-          <p className="mc-note">Tiominutersintervall över matchen. Grön gjorda, röd insläppta.</p>
+          <p className="mc-note">Per tio minuter. Grön gjorda, röd insläppta.</p>
         </section>
       )}
 

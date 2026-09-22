@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { MATT, MINSTA_MATCHER, formatMatt, komma, placering } from '../lib/serien';
 import type { LeagueData, LeagueTeam } from '../lib/serien';
 
@@ -48,24 +49,33 @@ function Linje({ teams, k, higher, snitt }: { teams: LeagueTeam[]; k: string; hi
   );
 }
 
-export function SerienKort({ data }: { data: LeagueData }) {
+/** Kortets ram, eller bara innehållet när det bäddas in i ett annat kort. */
+function Ram({ bar, kicker, children }: { bar?: boolean; kicker: string; children: ReactNode }) {
+  if (bar) return <>{children}</>;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">{kicker}</p>
+      {children}
+    </section>
+  );
+}
+
+export function SerienKort({ data, bar }: { data: LeagueData; bar?: boolean }) {
   const [alla, setAlla] = useState(false);
   const oss = data.teams.find(t => t.is_ours);
   if (!oss) return null;
 
   if (oss.gp < MINSTA_MATCHER) {
     return (
-      <section className="mc-card">
-        <p className="mc-kicker">Serien</p>
+      <Ram bar={bar} kicker="Serien">
         <p className="mc-text">Placeringar i serien visas efter {MINSTA_MATCHER} omgångar.</p>
-      </section>
+      </Ram>
     );
   }
 
   const visas = MATT.filter(m => alla || !m.fler);
   return (
-    <section className="mc-card">
-      <p className="mc-kicker">Serien · {data.teams.length} lag</p>
+    <Ram bar={bar} kicker={`Serien · ${data.teams.length} lag`}>
       <div className="se-rader">
         {visas.map(m => (
           <div className="se-rad" key={m.key}>
@@ -81,8 +91,8 @@ export function SerienKort({ data }: { data: LeagueData }) {
       <button className="st-more" onClick={() => setAlla(v => !v)}>
         {alla ? 'Färre mått' : 'Fler mått'}
       </button>
-      <p className="mc-note">Varje prick är ett lag, längre till höger är bättre. Strecket är seriens snitt.</p>
-    </section>
+      <p className="mc-note">En prick per lag, höger är bättre. Strecket är snittet.</p>
+    </Ram>
   );
 }
 
@@ -94,7 +104,7 @@ export function SerienKort({ data }: { data: LeagueData }) {
  * sådant brukar inte hålla en hel säsong. Samma skala på båda sidor om
  * mittlinjerna, så att avståndet till 50 och 100 går att jämföra.
  */
-export function SpelOchTur({ data }: { data: LeagueData }) {
+export function SpelOchTur({ data, bar }: { data: LeagueData; bar?: boolean }) {
   const oss = data.teams.find(t => t.is_ours);
   const lag = data.teams.filter(t => t.values.shot_share != null && t.values.pdo != null);
   if (!oss || oss.gp < MINSTA_MATCHER || lag.length < 4) return null;
@@ -133,8 +143,7 @@ export function SpelOchTur({ data }: { data: LeagueData }) {
   });
 
   return (
-    <section className="mc-card">
-      <p className="mc-kicker">Serien · skott och tur</p>
+    <Ram bar={bar} kicker="Serien · skott och tur">
       <svg className="rl se-spridning" viewBox={`0 0 ${W} ${H}`} role="img"
         aria-label={`Andel av skotten mot PDO för seriens lag. ${oss.team}: ${formatMatt('shot_share', oss.values.shot_share)} av skotten, PDO ${komma(oss.values.pdo as number)}.`}>
         <line className="rl-grid" x1={x(50)} x2={x(50)} y1={T} y2={H - B} />
@@ -157,7 +166,7 @@ export function SpelOchTur({ data }: { data: LeagueData }) {
           </text>
         ))}
       </svg>
-      <p className="mc-note">PDO är skjut- plus räddningsprocent. Långt över 100 brukar inte hålla en hel säsong.</p>
-    </section>
+      <p className="mc-note">PDO är skjut- plus räddningsprocent. Långt över 100 brukar inte hålla.</p>
+    </Ram>
   );
 }

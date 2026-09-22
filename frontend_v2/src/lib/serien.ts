@@ -96,3 +96,10 @@ export function placering(t: LeagueTeam, key: string): string {
 }
 
 export const komma = (v: number, d = 1) => v.toFixed(d).replace('.', ',');
+
+/** Om SpelOchTur har något att visa, så en växel inte erbjuder en tom flik. */
+export function harSpelOchTur(data: LeagueData): boolean {
+  const oss = data.teams.find(t => t.is_ours);
+  const lag = data.teams.filter(t => t.values.shot_share != null && t.values.pdo != null);
+  return !!oss && oss.gp >= MINSTA_MATCHER && lag.length >= 4;
+}
