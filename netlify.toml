@@ -3,14 +3,6 @@
   command = "npm run build"
   publish = "dist"
 
-# Kalenderflödet byggs i API:t men ska ha sajtens adress: den som
-# prenumererar ser den, och Cloud Run-adressen kan bytas.
-[[redirects]]
-  from = "/kalender.ics"
-  to = "https://loven-stats-api-324947473206.europe-west1.run.app/api/v1/kalender.ics"
-  status = 200
-  force = true
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
