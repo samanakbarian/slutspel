@@ -52,7 +52,6 @@ const kortDatum = (d: string) => {
   const m = d.match(/^\d{4}-(\d{2})-(\d{2})/);
   return m ? `${Number(m[2])} ${MANADER[Number(m[1]) - 1]}` : d;
 };
-const kortLag = (n: string | undefined) => (n || '').replace(/^IF\s+/, '');
 
 /**
  * Strecken i SHL, samma tre som slutplaceringen räknar sannolikheter för.
@@ -169,50 +168,6 @@ function Klassisk({ rows, streck, moten }: {
   );
 }
 
-/**
- * Avståndet till strecken, i poäng.
- *
- * Som nyuppflyttade är det avståndet till gränserna som betyder något, inte
- * placeringen i sig. Talet räknas mot laget närmast på andra sidan strecket,
- * och skiljer sig antalet spelade matcher står det med.
- */
-function Strecken({ rows }: { rows: Standing[] }) {
-  const vi = rows.findIndex(r => BJK.test(r.team_name || ''));
-  if (vi < 0) return null;
-  const oss = rows[vi];
-  const vara = oss.points ?? 0;
-
-  return (
-    <div className="st-strecken">
-      {STRECK.map(({ plats, namn }) => {
-        const ovanfor = vi < plats;
-        // Närmast på andra sidan: första laget under strecket om vi är över,
-        // sista laget över det om vi är under.
-        const mot = rows[ovanfor ? plats : plats - 1];
-        if (!mot) return null;
-        const deras = mot.points ?? 0;
-        const p = Math.abs(vara - deras);
-        const text = p === 0
-          ? `lika med ${kortLag(mot.team_name)}`
-          : `${p} p ${ovanfor ? 'före' : 'bakom'} ${kortLag(mot.team_name)}`;
-        const skillnad = (mot.games_played ?? 0) - (oss.games_played ?? 0);
-        const matcher = Math.abs(skillnad) === 1 ? 'en match' : `${Math.abs(skillnad)} matcher`;
-        return (
-          <div className="st-kv" key={plats}>
-            <span className="st-kvlabel">{namn}</span>
-            <span className={`st-kvvalue${ovanfor ? '' : ' st-difftext-neg'}`}>{text}</span>
-            {skillnad !== 0 && (
-              <span className="st-kvhint">
-                {kortLag(mot.team_name)} har spelat {matcher} {skillnad > 0 ? 'mer' : 'mindre'}
-              </span>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ── 377 ─────────────────────────────────────────────────────────────── */
 
 /**
@@ -296,7 +251,6 @@ export function Tabellen({ rows, season, moten }: { rows: Standing[]; season?: s
         ? <TextTv rows={sorted} season={season || ''} />
         : <Klassisk rows={sorted} streck={streck} moten={moten} />}
 
-      {started && streck && !texttv && <Strecken rows={sorted} />}
 
       {!started && (
         <p className="mc-note">
