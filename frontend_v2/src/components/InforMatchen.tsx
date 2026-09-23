@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
-import { ordinal } from '../lib/match';
+import { humanName, ordinal } from '../lib/match';
 import { MINSTA_MATCHER, useLeague } from '../lib/serien';
 
 /**
@@ -72,6 +72,15 @@ type NextMatch = {
   venue_average: number | null;
   venue_games: number;
   previous: { season?: string; teams?: number; opponent?: PrevRow; us?: PrevRow } | null;
+  them_players?: {
+    players: {
+      name: string; number: number | null; position: string | null;
+      games_played: number; goals: number; assists: number; points: number;
+      points_last5: number;
+    }[];
+    goalie: { name: string; games_played: number; save_pct: number | null; gaa: number | null } | null;
+    games_last: number;
+  } | null;
 };
 
 /** Ett mått ställt mellan lagen. `better` säger vilket håll som är bra. */
@@ -158,6 +167,43 @@ function Duels({ rows, opponent }: { rows: Duel[]; opponent: string }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+type Specialrad = { etikett: string; a: number; ap: number | null; b: number; bp: number | null; motEtikett: string };
+
+/**
+ * Motståndarens poängbästa och förstemålvakt. Poängen de senaste fem
+ * matcherna visas bara när säsongen är längre än så — annars är det samma tal.
+ */
+function Nyckelspelare({ data, opponent }: { data: NextMatch['them_players'] | null; opponent: string }) {
+  if (!data || (data.players.length === 0 && !data.goalie)) return null;
+  const komma = (v: number, d = 1) => v.toFixed(d).replace('.', ',');
+  return (
+    <div className="im-ns">
+      <span className="im-h2hlabel">Att hålla koll på · {opponent}</span>
+      {data.players.map(p => (
+        <div className="im-nsrad" key={p.name}>
+          <span className="im-nsnr">{p.number ?? ''}</span>
+          <span className="im-nsnamn">
+            {humanName(p.name)}
+            {p.games_played > data.games_last && p.points_last5 >= Math.max(3, data.games_last - 1) && (
+              <em>{p.points_last5} p senaste {data.games_last}</em>
+            )}
+          </span>
+          <span className="im-nspos">{p.position ?? ''}</span>
+          <span className="im-nstal">{p.goals}+{p.assists}</span>
+        </div>
+      ))}
+      {data.goalie && data.goalie.save_pct != null && (
+        <div className="im-nsrad">
+          <span className="im-nsnr" />
+          <span className="im-nsnamn">{humanName(data.goalie.name)}</span>
+          <span className="im-nspos">GK</span>
+          <span className="im-nstal">{komma(data.goalie.save_pct)} %</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -258,6 +304,7 @@ export function InforMatchen({ season }: { season: string | null }) {
   // just den vecka det behövs mest.
   const duels: Duel[] = [];
   let duelNote = '';
+  let specialteam: Specialrad[] = [];
   if (data.us && data.them && usSeason && themSeason) {
     duels.push(
       { label: 'Poäng', us: data.us.points, them: data.them.points },
@@ -276,8 +323,6 @@ export function InforMatchen({ season }: { season: string | null }) {
     if (oss && dem && oss.gp >= MINSTA_MATCHER && dem.gp >= MINSTA_MATCHER) {
       for (const [key, label] of [
         ['shot_share', 'Andel av skotten'],
-        ['pp_pct', 'Powerplay'],
-        ['pk_pct', 'Boxplay'],
         ['sv_pct', 'Räddningsprocent'],
       ] as const) {
         const a = oss.values[key];
@@ -285,6 +330,21 @@ export function InforMatchen({ season }: { season: string | null }) {
         // Hela procent: kolumnen rymmer inte "100,0 %" på en telefon.
         if (a != null && b != null) duels.push({ label, us: a, them: b, format: v => `${Math.round(v)} %` });
       }
+      // Powerplay möter boxplay, inte powerplay. Placeringen i serien säger
+      // om talet är bra; 20 % i powerplay och 80 % i boxplay går inte att
+      // ställa mot varandra som staplar.
+      const plats = (key: 'pp_pct' | 'pk_pct', v: number | null | undefined) =>
+        v == null || !league ? null
+          : 1 + league.teams.filter(t => t.gp >= MINSTA_MATCHER && (t.values[key] ?? -1) > v).length;
+      const rad = (etikett: string, a: number | null | undefined, ak: 'pp_pct' | 'pk_pct',
+                   b: number | null | undefined, bk: 'pp_pct' | 'pk_pct', motEtikett: string) =>
+        a != null && b != null
+          ? { etikett, a: Math.round(a), ap: plats(ak, a), b: Math.round(b), bp: plats(bk, b), motEtikett }
+          : null;
+      specialteam = [
+        rad('Vårt powerplay', oss.values.pp_pct, 'pp_pct', dem.values.pk_pct, 'pk_pct', 'deras boxplay'),
+        rad('Deras powerplay', dem.values.pp_pct, 'pp_pct', oss.values.pk_pct, 'pk_pct', 'vårt boxplay'),
+      ].filter(x => x != null);
     }
   }
   // Före omgång 1 finns inga siffror att ställa mot varandra. Att jämföra
@@ -349,6 +409,23 @@ export function InforMatchen({ season }: { season: string | null }) {
           Därefter: {upcoming[1].opponent.replace(/^IF\s+/, '')} {upcoming[1].is_home ? 'hemma' : 'borta'}
         </p>
       )}
+
+      {specialteam.length > 0 && (
+        <div className="im-st">
+          <span className="im-h2hlabel">Specialteam</span>
+          {specialteam.map(r => (
+            <div className="im-strad" key={r.etikett}>
+              <span className="im-stnamn">{r.etikett}</span>
+              <span className="im-sttal">{r.a} %{r.ap && <i>{ordinal(r.ap)}</i>}</span>
+              <span className="im-stmot">mot</span>
+              <span className="im-sttal">{r.b} %{r.bp && <i>{ordinal(r.bp)}</i>}</span>
+              <span className="im-stnamn im-stnamnr">{r.motEtikett}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Nyckelspelare data={data.them_players ?? null} opponent={opponent} />
 
       <Form games={usForm} label="Form · Björklöven" />
       <Form games={themForm} label={`Form · ${opponent}`} />
