@@ -454,10 +454,6 @@ function Jamforelse({ a, season, squad }: { a: PlayerResponse; season: string; s
                          guideLabel={humanName(bd.player.name).split(' ').slice(-1)[0]} />
             </>
           )}
-          <p className="mc-note">
-            {humanName(a.player.name)} {matcher(a.player.games_played)}, {humanName(bd.player.name)} {matcher(bd.player.games_played)}.
-            {' '}Allt per match. Den streckade kurvan är {humanName(bd.player.name).split(' ')[0]}.
-          </p>
         </>
       )}
     </section>
