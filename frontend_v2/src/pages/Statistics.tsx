@@ -2156,7 +2156,7 @@ function Utveckling({
             format={v => svNum(v, 1)}
           />
           <p className="mc-note">
-            Skjut- plus räddningsprocent. 100 är normalt.
+            PDO är skjutprocent plus räddningsprocent. 100 är normalt.
           </p>
           <p className="mc-kicker st-sub">Skottandel — rullande {shots.window} matcher</p>
           <Sparkline
