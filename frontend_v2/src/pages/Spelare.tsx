@@ -576,7 +576,7 @@ export function Spelare() {
   }
 
   // Målvakter får ett eget svar och en egen sida. En utespelarlogg med noll
-  // skott och noll skjutprocent säger ingenting om en målvakt.
+  // skott och noll skottprocent säger ingenting om en målvakt.
   if (data.role === 'goalie') {
     return <Malvakt data={data} />;
   }
@@ -663,7 +663,7 @@ export function Spelare() {
         </div>
       </section>
 
-      {/* Nyckeltalen skiljer sig åt: en back mäts inte på skjutprocent. */}
+      {/* Nyckeltalen skiljer sig åt: en back mäts inte på skottprocent. */}
       <section className="mc-card">
         <p className="mc-kicker">Nyckeltal</p>
         <div className="sp-stats">
@@ -671,7 +671,7 @@ export function Spelare() {
                 hint="Swehockeys officiella" />
           {p.shots != null && <Stat label="Skott" value={String(p.shots)} />}
           {isForward && p.shooting_pct != null && (
-            <Stat label="Skjutprocent" value={`${komma(p.shooting_pct)} %`} tone="var(--brand-green-light)"
+            <Stat label="Skottprocent" value={`${komma(p.shooting_pct)} %`} tone="var(--brand-green-light)"
                   hint={cov ? `${shotsGoals} mål på ${p.shots} skott · ${matcher(cov.games_with_report)} med skottdata` : undefined} />
           )}
           {takesFaceoffs && p.faceoff_pct != null && (

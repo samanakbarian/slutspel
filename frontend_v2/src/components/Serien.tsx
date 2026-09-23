@@ -100,7 +100,7 @@ export function SerienKort({ data, bar }: { data: LeagueData; bar?: boolean }) {
  * Skottandel mot PDO, alla lag.
  *
  * Två frågor om samma säsong: styr laget matcherna, och går pucken in? Ett
- * lag långt upp men till vänster vinner på skjut- och räddningsprocent, och
+ * lag långt upp men till vänster vinner på skott- och räddningsprocent, och
  * sådant brukar inte hålla en hel säsong. Samma skala på båda sidor om
  * mittlinjerna, så att avståndet till 50 och 100 går att jämföra.
  */
@@ -166,7 +166,7 @@ export function SpelOchTur({ data, bar }: { data: LeagueData; bar?: boolean }) {
           </text>
         ))}
       </svg>
-      <p className="mc-note">PDO är skjutprocent plus räddningsprocent.</p>
+      <p className="mc-note">PDO är skottprocent plus räddningsprocent.</p>
     </Ram>
   );
 }

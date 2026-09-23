@@ -78,7 +78,7 @@ export const MATT: { key: string; label: string; d: number; enhet: string; fler?
   { key: 'fo_pct', label: 'Tekningar', d: 1, enhet: ' %' },
   { key: 'pim_pg', label: 'Utvisningsminuter per match', d: 1, enhet: '' },
   { key: 'ev_share', label: 'Andel av målen i 5 mot 5', d: 1, enhet: ' %', fler: true },
-  { key: 'sh_pct', label: 'Skjutprocent', d: 1, enhet: ' %', fler: true },
+  { key: 'sh_pct', label: 'Skottprocent', d: 1, enhet: ' %', fler: true },
   { key: 'sf_pg', label: 'Skott per match', d: 1, enhet: '', fler: true },
   { key: 'sa_pg', label: 'Skott emot per match', d: 1, enhet: '', fler: true },
 ];
