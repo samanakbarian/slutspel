@@ -443,7 +443,7 @@ function Boxscore({ skaters, squad, till }: { skaters: Skater[] | undefined; squ
       </details>
 
       <p className="mr-note">
-        Lika styrka och underläge räknas, powerplay inte — som hos Swehockey.
+        Powerplaymål räknas inte, som hos Swehockey.
         {!hasReport && ' Skott och tekningar saknas i protokollet.'}
       </p>
     </section>

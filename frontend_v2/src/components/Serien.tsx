@@ -166,7 +166,7 @@ export function SpelOchTur({ data, bar }: { data: LeagueData; bar?: boolean }) {
           </text>
         ))}
       </svg>
-      <p className="mc-note">PDO är skjut- plus räddningsprocent. Långt över 100 brukar inte hålla.</p>
+      <p className="mc-note">PDO = skjut% + räddnings%.</p>
     </Ram>
   );
 }

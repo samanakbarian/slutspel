@@ -207,11 +207,11 @@ export function Roster() {
       <section className="rs-source">
         <p className="rs-source-title">{data.count} spelare · {data.season}</p>
         <p className="rs-source-text">
-          Truppen hämtas från Swehockeys officiella trupplista och uppdateras automatiskt
+          Källa: Swehockey
           {data.roster_scraped_at
             ? `, senast ${new Date(data.roster_scraped_at).toLocaleDateString('sv-SE')}`
             : ''}.
-          {missingContract > 0 && ` Kontraktsuppgifter saknas för ${missingContract} av dem.`}
+          {missingContract > 0 && ` Kontrakt saknas för ${missingContract}.`}
         </p>
       </section>
 

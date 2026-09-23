@@ -69,8 +69,8 @@ export function MetodSida() {
         <Matt
           id="specialteam"
           namn="Special teams-index"
-          formel="PP% + PK%,  där PP% = powerplaymål ÷ motståndarnas utvisningar  och  PK% = (egna utvisningar − insläppta powerplaymål) ÷ egna utvisningar"
-          rad="100 är neutralnivån. Räknat på antal utvisningar, inte på speltid."
+          formel="PP% + PK%"
+          rad="Powerplaylägen enligt Swehockeys lagstatistik. 100 är ett snittlag."
         />
         <Matt
           id="form"
@@ -97,8 +97,8 @@ export function MetodSida() {
         <Matt
           id="percentiler"
           namn="Percentiler"
-          formel="andel av serien med minst 10 matcher som ligger under spelarens värde"
-          rad="85 = bättre än 85 % av serien. Backar jämförs med forwards."
+          formel="andel spelare på samma position med lägre värde per match"
+          rad="85 = bättre än 85 %. Kräver fyra av tio omgångar."
         />
       </section>
 

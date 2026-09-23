@@ -237,8 +237,8 @@ function Malvakt({ data }: { data: PlayerResponse }) {
         </div>
         <p className="mc-note">
           {g.gaa_basis === 'speltid'
-            ? 'GAA räknas på verklig istid ur matchrapporten, inte på antal matcher.'
-            : 'GAA räknas på antal matcher. Speltiden saknas för den här säsongen.'}
+            ? 'GAA räknat på istid.'
+            : 'GAA räknat per match, istid saknas.'}
         </p>
       </section>
 
@@ -246,10 +246,6 @@ function Malvakt({ data }: { data: PlayerResponse }) {
         <section className="mc-card">
           <p className="mc-kicker">Räddningsprocent per match</p>
           <Sparkline points={curve} height={110} unit=" %" format={v => v.toFixed(1)} />
-          <p className="mc-note">
-            X-axeln är matchnummer. En match med få skott ger stort utslag åt båda
-            håll, så enstaka toppar och dalar säger lite.
-          </p>
         </section>
       )}
 
@@ -296,7 +292,7 @@ function Malvakt({ data }: { data: PlayerResponse }) {
             </button>
           )}
           <p className="mc-note">
-            En punkt i istidskolumnen betyder att matchrapporten saknas för den matchen.
+            Punkt = rapport saknas.
           </p>
         </section>
       )}
@@ -700,10 +696,7 @@ export function Spelare() {
           <p className="mc-kicker">Poäng ackumulerat</p>
           <Sparkline points={curve} height={112} unit=" p" guide={pace} guideLabel="takt" />
           <p className="mc-note">
-            {p.points} poäng på {matcher(p.games_played)}. X-axeln är matchnummer, så en platt
-            sträcka är matcher utan poäng. Den streckade linjen visar den genomsnittliga
-            säsongstakten, {svNum(p.points_per_game, 2)} per match. Sträckor under linjen
-            är perioder med lägre takt än så.
+            {p.points} poäng på {matcher(p.games_played)}, {svNum(p.points_per_game, 2)} per match.
           </p>
         </section>
       )}
@@ -760,7 +753,6 @@ export function Spelare() {
               )}
             </>
           )}
-          <p className="mc-note">Spelform och måltyp kan överlappa. En powerplayträff kan samtidigt vara matchavgörande.</p>
         </section>
       )}
 
@@ -773,7 +765,6 @@ export function Spelare() {
             <Stat label="Längsta poängsvit" value={matcher(st.longest_points)} />
             <Stat label="Längsta torka" value={matcher(st.longest_drought)} />
           </div>
-          <p className="mc-note">Räknat över alla matcher spelaren var med i, inte bara de med poäng.</p>
         </section>
       )}
 
@@ -828,8 +819,7 @@ export function Spelare() {
           </>
         ) : (
           <p className="mc-text">
-            Percentil visas när spelaren spelat fyra av tio omgångar, minst tre
-            matcher. Färre än så ger för stort utslag.
+            Visas när spelaren spelat fyra av tio omgångar.
           </p>
         )}
       </section>
@@ -893,8 +883,7 @@ export function Spelare() {
             </button>
           )}
           <p className="mc-note">
-            Plus/minus i tabellen är härlett ur målhändelserna. En punkt i skottkolumnen
-            betyder att matchrapporten saknas, inte noll skott. Stjärna = förlängning.
+            Punkt = rapport saknas. Stjärna = förlängning.
           </p>
         </section>
       )}

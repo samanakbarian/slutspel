@@ -1032,8 +1032,7 @@ export function StatisticsPage() {
           <div className="st-skeleton" />
           {slow && (
             <p className="mc-note">
-              Servern startar från vila när ingen varit inne på ett tag. Det
-              här tar en stund första gången, sedan går det direkt.
+              Servern startar, det tar några sekunder.
             </p>
           )}
         </section>
@@ -1052,7 +1051,7 @@ export function StatisticsPage() {
           </h2>
           <p className="mc-text">
             {timedOut
-              ? 'Statistiken räknas fram ur hela seriens matcher, och servern startar från vila när ingen varit inne på ett tag. Ett nytt försök brukar gå på någon sekund.'
+              ? 'Servern svarade inte i tid. Försök igen.'
               : statsError || stats?.error}
           </p>
           <button className="empty-season-btn" onClick={() => setReloadKey(k => k + 1)}>
@@ -1192,8 +1191,7 @@ function Slutplacering({ proj }: { proj: Projection }) {
       <section className="mc-card">
         <p className="mc-kicker">Slutplacering</p>
         <p className="mc-text">
-          Kommer när serien startat. Före första matchen delar alla lag styrketal,
-          och simuleringen beskriver bara spelschemat.
+          Visas när serien startat.
         </p>
       </section>
     );
@@ -1381,7 +1379,7 @@ function Motstandare({
   return (
     <section className="mc-card">
       <p className="mc-kicker">Motståndare</p>
-      <h2 className="mc-title">Mot vem gick det bra?</h2>
+      <h2 className="mc-title">Mot varje lag</h2>
       <div className="opp-filter" role="group" aria-label="Filtrera matcher">
         {filters.map(f => (
           <button
@@ -1469,7 +1467,7 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
   return (
     <section className="mc-card">
       <p className="mc-kicker">Tabellen över tid</p>
-      <h2 className="mc-title">Hur såg serien ut vecka för vecka?</h2>
+      <h2 className="mc-title">Vecka för vecka</h2>
       {bjk && (
         <p className="mc-text tor-sammanfattning">
           Björklöven låg etta efter <b>{ledde} av {data.rounds.length}</b> omgångar.
@@ -1492,7 +1490,7 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
       />
       <p className="mc-note">
         {data.table_settled_after_last_round
-          ? 'Serien spelade klart efter vår sista match, så kurvans slut är inte slutplaceringen.'
+          ? 'Kurvan slutar vid vår sista match, inte vid seriens.'
           : 'Efter varje omgång Björklöven spelat.'}
       </p>
     </section>
@@ -1657,14 +1655,13 @@ function Laget({
           <p className="mc-kicker">Analys</p>
           <div className="st-skeleton" />
           <div className="st-skeleton" />
-          <p className="mc-note">Räknar fram splittar, perioder och specialteam ur matchhändelserna.</p>
         </section>
       )}
 
       {analyticsState === 'error' && (
         <section className="mc-card">
           <p className="mc-kicker">Analys</p>
-          <p className="mc-text">Analysdata kunde inte hämtas just nu. Facit ovan kommer direkt från serietabellen och påverkas inte.</p>
+          <p className="mc-text">Analysdata kunde inte hämtas.</p>
         </section>
       )}
 
@@ -1680,14 +1677,14 @@ function Laget({
               ingenstans. De två sista kan peka åt olika håll — det är inte en
               motsägelse, de mäter olika led i samma kedja. */}
           {harSkott && shots && (<>
-          <h2 className="mc-title">Styrde laget spelet?</h2>
+          <h2 className="mc-title">Skott</h2>
           <Andel pct={shots.totals.shot_share_pct ?? 0} label="Skottandel" />
           <p className="mc-note">
             {shots.totals.shots_for}–{shots.totals.shots_against} i skott på mål.
             {' '}<Formel till="skottandel" />
           </p>
 
-          <h2 className="mc-title st-sub2">Hade laget tur?</h2>
+          <h2 className="mc-title st-sub2">PDO</h2>
           <div className="pdo">
             {/* Decimalkomma som i resten av appen; talen kom som punkt ur API:t. */}
             <span className="pdo-tal" style={{ color: pdoTone(shots.totals.pdo, 100) }}>
@@ -1702,8 +1699,7 @@ function Laget({
             </span>
           </div>
           <p className="mc-note">
-            Skjut- plus räddningsprocent. Över 100 har pucken varit vänlig.
-            {' '}<Formel till="pdo" />
+            <Formel till="pdo" />
           </p>
           </>)}
 
@@ -1712,7 +1708,7 @@ function Laget({
               {/* "Poäng" betyder två saker i hockey — spelarpoäng och tabellpoäng
                   — och rubriken lästes som det första. Ordet tabellpoäng står
                   därför både i rubriken och på etiketten. */}
-              <h2 className={`mc-title${harSkott ? ' st-sub2' : ''}`}>Gav målen tabellpoäng?</h2>
+              <h2 className={`mc-title${harSkott ? ' st-sub2' : ''}`}>Tabellpoäng mot målskillnad</h2>
               <div className="st-stats">
                 <Stat label="Tabellpoäng" value={pyth.pts} tone="var(--brand-gold)" />
                 <Stat label="Förväntat" value={svNum(pyth.exp_pts, 1)} />
@@ -1723,13 +1719,7 @@ function Laget({
                 />
               </div>
               <p className="mc-note">
-                Mot poängen målskillnaden förutsäger.
-                {' '}{pyth.diff > 0
-                  ? 'De jämna matcherna gick åt rätt håll.'
-                  : pyth.diff < 0
-                    ? 'Storsegrar ger inte mer än tre poäng.'
-                    : ''}
-                {' '}<Formel till="turindex" />
+                <Formel till="turindex" />
               </p>
             </>
           )}
@@ -1749,11 +1739,10 @@ function Laget({
           <p className="mc-kicker">Specialteam</p>
           <KV label="Powerplay" value={`${komma(st.pp_pct)} %`} hint={`${st.pp_goals} mål på ${st.pp_opportunities} spel`} />
           <KV label="Boxplay" value={`${komma(st.pk_pct)} %`} hint={`${st.pk_goals_against} insläppta på ${st.pk_times} numerära underlägen`} />
-          <KV label="Special teams-index" value={komma(st.special_teams_index)} hint="PP% + PK%. 100 är neutralnivån, över räknas som starkt." />
+          <KV label="Special teams-index" value={komma(st.special_teams_index)} hint="PP% + PK%" />
           <KV label="Utvisningar" value={`${komma(st.avg_pim_per_game)} min/match`} hint={`${st.total_pim} minuter totalt`} />
           <p className="mc-note">
-            Räknat på antal utvisningar, inte på speltid.
-            {' '}<Formel till="specialteam" />
+            <Formel till="specialteam" />
           </p>
         </section>
       )}
@@ -2089,7 +2078,6 @@ function Utveckling({
         <h2 className="mc-title">Räknar…</h2>
         <div className="st-skeleton" />
         <div className="st-skeleton" />
-        <p className="mc-note">Kurvorna byggs ur varje spelad match, så första hämtningen tar några sekunder.</p>
       </section>
     );
   }
@@ -2100,7 +2088,7 @@ function Utveckling({
         <p className="mc-kicker">Utveckling</p>
         <p className="mc-text">
           {analyticsState === 'error'
-            ? 'Analysdata kunde inte hämtas just nu.'
+            ? 'Analysdata kunde inte hämtas.'
             : 'Utvecklingen kräver spelade matcher med registrerade händelser.'}
         </p>
       </section>
@@ -2120,8 +2108,7 @@ function Utveckling({
           <p className="mc-kicker">Utveckling</p>
           <p className="mc-text">
             {matcher(timeline.length)} spelad{timeline.length === 1 ? '' : 'a'} av säsongen.
-            Kurvorna växer fram efterhand. Form, styrketal och publiksnitt behöver
-            några matcher innan de säger något.
+            Kurvorna fylls på efter hand.
           </p>
         </section>
       )}
@@ -2155,9 +2142,6 @@ function Utveckling({
               <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.ga_avg }))} height={92} format={v => svNum(v, 1)} colour="var(--impact-negative)" fill="rgba(255,77,77,0.10)" />
             </div>
           </div>
-          <p className="mc-note">
-            Den guldfärgade kurvan är poängskörden i fönstret.
-          </p>
         </section>
       )}
 

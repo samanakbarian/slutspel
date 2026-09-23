@@ -741,7 +741,7 @@ function PredictionsTab({ predictions, gameState }: { predictions: Predictions; 
             </AreaChart>
           </ResponsiveContainer>
           <div style={{ marginTop: 8, fontSize: 11, color: chartTheme.text, lineHeight: 1.4 }}>
-            <b>Vad är Elo?</b> Ett dynamiskt styrkesystem där lag vinner poäng baserat på motståndarens svårighetsgrad. Filtrerar bort spelschemats ojämnheter för att visa lagets "sanna" form.
+            <b>Elo:</b> styrketal som ändras efter varje match. Vinst mot ett starkt lag ger mer än mot ett svagt.
           </div>
         </div>
         
