@@ -3369,3 +3369,20 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .pg-f-vi { background: var(--data-for); color: #04140c; }
 .pg-f-ot { background: rgba(172, 199, 186, 0.22); color: var(--text-primary); }
 .pg-f-de { background: rgba(172, 199, 186, 0.4); color: var(--text-primary); }
+
+/* Kalenderlänkarna under spelprogrammet. */
+.mc-kalender {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+  margin-top: 0.75rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.mc-kalender a {
+  color: var(--brand-green-light);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(27, 175, 122, 0.4);
+}

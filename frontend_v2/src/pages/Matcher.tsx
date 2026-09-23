@@ -7,6 +7,9 @@ import { Tabellen } from '../components/Tabellen';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from '../components/texttv';
 import type { Standing } from '../components/Tabellen';
 
+/** Netlify skickar vidare till API:t, se netlify.toml. */
+const KALENDER = 'sida377.se/kalender.ics';
+
 /* ── typer ── */
 type RawGame = {
   game_id?: number | null;
@@ -458,6 +461,17 @@ export function Matcher() {
           <button className="mc-visa-alla" onClick={() => setVisaAllt(true)}>
             Visa hela spelprogrammet ({shown.length})
           </button>
+        )}
+        {/* Prenumeration, inte nedladdning: kalenderappen hämtar flödet igen
+            av sig själv, så flyttade matcher följer med. Google tar inte
+            webcal-länkar direkt utan via sin egen adress. */}
+        {!texttv && (!season || season === activeKey) && (
+          <p className="mc-kalender">
+            Lägg in i kalendern:
+            <a href={`webcal://${KALENDER}`}>iPhone / Outlook</a>
+            <a href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(`webcal://${KALENDER}`)}`}
+               target="_blank" rel="noopener noreferrer">Google</a>
+          </p>
         )}
       </section>
 
