@@ -1,19 +1,17 @@
-# Löven Stats Hub — snabbnavigering
+# Löven Stats Hub — frontend
 
-Detta repo innehåller frontend och central produkt/systemdokumentation för Löven Stats Hub.
+Webbplatsen [sida377.se](https://sida377.se): statistik om IF Björklöven i SHL.
+Data och API ligger i `samanakbarian/loven-stats-backend`, och överlämningen
+med läget och vad som är på gång står i dess `docs/NASTA_STEG.md`.
 
-## Viktiga dokument
+- `frontend_v2/` — Vite, React 19 och TypeScript. Netlify bygger och
+  publicerar vid varje push till `main` (se `netlify.toml`).
+- `docs/SWEHOCKEY_DATA_COVERAGE_MATRIX.md` — vilka data Swehockey har.
 
-- **Produktdefinition (2026/27 + långsiktig vision):** `docs/PRODUCT_DIRECTION_2026.md`
-- **Produktroadmap (Fas 1–5):** `docs/ROADMAP_PRODUCT_2026.md`
-- **Frontend 2.0-spec:** `FRONTEND_2.0_SPECS.md`
-- **Systemdokumentation (Master Plan):** `SYSTEM_DOCUMENTATION.md`
+## Lokalt
 
-## Snabb kontext
+```
+cd frontend_v2 && npm ci && npm run dev
+```
 
-Produkten har två berättelselägen över tid:
-
-1. **Fas A — Uppflyttning och etablering** (SHL-readiness, truppbehov, ekonomisk etablering)
-2. **Fas B — Långsiktig konkurrenskraft** (slutspel, sportslig utveckling, budgeteffektivitet, talangpipeline)
-
-Se detaljer i produktdefinitionen och roadmapen ovan.
+Före push: `npx tsc -b && npx eslint src && npx vite build`.
