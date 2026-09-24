@@ -5,7 +5,8 @@ import { InforMatchen } from '../components/InforMatchen';
 import { Guard } from '../components/Guard';
 import { Tabellen } from '../components/Tabellen';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from '../components/texttv';
-import type { Standing } from '../components/Tabellen';
+import type { Formkarta, Standing } from '../components/Tabellen';
+import { useLeague } from '../lib/serien';
 
 /* ── typer ── */
 type RawGame = {
@@ -265,6 +266,14 @@ export function Matcher() {
   // Tom sträng betyder "den säsong API:t självt väljer".
   const [season, setSeason] = useState<string>('');
   const [activeKey, setActiveKey] = useState('');
+  // Formen i tabellen kommer ur seriens lagstatistik. Saknas den visar
+  // tabellen målen som förut.
+  const league = useLeague(season || '');
+  const form: Formkarta | null = league
+    ? Object.fromEntries(league.teams.map(t => [t.team, (t.form || []).map(g => ({
+        won: g.gf > g.ga, ot: g.ot, opponent: g.opponent, gf: g.gf, ga: g.ga, date: g.date,
+      }))]))
+    : null;
 
   // Säsongslistan fyller bara väljaren och blockerar därför ingenting.
   //
@@ -461,7 +470,7 @@ export function Matcher() {
         )}
       </section>
 
-      <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} moten={games} /></Guard>
+      <Guard name="Tabellen"><Tabellen rows={standings} season={seasonName} moten={games} form={form} /></Guard>
     </div>
   );
 }

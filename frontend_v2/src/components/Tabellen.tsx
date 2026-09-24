@@ -34,6 +34,9 @@ export type Standing = {
   goals_against?: number | null;
 };
 
+/** Ett lags senaste matcher, äldst först. Nyckel: lagnamnet i tabellen. */
+export type Formkarta = Record<string, { won: boolean; ot: boolean; opponent: string; gf: number; ga: number; date: string }[]>;
+
 /** En av lagets matcher, som spelprogrammet redan har dem. */
 export type Mote = {
   gameId: number | null;
@@ -95,8 +98,8 @@ function Moten({ moten }: { moten: Mote[] }) {
   );
 }
 
-function Klassisk({ rows, streck, moten }: {
-  rows: Standing[]; streck: boolean; moten?: Mote[];
+function Klassisk({ rows, streck, moten, form }: {
+  rows: Standing[]; streck: boolean; moten?: Mote[]; form?: Formkarta | null;
 }) {
   const [oppen, setOppen] = useState<string | null>(null);
   return (
@@ -109,7 +112,11 @@ function Klassisk({ rows, streck, moten }: {
           <span title="Vinster efter förlängning eller straffar">ÖV</span>
           <span title="Förluster efter förlängning eller straffar">ÖF</span>
           <span title="Förluster i ordinarie tid">F</span>
-          <span title="Gjorda–insläppta mål">Mål</span>
+          {/* Formen tar målens plats när den finns: målskillnaden står bredvid,
+              och båda ryms inte på en telefon. */}
+          {form
+            ? <span title="Senaste fem matcherna, äldst till vänster">Form</span>
+            : <span title="Gjorda–insläppta mål">Mål</span>}
           <span title="Målskillnad">+/−</span>
           <span>P</span>
         </div>
@@ -131,11 +138,21 @@ function Klassisk({ rows, streck, moten }: {
               <span className="st-n st-dim">{r.ot_wins ?? 0}</span>
               <span className="st-n st-dim">{r.ot_losses ?? 0}</span>
               <span className="st-n">{r.losses ?? 0}</span>
-              <span className="st-goals">
-                {r.goals_for != null && r.goals_against != null
-                  ? `${r.goals_for}–${r.goals_against}`
-                  : '–'}
-              </span>
+              {form ? (
+                <span className="st-form">
+                  {(form[lag] || []).slice(-5).map((g, j) => (
+                    <i key={j}
+                       className={`st-formprick st-formprick-${g.won ? 'v' : 'f'}${g.ot ? ' st-formprick-ot' : ''}`}
+                       title={`${g.won ? 'Vinst' : 'Förlust'}${g.ot ? ' efter förlängning' : ''} ${g.gf}–${g.ga} mot ${g.opponent.replace(/^IF\s+/, '')}`} />
+                  ))}
+                </span>
+              ) : (
+                <span className="st-goals">
+                  {r.goals_for != null && r.goals_against != null
+                    ? `${r.goals_for}–${r.goals_against}`
+                    : '–'}
+                </span>
+              )}
               <span className={`st-n st-diffnum${diff > 0 ? ' st-difftext-pos' : diff < 0 ? ' st-difftext-neg' : ''}`}>
                 {signed(diff)}
               </span>
@@ -216,7 +233,9 @@ function TextTv({ rows, season }: { rows: Standing[]; season: string }) {
 
 /* ── kortet ──────────────────────────────────────────────────────────── */
 
-export function Tabellen({ rows, season, moten }: { rows: Standing[]; season?: string; moten?: Mote[] }) {
+export function Tabellen({ rows, season, moten, form }: {
+  rows: Standing[]; season?: string; moten?: Mote[]; form?: Formkarta | null;
+}) {
   const [texttv, vaxla] = useTextTv('tabell');
   const [expanderad, setExpanderad] = useState(false);
 
@@ -249,7 +268,7 @@ export function Tabellen({ rows, season, moten }: { rows: Standing[]; season?: s
 
       {texttv
         ? <TextTv rows={sorted} season={season || ''} />
-        : <Klassisk rows={sorted} streck={streck} moten={moten} />}
+        : <Klassisk rows={sorted} streck={streck} moten={moten} form={form} />}
 
 
       {!started && (

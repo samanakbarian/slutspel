@@ -1196,6 +1196,14 @@ a {
    vinster och förluster först. */
 .st-dim { color: var(--text-muted); }
 .st-goals { font-size: 0.6rem; color: var(--text-muted); white-space: nowrap; }
+/* Formen: fem prickar, äldst till vänster. Förlängning är en ring runt
+   pricken, som i matchkortets form. */
+.st-form { display: flex; justify-content: flex-end; gap: 2.5px; }
+.st-formprick { width: 6px; height: 6px; border-radius: 50%; display: block; flex: none; }
+.st-formprick-v { background: var(--data-for); }
+.st-formprick-f { background: var(--data-against); }
+/* Ringen ligger inuti pricken, så alla prickar är lika stora. */
+.st-formprick-ot { box-shadow: inset 0 0 0 1.5px var(--brand-gold); }
 .st-diffnum { font-weight: 700; }
 .st-difftext-pos { color: var(--data-for); }
 .st-difftext-neg { color: var(--data-against); }
