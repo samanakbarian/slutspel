@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
 import type { GoalieLine, MatchReport } from '../../lib/match';
 import { isOurs, ordinal, parsePeriods, surname } from '../../lib/match';
-import { CARD_SIZE, cardBlob, cardFontsReady, drawMatchCard } from './matchCard';
+import { drawMatchCard } from './matchCard';
+import { Delningsbild } from './Delningsbild';
 import type { CardModel, CardStat, CardStep } from './matchCard';
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
@@ -191,95 +191,21 @@ export function buildCardModel(data: MatchReport): CardModel | null {
   };
 }
 
-/**
- * Kortet, med knapp för att dela eller spara.
- *
- * `navigator.share` med fil är vägen på telefonen — den lämnar över till
- * systemets delningsmeny, så bilden kan gå direkt till meddelanden eller
- * ett flöde. Saknas den laddas PNG:n ned istället.
- */
+/** Kortet efter matchen, med knapp för att dela eller spara. */
 export function DelaMatchen({ data }: { data: MatchReport }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
   const model = buildCardModel(data);
-
-  useEffect(() => {
-    if (!model) return;
-    let live = true;
-    const paint = () => {
-      const ctx = canvasRef.current?.getContext('2d');
-      if (ctx && live) drawMatchCard(ctx, model);
-    };
-    paint();
-    // Ritas kortet innan snitten laddat mäts fel bredder och texten hamnar
-    // snett. Andra målningen rättar det.
-    cardFontsReady().then(paint);
-    return () => { live = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.game_id, data.result, data.goals.length, data.teams, data.goalies]);
-
   if (!model) return null;
-
-  const filename = `lovenlaget-${data.date || data.game_id}-${model.score.replace('–', '-')}.png`;
-
-  const share = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas || busy) return;
-    setBusy(true);
-    setStatus(null);
-    try {
-      const blob = await cardBlob(canvas);
-      const file = new File([blob], filename, { type: 'image/png' });
-      const nav = navigator as Navigator & {
-        canShare?: (d: ShareData) => boolean;
-        share?: (d: ShareData) => Promise<void>;
-      };
-      if (nav.share && nav.canShare?.({ files: [file] })) {
-        try {
-          await nav.share({ files: [file], title: `Björklöven ${model.score}` });
-          setStatus('Delat.');
-          return;
-        } catch (e) {
-          // Avbrott är inte ett fel — användaren stängde delningsmenyn.
-          if ((e as Error).name === 'AbortError') { setStatus(null); return; }
-        }
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 10000);
-      setStatus('Bilden är sparad.');
-    } catch (e) {
-      setStatus((e as Error).message || 'Kunde inte skapa bilden.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <section className="mr-card">
       <p className="mr-kicker">Dela matchen</p>
-      <div className="share-wrap">
-        <canvas
-          ref={canvasRef}
-          width={CARD_SIZE}
-          height={CARD_SIZE}
-          className="share-canvas"
-          role="img"
-          aria-label={`Delbart kort: Björklöven ${model.score} ${model.themLabel}`}
-        />
-      </div>
-      <button className="share-btn" onClick={share} disabled={busy}>
-        {busy ? 'Skapar bild…' : 'Dela som bild'}
-      </button>
-      {/* Ingen förklarande text under knappen. Formatet och varifrån siffrorna
-          kommer är vårt problem, inte läsarens — kvar står bara det som
-          faktiskt behöver sägas, när något gick fel. */}
-      {status && <p className="mr-note">{status}</p>}
+      <Delningsbild
+        draw={ctx => drawMatchCard(ctx, model)}
+        filnamn={`lovenlaget-${data.date || data.game_id}-${model.score.replace('–', '-')}.png`}
+        titel={`Björklöven ${model.score}`}
+        rubrik="Slutresultat"
+        beskrivning={`Delbart kort: Björklöven ${model.score} ${model.themLabel}`}
+        nyckel={`${data.game_id}|${data.result}|${data.goals.length}|${model.stats.map(x => x.value).join()}`}
+      />
     </section>
   );
 }

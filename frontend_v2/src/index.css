@@ -1900,6 +1900,32 @@ a {
 }
 .share-btn:disabled { opacity: 0.55; cursor: progress; }
 .share-btn:focus-visible { outline: 2px solid var(--brand-green-light); outline-offset: 2px; }
+/* Storyn är hög: smalare, så hela bilden ryms på skärmen. */
+.share-wrap-story { max-width: 260px; }
+.im-delaknapp { margin-top: 0.8rem; }
+.im-dela { margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px solid rgba(172, 199, 186, 0.12); }
+.share-format {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+}
+.share-format button {
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.share-format button.is-on {
+  border-color: rgba(66, 216, 131, 0.45);
+  background: rgba(37, 163, 90, 0.16);
+  color: var(--brand-green-light);
+}
 
 .mr-pimbar { margin-bottom: 0.7rem; }
 

@@ -41,16 +41,16 @@ export type CardModel = {
 
 export const CARD_SIZE = 1080;
 
-const INK = '#f1f7f4';
-const INK_2 = '#acc7ba';
-const INK_3 = '#7c9a8b';
-const BRAND = '#42d883';
-const FOR = '#1baf7a';
-const AGAINST = '#d95926';
-const GOLD = '#f5c045';
+export const INK = '#f1f7f4';
+export const INK_2 = '#acc7ba';
+export const INK_3 = '#7c9a8b';
+export const BRAND = '#42d883';
+export const FOR = '#1baf7a';
+export const AGAINST = '#d95926';
+export const GOLD = '#f5c045';
 
-const DISPLAY = "'Outfit', system-ui, sans-serif";
-const SANS = "'Inter', system-ui, sans-serif";
+export const DISPLAY = "'Outfit', system-ui, sans-serif";
+export const SANS = "'Inter', system-ui, sans-serif";
 
 /** Snitten maste vara laddade innan kortet ritas, annars mats fel bredder. */
 export async function cardFontsReady(): Promise<void> {
@@ -78,7 +78,7 @@ export async function cardFontsReady(): Promise<void> {
  * ratt bredd men lite ojamnare mellanrum i par som VA och JO. Bada vagarna
  * matas med samma funktion, sa uppmatt bredd stammer med det som ritas.
  */
-function tracked(
+export function tracked(
   ctx: CanvasRenderingContext2D,
   text: string,
   x: number,
@@ -115,7 +115,7 @@ function tracked(
  * fore publiksiffran. Att korta av med tre punkter i stallet hade lamnat
  * "Hovet, Johanneshov · 7…" — en avhuggen siffra sager ingenting.
  */
-function widest(ctx: CanvasRenderingContext2D, parts: string[], max: number): string {
+export function widest(ctx: CanvasRenderingContext2D, parts: string[], max: number): string {
   const options = [parts, parts.filter((_, i) => i !== 1), [parts[0]]];
   for (const opt of options) {
     const text = opt.filter(Boolean).join(' · ');
@@ -124,7 +124,7 @@ function widest(ctx: CanvasRenderingContext2D, parts: string[], max: number): st
   return fit(ctx, parts.filter(Boolean).join(' · '), max);
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   if (typeof ctx.roundRect === 'function') {
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, r);
@@ -140,7 +140,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 }
 
 /** Kortar en text tills den ryms, med tre punkter. */
-function fit(ctx: CanvasRenderingContext2D, text: string, max: number): string {
+export function fit(ctx: CanvasRenderingContext2D, text: string, max: number): string {
   if (ctx.measureText(text).width <= max) return text;
   let out = text;
   while (out.length > 1 && ctx.measureText(`${out}…`).width > max) out = out.slice(0, -1);
@@ -270,10 +270,15 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
 
 /* ── kortet ────────────────────────────────────────────────────────────── */
 
-export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
+/**
+ * Bakgrunden, ramen och huvudet: avsändare, adress och när. Delas av alla
+ * kort så att de ser ut att höra ihop i ett flöde.
+ */
+export function drawFrame(ctx: CanvasRenderingContext2D, when: string[]) {
   const S = CARD_SIZE;
   const PAD = 58;
   const right = S - PAD;
+  const m = { when };
 
   ctx.clearRect(0, 0, S, S);
 
@@ -317,6 +322,14 @@ export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
   ctx.font = `500 22px ${SANS}`;
   ctx.textAlign = 'left';
   tracked(ctx, 'SIDA377.SE', PAD, PAD + 58, 3.4);
+}
+
+export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
+  const S = CARD_SIZE;
+  const PAD = 58;
+  const right = S - PAD;
+
+  drawFrame(ctx, m.when);
 
   /* rubrikbrickan */
   let y = PAD + 84;
@@ -396,4 +409,53 @@ export function cardBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(b => (b ? resolve(b) : reject(new Error('Kunde inte skapa bilden.'))), 'image/png');
   });
+}
+
+/** Storyformatet: 1080 x 1920, för Instagram och Snapchat. */
+export const STORY_HEIGHT = 1920;
+
+/**
+ * Det kvadratiska kortet mitt i en stående bild.
+ *
+ * Storyappar lägger sina egna knappar överst och nederst, så kortet hålls i
+ * mitten och ytan runt det bär bara adressen. Samma pixlar som kvadraten —
+ * två layouter att hålla i takt hade glidit isär.
+ */
+export function drawStory(
+  ctx: CanvasRenderingContext2D,
+  drawSquare: (c: CanvasRenderingContext2D) => void,
+  rubrik = '',
+) {
+  const W = CARD_SIZE;
+  const H = STORY_HEIGHT;
+  const top = (H - W) / 2;
+
+  const base = ctx.createLinearGradient(0, 0, W, H);
+  base.addColorStop(0, '#0d3524');
+  base.addColorStop(0.5, '#082018');
+  base.addColorStop(1, '#05130e');
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.translate(0, top);
+  drawSquare(ctx);
+  ctx.restore();
+
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  // Rubriken ovanför kortet, under appens egen knapprad.
+  if (rubrik) {
+    ctx.fillStyle = INK;
+    ctx.font = `700 64px ${DISPLAY}`;
+    const t = rubrik.toUpperCase();
+    const rw = ctx.measureText(t).width + 4 * (t.length - 1);
+    tracked(ctx, t, W / 2 - rw / 2, top - 70, 4);
+  }
+
+  ctx.fillStyle = BRAND;
+  ctx.font = `700 44px ${DISPLAY}`;
+  const w = ctx.measureText('SIDA377.SE').width + 6.6 * 9;
+  tracked(ctx, 'SIDA377.SE', W / 2 - w / 2, top + W + 190, 6.6);
+  ctx.textAlign = 'left';
 }

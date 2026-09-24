@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 import { humanName, ordinal } from '../lib/match';
 import { MINSTA_MATCHER, useLeague } from '../lib/serien';
+import { Delningsbild } from './share/Delningsbild';
+import { drawForeMatchCard } from './share/foreMatchCard';
+import type { ForeModel } from './share/foreMatchCard';
 
 /**
  * Vad som väntar i nästa match.
@@ -217,6 +220,9 @@ type Prognos = {
   p_home_regulation: number;
   p_overtime: number;
   p_away_regulation: number;
+  /** Vinst totalt, förlängning och straffar inräknade. Saknas i äldre API. */
+  p_home_win?: number;
+  p_away_win?: number;
 };
 
 /**
@@ -254,9 +260,83 @@ const BJK_RE = /bj[oö]rkl[oö]ven/i;
 const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `\u2212${Math.abs(v)}` : '0');
 const decimal = (v: number) => v.toFixed(2).replace('.', ',');
 
+const WEEKDAYS = ['sön', 'mån', 'tis', 'ons', 'tor', 'fre', 'lör'];
+
+/** Kortet inför matchen byggs ur samma svar som rutan visar, inget annat. */
+function foreModel(data: NextMatch, p: Prognos | null): ForeModel {
+  const { game } = data;
+  const opponent = game.opponent.replace(/^IF\s+/, '');
+  const d = new Date(`${String(game.date).slice(0, 10)}T00:00:00`);
+  const days = daysUntil(game.date);
+
+  let prognos: ForeModel['prognos'] = null;
+  let big = days <= 0 ? 'I dag' : days === 1 ? 'I morgon' : `Om ${days} dagar`;
+  let bigLabel = 'Nedsläpp';
+  if (p) {
+    const hemma = BJK_RE.test(p.home_team);
+    const vi = hemma ? p.p_home_regulation : p.p_away_regulation;
+    const de = hemma ? p.p_away_regulation : p.p_home_regulation;
+    prognos = { vi, ot: p.p_overtime, de };
+    const vinst = (hemma ? p.p_home_win : p.p_away_win) ?? vi + p.p_overtime / 2;
+    big = `${Math.round(vinst * 100)} %`;
+    bigLabel = 'Björklövens vinstchans';
+  }
+
+  const tp = data.them_players;
+  const topp = tp?.players[0];
+  const hero = topp
+    ? { label: 'Deras poängbästa', name: topp.name.split(',')[0].trim(),
+        detail: `${topp.goals}+${topp.assists} på ${topp.games_played} ${topp.games_played === 1 ? 'match' : 'matcher'}` }
+    : null;
+
+  const stats: ForeModel['stats'] = [];
+  if (data.us && data.them && data.us.games_played > 0 && data.them.games_played > 0) {
+    stats.push({ label: 'Tabellen', value: `${ordinal(data.us.rank)} – ${ordinal(data.them.rank)}` });
+  }
+  const us = data.us_season;
+  const them = data.them_season;
+  if (us && them && us.games > 0 && them.games > 0) {
+    const fmt = (v: number) => v.toFixed(1).replace('.', ',');
+    stats.push({ label: 'Mål per match', value: `${fmt(us.goals_for_avg)} – ${fmt(them.goals_for_avg)}` });
+  }
+  if (tp?.goalie?.save_pct != null) {
+    stats.push({ label: 'Deras målvakt', value: `${tp.goalie.save_pct.toFixed(1).replace('.', ',')} %` });
+  }
+  const meetings = data.meetings ?? [];
+  if (meetings.length > 0) {
+    const w = meetings.filter(m => m.goals_for > m.goals_against).length;
+    stats.push({ label: 'Inbördes', value: `${w}–${meetings.length - w}` });
+  } else if (data.previous?.opponent?.rank && stats.length < 4 && data.us && data.us.games_played === 0) {
+    stats.push({ label: `${opponent} i fjol`, value: ordinal(data.previous.opponent.rank) });
+  }
+
+  const form = [
+    { team: 'Björklöven', games: (data.us_form ?? []).map(g => ({ won: g.won, ot: g.beyond_regulation })) },
+    { team: opponent, games: (data.them_form ?? []).map(g => ({ won: g.won, ot: g.beyond_regulation })) },
+  ].filter(f => f.games.length > 0);
+
+  return {
+    when: [
+      `${WEEKDAYS[d.getDay()]} ${shortDate(game.date)}${game.time ? ` ${game.time}` : ''}`,
+      game.venue || '',
+    ].filter(Boolean),
+    eyebrow: data.is_premiere ? 'Premiär' : `Inför omgång ${data.round} av ${data.total_rounds}`,
+    big,
+    bigLabel,
+    usLabel: 'Björklöven',
+    themLabel: `${game.is_home ? 'hemma' : 'borta'} mot ${opponent}`,
+    opponent,
+    hero,
+    prognos,
+    form,
+    stats,
+  };
+}
+
 export function InforMatchen({ season }: { season: string | null }) {
   const [data, setData] = useState<NextMatch | null>(null);
   const [prognos, setPrognos] = useState<Prognos | null>(null);
+  const [dela, setDela] = useState(false);
   const league = useLeague(season || '');
 
   useEffect(() => {
@@ -352,6 +432,9 @@ export function InforMatchen({ season }: { season: string | null }) {
   // samma sak; de gör de inte. Då säger kortet vad motståndaren gjorde i sin
   // egen serie, och visar inledningen — det enda som faktiskt är färskt.
 
+  const visaPrognos = !!prognos && prognos.date === String(game.date).slice(0, 10)
+    && (BJK_RE.test(prognos.home_team) ? prognos.home_games : prognos.away_games) >= MINSTA_MATCHER;
+
   const streakText = (t: TeamSeason) =>
     t && t.streak.length > 1 ? `${t.streak.length} raka ${t.streak.won ? 'vinster' : 'förluster'}` : null;
 
@@ -389,10 +472,7 @@ export function InforMatchen({ season }: { season: string | null }) {
       {/* Samma gräns som seriekorten: efter en match vet modellen för lite om
           ett lag den inte sett förra säsongen. Prognosen gäller nästa match
           och bara om den är densamma som kortet handlar om. */}
-      {prognos && prognos.date === String(game.date).slice(0, 10)
-        && (BJK_RE.test(prognos.home_team) ? prognos.home_games : prognos.away_games) >= MINSTA_MATCHER && (
-        <Prognosstapel p={prognos} opponent={opponent} />
-      )}
+      {visaPrognos && <Prognosstapel p={prognos!} opponent={opponent} />}
 
       <Duels rows={duels} opponent={opponent} />
       {duelNote && <p className="mr-note im-duelnote">{duelNote}</p>}
@@ -452,6 +532,23 @@ export function InforMatchen({ season }: { season: string | null }) {
             ))}
           </span>
         </div>
+      )}
+
+      {dela ? (
+        <div className="im-dela">
+          <Delningsbild
+            draw={ctx => drawForeMatchCard(ctx, foreModel(data, visaPrognos ? prognos : null))}
+            filnamn={`infor-${game.date}-${opponent.replace(/\s+/g, '-').toLowerCase()}.png`}
+            titel={`Björklöven ${game.is_home ? 'hemma' : 'borta'} mot ${opponent}`}
+            rubrik="Inför matchen"
+            beskrivning={`Delbart kort inför matchen mot ${opponent}`}
+            nyckel={`${game.date}|${game.opponent}|${visaPrognos ? prognos!.p_home_regulation : ''}|${data.them_players?.players.length ?? 0}`}
+          />
+        </div>
+      ) : (
+        <button type="button" className="share-btn im-delaknapp" onClick={() => setDela(true)}>
+          Dela som bild
+        </button>
       )}
 
       {data.venue_average != null && (
