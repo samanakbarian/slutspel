@@ -363,7 +363,7 @@ function Boxscore({ skaters, squad, till }: { skaters: Skater[] | undefined; squ
   return (
     <section className="mr-card">
       <p className="mr-kicker">Spelarna</p>
-      <h2 className="mr-title">På isen vid mål</h2>
+      <h2 className="mr-title">Plus/minus</h2>
 
       {/* En rad per +/--värde, namnen som brickor. Tröjnummer ensamt gick
           inte att läsa utan att kunna truppen utantill, och en stapel per
