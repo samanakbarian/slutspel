@@ -905,10 +905,10 @@ a {
 
 .ctx-form { display: inline-flex; gap: 0.25rem; align-items: center; }
 .ctx-dot { width: 9px; height: 9px; border-radius: 50%; display: block; }
-.ctx-dot-w { background: var(--data-for); }
-.ctx-dot-l { background: var(--data-against); }
-/* Förlängning markeras med en ring, inte med en tredje färg. */
-.ctx-dot-ot { box-shadow: 0 0 0 2px var(--bg-dark), 0 0 0 3px var(--brand-gold); }
+.ctx-dot-w { background: var(--data-for); color: var(--data-for); }
+.ctx-dot-l { background: var(--data-against); color: var(--data-against); }
+/* Förlängning: ihålig ring i vinstens eller förlustens färg, som i tabellen. */
+.ctx-dot-ot { background: transparent; box-shadow: inset 0 0 0 2px currentColor; }
 
 /* uppställningen */
 .lu-row {

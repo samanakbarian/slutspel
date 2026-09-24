@@ -27,10 +27,10 @@ export type CardModel = {
   when: string[];
   /** Vad matchen handlade om: "Vandning fran 0-2". Tom nar inget sticker ut. */
   eyebrow: string;
+  /** Hemmalag–bortalag, som resultat skrivs överallt. */
   score: string;
-  /** "Bjorkloven borta mot AIK" — lagnamnet fetstilas separat. */
-  usLabel: string;
-  themLabel: string;
+  /** Lagen under resultatet i samma ordning, vårt lag fetstilat. */
+  lag: { text: string; ours: boolean }[];
   hero: { label: string; name: string; detail: string } | null;
   steps: CardStep[];
   /** Antal perioder, inklusive forlangning och straffar. */
@@ -351,14 +351,14 @@ export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
   ctx.font = `700 168px ${DISPLAY}`;
   ctx.fillText(m.score, PAD - 6, y + 152);
 
-  ctx.font = `400 36px ${SANS}`;
-  ctx.fillStyle = INK;
-  const usWidth = ctx.measureText(m.usLabel).width;
-  ctx.font = `600 36px ${SANS}`;
-  ctx.fillText(m.usLabel, PAD, y + 208);
-  ctx.font = `400 36px ${SANS}`;
-  ctx.fillStyle = INK_2;
-  ctx.fillText(m.themLabel, PAD + usWidth + 12, y + 208);
+  let lx = PAD;
+  m.lag.forEach((del, i) => {
+    const text = i < m.lag.length - 1 ? `${del.text} –` : del.text;
+    ctx.font = `${del.ours ? 600 : 400} 36px ${SANS}`;
+    ctx.fillStyle = del.ours ? INK : INK_2;
+    ctx.fillText(text, lx, y + 208);
+    lx += ctx.measureText(text).width + 12;
+  });
 
   /* matchens spelare, till hoger om siffran */
   if (m.hero) {

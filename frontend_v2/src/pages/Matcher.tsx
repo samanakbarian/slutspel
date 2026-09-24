@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
+import { resultat } from '../lib/match';
 import { Guard } from '../components/Guard';
 import { Tabellen } from '../components/Tabellen';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from '../components/texttv';
@@ -113,7 +114,7 @@ function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) 
       <div className="mc-latest-row">
         <span className={`mc-ha${game.isHome ? ' mc-ha-home' : ''}`}>{game.isHome ? 'H' : 'B'}</span>
         <span className="mc-latest-opp">{game.opponent.replace(/^IF\s+/, '')}</span>
-        <span className="mc-latest-score">{game.gf}–{game.ga}</span>
+        <span className="mc-latest-score">{resultat(game.gf, game.ga, game.isHome)}</span>
       </div>
       <p className="mc-latest-label">{label}</p>
       {linkable ? (
@@ -225,7 +226,7 @@ function GameRow({ game }: { game: Game }) {
       <span className="mc-opponent">{game.opponent.replace(/^IF\s+/, '')}</span>
       {game.played ? (
         <>
-          <span className="mc-score">{game.gf}–{game.ga}</span>
+          <span className="mc-score">{resultat(game.gf, game.ga, game.isHome)}</span>
           <span className={`mc-res mc-res-${game.result.toLowerCase()}`}>
             {game.result === 'OTL' ? 'ÖT' : game.result}
           </span>
@@ -243,7 +244,7 @@ function GameRow({ game }: { game: Game }) {
       <Link
         to={`/matcher/${game.gameId}`}
         className="mc-row mc-row-link"
-        aria-label={`Matchrapport: ${game.isHome ? 'Björklöven' : game.opponent} mot ${game.isHome ? game.opponent : 'Björklöven'} ${game.gf}–${game.ga}`}
+        aria-label={`Matchrapport: ${game.isHome ? 'Björklöven' : game.opponent} mot ${game.isHome ? game.opponent : 'Björklöven'} ${resultat(game.gf, game.ga, game.isHome)}`}
       >
         {body}
         <span className="mc-chevron" aria-hidden="true">›</span>

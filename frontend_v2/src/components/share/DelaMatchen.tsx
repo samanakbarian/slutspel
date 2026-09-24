@@ -1,5 +1,5 @@
 import type { GoalieLine, MatchReport } from '../../lib/match';
-import { isOurs, ordinal, parsePeriods, surname } from '../../lib/match';
+import { isOurs, ordinal, parsePeriods, resultat, surname } from '../../lib/match';
 import { drawMatchCard } from './matchCard';
 import { Delningsbild } from './Delningsbild';
 import type { CardModel, CardStat, CardStep } from './matchCard';
@@ -111,7 +111,7 @@ function statsFor(data: MatchReport, periods: [number, number][], ourSide: 'home
   const t = data.teams;
 
   if (t?.ours.shots != null && t.theirs.shots != null) {
-    out.push({ label: 'Skott', value: `${t.ours.shots}–${t.theirs.shots}` });
+    out.push({ label: 'Skott', value: resultat(t.ours.shots, t.theirs.shots, ourSide === 'home') });
   }
 
   const ppChances = data.penalties.filter(p => !isOurs(p.team_code) && p.minutes > 0).length;
@@ -132,17 +132,15 @@ function statsFor(data: MatchReport, periods: [number, number][], ourSide: 'home
       if (d > bestDiff) { bestDiff = d; bestIdx = i; }
     });
     const [h, a] = periods[bestIdx];
-    const ours = ourSide === 'home' ? h : a;
-    const theirs = ourSide === 'home' ? a : h;
     // Etiketten måste säga vad siffran är. "PERIOD 2 · 1–0" bredvid "SKOTT
     // 37–22" läses som en godtycklig period, inte som den ni vann tydligast.
-    out.push({ label: 'Bästa perioden', value: `${ordinal(bestIdx + 1)} · ${ours}–${theirs}` });
+    out.push({ label: 'Bästa period', value: `${ordinal(bestIdx + 1)} · ${h}–${a}` });
   }
 
   if (out.length < 4) {
     const pim = (ours: boolean) =>
       data.penalties.filter(p => isOurs(p.team_code) === ours).reduce((n, p) => n + (p.minutes || 0), 0);
-    out.push({ label: 'Utvisningar', value: `${pim(true)}–${pim(false)} min` });
+    out.push({ label: 'Utvisningar', value: `${resultat(pim(true), pim(false), ourSide === 'home')} min` });
   }
   return out.slice(0, 4);
 }
@@ -158,8 +156,8 @@ export function buildCardModel(data: MatchReport): CardModel | null {
   const theirGoals = ourSide === 'home' ? ag : hg;
   const periods = parsePeriods(data.period_results);
 
-  // Ställningen skrivs från Björklövens håll, oavsett vem som gjorde målet,
-  // och räknas i samma svep som steget så texten aldrig kan glida isär.
+  // Ställningen skrivs hemmalag–bortalag, som resultatet, och räknas i samma
+  // svep som steget så texten aldrig kan glida isär.
   let us = 0;
   let them = 0;
   const steps: CardStep[] = [...data.goals]
@@ -167,7 +165,7 @@ export function buildCardModel(data: MatchReport): CardModel | null {
     .map(g => {
       const ours = isOurs(g.team_code);
       if (ours) us += 1; else them += 1;
-      return { minute: g.minute, diff: us - them, ours, state: `${us}–${them}` };
+      return { minute: g.minute, diff: us - them, ours, state: resultat(us, them, ourSide === 'home') };
     });
 
   const keeper = (data.goalies || []).find(g => g.is_ours);
@@ -180,9 +178,10 @@ export function buildCardModel(data: MatchReport): CardModel | null {
       data.spectators ? data.spectators.toLocaleString('sv-SE') : '',
     ].filter(Boolean),
     eyebrow: eyebrowFor(steps, ourGoals - theirGoals, theirGoals, periods.length),
-    score: `${ourGoals}–${theirGoals}`,
-    usLabel: 'Björklöven',
-    themLabel: `${ourSide === 'home' ? 'hemma' : 'borta'} mot ${opponent}`,
+    score: resultat(ourGoals, theirGoals, ourSide === 'home'),
+    lag: ourSide === 'home'
+      ? [{ text: 'Björklöven', ours: true }, { text: opponent, ours: false }]
+      : [{ text: opponent, ours: false }, { text: 'Björklöven', ours: true }],
     hero: heroFor(data, ourGoals, theirGoals, keeper),
     steps,
     periods: Math.max(3, periods.length),
@@ -201,9 +200,9 @@ export function DelaMatchen({ data }: { data: MatchReport }) {
       <Delningsbild
         draw={ctx => drawMatchCard(ctx, model)}
         filnamn={`lovenlaget-${data.date || data.game_id}-${model.score.replace('–', '-')}.png`}
-        titel={`Björklöven ${model.score}`}
+        titel={`${model.lag.map(l => l.text).join(' – ')} ${model.score}`}
         rubrik="Slutresultat"
-        beskrivning={`Delbart kort: Björklöven ${model.score} ${model.themLabel}`}
+        beskrivning={`Delbart kort: ${model.lag.map(l => l.text).join(' – ')} ${model.score}`}
         nyckel={`${data.game_id}|${data.result}|${data.goals.length}|${model.stats.map(x => x.value).join()}`}
       />
     </section>

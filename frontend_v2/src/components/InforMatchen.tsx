@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
-import { humanName, ordinal } from '../lib/match';
+import { humanName, ordinal, resultat } from '../lib/match';
 import { MINSTA_MATCHER, useLeague } from '../lib/serien';
 import { Delningsbild } from './share/Delningsbild';
 import { drawForeMatchCard } from './share/foreMatchCard';
@@ -527,7 +527,7 @@ export function InforMatchen({ season }: { season: string | null }) {
                 className={`im-h2hchip${m.goals_for > m.goals_against ? ' im-h2hwin' : ' im-h2hloss'}`}
                 title={`${shortDate(m.date)} ${m.is_home ? 'hemma' : 'borta'}`}
               >
-                {m.is_home ? 'H' : 'B'} {m.goals_for}–{m.goals_against}
+                {m.is_home ? 'H' : 'B'} {resultat(m.goals_for, m.goals_against, m.is_home)}
               </span>
             ))}
           </span>

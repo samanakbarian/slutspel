@@ -6,7 +6,7 @@ import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
-import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, positionOf, surname } from '../lib/match';
+import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, resultat, positionOf, surname } from '../lib/match';
 import { sasongForDatum, spelarsida } from '../lib/lankar';
 import { skrivSidhuvud } from '../lib/sidhuvud';
 import { matcher } from '../lib/sprak';
@@ -71,7 +71,7 @@ function Kontext({ ctx, liga, vann, forlangning }: {
           <span className="st-kvlabel">Inbördes i år</span>
           <span className="st-kvvalue">{record.w}–{record.l}</span>
           <span className="st-kvhint">
-            {meetings.map(m => `${m.goals_for}–${m.goals_against}`).join(', ')}
+            {meetings.map(m => resultat(m.goals_for, m.goals_against, m.is_home)).join(', ')}
           </span>
         </div>
       )}

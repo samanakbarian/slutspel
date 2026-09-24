@@ -252,3 +252,14 @@ export function parsePeriods(pr: string | null | undefined): [number, number][] 
     .filter((m): m is RegExpMatchArray => Boolean(m))
     .map(m => [parseInt(m[1], 10), parseInt(m[2], 10)] as [number, number]);
 }
+
+/**
+ * En enskild match skrivs hemmalag–bortalag, som hos Swehockey och i media:
+ * en bortaseger med 4–3 är 3–4. Summor över flera matcher räknas däremot
+ * från vårt håll och skrivs vi–dem.
+ */
+export function resultat(vara: number | null | undefined, deras: number | null | undefined, hemma: boolean): string {
+  const v = vara ?? '';
+  const d = deras ?? '';
+  return hemma ? `${v}–${d}` : `${d}–${v}`;
+}

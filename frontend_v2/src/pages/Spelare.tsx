@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { API_URL } from '../config/api';
 import { PercentileBar, Sparkline } from '../components/charts/Charts';
 import { matcher } from '../lib/sprak';
+import { resultat } from '../lib/match';
 
 /**
  * Spelarsidan.
@@ -861,7 +862,7 @@ export function Spelare() {
                         ? <Link to={`/matcher/${g.game_id}`}>{shortTeam(g.opponent)}</Link>
                         : shortTeam(g.opponent)}
                       <span className={`sp-res sp-res-${g.result === 'W' ? 'w' : 'l'}`}>
-                        {g.result === 'W' ? 'V' : 'F'}{g.beyond_regulation ? '*' : ''} {g.goals_for}–{g.goals_against}
+                        {g.result === 'W' ? 'V' : 'F'}{g.beyond_regulation ? '*' : ''} {resultat(g.goals_for, g.goals_against, g.is_home)}
                       </span>
                     </td>
                     <td className="opp-num">{`${g.goals}+${g.assists}`}</td>

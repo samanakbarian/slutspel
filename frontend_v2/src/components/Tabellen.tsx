@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { resultat } from '../lib/match';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from './texttv';
 
 /**
@@ -86,7 +87,7 @@ function Moten({ moten }: { moten: Mote[] }) {
             <span className="st-mote-datum">{kortDatum(m.date)}</span>
             <span className={`mc-ha${m.isHome ? ' mc-ha-home' : ''}`}>{m.isHome ? 'H' : 'B'}</span>
             {m.played
-              ? <span className={`st-mote-res${m.gf > m.ga ? ' st-difftext-pos' : m.gf < m.ga ? ' st-difftext-neg' : ''}`}>{m.gf}–{m.ga}</span>
+              ? <span className={`st-mote-res${m.gf > m.ga ? ' st-difftext-pos' : m.gf < m.ga ? ' st-difftext-neg' : ''}`}>{resultat(m.gf, m.ga, m.isHome)}</span>
               : <span className="st-mote-tid">{m.time.replace(':', '.')}</span>}
           </>
         );
