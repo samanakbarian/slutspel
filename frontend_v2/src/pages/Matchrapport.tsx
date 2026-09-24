@@ -6,7 +6,7 @@ import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
-import { BJK, humanName, isDefence, isOurs, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
+import { BJK, humanName, isDefence, isOurs, motSerien, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
 import { sasongForDatum, spelarsida } from '../lib/lankar';
 import { skrivSidhuvud } from '../lib/sidhuvud';
 import { matcher } from '../lib/sprak';
@@ -21,10 +21,11 @@ import { matcher } from '../lib/sprak';
  * att se skillnaden. Allt räknas ur schemat, som täcker hela serien — vi
  * skördar bara våra egna matcher, men resultatet för alla.
  */
-function Kontext({ ctx, opponent }: { ctx: MatchContext | null | undefined; opponent: string }) {
+function Kontext({ ctx, opponent, liga }: { ctx: MatchContext | null | undefined; opponent: string; liga: string }) {
   if (!ctx) return null;
   const { before, after, opponent_before: theirs, form, meetings, venue_average: avg } = ctx;
   if (!before && !after && form.length === 0) return null;
+  const sticker = motSerien(ctx.league_compare, liga);
 
   const moved = before && after ? before.rank - after.rank : 0;
   const record = meetings.reduce(
@@ -87,6 +88,15 @@ function Kontext({ ctx, opponent }: { ctx: MatchContext | null | undefined; oppo
           <span className="st-kvhint">
             {meetings.map(m => `${m.goals_for}–${m.goals_against}`).join(', ')}
           </span>
+        </div>
+      )}
+
+      {sticker.length > 0 && (
+        <div className="ctx-serien">
+          <span className="im-h2hlabel">Mot serien</span>
+          {sticker.map(r => (
+            <p key={r.key} className="ctx-serienrad"><b>{r.varde}</b> – {r.text}</p>
+          ))}
         </div>
       )}
 
@@ -945,6 +955,9 @@ export function Matchrapport() {
       <Guard name="Sammanhang"><Kontext
         ctx={data.context}
         opponent={(ourSide === 'home' ? data.away_team : data.home_team).replace(/^IF\s+/, '')}
+        // Björklöven gick upp inför 2026/27. Säsongsnyckeln avgör när den
+        // finns; annars datumet.
+        liga={(sasong ?? '').startsWith('ha') || (!sasong && data.date < '2026-07') ? 'HA' : 'SHL'}
       /></Guard>
       <Momentum goals={data.goals} penalties={data.penalties} netResult={ourGoals - theirGoals} />
       {/* Förlängningen är fem minuter och straffläggningen ingen speltid alls.

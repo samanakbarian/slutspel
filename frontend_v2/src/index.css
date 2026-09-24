@@ -3395,3 +3395,13 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .pg-f-vi { background: var(--data-for); color: #04140c; }
 .pg-f-ot { background: rgba(172, 199, 186, 0.22); color: var(--text-primary); }
 .pg-f-de { background: rgba(172, 199, 186, 0.4); color: var(--text-primary); }
+
+/* Matchens tal mot serien, under sammanhanget i matchrapporten. */
+.ctx-serien { padding: 0.55rem 0 0.2rem; }
+.ctx-serienrad {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.ctx-serienrad b { color: var(--text-primary); font-weight: 700; }

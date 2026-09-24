@@ -96,7 +96,50 @@ export type LineupBlock = {
 
 export type Placing = { rank: number; points: number; games_played: number };
 
+/** Ett av matchens tal mot seriens alla matcher i år, se /api/v1/match. */
+export type LeagueCompare = {
+  key: 'shots_for' | 'shots_against' | 'save_pct' | 'pim' | 'goals_for' | 'spectators';
+  label: string;
+  value: number;
+  n: number;
+  below: number;
+  above: number;
+  max: boolean;
+  min: boolean;
+};
+
+const MOT_SERIEN_ORD: Record<LeagueCompare['key'], { enhet: (v: number) => string; mer: string; mindre: string; mest: string; minst: string }> = {
+  shots_for: { enhet: v => `${v} skott`, mer: 'fler', mindre: 'färre', mest: 'flest', minst: 'minst' },
+  shots_against: { enhet: v => `${v} skott emot`, mer: 'fler', mindre: 'färre', mest: 'flest', minst: 'minst' },
+  save_pct: { enhet: v => `${v.toFixed(1).replace('.', ',')} % räddningar`, mer: 'högre', mindre: 'lägre', mest: 'högst', minst: 'lägst' },
+  pim: { enhet: v => `${v} utvisningsminuter`, mer: 'fler', mindre: 'färre', mest: 'flest', minst: 'minst' },
+  goals_for: { enhet: v => `${v} mål`, mer: 'fler', mindre: 'färre', mest: 'flest', minst: 'minst' },
+  spectators: { enhet: v => `${v.toLocaleString('sv-SE')} i publiken`, mer: 'fler', mindre: 'färre', mest: 'flest', minst: 'minst' },
+};
+
+/**
+ * Matchens tal som sticker ut mot serien, som korta meningar.
+ *
+ * Bara det som ligger i seriens yttersta femtedel tas med. "Fler skott än i
+ * sex av tio matcher" säger ingenting, och tre rader räcker.
+ */
+export function motSerien(rows: LeagueCompare[] | undefined, liga = 'SHL'): { key: string; varde: string; text: string }[] {
+  const ut: { key: string; varde: string; text: string; vikt: number }[] = [];
+  for (const r of rows ?? []) {
+    const o = MOT_SERIEN_ORD[r.key];
+    if (!o) continue;
+    const varde = o.enhet(r.value);
+    if (r.max) ut.push({ key: r.key, varde, text: `${o.mest} i en ${liga}-match i år`, vikt: 2 });
+    else if (r.min) ut.push({ key: r.key, varde, text: `${o.minst} i en ${liga}-match i år`, vikt: 2 });
+    else if (r.below >= 0.8) ut.push({ key: r.key, varde, text: `${o.mer} än i ${Math.round(r.below * 10)} av 10 matcher i år`, vikt: r.below });
+    else if (r.above >= 0.8) ut.push({ key: r.key, varde, text: `${o.mindre} än i ${Math.round(r.above * 10)} av 10 matcher i år`, vikt: r.above });
+  }
+  return ut.sort((a, b) => b.vikt - a.vikt).slice(0, 3).map(({ key, varde, text }) => ({ key, varde, text }));
+}
+
 export type MatchContext = {
+  /** Saknas i äldre API och tidigt på säsongen. */
+  league_compare?: LeagueCompare[];
   before: Placing | null;
   after: Placing | null;
   opponent_before: Placing | null;
