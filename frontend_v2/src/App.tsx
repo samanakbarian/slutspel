@@ -11,18 +11,9 @@ import { StatisticsPage } from './pages/Statistics';
 import { useLageStore } from './store/useLageStore';
 import { Sidhuvud } from './lib/sidhuvud';
 
-// De avpublicerade sidorna är de enda som använder Recharts. Laddas de lazy
-// hamnar biblioteket i en egen chunk i stället för i huvudbundlen, som alla
-// besökare betalar för.
-const EkonomiPage = lazy(() => import('./pages/Ekonomi').then(m => ({ default: m.EkonomiPage })));
-const PreseasonShlPage = lazy(() => import('./pages/PreseasonShl').then(m => ({ default: m.PreseasonShlPage })));
 const MetodSida = lazy(() => import('./pages/Metod').then(m => ({ default: m.MetodSida })));
 
-/**
- * Fem flikar. Ekonomi och Preseason ligger kvar som rutter men är
- * avpublicerade från navigeringen — inga länkar dör, och de kan tas
- * tillbaka utan att byggas om.
- */
+/** Fem flikar. */
 const navItems = [
   { to: '/matcher', label: 'Matcher', icon: CalendarDays },
   { to: '/statistik', label: 'Statistik', icon: LineChart },
@@ -162,8 +153,6 @@ function App() {
             <Route path="/x" element={<XFeedPage />} />
 
             {/* Avpublicerade men fungerande rutter */}
-            <Route path="/ekonomi" element={<EkonomiPage />} />
-            <Route path="/preseason-shl" element={<PreseasonShlPage />} />
             <Route path="/om" element={<OmSida />} />
             {/* Uppslagsverk, inte destination: ligger utanför bottenmenyn och
                 nås från noterna som använder måtten, plus sidfoten. */}

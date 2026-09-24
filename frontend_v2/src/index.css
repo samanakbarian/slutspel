@@ -201,49 +201,6 @@ a {
   gap: 0.7rem;
 }
 
-.signal-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.7rem;
-}
-
-.signal-card {
-  background: var(--bg-card);
-  border: 1px solid var(--glass-border);
-  border-left-width: 3px;
-  border-radius: 12px;
-  box-shadow: var(--glass-shadow);
-  padding: 0.9rem;
-}
-
-.signal-card-primary {
-  border-left-color: var(--impact-neutral);
-}
-
-.signal-card-critical {
-  border-left-color: var(--impact-negative);
-}
-
-.card-kicker {
-  color: var(--brand-gold);
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 0.35rem;
-}
-
-.card-title {
-  font-size: 1rem;
-  font-weight: 800;
-  margin-bottom: 0.35rem;
-}
-
-.card-text {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
 .bottom-nav {
   position: sticky;
   bottom: 0;
@@ -387,10 +344,6 @@ a {
        att bli en allt längre rad. */
     max-width: 50rem;
     padding: 1.2rem 1.25rem 1.3rem;
-  }
-
-  .signal-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .bottom-nav {

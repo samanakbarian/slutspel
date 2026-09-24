@@ -21,9 +21,7 @@ import { matcher } from '../lib/sprak';
  *   Utveckling  — allt som rör sig över tid: poängkurva, form, Elo, när
  *                 målen faller, publik, utvisningar.
  *
- * Tidigare låg en hel analysmodul (Recharts, ~1000 rader) nästlad i en
- * underflik här. Den ligger kvar för /preseason-shl men laddas inte längre
- * på statistiksidan — diagrammen nedan är handritad SVG.
+ * Diagrammen är handritad SVG, utan diagrambibliotek.
  */
 
 /* ── Typer ── */
