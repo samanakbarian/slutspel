@@ -6,7 +6,7 @@ import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
-import { BJK, humanName, isDefence, isOurs, motSerien, ordinal, ordinalSuffix, parsePeriods, positionOf, surname } from '../lib/match';
+import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, positionOf, surname } from '../lib/match';
 import { sasongForDatum, spelarsida } from '../lib/lankar';
 import { skrivSidhuvud } from '../lib/sidhuvud';
 import { matcher } from '../lib/sprak';
@@ -14,20 +14,21 @@ import { matcher } from '../lib/sprak';
 /* ── kontext: vad matchen betydde ── */
 
 /**
- * Var matchen stod i serien.
+ * Vad matchen gav: poängen den tog och säsongen efter den.
  *
- * En 2-1-vinst i februari kan vara en av femtiotvå eller den som tar laget
- * från andra till första plats. Utan placeringen före och efter går det inte
- * att se skillnaden. Allt räknas ur schemat, som täcker hela serien — vi
- * skördar bara våra egna matcher, men resultatet för alla.
+ * Här stod tidigare placeringen före och efter, räknad ur vår egen tabell.
+ * Vid lika poäng skiljer sig ordningen från den officiella — rapporten sa
+ * 1:a när tabellen sa 2:a — och placeringen hör hemma i tabellen, inte i
+ * en matchrapport. Poängen är exakta och säger vad matchen var värd.
  */
-function Kontext({ ctx, opponent, liga }: { ctx: MatchContext | null | undefined; opponent: string; liga: string }) {
+function Kontext({ ctx, liga, vann, forlangning }: {
+  ctx: MatchContext | null | undefined; liga: string; vann: boolean; forlangning: boolean;
+}) {
   if (!ctx) return null;
-  const { before, after, opponent_before: theirs, form, meetings, venue_average: avg } = ctx;
-  if (!before && !after && form.length === 0) return null;
+  const { after, form, meetings, venue_average: avg } = ctx;
+  if (!after && form.length === 0) return null;
   const sticker = motSerien(ctx.league_compare, liga);
-
-  const moved = before && after ? before.rank - after.rank : 0;
+  const poang = vann ? (forlangning ? 2 : 3) : (forlangning ? 1 : 0);
   const record = meetings.reduce(
     (acc, m) => {
       if (m.goals_for > m.goals_against) acc.w += 1;
@@ -42,18 +43,10 @@ function Kontext({ ctx, opponent, liga }: { ctx: MatchContext | null | undefined
       <p className="mr-kicker">Sammanhang</p>
       {after && (
         <div className="ctx-rank">
-          <span className="ctx-rankbig">{after.rank}<i>{ordinalSuffix(after.rank)}</i></span>
+          <span className="ctx-rankbig">{poang}<i>p</i></span>
           <span className="ctx-rankbody">
-            <b>{after.points} poäng</b> efter {matcher(after.games_played)}
-            {before && (
-              <span className="ctx-move">
-                {moved > 0
-                  ? `Klättrade ${moved} placering${moved > 1 ? 'ar' : ''} från ${ordinal(before.rank)}`
-                  : moved < 0
-                    ? `Tappade ${-moved} placering${-moved > 1 ? 'ar' : ''} från ${ordinal(before.rank)}`
-                    : `Låg ${ordinal(before.rank)} även före`}
-              </span>
-            )}
+            <b>{after.points} poäng</b>
+            efter {matcher(after.games_played)}
           </span>
         </div>
       )}
@@ -70,14 +63,6 @@ function Kontext({ ctx, opponent, liga }: { ctx: MatchContext | null | undefined
               />
             ))}
           </span>
-        </div>
-      )}
-
-      {theirs && (
-        <div className="st-kv">
-          <span className="st-kvlabel">{opponent} före matchen</span>
-          <span className="st-kvvalue">{ordinal(theirs.rank)}</span>
-          <span className="st-kvhint">{theirs.points} poäng</span>
         </div>
       )}
 
@@ -954,7 +939,8 @@ export function Matchrapport() {
         goals={data.goals || []} penalties={data.penalties || []} /></Guard>
       <Guard name="Sammanhang"><Kontext
         ctx={data.context}
-        opponent={(ourSide === 'home' ? data.away_team : data.home_team).replace(/^IF\s+/, '')}
+        vann={ourGoals > theirGoals}
+        forlangning={extra}
         // Björklöven gick upp inför 2026/27. Säsongsnyckeln avgör när den
         // finns; annars datumet.
         liga={(sasong ?? '').startsWith('ha') || (!sasong && data.date < '2026-07') ? 'HA' : 'SHL'}
