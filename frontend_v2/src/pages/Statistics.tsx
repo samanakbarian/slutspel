@@ -136,7 +136,7 @@ type Split = { gp: number; w: number; l: number; otw: number; otl: number; gf: n
 type StateRecord = { w: number; l: number; otl?: number };
 
 type Modules = {
-  timeline?: { date: string; opponent: string; result: string; score: string; cumPts: number; isHome: boolean; gf: number; ga: number }[];
+  timeline?: { date: string; opponent: string; result: string; score: string; cumPts: number; isHome: boolean; gf: number; ga: number; beyond?: boolean }[];
   splits?: { home: Split; away: Split };
   periods?: { period: number; label: string; gf: number; ga: number; games: number }[];
   form?: { date: string; matchNum: number; pts: number; gf_avg: number; ga_avg: number; window: number }[];
@@ -1562,7 +1562,8 @@ function Laget({
   venue: VenueFilter;
   onVenue: (v: VenueFilter) => void;
 }) {
-  const last10 = timeline.slice(-10).map(t => t.result);
+  // Tidslinjen skriver W och L; förlängningen står i ett eget fält.
+  const last10 = timeline.slice(-10).map(t => (t.beyond ? (t.result === 'W' ? 'OTW' : 'OTL') : t.result));
   const splits = modules?.splits;
   const st = modules?.special_teams;
   const gs = modules?.game_state;
