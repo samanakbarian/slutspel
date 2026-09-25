@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
+import { Lageskort, lageFor } from '../components/koncept/Lageskort';
+import { Sasongsbandet } from '../components/koncept/Sasongsbandet';
 import { resultat } from '../lib/match';
 import { Guard } from '../components/Guard';
 import { Tabellen } from '../components/Tabellen';
@@ -37,6 +39,8 @@ type Game = {
   gf: number;
   ga: number;
   result: 'W' | 'L' | 'OTL' | 'D' | '';
+  /** Avgjord i förlängning eller straffar. */
+  ot: boolean;
   venue: string;
 };
 
@@ -72,6 +76,7 @@ function normalise(g: RawGame): Game {
     gf,
     ga,
     result,
+    ot,
     venue: g.venue || '',
   };
 }
@@ -140,25 +145,6 @@ function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) 
   );
 }
 
-function FormDots({ games }: { games: Game[] }) {
-  const last = games.slice(0, 10);
-  if (last.length === 0) return null;
-  const w = last.filter(g => g.result === 'W').length;
-  const l = last.filter(g => g.result === 'L').length;
-  const o = last.filter(g => g.result === 'OTL').length;
-  return (
-    <div className="mc-form">
-      {last.map((g, i) => (
-        <span
-          key={i}
-          className={`mc-dot mc-dot-${g.result.toLowerCase() || 'none'}`}
-          title={`${g.date}: ${g.home} ${g.gf}–${g.ga} ${g.away}`}
-        />
-      ))}
-      <span className="mc-formtext">{w}V–{l}F{o > 0 ? `–${o}ÖT` : ''}</span>
-    </div>
-  );
-}
 
 /**
  * Björklöven är alltid ett av lagen, så att skriva ut båda på varje rad
@@ -370,26 +356,23 @@ export function Matcher() {
   const next = upcoming[0];
   const shown = view === 'spelade' ? played : upcoming;
   const trunkerad = !visaAllt && shown.length > 8;
+  const lage = lageFor(played[0], next);
   const synliga = trunkerad ? shown.slice(0, 8) : shown;
 
   return (
     <div className="page animate-fade-up">
-      {/* Under säsong är senaste resultatet det man kollar först; före
-          seriestart finns bara nästa match att visa. */}
-      {played[0] && (
+      {/* Överdelen följer veckan: resultatet efter en match, tiden kvar på
+          matchdagen, och kortet inför matchen resten av veckan. */}
+      {lage !== 'fore' && <Lageskort lage={lage} senaste={played[0]} nasta={next} />}
+      {next && <Guard name="Inför matchen"><InforMatchen season={season} /></Guard>}
+      {lage === 'fore' && played[0] && (
         <LatestMatch
           game={played[0]}
           fallback={played[0].gameId === null ? played.find(g => g.gameId !== null) || null : null}
         />
       )}
-      {next && <Guard name="Inför matchen"><InforMatchen season={season} /></Guard>}
 
-      {played.length > 0 && (
-        <section className="mc-card">
-          <p className="mc-kicker">Form · senaste {Math.min(played.length, 10)}</p>
-          <FormDots games={played} />
-        </section>
-      )}
+      <Guard name="Säsongen"><Sasongsbandet games={games} season={seasonName} /></Guard>
 
       <div className="mc-seg" role="tablist">
         <button

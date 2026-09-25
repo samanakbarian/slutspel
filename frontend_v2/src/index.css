@@ -108,7 +108,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   letter-spacing: -0.02em;
 }
 
@@ -385,7 +385,7 @@ a {
 }
 
 .empty-season-title {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -436,7 +436,7 @@ a {
   margin-bottom: 0.5rem;
 }
 
-.mc-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; }
+.mc-title { font-family: var(--font-display); font-stretch: var(--display-stretch, 100%); font-size: 1.1rem; font-weight: 800; }
 .mc-text { font-size: 0.84rem; color: var(--text-secondary); }
 
 /* hero: nästa match */
@@ -533,7 +533,7 @@ a {
 
 .mc-score {
   flex: none;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -701,7 +701,7 @@ a {
   margin-bottom: 0.5rem;
 }
 
-.mr-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; }
+.mr-title { font-family: var(--font-display); font-stretch: var(--display-stretch, 100%); font-size: 1.1rem; font-weight: 800; }
 .mr-text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45; }
 .mr-note { margin-top: 0.4rem; font-size: 0.68rem; color: var(--text-muted); }
 
@@ -736,7 +736,7 @@ a {
 
 .mr-scorenum {
   flex: none;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.75rem;
   font-weight: 900;
   letter-spacing: -0.03em;
@@ -772,7 +772,7 @@ a {
 }
 
 .mr-period-score {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -850,7 +850,7 @@ a {
 
 .mr-goal-state {
   flex: none;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-weight: 800;
   font-size: 0.82rem;
   color: var(--text-secondary);
@@ -891,7 +891,7 @@ a {
   padding: 0.2rem 0 0.7rem;
 }
 .ctx-rankbig {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 2.6rem;
   font-weight: 800;
   line-height: 1;
@@ -1209,7 +1209,7 @@ a {
 .st-difftext-neg { color: var(--data-against); }
 
 .st-points {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 0.86rem;
   font-weight: 800;
   text-align: right;
@@ -1228,7 +1228,7 @@ a {
   margin-bottom: 0.3rem;
 }
 .an-head b {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.15rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -1261,7 +1261,7 @@ a {
 
 .pdo { display: flex; align-items: baseline; gap: 0.8rem; margin: 0.4rem 0 0.5rem; }
 .pdo-tal {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 2rem;
   font-weight: 800;
   line-height: 1;
@@ -1316,7 +1316,7 @@ a {
   border: 1px solid rgba(66, 216, 131, 0.28);
 }
 .im-count b {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 2.1rem;
   font-weight: 800;
   line-height: 1;
@@ -1354,7 +1354,7 @@ a {
 }
 .im-opponent {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.35rem;
   font-weight: 800;
   line-height: 1.15;
@@ -1388,7 +1388,7 @@ a {
 .du-row:last-child { margin-bottom: 0; }
 
 .du-val {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 0.86rem;
   font-weight: 700;
   color: var(--text-muted);
@@ -1556,7 +1556,7 @@ a {
 .pm-row-neg { border-left-color: var(--data-against); }
 
 .pm-value {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-muted);
@@ -1688,7 +1688,7 @@ a {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-weight: 700;
   font-size: 1rem;
   color: var(--text-secondary);
@@ -1778,7 +1778,7 @@ a {
 }
 
 .rs-source-title {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 0.95rem;
   font-weight: 800;
   margin-bottom: 0.2rem;
@@ -1795,7 +1795,7 @@ a {
 }
 
 .rs-stale-title {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 0.92rem;
   font-weight: 800;
   color: var(--impact-warning);
@@ -1817,7 +1817,7 @@ a {
 
 .rs-kpival {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.5rem;
   font-weight: 900;
   line-height: 1;
@@ -1869,7 +1869,7 @@ a {
 .rs-left { border-left-color: var(--impact-negative); }
 
 .rs-num {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 0.8rem;
   font-weight: 800;
   color: var(--text-muted);
@@ -2015,7 +2015,7 @@ a {
 
 .st-statval {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.4rem;
   font-weight: 800;
   line-height: 1.1;
@@ -2108,14 +2108,14 @@ a {
   border-radius: 10px;
   background: rgba(37, 163, 90, 0.14);
   border: 1px solid rgba(37, 163, 90, 0.3);
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.1rem;
   font-weight: 800;
   color: var(--brand-green-light);
 }
 
 .sp-ident { min-width: 0; }
-.sp-name { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; overflow-wrap: anywhere; }
+.sp-name { font-family: var(--font-display); font-stretch: var(--display-stretch, 100%); font-size: 1.15rem; font-weight: 800; overflow-wrap: anywhere; }
 .sp-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 1px; }
 
 .sp-totals {
@@ -2130,7 +2130,7 @@ a {
 
 .sp-val {
   display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.1;
@@ -2271,7 +2271,7 @@ a {
 .mc-latest-opp {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.1rem;
   font-weight: 800;
   overflow: hidden;
@@ -2281,7 +2281,7 @@ a {
 
 .mc-latest-score {
   flex: none;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.5rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -2357,7 +2357,7 @@ a {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.05rem;
   font-weight: 800;
 }
@@ -2521,7 +2521,7 @@ a {
 
 .tor-diff {
   text-align: right;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 0.95rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -2656,7 +2656,7 @@ td.opp-num { font-variant-numeric: tabular-nums; text-align: right; padding-left
 .swing-tag.down { background: rgba(217, 89, 38, 0.16); color: var(--data-against); }
 .swing-score {
   text-align: right;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-variant-numeric: tabular-nums;
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -2703,7 +2703,7 @@ td.opp-num { font-variant-numeric: tabular-nums; text-align: right; padding-left
 .sp-stats-tight { grid-template-columns: repeat(auto-fit, minmax(4.6rem, 1fr)); }
 .sp-stat { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
 .sp-stat-val {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.15rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -2728,7 +2728,7 @@ td.opp-num { font-variant-numeric: tabular-nums; text-align: right; padding-left
   font-weight: 600;
 }
 .sp-split b {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.25rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -2846,7 +2846,7 @@ td.opp-num { font-variant-numeric: tabular-nums; text-align: right; padding-left
 .ny-toppmeta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 
 .ny-topptitel {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.25;
@@ -2927,7 +2927,7 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .ny-tomt { font-size: 0.82rem; color: var(--text-muted); font-style: italic; margin: 0.8rem 0; }
 
 .ny-rubrik {
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.5rem;
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -3058,7 +3058,7 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 
 .md-namn {
   margin: 0 0 0.45rem;
-  font-family: var(--font-display);
+  font-family: var(--font-display); font-stretch: var(--display-stretch, 100%);
   font-size: 1.05rem;
   font-weight: 800;
 }

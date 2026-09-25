@@ -4,9 +4,11 @@ import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
+import { Kedjekort } from '../components/koncept/Kedjekort';
+import { Matchstory } from '../components/koncept/Matchstory';
 import { Guard } from '../components/Guard';
 import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
-import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, resultat, positionOf, surname } from '../lib/match';
+import { BJK, humanName, isOurs, motSerien, parsePeriods, resultat, positionOf, surname } from '../lib/match';
 import { sasongForDatum, spelarsida } from '../lib/lankar';
 import { skrivSidhuvud } from '../lib/sidhuvud';
 import { matcher } from '../lib/sprak';
@@ -485,48 +487,6 @@ function Malvakter({ goalies, till }: { goalies: MatchReport['goalies']; till: T
  * forwards och backparet — så raden är inte en kedja i ordets vanliga mening.
  * Positionerna kommer ur truppen, så de går att skilja åt.
  */
-function Femmorna({ lineup, squad, till }: { lineup: MatchReport['lineup']; squad: MatchReport['squad']; till: TillSpelare }) {
-  const blocks = (lineup || []).filter(b => b.players.length > 0);
-  if (blocks.length === 0) return null;
-  const isBack = (p: { number: number | null; name: string }) =>
-    isDefence(positionOf(squad, p.name, p.number));
-  const label = (b: { block: string; line: number | null }) =>
-    b.block === 'line' ? `Femma ${b.line}` : b.block === 'goalie' ? 'Målvakter' : 'Extra';
-
-  return (
-    <section className="mr-card">
-      <p className="mr-kicker">Uppställning</p>
-      {blocks.map((b, i) => {
-        const fwd = b.block === 'line' ? b.players.filter(p => !isBack(p)) : b.players;
-        const def = b.block === 'line' ? b.players.filter(p => isBack(p)) : [];
-        return (
-          <div className="lu-row" key={i}>
-            <span className="lu-label">{label(b)}</span>
-            <span className="lu-players">
-              {fwd.map(p => (
-                <span className="lu-p" key={p.number ?? p.name}>
-                  <b>{p.number}</b> <Namn namn={p.name} till={till}>{surname(p.name)}</Namn>
-                </span>
-              ))}
-              {def.length > 0 && (
-                <>
-                  <span className="lu-sep" aria-hidden="true" />
-                  {def.map(p => (
-                    <span className="lu-p lu-p-d" key={p.number ?? p.name}>
-                      <b>{p.number}</b> <Namn namn={p.name} till={till}>{surname(p.name)}</Namn>
-                    </span>
-                  ))}
-                </>
-              )}
-            </span>
-          </div>
-        );
-      })}
-      <p className="mr-note">Klubbens egen indelning. Backparet efter avdelaren.</p>
-    </section>
-  );
-}
-
 /* ── målkronologi ── */
 
 /**
@@ -909,7 +869,6 @@ export function Matchrapport() {
   const ag = m ? parseInt(m[2], 10) : 0;
   const ourGoals = ourSide === 'home' ? hg : ag;
   const theirGoals = ourSide === 'home' ? ag : hg;
-  const outcome = ourGoals > theirGoals ? 'Vinst' : ourGoals < theirGoals ? 'Förlust' : 'Oavgjort';
   const extra = periods.length > 3;
   const sasong = sasonger ? sasongForDatum(data.date, sasonger.list, sasonger.active) : null;
   const till: TillSpelare = sasong === null ? null : (namn: string) => spelarsida(namn, sasong);
@@ -918,22 +877,7 @@ export function Matchrapport() {
     <div className="page animate-fade-up">
       <Link to="/matcher" className="mr-back">← Matcher</Link>
 
-      <section className="mr-hero">
-        <p className="mr-kicker">{data.date}{data.venue ? ` · ${data.venue}` : ''}</p>
-        <div className="mr-score">
-          <span className={`mr-side${ourSide === 'home' ? ' mr-side-ours' : ''}`}>
-            {data.home_team.replace(/^IF\s+/, '')}
-          </span>
-          <span className="mr-scorenum">{hg}–{ag}</span>
-          <span className={`mr-side${ourSide === 'away' ? ' mr-side-ours' : ''}`}>
-            {data.away_team.replace(/^IF\s+/, '')}
-          </span>
-        </div>
-        <p className={`mr-outcome mr-outcome-${outcome.toLowerCase()}`}>
-          {outcome}{extra ? (periods.length > 4 ? ' efter straffar' : ' efter förlängning') : ''}
-          {data.spectators ? ` · ${data.spectators.toLocaleString('sv-SE')} åskådare` : ''}
-        </p>
-      </section>
+      <Guard name="Matchstory"><Matchstory data={data} /></Guard>
 
       <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []}
         goals={data.goals || []} penalties={data.penalties || []} /></Guard>
@@ -953,7 +897,7 @@ export function Matchrapport() {
       <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
       <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} till={till} /></Guard>
       <Guard name="Målvakter"><Malvakter goalies={data.goalies} till={till} /></Guard>
-      <Guard name="Uppställning"><Femmorna lineup={data.lineup} squad={data.squad} till={till} /></Guard>
+      <Guard name="Uppställning"><Kedjekort data={data} /></Guard>
       <Goals goals={data.goals} squad={data.squad} till={till} />
       <Penalties penalties={data.penalties} goals={data.goals} />
       <Guard name="Dela matchen"><DelaMatchen data={data} /></Guard>
