@@ -60,7 +60,7 @@
   --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Anybody', 'Arial Narrow', system-ui, sans-serif;
   --font-mono: 'Martian Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  --display-stretch: 62%;
+  --display-stretch: 58%;
   color-scheme: light;
 }
 
@@ -110,7 +110,7 @@ body {
 .ks-sida { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 18px 18px 24px; }
 .ks-tid { font: 600 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--k-gul); }
 .ks-stor {
-  font-family: var(--font-display); font-stretch: 55%; font-weight: 900;
+  font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900;
   font-size: 8.5rem; line-height: .8; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
 }
 .ks-text { font-size: 1.1rem; line-height: 1.35; font-weight: 500; max-width: 28ch; }
@@ -155,7 +155,7 @@ body {
 .lk-dag { background: var(--k-gul); color: var(--k-svart); }
 .lk-rubr { font: 600 11px/1 var(--font-mono); font-stretch: 87.5%; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
 .lk-jatte {
-  font-family: var(--font-display); font-stretch: 55%; font-weight: 900;
+  font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900;
   font-size: 7rem; line-height: .8; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
 }
 .lk-jatte small { font-size: 1.6rem; font-stretch: 70%; margin-left: 8px; }
@@ -182,7 +182,7 @@ body {
 .sb-cell[aria-pressed="true"] { outline: 2px solid var(--k-svart); outline-offset: 1px; }
 .sb-cell:focus-visible { outline: 2px solid var(--k-svart); outline-offset: 1px; }
 .sb-detalj { margin-top: .8rem; background: var(--k-svart); color: #f3f5f1; border-radius: 6px; padding: 12px 14px; display: grid; gap: 3px; }
-.sb-detalj b { font-family: var(--font-display); font-stretch: 65%; font-weight: 800; font-size: 1.45rem; line-height: 1; text-transform: uppercase; }
+.sb-detalj b { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 800; font-size: 1.45rem; line-height: 1; text-transform: uppercase; }
 .sb-detalj span { font: 500 11px/1.4 var(--font-mono); font-stretch: 87.5%; color: #b8c6be; }
 .sb-lank { color: var(--k-gul); font-weight: 700; font-size: .85rem; text-decoration: none; margin-top: 4px; }
 .sb-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: .7rem; font: 500 10px/1 var(--font-mono); font-stretch: 87.5%; color: var(--text-muted); }
@@ -200,7 +200,7 @@ body {
 .topbar { background: rgba(243, 245, 241, 0.94); border-bottom: 2px solid var(--k-svart); }
 .topbar-sida { background: var(--k-gul); color: var(--k-svart); border: 0; border-radius: 2px; font-family: var(--font-mono); }
 .topbar-kicker { color: var(--k-gron); font-family: var(--font-mono); font-stretch: 87.5%; }
-.topbar-title { font-stretch: 60%; font-weight: 900; text-transform: uppercase; font-size: 1.6rem; }
+.topbar-title { font-stretch: var(--display-stretch); font-weight: 900; text-transform: uppercase; font-size: 1.6rem; }
 .bottom-nav { background: rgba(243, 245, 241, 0.97); border-top: 2px solid var(--k-svart); }
 .bottom-link { font-family: var(--font-mono); font-stretch: 87.5%; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; font-size: .58rem; }
 .bottom-link.active { background: var(--k-svart); color: var(--k-gul); border: 0; border-radius: 4px; }
@@ -220,7 +220,7 @@ body {
 }
 .sp-hero .sp-num {
   position: absolute; right: -6px; top: -28px; z-index: 0;
-  font-family: var(--font-display); font-stretch: 55%; font-weight: 900;
+  font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900;
   font-size: 12rem; line-height: 1; color: rgba(255, 199, 44, 0.16);
   background: none; border: 0; width: auto; height: auto; padding: 0;
   pointer-events: none;
@@ -229,7 +229,7 @@ body {
 .sp-hero .sp-name { max-width: 78%; font-size: 2.6rem; line-height: .88; text-transform: uppercase; font-weight: 900; color: #fff; }
 .sp-hero .sp-meta { color: rgba(243, 245, 241, 0.75); font-family: var(--font-mono); font-stretch: 87.5%; font-size: .72rem; letter-spacing: .04em; margin-top: 6px; }
 .sp-hero .sp-totals { border-top: 1px solid rgba(255, 255, 255, 0.25); margin-top: 14px; padding-top: 12px; }
-.sp-hero .sp-val { color: #fff; font-family: var(--font-display); font-stretch: 60%; font-weight: 900; font-size: 2.2rem; }
+.sp-hero .sp-val { color: #fff; font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 2.2rem; }
 .sp-hero .sp-val.sp-gold { color: var(--k-gul); }
 .sp-hero .sp-lbl { color: rgba(243, 245, 241, 0.7); }
 .sp-hero .sp-nav button { background: rgba(0, 0, 0, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); }
@@ -259,7 +259,7 @@ a.tv-kort:active .tv-troja { transform: scale(.96); }
 .tv-ny { background: var(--k-gul); color: var(--k-svart); }
 .tv-gk { background: var(--k-svart); color: var(--k-gul); }
 .tv-rygg { font: 600 7.5px/1 var(--font-mono); letter-spacing: .06em; max-width: 64%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tv-nr { font-family: var(--font-display); font-stretch: 55%; font-weight: 900; font-size: 2.6rem; line-height: 1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.tv-nr { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 2.6rem; line-height: 1; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .tv-namn { font-weight: 700; font-size: .8rem; line-height: 1.15; overflow-wrap: anywhere; }
 .tv-meta { font: 500 9.5px/1.35 var(--font-mono); font-stretch: 87.5%; color: var(--text-muted); }
 .tv-meta b { color: var(--k-gron); }
@@ -282,13 +282,13 @@ a.tv-kort:active .tv-troja { transform: scale(.96); }
 .ld-1 { background: var(--k-svart); }
 .ld-2 { background: var(--k-gul); color: var(--k-svart); }
 .ld-etikett { font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
-.ld-varde { font-family: var(--font-display); font-stretch: 55%; font-weight: 900; font-size: 5.2rem; line-height: .85; font-variant-numeric: tabular-nums; }
+.ld-varde { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 5.2rem; line-height: .85; font-variant-numeric: tabular-nums; }
 .ld-namn { font-weight: 700; font-size: 1.05rem; }
 .ld-not { font: 500 10px/1.3 var(--font-mono); opacity: .75; }
 
 /* ── Nyheter och X ── */
 .ny-topp { background: var(--k-svart); color: #f3f5f1; border: 0; border-radius: 6px; }
-.ny-topptitel { font-family: var(--font-display); font-stretch: 62%; font-weight: 900; font-size: 2rem; line-height: .95; text-transform: uppercase; color: #fff; }
+.ny-topptitel { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 2rem; line-height: .95; text-transform: uppercase; color: #fff; }
 .ny-topp .ny-tid, .ny-topp .ny-kalla { color: rgba(243, 245, 241, 0.7); }
 .ny-dagrubrik { font-family: var(--font-mono); font-stretch: 87.5%; letter-spacing: .1em; }
 .ny-rad { background: #fff; border: 1px solid var(--k-linje); border-radius: 4px; }
@@ -319,7 +319,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .stv-del:last-of-type { border-bottom: 0; }
 .stv-huvud { display: flex; justify-content: space-between; align-items: baseline; }
 .stv-rubrik { font: 600 11px/1 var(--font-mono); font-stretch: 87.5%; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
-.stv-tal { font-family: var(--font-display); font-stretch: 55%; font-weight: 900; font-size: 3.4rem; line-height: .85; font-variant-numeric: tabular-nums; }
+.stv-tal { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 3.4rem; line-height: .85; font-variant-numeric: tabular-nums; }
 .stv-tal small { font-size: 1.4rem; margin-left: 3px; }
 .stv-rutor { display: flex; flex-wrap: wrap; gap: 5px; }
 .stv-ruta { width: 22px; height: 22px; border-radius: 3px; display: block; }
@@ -376,7 +376,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 /* Tal */
 .st-statval, .sp-stat-val, .sp-split b, .rs-kpival, .pdo-tal, .mr-period-score, .im-count b, .rs-num, .du-val {
   font-family: var(--font-display);
-  font-stretch: 58%;
+  font-stretch: var(--display-stretch);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
@@ -386,7 +386,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .sp-split b { font-size: 1.8rem; }
 .pdo-tal { font-size: 3rem; line-height: .9; }
 .mr-period-score { font-size: 1.7rem; line-height: 1; }
-.st-kvvalue { font-family: var(--font-display); font-stretch: 58%; font-weight: 900; font-size: 1.2rem; }
+.st-kvvalue { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 1.2rem; }
 .md-namn { text-transform: uppercase; font-size: 1.3rem; font-weight: 900; letter-spacing: 0; }
 
 /* Rubriker under kortets etikett: versaler, som kortens huvudrubrik. */
@@ -508,7 +508,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .ny-tumnagel:hover { border-color: var(--k-svart); }
 
 /* X */
-.xf-avatar { color: var(--k-gul); font-family: var(--font-display); font-stretch: 62%; font-weight: 900; font-size: 1rem; }
+.xf-avatar { color: var(--k-gul); font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 1rem; }
 
 /* Metod */
 .md-formel {
@@ -525,3 +525,69 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .pd-gf { background: var(--k-gron); }
 .pd-ga { background: var(--k-rod); }
 .pd-nums, .pd-diff, .pd-label { font-family: var(--font-mono); font-stretch: 87.5%; }
+
+/* ── Typsystemet ─────────────────────────────────────────────────────────
+   Tre roller och inga fler:
+   1. Anybody: stora tal och rubriker. En bredd, tjockast snitt, versaler,
+      aldrig under 20 px.
+   2. Martian Mono: etiketter, märken och enheter. Versaler, 87,5 % bredd.
+   3. Instrument Sans: löptext och små tal i listor, med tabellsiffror.
+   Blocket ligger sist så att det vinner över kortformen `font:`, som annars
+   nollställer bredden. */
+
+body :is(
+  h1, h2, h3, .mc-title, .mr-title, .md-namn, .topbar-title, .sp-name, .gk-name, .ny-rubrik, .ny-topptitel,
+  .im-opponent, .rs-source-title, .sb-detalj > b, .xf-avatar,
+  .ks-stor, .lk-jatte, .ld-varde, .sp-num, .sp-val, .sp-stat-val, .sp-split b, .st-statval, .st-kvvalue,
+  .stv-tal, .pdo-tal, .mr-period-score, .im-count b, .ctx-rankbig, .tv-nr, .rs-hjalte b, .mc-latest-score,
+  .ld-namn
+) {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  font-variant-numeric: normal;
+}
+/* Tal behåller sina enheter i gemener: "3 p", "31 min". */
+body :is(
+  .ks-stor, .lk-jatte, .ld-varde, .sp-num, .sp-val, .sp-stat-val, .sp-split b, .st-statval, .st-kvvalue,
+  .stv-tal, .pdo-tal, .mr-period-score, .im-count b, .ctx-rankbig, .tv-nr, .rs-hjalte b, .mc-latest-score
+) { text-transform: none; }
+body :is(.gk-name, .rs-source-title, .xf-avatar, .md-namn, .st-kvvalue, .ld-namn) { font-size: 1.25rem; line-height: 1; }
+body .rs-hjalte b { font-size: 3rem; line-height: .9; }
+
+/* Små tal i rader och tabeller: Instrument Sans, inte Anybody. */
+body :is(.mc-score, .st-points, .mr-goal-state, .pm-value, .du-val, .mr-gk-pct, .an-under) {
+  font-family: var(--font-sans);
+  font-stretch: 100%;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+body :is(
+  .bottom-link span, .bx-l, .bx-pos-tag, .bx-summary, .du-us, .du-them, .du-label, .du-head, .freshness, .gk-num,
+  .im-count i, .im-h2hlabel, .im-ha, .kk-nr, .kk-p, .kk-summa span, .kk-summa b, .kk-val button, .ks-huvud, .ks-tid,
+  .ld-etikett, .ld-not, .lk-rubr, .mc-ha, .mc-kicker, .mc-res, .mr-kicker, .mr-onice-label,
+  .mr-pen-min, .mr-period-label, .mr-tag, .mr-team, .ny-dagrubrik, .ny-tagg, .opp-num, .pd-diff, .pd-label,
+  .pd-nums, .rs-difflbl, .sb-cell, .sb-detalj span, .sb-legend, .sp-ep, .sp-lbl, .sp-mates-h, .sp-meta,
+  .sp-split-h, .sp-stat-lbl, .st-kol, .st-more, .st-sort, .st-statlbl, .stv-rubrik, .stv-skala, .tab-vaxel,
+  .topbar-kicker, .topbar-sida, .tv-meta, .tv-rygg, .tv-status, .mc-table th, .opp-tbl th, .bx-table th,
+  .st-minilbl, .rs-kpilbl, .swing-tag, .ny-inofficiell, .pg-head, .mc-latest-label, .tor-sub-tag,
+  .stv-tal small, .lk-jatte small, .ctx-rankbig i, .sp-cmp select, .st-season
+) {
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  text-transform: uppercase;
+  font-style: normal;
+}
+/* Enheterna efter ett stort tal: små, i mono, på baslinjen. */
+body :is(.stv-tal small, .lk-jatte small, .ctx-rankbig i) { font-size: .7rem; font-weight: 600; letter-spacing: .06em; margin-left: 4px; }
+/* Formlerna ska läsas som de står. */
+body .md-formel { text-transform: none; }
+
+/* Diagrammens axlar och etiketter. */
+body svg text, body .rl text { font-family: var(--font-mono); font-stretch: 87.5%; text-transform: uppercase; }
+/* Lagnamnen vid kurvornas slut är data, inte etiketter, och måste rymmas. */
+body .rl text.rl-end { font-family: var(--font-sans); font-stretch: 100%; text-transform: none; }

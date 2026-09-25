@@ -1,3 +1,4 @@
+import { luft } from './luft';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { resultat } from '../../lib/match';
@@ -71,7 +72,7 @@ export function Spelarreel({ namn, log, poang, matcher }: { namn: string; log: R
       <div className="ks-huvud"><span>{namn}</span><span>{i + 1}/{sidor.length}</span></div>
       <div className="ks-sida" aria-live="polite">
         <span className="ks-tid">{s.tid}</span>
-        <span className="ks-stor">{s.stor}</span>
+        <span className="ks-stor">{luft(s.stor)}</span>
         <p className="ks-text">{s.text}</p>
       </div>
       <button type="button" className="ks-zon ks-bak" aria-label="Föregående" onClick={() => bladdra(-1)} disabled={i === 0} />

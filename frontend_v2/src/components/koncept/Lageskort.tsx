@@ -1,3 +1,4 @@
+import { luft } from './luft';
 import { Link } from 'react-router-dom';
 import type { BandMatch } from './Sasongsbandet';
 import type { Lage } from './lage';
@@ -20,7 +21,7 @@ export function Lageskort({ lage, senaste, nasta }: { lage: Lage; senaste?: Band
     return (
       <section className={`lk lk-efter${vann ? '' : ' lk-forlust'}`}>
         <span className="lk-rubr">Slut{senaste.ot ? ' · efter förlängning' : ''}</span>
-        <span className="lk-jatte">{senaste.isHome ? `${senaste.gf}–${senaste.ga}` : `${senaste.ga}–${senaste.gf}`}</span>
+        <span className="lk-jatte">{luft(senaste.isHome ? `${senaste.gf}–${senaste.ga}` : `${senaste.ga}–${senaste.gf}`)}</span>
         <p className="lk-text">
           {senaste.isHome ? <><b>{hemma}</b> – {borta}</> : <>{hemma} – <b>{borta}</b></>}
         </p>

@@ -1,3 +1,4 @@
+import { luft } from '../components/koncept/luft';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
@@ -120,7 +121,7 @@ function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) 
       <div className="mc-latest-row">
         <span className={`mc-ha${game.isHome ? ' mc-ha-home' : ''}`}>{game.isHome ? 'H' : 'B'}</span>
         <span className="mc-latest-opp">{game.opponent.replace(/^IF\s+/, '')}</span>
-        <span className="mc-latest-score">{resultat(game.gf, game.ga, game.isHome)}</span>
+        <span className="mc-latest-score">{luft(resultat(game.gf, game.ga, game.isHome))}</span>
       </div>
       <p className="mc-latest-label">{label}</p>
       {linkable ? (

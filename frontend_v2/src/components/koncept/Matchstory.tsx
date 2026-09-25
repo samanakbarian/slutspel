@@ -1,3 +1,4 @@
+import { luft } from './luft';
 import { useState } from 'react';
 import type { Goal, MatchReport } from '../../lib/match';
 import { isOurs, parsePeriods, surname } from '../../lib/match';
@@ -149,7 +150,7 @@ export function Matchstory({ data }: { data: MatchReport }) {
       </div>
       <div className="ks-sida" aria-live="polite">
         <span className="ks-tid">{sida.tid}</span>
-        <span className="ks-stor">{sida.stor}</span>
+        <span className="ks-stor">{luft(sida.stor)}</span>
         <p className="ks-text">{sida.text}</p>
       </div>
       <button type="button" className="ks-zon ks-bak" aria-label="Föregående" onClick={() => bladdra(-1)} disabled={i === 0} />
