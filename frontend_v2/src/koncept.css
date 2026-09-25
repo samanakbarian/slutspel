@@ -210,3 +210,98 @@ body {
 .mc-cta, .share-btn { background: var(--k-svart); color: var(--k-gul); border: 0; border-radius: 999px; }
 .st-row-ours { background: var(--k-gul); box-shadow: none; }
 .st-row-ours .st-team, .st-row-ours .st-rank, .st-row-ours .st-points { color: var(--k-svart); }
+
+/* ── Spelarkortet ── */
+.sp-hero {
+  position: relative; overflow: hidden;
+  background: var(--k-gron); color: #f3f5f1; border: 0; border-radius: 6px;
+  padding: 18px 16px 16px;
+}
+.sp-hero .sp-num {
+  position: absolute; right: -6px; top: -28px; z-index: 0;
+  font-family: var(--font-display); font-stretch: 55%; font-weight: 900;
+  font-size: 12rem; line-height: 1; color: rgba(255, 199, 44, 0.16);
+  background: none; border: 0; width: auto; height: auto; padding: 0;
+  pointer-events: none;
+}
+.sp-hero .sp-head, .sp-hero .sp-totals { position: relative; z-index: 1; }
+.sp-hero .sp-name { max-width: 78%; font-size: 2.6rem; line-height: .88; text-transform: uppercase; font-weight: 900; color: #fff; }
+.sp-hero .sp-meta { color: rgba(243, 245, 241, 0.75); font-family: var(--font-mono); font-stretch: 87.5%; font-size: .72rem; letter-spacing: .04em; margin-top: 6px; }
+.sp-hero .sp-totals { border-top: 1px solid rgba(255, 255, 255, 0.25); margin-top: 14px; padding-top: 12px; }
+.sp-hero .sp-val { color: #fff; font-family: var(--font-display); font-stretch: 60%; font-weight: 900; font-size: 2.2rem; }
+.sp-hero .sp-val.sp-gold { color: var(--k-gul); }
+.sp-hero .sp-lbl { color: rgba(243, 245, 241, 0.7); }
+.sp-hero .sp-nav button { background: rgba(0, 0, 0, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); }
+.sp-hero .sp-band { background: var(--k-gul); color: var(--k-svart); }
+
+/* Reelen är lägre än matchstoryn. */
+.ks-reel { min-height: 330px; }
+.ks-reel .ks-stor { font-size: 7rem; }
+.ks-lank {
+  position: absolute; right: 14px; bottom: 14px; z-index: 2;
+  padding: 7px 12px; border-radius: 999px; background: var(--k-gul); color: var(--k-svart);
+  font-weight: 700; font-size: .8rem; text-decoration: none;
+}
+
+/* ── Tröjväggen ── */
+.tv-vagg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; margin-top: .6rem; }
+@media (max-width: 340px) { .tv-vagg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tv-kort { display: grid; justify-items: center; gap: 4px; text-align: center; text-decoration: none; color: inherit; min-width: 0; }
+a.tv-kort:active .tv-troja { transform: scale(.96); }
+.tv-troja {
+  position: relative; width: 100%; max-width: 104px; aspect-ratio: 1 / 1.05;
+  background: var(--k-gron); color: #fff;
+  clip-path: polygon(22% 0, 38% 0, 42% 7%, 58% 7%, 62% 0, 78% 0, 100% 16%, 100% 40%, 84% 40%, 84% 100%, 16% 100%, 16% 40%, 0 40%, 0 16%);
+  display: grid; align-content: start; justify-items: center; padding-top: 16%;
+  transition: transform .12s ease;
+}
+.tv-ny { background: var(--k-gul); color: var(--k-svart); }
+.tv-gk { background: var(--k-svart); color: var(--k-gul); }
+.tv-rygg { font: 600 7.5px/1 var(--font-mono); letter-spacing: .06em; max-width: 64%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-nr { font-family: var(--font-display); font-stretch: 55%; font-weight: 900; font-size: 2.6rem; line-height: 1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.tv-namn { font-weight: 700; font-size: .8rem; line-height: 1.15; overflow-wrap: anywhere; }
+.tv-meta { font: 500 9.5px/1.35 var(--font-mono); font-stretch: 87.5%; color: var(--text-muted); }
+.tv-meta b { color: var(--k-gron); }
+.tv-status { font: 700 9px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; padding: 3px 6px; border-radius: 2px; box-shadow: inset 0 0 0 1px var(--k-linje); color: var(--text-muted); }
+.tv-status-ny { background: var(--k-gul); color: var(--k-svart); box-shadow: none; }
+
+/* ── Ledarkorten ── */
+.ld { margin: 0 -16px; }
+.ld-rad {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 62%; gap: 10px;
+  overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 16px 6px; scrollbar-width: none;
+}
+.ld-rad::-webkit-scrollbar { display: none; }
+.ld-kort {
+  scroll-snap-align: start; display: grid; gap: 4px; align-content: end; min-height: 190px;
+  padding: 16px; border-radius: 6px; text-decoration: none; color: #f3f5f1; background: var(--k-gron);
+  transition: transform .12s ease;
+}
+.ld-kort:active { transform: scale(.97); }
+.ld-1 { background: var(--k-svart); }
+.ld-2 { background: var(--k-gul); color: var(--k-svart); }
+.ld-etikett { font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+.ld-varde { font-family: var(--font-display); font-stretch: 55%; font-weight: 900; font-size: 5.2rem; line-height: .85; font-variant-numeric: tabular-nums; }
+.ld-namn { font-weight: 700; font-size: 1.05rem; }
+.ld-not { font: 500 10px/1.3 var(--font-mono); opacity: .75; }
+
+/* ── Nyheter och X ── */
+.ny-topp { background: var(--k-svart); color: #f3f5f1; border: 0; border-radius: 6px; }
+.ny-topptitel { font-family: var(--font-display); font-stretch: 62%; font-weight: 900; font-size: 2rem; line-height: .95; text-transform: uppercase; color: #fff; }
+.ny-topp .ny-tid, .ny-topp .ny-kalla { color: rgba(243, 245, 241, 0.7); }
+.ny-dagrubrik { font-family: var(--font-mono); font-stretch: 87.5%; letter-spacing: .1em; }
+.ny-rad { background: #fff; border: 1px solid var(--k-linje); border-radius: 4px; }
+.ny-chip { border-radius: 999px; border: 1.5px solid var(--k-svart); background: transparent; color: var(--k-svart); }
+.ny-chip-vald { background: var(--k-svart); color: var(--k-gul); }
+.xf-post { background: #fff; border: 1px solid var(--k-linje); border-radius: 4px; }
+
+/* Allt som går att trycka på ger efter lite, som en knapp ska. */
+a, button { -webkit-tap-highlight-color: transparent; }
+.mc-row-link:active, .mc-cta:active, .share-btn:active, .lk-knapp:active, .kk-val button:active,
+.sb-cell:active, .mc-segbtn:active, .ny-rad:active, .bottom-link:active, .st-row-knapp:active {
+  transform: scale(.97);
+}
+.mc-row-link, .mc-cta, .share-btn, .lk-knapp, .sb-cell, .mc-segbtn, .ny-rad, .bottom-link { transition: transform .1s ease; }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

@@ -7,6 +7,7 @@ import { Truppen } from '../components/Truppen';
 import { harSpelOchTur, useLeague } from '../lib/serien';
 import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
+import { Ledarna } from '../components/koncept/Ledarna';
 import { Andel, FormDots, Jamforelse, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 import { matcher } from '../lib/sprak';
@@ -1828,6 +1829,8 @@ function Spelare({
         <button role="tab" aria-selected={loven} className={`mc-segbtn${loven ? ' mc-on' : ''}`} onClick={() => setScope('loven')}>Björklöven</button>
         <button role="tab" aria-selected={!loven} className={`mc-segbtn${!loven ? ' mc-on' : ''}`} onClick={() => setScope('serien')}>Hela {leagueName}</button>
       </div>
+
+      {loven && !texttv && <Ledarna skaters={skaters} goalies={goalies} season={season} />}
 
       <section className={`mc-card${texttv ? ' mc-card-tt' : ''}`}>
         <div className="tab-huvud">

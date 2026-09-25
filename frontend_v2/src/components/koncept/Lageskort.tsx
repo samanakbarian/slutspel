@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
 import type { BandMatch } from './Sasongsbandet';
+import type { Lage } from './lage';
+
+const kort = (lag: string) => lag.replace(/^IF\s+/, '');
 
 /**
  * Startsidans överdel efter var i veckan man är.
@@ -8,19 +11,6 @@ import type { BandMatch } from './Sasongsbandet';
  * nästa. På matchdagen är det tiden kvar. Resten av veckan tar kortet inför
  * matchen platsen, och det här kortet visas inte alls.
  */
-
-export type Lage = 'efter' | 'dag' | 'fore';
-
-const kort = (lag: string) => lag.replace(/^IF\s+/, '');
-const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-export function lageFor(senaste: BandMatch | undefined, nasta: BandMatch | undefined, nu = new Date()): Lage {
-  const idag = iso(nu);
-  if (nasta && nasta.date.slice(0, 10) === idag) return 'dag';
-  const igar = new Date(nu); igar.setDate(igar.getDate() - 1);
-  if (senaste && senaste.date.slice(0, 10) >= iso(igar)) return 'efter';
-  return 'fore';
-}
 
 export function Lageskort({ lage, senaste, nasta }: { lage: Lage; senaste?: BandMatch; nasta?: BandMatch }) {
   if (lage === 'efter' && senaste) {

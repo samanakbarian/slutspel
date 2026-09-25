@@ -4,6 +4,7 @@ import { API_URL } from '../config/api';
 import { PercentileBar, Sparkline } from '../components/charts/Charts';
 import { matcher } from '../lib/sprak';
 import { resultat } from '../lib/match';
+import { Spelarreel } from '../components/koncept/Spelarreel';
 
 /**
  * Spelarsidan.
@@ -663,6 +664,8 @@ export function Spelare() {
           <div><span className="sp-val sp-green">{svNum(p.points_per_game, 2)}</span><span className="sp-lbl">P/match</span></div>
         </div>
       </section>
+
+      <Spelarreel namn={display} log={log} poang={p.points} matcher={p.games_played} />
 
       {/* Nyckeltalen skiljer sig åt: en back mäts inte på skottprocent. */}
       <section className="mc-card">

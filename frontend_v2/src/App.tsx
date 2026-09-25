@@ -1,5 +1,8 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+
+// Testläget ligger under en okänd sökväg, så där bär adressens #-del rutten.
+const Router = import.meta.env.VITE_TESTLAGE === '1' ? HashRouter : BrowserRouter;
 import { AlertTriangle, CalendarDays, LineChart, MessageSquare, Newspaper, Users } from 'lucide-react';
 import { Matcher } from './pages/Matcher';
 import { Matchrapport } from './pages/Matchrapport';
