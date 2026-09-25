@@ -37,8 +37,9 @@
 
   --brand-green: #0b6b44;
   --brand-green-light: #0b6b44;
-  --brand-gold: #9a6a00;
-  --brand-gold-light: #7d5600;
+  /* Guldet var en accent på mörk botten. Här bär gult ytor, inte text. */
+  --brand-gold: #0f1a15;
+  --brand-gold-light: #0f1a15;
 
   --text-primary: #0f1a15;
   --text-secondary: #3b4a43;
@@ -46,7 +47,7 @@
 
   --impact-positive: #0b7a4c;
   --impact-negative: #c9391f;
-  --impact-warning: #a36b00;
+  --impact-warning: #c9391f;
   --impact-neutral: #2f6fc1;
 
   --data-for: #0b8a55;
@@ -355,3 +356,172 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .fd-otw { background: transparent; box-shadow: inset 0 0 0 2.5px var(--k-gron); }
 .fd-otl { background: transparent; box-shadow: inset 0 0 0 2.5px var(--k-rod); }
 .sb-legend i.sb-f.sb-ot { background: #fff; box-shadow: inset 0 0 0 2px var(--k-rod); }
+
+/* ── Enhetlighet ─────────────────────────────────────────────────────────
+   Grundelementen som finns på alla sidor: etiketter i mono, tal i Anybody,
+   knappar och märken i svart, gult och grönt. Inga toningar eller glas. */
+
+/* Etiketter */
+.topbar-kicker, .empty-season-kicker, .mc-table th, .rs-difflbl, .mr-period-label, .im-count i, .im-ha,
+.du-head, .bx-table th, .rs-kpilbl, .st-statlbl, .st-minilbl, .mr-onice-label, .tor-sub-tag, .opp-tbl th,
+.swing-tag, .sp-stat-lbl, .sp-split-h, .sp-mates-h, .ny-dagrubrik, .ny-tagg, .ny-inofficiell, .pg-head,
+.mc-latest-label, .tab-vaxel, .mr-team, .mr-tag, .mc-res, .mc-ha, .sp-band, .freshness, .gk-num {
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  letter-spacing: .08em;
+  font-weight: 600;
+}
+.st-statlbl, .sp-stat-lbl, .rs-kpilbl, .st-minilbl { font-size: .6rem; text-transform: uppercase; color: var(--text-muted); }
+
+/* Tal */
+.st-statval, .sp-stat-val, .sp-split b, .rs-kpival, .pdo-tal, .mr-period-score, .im-count b, .rs-num, .du-val {
+  font-family: var(--font-display);
+  font-stretch: 58%;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.st-statval { font-size: 2rem; line-height: .95; }
+.st-stats-tight .st-statval { font-size: 1.6rem; }
+.sp-stat-val { font-size: 1.8rem; line-height: .95; }
+.sp-split b { font-size: 1.8rem; }
+.pdo-tal { font-size: 3rem; line-height: .9; }
+.mr-period-score { font-size: 1.7rem; line-height: 1; }
+.st-kvvalue { font-family: var(--font-display); font-stretch: 58%; font-weight: 900; font-size: 1.2rem; }
+.md-namn { text-transform: uppercase; font-size: 1.3rem; font-weight: 900; letter-spacing: 0; }
+
+/* Rubriker under kortets etikett: versaler, som kortens huvudrubrik. */
+.mc-card h3, .mr-card h3 { text-transform: uppercase; font-weight: 900; letter-spacing: 0; }
+
+/* Knappar som visar mer eller leder vidare */
+.st-more, .sp-ep, .sp-more, .mc-cta-soft, .bx-summary {
+  background: transparent;
+  border: 1.5px solid var(--k-svart);
+  border-radius: 4px;
+  color: var(--k-svart);
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.st-more:hover, .sp-ep:hover, .sp-more:hover, .bx-summary:hover { background: var(--k-svart); color: var(--k-gul); border-color: var(--k-svart); }
+
+/* Val och filter: samma form som nyheternas filter */
+.opp-chip, .share-format button {
+  border: 1.5px solid var(--k-svart);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--k-svart);
+  font-weight: 600;
+}
+.opp-chip[aria-pressed='true'], .share-format button.is-on { background: var(--k-svart); color: var(--k-gul); border-color: var(--k-svart); }
+.st-season, .sp-cmp select, select {
+  background-color: #fff;
+  border: 1.5px solid var(--k-svart);
+  border-radius: 4px;
+  color: var(--k-svart);
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  font-weight: 600;
+}
+.st-season optgroup, .st-season option { background: #fff; color: var(--k-svart); }
+.tab-vaxel { border: 1px solid var(--k-linje); color: var(--text-muted); border-radius: 3px; }
+.tab-vaxel-pa { background: var(--k-svart); border-color: var(--k-svart); color: var(--k-gul); }
+
+/* Uppdaterad-märket i toppen */
+.freshness { background: #fff; border: 1.5px solid var(--k-svart); color: var(--k-svart); font-size: .62rem; }
+.freshness-ok::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--k-gron); }
+.freshness-warn { background: var(--k-gul); color: var(--k-svart); border-color: var(--k-svart); }
+.freshness-bad { border-color: var(--k-rod); color: var(--k-rod); }
+
+/* Resultatmärken: samma språk som säsongsbandet */
+.mc-res { width: 30px; height: 20px; border-radius: 3px; font-size: .6rem; border: 1.5px solid currentColor; }
+.mc-res-w { background: var(--k-gron); border-color: var(--k-gron); color: #fff; }
+.mc-res-w.mc-res-ot { background: transparent; color: var(--k-gron); }
+.mc-res-otl { background: transparent; color: var(--k-rod); }
+.mc-res-l { background: var(--k-rod); border-color: var(--k-rod); color: #fff; }
+.mc-ha { background: transparent; border-radius: 3px; }
+.mc-ha-home { background: transparent; color: var(--k-svart); border: 1.5px solid var(--k-svart); }
+
+/* Inför matchen */
+.im-count { background: var(--k-gul); border: 0; border-radius: 4px; }
+.im-count b { color: var(--k-svart); font-size: 2.6rem; line-height: .9; }
+.im-count i { color: var(--k-svart); }
+.im-count-wait { background: var(--k-papper); }
+.im-premiere { background: #fff; border-color: var(--k-linje); border-top: 4px solid var(--k-gul); }
+.im-h2hwin { background: var(--k-gron); color: #fff; border-color: var(--k-gron); }
+
+/* Tabeller */
+.mc-table th { font-size: .58rem; color: var(--text-muted); }
+.mc-table tr.mc-hl td { background: var(--k-gul); color: var(--k-svart); }
+.sp-scored td { background: transparent; }
+.gk-num { background: var(--k-svart); color: var(--k-gul); border-radius: 3px; }
+
+/* Matchrapporten */
+.mr-period { background: #fff; border: 1px solid var(--k-linje); border-top: 4px solid var(--k-linje); border-radius: 4px; }
+.mr-period-win { border-color: var(--k-linje); border-top-color: var(--k-gron); }
+.mr-period-loss { border-color: var(--k-linje); border-top-color: var(--k-rod); }
+.mr-period-win .mr-period-score { color: var(--k-gron); }
+.mr-period-loss .mr-period-score { color: var(--k-rod); }
+.mr-team { background: transparent; border: 1px solid var(--k-linje); border-radius: 3px; color: var(--text-secondary); }
+.mr-team-ours { background: var(--k-gron); border-color: var(--k-gron); color: #fff; }
+.mr-tag { border-radius: 2px; }
+.mr-tag-pp { background: var(--k-gul); color: var(--k-svart); }
+.mr-tag-sh { background: var(--k-svart); color: #fff; }
+.mr-tag-eq { background: transparent; color: var(--text-muted); }
+.mr-tag-ps { background: transparent; color: var(--k-svart); box-shadow: inset 0 0 0 1px var(--k-svart); }
+.mr-tag-en { background: transparent; color: var(--k-rod); box-shadow: inset 0 0 0 1px var(--k-rod); }
+.mr-pen-min { color: var(--k-rod); font-family: var(--font-mono); font-stretch: 87.5%; }
+.mr-pen-out-goal { color: var(--k-svart); font-weight: 600; }
+.mr-pimtrack, .pb-track, .st-bartrack, .rs-difftrack { background: rgba(15, 26, 21, 0.08); border-radius: 2px; }
+.pm-row { border-radius: 0; }
+.pm-chip, .pm-row-pos .pm-chip, .pm-row-neg .pm-chip { background: #fff; border: 1px solid var(--k-linje); border-radius: 3px; }
+.pm-chip i { color: var(--k-gron); }
+.pm-chip-lank:hover { border-color: var(--k-svart); }
+
+/* Statistiken */
+.pj-span { background: rgba(15, 26, 21, 0.1); border-radius: 2px; }
+.pj-dot { background: var(--k-svart); }
+.pj-ours .pj-team { color: var(--k-svart); font-weight: 800; }
+.pj-ours .pj-span { background: var(--k-gul); }
+.pj-ours .pj-dot { background: var(--k-svart); }
+.swing-tag { border-radius: 2px; }
+.swing-tag.up { background: var(--k-gron); color: #fff; }
+.rs-kpi { background: #fff; border: 1px solid var(--k-linje); border-radius: 4px; }
+.rs-stale, .empty-season { background: #fff; border: 1px solid var(--k-linje); border-left: 4px solid var(--k-gul); border-radius: 4px; }
+.empty-season-btn { background: var(--k-svart); color: var(--k-gul); border-radius: 4px; }
+.st-skeleton { background: linear-gradient(90deg, rgba(15, 26, 21, 0.05) 25%, rgba(15, 26, 21, 0.1) 50%, rgba(15, 26, 21, 0.05) 75%); background-size: 200% 100%; border-radius: 3px; }
+
+/* Spelaren */
+.sp-band-a { background: var(--k-gul); color: var(--k-svart); }
+.sp-band { border-radius: 2px; }
+
+/* Nyheter */
+.ny-tagg { border-radius: 2px; background: transparent; color: var(--text-muted); padding-left: 0; }
+.ny-tagg-match, .ny-tagg-trupp, .ny-tagg-klipp, .ny-tagg-ungdom, .ny-tagg-snack { padding-left: .45rem; }
+.ny-tagg-match { background: var(--k-gron); color: #fff; }
+.ny-tagg-trupp { background: var(--k-gul); color: var(--k-svart); }
+.ny-tagg-klipp { background: var(--k-svart); color: var(--k-gul); }
+.ny-tagg-ungdom, .ny-tagg-snack { background: transparent; color: var(--k-svart); box-shadow: inset 0 0 0 1px var(--k-svart); }
+.ny-tumnagel { border-radius: 4px; }
+.ny-tumnagel:hover { border-color: var(--k-svart); }
+
+/* X */
+.xf-avatar { color: var(--k-gul); font-family: var(--font-display); font-stretch: 62%; font-weight: 900; font-size: 1rem; }
+
+/* Metod */
+.md-formel {
+  border-radius: 0;
+  border-left: 4px solid var(--k-gul);
+  background: var(--k-papper);
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  font-size: .72rem;
+}
+
+/* Diagram */
+.pd-bar { width: 16px; border-radius: 1px 1px 0 0; }
+.pd-gf { background: var(--k-gron); }
+.pd-ga { background: var(--k-rod); }
+.pd-nums, .pd-diff, .pd-label { font-family: var(--font-mono); font-stretch: 87.5%; }

@@ -709,7 +709,7 @@ export function Spelare() {
         <section className="mc-card">
           <p className="mc-kicker">Form — poäng på rullande 10 matcher</p>
           <Sparkline points={rolling} height={104} unit=" p" colour="var(--brand-gold)"
-                     fill="rgba(245, 192, 69, 0.12)" />
+                     fill="rgba(255,199,44,0.3)" />
           {last10.length > 0 && (
             <>
               <p className="mc-kicker st-sub">Senaste {last10.length}</p>

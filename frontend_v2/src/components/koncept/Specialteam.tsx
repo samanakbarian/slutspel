@@ -28,8 +28,8 @@ function Rutor({ antal, traffar, sort }: { antal: number; traffar: number; sort:
   );
 }
 
-function Linje({ league, nyckel, var_, hogtBra = true }: {
-  league: LeagueData | null; nyckel: 'pp_pct' | 'pk_pct'; var_: number; hogtBra?: boolean;
+function Linje({ league, nyckel, var_, hogtBra = true, enhet = ' %' }: {
+  league: LeagueData | null; nyckel: 'pp_pct' | 'pk_pct' | 'pim_pg'; var_: number; hogtBra?: boolean; enhet?: string;
 }) {
   const lag = (league?.teams || []).filter(t => t.values[nyckel] != null && t.gp > 0);
   if (lag.length < 4) return null;
@@ -42,17 +42,17 @@ function Linje({ league, nyckel, var_, hogtBra = true }: {
   const plats = 1 + varden.filter(v => (hogtBra ? v > var_ : v < var_)).length;
   return (
     <div className="stv-linje">
-      <div className="stv-axel" role="img" aria-label={`${ordning(plats)} av ${lag.length} i serien, snittet ${komma(snitt)} %`}>
+      <div className="stv-axel" role="img" aria-label={`${ordning(plats)} av ${lag.length} i serien, snittet ${komma(snitt)}${enhet}`}>
         <span className="stv-snitt" style={{ left: `${x(snitt)}%` }} />
         {lag.filter(t => !t.is_ours).map(t => (
-          <span key={t.team} className="stv-lag" style={{ left: `${x(t.values[nyckel] as number)}%` }} title={`${t.team} ${komma(t.values[nyckel] as number)} %`} />
+          <span key={t.team} className="stv-lag" style={{ left: `${x(t.values[nyckel] as number)}%` }} title={`${t.team} ${komma(t.values[nyckel] as number)}${enhet}`} />
         ))}
         <span className="stv-vi" style={{ left: `${x(var_)}%` }} />
       </div>
       <div className="stv-skala">
-        <span>{komma(lo, 0)} %</span>
-        <span><b>{ordning(plats)}</b> av {lag.length} · snitt {komma(snitt)} %</span>
-        <span>{komma(hi, 0)} %</span>
+        <span>{komma(lo, 0)}{enhet}</span>
+        <span><b>{ordning(plats)}</b> av {lag.length} · snitt {komma(snitt)}{enhet}</span>
+        <span>{komma(hi, 0)}{enhet}</span>
       </div>
     </div>
   );
@@ -62,6 +62,7 @@ export function Specialteam({ st, league, matcher }: { st: St; league: LeagueDat
   const index = st.special_teams_index;
   // Indexet runt 100: halva stapeln är 20 poäng åt varje håll.
   const utslag = Math.max(-1, Math.min(1, (index - 100) / 20));
+  const pimPerMatch = matcher > 0 ? st.total_pim / matcher : 0;
   return (
     <section className="mc-card stv">
       <p className="mc-kicker">Specialteam</p>
@@ -99,7 +100,14 @@ export function Specialteam({ st, league, matcher }: { st: St; league: LeagueDat
         <div className="stv-skala"><span>80</span><span>100 är ett snittlag</span><span>120</span></div>
       </div>
 
-      <p className="mc-note">{st.total_pim} utvisningsminuter, {komma(matcher > 0 ? st.total_pim / matcher : 0)} per match.</p>
+      <div className="stv-del">
+        <div className="stv-huvud">
+          <span className="stv-rubrik">Utvisningar</span>
+          <span className="stv-tal">{komma(pimPerMatch)}<small>min/match</small></span>
+        </div>
+        <p className="stv-text"><b>{st.total_pim}</b> utvisningsminuter på {matcher} matcher. Färre är bättre.</p>
+        <Linje league={league} nyckel="pim_pg" var_={pimPerMatch} hogtBra={false} enhet="" />
+      </div>
     </section>
   );
 }

@@ -41,16 +41,39 @@ export type CardModel = {
 
 export const CARD_SIZE = 1080;
 
-export const INK = '#f1f7f4';
-export const INK_2 = '#acc7ba';
-export const INK_3 = '#7c9a8b';
-export const BRAND = '#42d883';
-export const FOR = '#1baf7a';
-export const AGAINST = '#d95926';
-export const GOLD = '#f5c045';
+export const GRON = '#0b6b44';
+export const SVART = '#0f1a15';
+export const GUL = '#ffc72c';
+export const INK = '#f3f5f1';
+export const INK_2 = 'rgba(243,245,241,0.8)';
+export const INK_3 = 'rgba(243,245,241,0.6)';
+export const BRAND = GUL;
+export const FOR = GUL;
+export const AGAINST = '#e0552f';
+export const GOLD = GUL;
 
-export const DISPLAY = "'Outfit', system-ui, sans-serif";
-export const SANS = "'Inter', system-ui, sans-serif";
+export const DISPLAY = "'Anybody', 'Arial Narrow', system-ui, sans-serif";
+export const SANS = "'Instrument Sans', system-ui, sans-serif";
+export const MONO = "'Martian Mono', ui-monospace, monospace";
+
+function bredd(ctx: CanvasRenderingContext2D, v: CanvasFontStretch) {
+  if ('fontStretch' in ctx) ctx.fontStretch = v;
+}
+/** De stora talen: Anybody i smalt snitt, som på sidan. */
+export function disp(ctx: CanvasRenderingContext2D, size: number, weight = 900) {
+  ctx.font = `${weight} ${size}px ${DISPLAY}`;
+  bredd(ctx, 'extra-condensed');
+}
+/** Etiketter i mono. */
+export function mono(ctx: CanvasRenderingContext2D, size: number, weight = 600) {
+  ctx.font = `${weight} ${size}px ${MONO}`;
+  bredd(ctx, 'semi-condensed');
+}
+/** Löptext. */
+export function sans(ctx: CanvasRenderingContext2D, size: number, weight = 400) {
+  ctx.font = `${weight} ${size}px ${SANS}`;
+  bredd(ctx, 'normal');
+}
 
 /** Snitten maste vara laddade innan kortet ritas, annars mats fel bredder. */
 export async function cardFontsReady(): Promise<void> {
@@ -58,10 +81,10 @@ export async function cardFontsReady(): Promise<void> {
   if (!fonts) return;
   try {
     await Promise.all([
-      fonts.load(`700 173px ${DISPLAY}`),
-      fonts.load(`600 50px ${DISPLAY}`),
-      fonts.load(`700 27px ${SANS}`),
-      fonts.load(`400 37px ${SANS}`),
+      fonts.load(`900 100px ${DISPLAY}`),
+      fonts.load(`600 30px ${MONO}`),
+      fonts.load(`600 30px ${SANS}`),
+      fonts.load(`400 30px ${SANS}`),
     ]);
     await fonts.ready;
   } catch {
@@ -162,7 +185,7 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
   const py = (d: number) => y + h - ((d - lo + 0.6) / span) * h;
 
   // Y-axelns hela steg, ett per mals skillnad.
-  ctx.font = `500 22px ${SANS}`;
+  mono(ctx, 19, 500);
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for (let d = lo; d <= hi; d++) {
@@ -171,7 +194,7 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
   }
 
   // Periodgranser. Straffarna far ingen egen linje — de ar en punkt i tiden.
-  ctx.strokeStyle = 'rgba(172,199,186,0.14)';
+  ctx.strokeStyle = 'rgba(243,245,241,0.16)';
   ctx.lineWidth = 1.5;
   for (const min of [20, 40, 60].slice(0, Math.min(3, m.periods - 1))) {
     ctx.beginPath();
@@ -181,7 +204,7 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
   }
 
   // Nollinjen: over den leder Bjorkloven.
-  ctx.strokeStyle = 'rgba(172,199,186,0.36)';
+  ctx.strokeStyle = 'rgba(243,245,241,0.42)';
   ctx.setLineDash([5, 6]);
   ctx.beginPath();
   ctx.moveTo(x, py(0));
@@ -212,9 +235,9 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
   ctx.lineTo(x, py(0));
   ctx.closePath();
   ctx.clip();
-  ctx.fillStyle = 'rgba(27,175,122,0.22)';
+  ctx.fillStyle = 'rgba(243,245,241,0.16)';
   ctx.fillRect(x, y, w, py(0) - y);
-  ctx.fillStyle = 'rgba(217,89,38,0.28)';
+  ctx.fillStyle = 'rgba(224,85,47,0.42)';
   ctx.fillRect(x, py(0), w, y + h - py(0));
   ctx.restore();
 
@@ -240,7 +263,7 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
     -1,
   );
   const last = m.steps.length - 1;
-  ctx.font = `700 24px ${SANS}`;
+  mono(ctx, 22, 700);
   ctx.textAlign = 'center';
   const label = (i: number, above: boolean, colour: string) => {
     if (i < 0 || !m.steps[i]) return;
@@ -253,7 +276,7 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
   label(last, m.steps[last].diff >= 0, m.steps[last].diff >= 0 ? GOLD : INK_2);
 
   // Periodernas namn under diagrammet.
-  ctx.font = `500 22px ${SANS}`;
+  mono(ctx, 17, 500);
   ctx.fillStyle = INK_3;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
@@ -274,7 +297,7 @@ function drawChart(ctx: CanvasRenderingContext2D, m: CardModel, x: number, y: nu
  * Bakgrunden, ramen och huvudet: avsändare, adress och när. Delas av alla
  * kort så att de ser ut att höra ihop i ett flöde.
  */
-export function drawFrame(ctx: CanvasRenderingContext2D, when: string[]) {
+export function drawFrame(ctx: CanvasRenderingContext2D, when: string[], yta = GRON) {
   const S = CARD_SIZE;
   const PAD = 58;
   const right = S - PAD;
@@ -282,32 +305,21 @@ export function drawFrame(ctx: CanvasRenderingContext2D, when: string[]) {
 
   ctx.clearRect(0, 0, S, S);
 
-  const base = ctx.createLinearGradient(S * 0.15, 0, S * 0.85, S);
-  base.addColorStop(0, '#0d3524');
-  base.addColorStop(0.52, '#082018');
-  base.addColorStop(1, '#05130e');
-  ctx.fillStyle = base;
+  // Klubbens färg som hel yta och en gul list längst ned, som på sidan.
+  ctx.fillStyle = yta;
   ctx.fillRect(0, 0, S, S);
-
-  const glow = ctx.createRadialGradient(S * 0.82, S * 0.04, 0, S * 0.82, S * 0.04, S * 0.72);
-  glow.addColorStop(0, 'rgba(66,216,131,0.17)');
-  glow.addColorStop(1, 'rgba(66,216,131,0)');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, S, S);
-
-  ctx.strokeStyle = 'rgba(66,216,131,0.3)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, S - 2, S - 2);
+  ctx.fillStyle = GUL;
+  ctx.fillRect(0, S - 14, S, 14);
 
   /* rad 1: avsandare och nar */
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
-  ctx.fillStyle = BRAND;
-  ctx.font = `700 32px ${DISPLAY}`;
-  tracked(ctx, 'LÖVENLÄGET', PAD, PAD + 30, 5.1);
+  ctx.fillStyle = GUL;
+  mono(ctx, 26, 700);
+  tracked(ctx, 'LÖVENLÄGET', PAD, PAD + 30, 4);
 
-  ctx.fillStyle = INK_3;
-  ctx.font = `400 28px ${SANS}`;
+  ctx.fillStyle = INK_2;
+  mono(ctx, 20, 500);
   ctx.textAlign = 'right';
   ctx.fillText(widest(ctx, m.when, 560), right, PAD + 30);
 
@@ -319,9 +331,9 @@ export function drawFrame(ctx: CanvasRenderingContext2D, when: string[]) {
   // vid foten fanns ingen plats: de fyra talen har sin baslinje på 986 och
   // ramen slutar på 1022.
   ctx.fillStyle = INK_3;
-  ctx.font = `500 22px ${SANS}`;
+  mono(ctx, 19, 500);
   ctx.textAlign = 'left';
-  tracked(ctx, 'SIDA377.SE', PAD, PAD + 58, 3.4);
+  tracked(ctx, 'SIDA377.SE', PAD, PAD + 58, 3);
 }
 
 export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
@@ -329,34 +341,27 @@ export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
   const PAD = 58;
   const right = S - PAD;
 
-  drawFrame(ctx, m.when);
+  drawFrame(ctx, m.when, m.outcome === 'loss' ? SVART : GRON);
 
   /* rubrikbrickan */
   let y = PAD + 84;
   if (m.eyebrow) {
-    ctx.font = `700 26px ${SANS}`;
-    ctx.textAlign = 'left';
-    const w = [...m.eyebrow].reduce((a, c) => a + ctx.measureText(c).width, 0) + 2.6 * (m.eyebrow.length - 1);
-    ctx.fillStyle = 'rgba(27,175,122,0.18)';
-    roundRect(ctx, PAD, y, w + 44, 50, 11);
-    ctx.fill();
-    ctx.fillStyle = FOR;
-    tracked(ctx, m.eyebrow, PAD + 22, y + 34, 2.6);
-    y += 50;
+    drawEyebrow(ctx, m.eyebrow, PAD, y);
+    y += 46;
   }
 
   /* resultatet */
   ctx.textAlign = 'left';
   ctx.fillStyle = INK;
-  ctx.font = `700 168px ${DISPLAY}`;
-  ctx.fillText(m.score, PAD - 6, y + 152);
+  disp(ctx, 250);
+  ctx.fillText(m.score, PAD - 4, y + 206);
 
   let lx = PAD;
   m.lag.forEach((del, i) => {
     const text = i < m.lag.length - 1 ? `${del.text} –` : del.text;
-    ctx.font = `${del.ours ? 600 : 400} 36px ${SANS}`;
-    ctx.fillStyle = del.ours ? INK : INK_2;
-    ctx.fillText(text, lx, y + 208);
+    sans(ctx, 36, del.ours ? 600 : 400);
+    ctx.fillStyle = del.ours ? GUL : INK_2;
+    ctx.fillText(text, lx, y + 256);
     lx += ctx.measureText(text).width + 12;
   });
 
@@ -364,44 +369,63 @@ export function drawMatchCard(ctx: CanvasRenderingContext2D, m: CardModel) {
   if (m.hero) {
     ctx.textAlign = 'right';
     ctx.fillStyle = INK_3;
-    ctx.font = `700 25px ${SANS}`;
-    tracked(ctx, m.hero.label.toUpperCase(), right, y + 44, 2.2, 'right');
+    mono(ctx, 20, 600);
+    tracked(ctx, m.hero.label.toUpperCase(), right, y + 44, 2, 'right');
 
     ctx.fillStyle = INK;
-    ctx.font = `600 50px ${DISPLAY}`;
-    ctx.fillText(fit(ctx, m.hero.name, 430), right, y + 106);
+    disp(ctx, 72);
+    ctx.fillText(fit(ctx, m.hero.name.toUpperCase(), 400), right, y + 114);
 
     ctx.fillStyle = GOLD;
-    ctx.font = `500 28px ${SANS}`;
-    ctx.fillText(fit(ctx, m.hero.detail, 430), right, y + 150);
+    sans(ctx, 28, 500);
+    ctx.fillText(fit(ctx, m.hero.detail, 400), right, y + 156);
   }
 
   /* diagrammet */
   if (m.steps.length > 0) drawChart(ctx, m, PAD + 52, 508, S - PAD * 2 - 52, 268);
 
-  /* fotens fyra tal */
+  drawFoot(ctx, m.stats);
+}
+
+/** Rubrikbrickan: gul platta, svart mono. */
+export function drawEyebrow(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
+  const t = text.toUpperCase();
+  mono(ctx, 21, 700);
+  ctx.textAlign = 'left';
+  const w = ctx.measureText(t).width + 2 * (t.length - 1);
+  ctx.fillStyle = GUL;
+  roundRect(ctx, x, y, w + 36, 46, 4);
+  ctx.fill();
+  ctx.fillStyle = SVART;
+  tracked(ctx, t, x + 18, y + 31, 2);
+}
+
+/** Fotens fyra tal under en tunn linje. Delas av båda korten. */
+export function drawFoot(ctx: CanvasRenderingContext2D, alla: CardStat[]) {
+  const S = CARD_SIZE;
+  const PAD = 58;
   const line = 878;
-  ctx.strokeStyle = 'rgba(66,216,131,0.22)';
+  ctx.strokeStyle = 'rgba(243,245,241,0.28)';
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(PAD, line);
-  ctx.lineTo(right, line);
+  ctx.lineTo(S - PAD, line);
   ctx.stroke();
 
-  const stats = m.stats.slice(0, 4);
-  if (stats.length > 0) {
-    const cell = (S - PAD * 2) / stats.length;
-    ctx.textAlign = 'left';
-    stats.forEach((s, i) => {
-      const cx = PAD + cell * i;
-      ctx.fillStyle = INK_3;
-      ctx.font = `700 25px ${SANS}`;
-      tracked(ctx, s.label.toUpperCase(), cx, line + 46, 2.8);
-      ctx.fillStyle = INK;
-      ctx.font = `600 48px ${DISPLAY}`;
-      ctx.fillText(fit(ctx, s.value, cell - 18), cx, line + 108);
-    });
-  }
+  const stats = alla.slice(0, 4);
+  if (stats.length === 0) return;
+  const cell = (S - PAD * 2) / stats.length;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  stats.forEach((s, i) => {
+    const cx = PAD + cell * i;
+    ctx.fillStyle = INK_3;
+    mono(ctx, 18, 600);
+    tracked(ctx, fit(ctx, s.label.toUpperCase(), cell - 18), cx, line + 44, 1.6);
+    ctx.fillStyle = INK;
+    disp(ctx, 70);
+    ctx.fillText(fit(ctx, s.value, cell - 18), cx, line + 116);
+  });
 }
 
 /** Kortet som PNG-blob, i full storlek oavsett hur det visas pa sidan. */
@@ -430,32 +454,30 @@ export function drawStory(
   const H = STORY_HEIGHT;
   const top = (H - W) / 2;
 
-  const base = ctx.createLinearGradient(0, 0, W, H);
-  base.addColorStop(0, '#0d3524');
-  base.addColorStop(0.5, '#082018');
-  base.addColorStop(1, '#05130e');
-  ctx.fillStyle = base;
-  ctx.fillRect(0, 0, W, H);
-
   ctx.save();
   ctx.translate(0, top);
   drawSquare(ctx);
   ctx.restore();
+
+  // Ytan runt kortet får kortets egen färg, grön eller svart.
+  const [r, g, b] = ctx.getImageData(4, top + 4, 1, 1).data;
+  ctx.fillStyle = `rgb(${r},${g},${b})`;
+  ctx.fillRect(0, 0, W, top);
+  ctx.fillRect(0, top + W, W, H - top - W);
 
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
   // Rubriken ovanför kortet, under appens egen knapprad.
   if (rubrik) {
     ctx.fillStyle = INK;
-    ctx.font = `700 64px ${DISPLAY}`;
-    const t = rubrik.toUpperCase();
-    const rw = ctx.measureText(t).width + 4 * (t.length - 1);
-    tracked(ctx, t, W / 2 - rw / 2, top - 70, 4);
+    disp(ctx, 130);
+    ctx.textAlign = 'center';
+    ctx.fillText(fit(ctx, rubrik.toUpperCase(), W - 120), W / 2, top - 70);
   }
 
-  ctx.fillStyle = BRAND;
-  ctx.font = `700 44px ${DISPLAY}`;
-  const w = ctx.measureText('SIDA377.SE').width + 6.6 * 9;
-  tracked(ctx, 'SIDA377.SE', W / 2 - w / 2, top + W + 190, 6.6);
+  ctx.fillStyle = GUL;
+  mono(ctx, 38, 700);
   ctx.textAlign = 'left';
+  const w = ctx.measureText('SIDA377.SE').width + 5 * 9;
+  tracked(ctx, 'SIDA377.SE', W / 2 - w / 2, top + W + 190, 5);
 }

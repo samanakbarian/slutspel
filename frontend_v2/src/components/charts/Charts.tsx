@@ -22,7 +22,7 @@ export function Sparkline({
   points,
   height = 96,
   colour = 'var(--brand-green-light)',
-  fill = 'rgba(66, 216, 131, 0.14)',
+  fill = 'rgba(11, 107, 68, 0.1)',
   format = (v: number) => String(v),
   unit = '',
   guide,
@@ -254,7 +254,7 @@ export function PairedBar({
   const summa = left + right;
   const del = Math.min(0.96, Math.max(0.04, summa > 0 ? left / summa : 0.5));
   const gron = 'var(--brand-green)';
-  const gra = 'rgba(255,255,255,0.14)';
+  const gra = 'rgba(15,26,21,0.14)';
   return (
     <div className="pb-row">
       <div className="pb-head">

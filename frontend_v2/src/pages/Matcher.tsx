@@ -214,7 +214,7 @@ function GameRow({ game }: { game: Game }) {
       {game.played ? (
         <>
           <span className="mc-score">{resultat(game.gf, game.ga, game.isHome)}</span>
-          <span className={`mc-res mc-res-${game.result.toLowerCase()}`}>
+          <span className={`mc-res mc-res-${game.result.toLowerCase()}${game.ot ? ' mc-res-ot' : ''}`}>
             {game.result === 'W' ? (game.ot ? 'ÖV' : 'V') : game.result === 'OTL' ? 'ÖF' : game.result === 'L' ? 'F' : game.result}
           </span>
         </>

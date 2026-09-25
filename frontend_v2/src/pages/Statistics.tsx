@@ -1974,7 +1974,7 @@ function GoalieCard({ g, ligaSv }: { g: GoalieFull; ligaSv: number | null }) {
       {curve.length > 1 && (
         <>
           <p className="mc-kicker st-sub">Räddningsprocent match för match</p>
-          <Sparkline points={curve} height={100} unit=" %" format={v => svNum(v, 1)} colour="var(--brand-gold)" fill="rgba(245,192,69,0.12)" />
+          <Sparkline points={curve} height={100} unit=" %" format={v => svNum(v, 1)} colour="var(--brand-gold)" fill="rgba(255,199,44,0.3)" />
         </>
       )}
 
@@ -2123,7 +2123,7 @@ function Utveckling({
       {rolling.length > 1 && (
         <section className="mc-card">
           <p className="mc-kicker">Form — poäng på rullande {rolling[rolling.length - 1].window} matcher</p>
-          <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.pts }))} height={100} unit=" p" colour="var(--brand-gold)" fill="rgba(245,192,69,0.12)" />
+          <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.pts }))} height={100} unit=" p" colour="var(--brand-gold)" fill="rgba(255,199,44,0.3)" />
           <div className="st-twin">
             <div>
               <p className="st-minilbl">Gjorda mål per match</p>
@@ -2131,7 +2131,7 @@ function Utveckling({
             </div>
             <div>
               <p className="st-minilbl st-minilbl-bad">Insläppta mål per match</p>
-              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.ga_avg }))} height={92} format={v => svNum(v, 1)} colour="var(--impact-negative)" fill="rgba(255,77,77,0.10)" />
+              <Sparkline points={rolling.map(f => ({ label: shortDate(f.date), value: f.ga_avg }))} height={92} format={v => svNum(v, 1)} colour="var(--impact-negative)" fill="rgba(224,85,47,0.12)" />
             </div>
           </div>
         </section>
@@ -2144,7 +2144,7 @@ function Utveckling({
             points={shots.rolling.filter(r => r.pdo !== null).map(r => ({ label: shortDate(r.date), value: r.pdo as number }))}
             height={100}
             colour="var(--brand-gold)"
-            fill="rgba(245,192,69,0.12)"
+            fill="rgba(255,199,44,0.3)"
             format={v => svNum(v, 1)}
           />
           <p className="mc-note">
@@ -2165,7 +2165,7 @@ function Utveckling({
       {elo.length > 1 && (
         <section className="mc-card">
           <p className="mc-kicker">Styrketal över säsongen</p>
-          <Sparkline points={elo.map(e => ({ label: shortDate(e.date), value: Math.round(e.elo) }))} height={100} colour="var(--impact-neutral)" fill="rgba(119,181,255,0.10)" />
+          <Sparkline points={elo.map(e => ({ label: shortDate(e.date), value: Math.round(e.elo) }))} height={100} colour="var(--k-svart)" fill="rgba(15,26,21,0.06)" />
           <p className="mc-note">
             Startar på 1500. Nu {Math.round(elo[elo.length - 1].elo)}. <Formel till="elo" />
           </p>
@@ -2198,7 +2198,7 @@ function Utveckling({
       {trend.length > 1 && (
         <section className="mc-card">
           <p className="mc-kicker">Publik per hemmamatch</p>
-          <Sparkline points={trend.map(t => ({ label: shortDate(t.date), value: t.spectators }))} height={100} format={v => v.toLocaleString('sv-SE')} colour="var(--brand-gold)" fill="rgba(245,192,69,0.12)" />
+          <Sparkline points={trend.map(t => ({ label: shortDate(t.date), value: t.spectators }))} height={100} format={v => v.toLocaleString('sv-SE')} colour="var(--brand-gold)" fill="rgba(255,199,44,0.3)" />
           <p className="mc-note">{trend.length} hemmamatcher med registrerad publiksiffra.</p>
         </section>
       )}

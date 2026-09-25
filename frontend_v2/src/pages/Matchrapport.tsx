@@ -659,8 +659,8 @@ function Penalties({ penalties, goals }: { penalties: Penalty[]; goals: Goal[] }
           <b>{pim(ours)} min</b><span>Utvisningsminuter</span><b>{pim(theirs)} min</b>
         </div>
         <div className="mr-pimtrack">
-          <span style={{ flex: Math.max(pim(ours), 0.4), background: 'var(--impact-warning)' }} />
-          <span style={{ flex: Math.max(pim(theirs), 0.4), background: 'rgba(255,255,255,.12)' }} />
+          <span style={{ flex: Math.max(pim(ours), 0.4), background: 'var(--k-svart)' }} />
+          <span style={{ flex: Math.max(pim(theirs), 0.4), background: 'rgba(15,26,21,.18)' }} />
         </div>
       </div>
       {penalties.map((p, i) => (
