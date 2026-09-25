@@ -69,6 +69,7 @@ export function Sasongsbandet({ games, season }: { games: BandMatch[]; season: s
       <div className="sb-legend">
         <span><i className="sb-v" />Vinst</span>
         <span><i className="sb-v sb-ot" />Vinst ÖT</span>
+        <span><i className="sb-f sb-ot" />Förlust ÖT</span>
         <span><i className="sb-f" />Förlust</span>
         <span><i className="sb-nasta" />Nästa</span>
         <span><i />Hemma</span>

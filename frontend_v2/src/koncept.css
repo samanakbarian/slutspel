@@ -354,3 +354,4 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .fd-l { background: var(--k-rod); }
 .fd-otw { background: transparent; box-shadow: inset 0 0 0 2.5px var(--k-gron); }
 .fd-otl { background: transparent; box-shadow: inset 0 0 0 2.5px var(--k-rod); }
+.sb-legend i.sb-f.sb-ot { background: #fff; box-shadow: inset 0 0 0 2px var(--k-rod); }

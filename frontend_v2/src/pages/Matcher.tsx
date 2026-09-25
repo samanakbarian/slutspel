@@ -215,7 +215,7 @@ function GameRow({ game }: { game: Game }) {
         <>
           <span className="mc-score">{resultat(game.gf, game.ga, game.isHome)}</span>
           <span className={`mc-res mc-res-${game.result.toLowerCase()}`}>
-            {game.result === 'OTL' ? 'ÖT' : game.result}
+            {game.result === 'W' ? (game.ot ? 'ÖV' : 'V') : game.result === 'OTL' ? 'ÖF' : game.result === 'L' ? 'F' : game.result}
           </span>
         </>
       ) : (
@@ -355,10 +355,13 @@ export function Matcher() {
   const lastPlayedSeason = seasons.find(x => x.key !== (season || activeKey) && x.has_team_data === true) || null;
   const upcoming = games.filter(g => !g.played).sort((a, b) => a.date.localeCompare(b.date));
   const next = upcoming[0];
-  const shown = view === 'spelade' ? played : upcoming;
+  // Spelade i den ordning de spelades, första matchen överst, som
+  // spelprogrammet. Den senaste står redan i kortet högst upp på sidan.
+  const shown = view === 'spelade' ? [...played].reverse() : upcoming;
   const trunkerad = !visaAllt && shown.length > 8;
   const lage = lageFor(played[0], next);
-  const synliga = trunkerad ? shown.slice(0, 8) : shown;
+  // Förkortad lista visar de senaste spelade och de närmaste kommande.
+  const synliga = trunkerad ? (view === 'spelade' ? shown.slice(-8) : shown.slice(0, 8)) : shown;
 
   return (
     <div className="page animate-fade-up">
