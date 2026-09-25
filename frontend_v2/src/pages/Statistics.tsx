@@ -8,6 +8,7 @@ import { harSpelOchTur, useLeague } from '../lib/serien';
 import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
 import { Ledarna } from '../components/koncept/Ledarna';
+import { Specialteam } from '../components/koncept/Specialteam';
 import { Andel, FormDots, Jamforelse, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 import { matcher } from '../lib/sprak';
@@ -137,7 +138,7 @@ type Split = { gp: number; w: number; l: number; otw: number; otl: number; gf: n
 type StateRecord = { w: number; l: number; otl?: number };
 
 type Modules = {
-  timeline?: { date: string; opponent: string; result: string; score: string; cumPts: number; isHome: boolean; gf: number; ga: number }[];
+  timeline?: { date: string; opponent: string; result: string; score: string; cumPts: number; isHome: boolean; gf: number; ga: number; beyond?: boolean }[];
   splits?: { home: Split; away: Split };
   periods?: { period: number; label: string; gf: number; ga: number; games: number }[];
   form?: { date: string; matchNum: number; pts: number; gf_avg: number; ga_avg: number; window: number }[];
@@ -1563,7 +1564,8 @@ function Laget({
   venue: VenueFilter;
   onVenue: (v: VenueFilter) => void;
 }) {
-  const last10 = timeline.slice(-10).map(t => t.result);
+  // Tidslinjen skriver W och L; förlängningen står i ett eget fält.
+  const last10 = timeline.slice(-10).map(t => (t.beyond ? (t.result === 'W' ? 'OTW' : 'OTL') : t.result));
   const splits = modules?.splits;
   const st = modules?.special_teams;
   const gs = modules?.game_state;
@@ -1733,18 +1735,7 @@ function Laget({
         </section>
       )}
 
-      {st && st.pp_opportunities > 0 && (
-        <section className="mc-card">
-          <p className="mc-kicker">Specialteam</p>
-          <KV label="Powerplay" value={`${komma(st.pp_pct)} %`} hint={`${st.pp_goals} mål på ${st.pp_opportunities} spel`} />
-          <KV label="Boxplay" value={`${komma(st.pk_pct)} %`} hint={`${st.pk_goals_against} insläppta på ${st.pk_times} numerära underlägen`} />
-          <KV label="Special teams-index" value={komma(st.special_teams_index)} hint="PP% + PK%" />
-          <KV label="Utvisningar" value={`${komma(st.avg_pim_per_game)} min/match`} hint={`${st.total_pim} minuter totalt`} />
-          <p className="mc-note">
-            <Formel till="specialteam" />
-          </p>
-        </section>
-      )}
+      {st && st.pp_opportunities > 0 && <Specialteam st={st} league={league} matcher={record.gp} />}
 
       {gs && (
         <section className="mc-card">

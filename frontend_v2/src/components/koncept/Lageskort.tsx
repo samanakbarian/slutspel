@@ -24,7 +24,7 @@ export function Lageskort({ lage, senaste, nasta }: { lage: Lage; senaste?: Band
         <p className="lk-text">
           {senaste.isHome ? <><b>{hemma}</b> – {borta}</> : <>{hemma} – <b>{borta}</b></>}
         </p>
-        {senaste.gameId !== null && <Link className="lk-knapp" to={`/matcher/${senaste.gameId}`}>Se matchen sida för sida →</Link>}
+        {senaste.gameId !== null && <Link className="lk-knapp" to={`/matcher/${senaste.gameId}`}>Matchrapporten →</Link>}
       </section>
     );
   }
