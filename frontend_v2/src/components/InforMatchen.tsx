@@ -396,11 +396,12 @@ export function InforMatchen({ season }: { season: string | null }) {
     );
     duelNote = `Efter ${data.us.games_played} respektive ${data.them.games_played} matcher i år.`;
 
-    // Seriens lagstatistik: hur lagen spelar, inte bara vad det gav. Samma
-    // gräns som för placeringarna — efter en match är 100 % i boxplay ingenting.
+    // Seriens lagstatistik: hur lagen spelar, inte bara vad det gav.
     const oss = league?.teams.find(t => t.is_ours);
     const dem = league?.teams.find(t => t.team === game.opponent);
-    if (oss && dem && oss.gp >= MINSTA_MATCHER && dem.gp >= MINSTA_MATCHER) {
+    // Värdena visas från första matchen, som mål per match ovanför. Gränsen
+    // gäller bara placeringarna i specialteamen längre ned.
+    if (oss && dem && oss.gp > 0 && dem.gp > 0) {
       const procent = (v: number) => `${Math.round(v)} %`;
       const enDecimal = (v: number) => v.toFixed(1).replace('.', ',');
       for (const [key, label, format, lowerIsBetter] of [
@@ -417,6 +418,8 @@ export function InforMatchen({ season }: { season: string | null }) {
         // telefon. Skottprocenten får en decimal, den ligger oftast kring tio.
         if (a != null && b != null) duels.push({ label, us: a, them: b, format, lowerIsBetter });
       }
+    }
+    if (oss && dem && oss.gp >= MINSTA_MATCHER && dem.gp >= MINSTA_MATCHER) {
       // Powerplay möter boxplay, inte powerplay. Placeringen i serien säger
       // om talet är bra; 20 % i powerplay och 80 % i boxplay går inte att
       // ställa mot varandra som staplar.
