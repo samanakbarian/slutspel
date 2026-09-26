@@ -118,9 +118,13 @@ function statsFor(data: MatchReport, periods: [number, number][], ourSide: 'home
   const ppGoals = data.goals.filter(g => isOurs(g.team_code) && g.is_power_play).length;
   if (ppChances > 0) out.push({ label: 'Powerplay', value: `${ppGoals} av ${ppChances}` });
 
-  const keeper = (data.goalies || []).find(g => g.is_ours);
-  if (keeper?.saves != null && keeper.shots_against != null) {
-    out.push({ label: 'Räddningar', value: `${keeper.saves} av ${keeper.shots_against}` });
+  // Hela lagets räddningar. Byttes målvakten stod två i målet, och bara den
+  // förstes siffror vore halva matchen.
+  const vara = (data.goalies || []).filter(g => g.is_ours && g.saves != null && g.shots_against != null);
+  if (vara.length > 0) {
+    const saves = vara.reduce((n, g) => n + (g.saves ?? 0), 0);
+    const skott = vara.reduce((n, g) => n + (g.shots_against ?? 0), 0);
+    out.push({ label: 'Räddningar', value: `${saves} av ${skott}` });
   }
 
   // Den period vi vann tydligast — eller, om ingen vanns, den bästa av dem.
@@ -168,7 +172,10 @@ export function buildCardModel(data: MatchReport): CardModel | null {
       return { minute: g.minute, diff: us - them, ours, state: resultat(us, them, ourSide === 'home') };
     });
 
-  const keeper = (data.goalies || []).find(g => g.is_ours);
+  // Nollan tillskrivs bara en målvakt som stod hela matchen. Delade två på
+  // den är ingen av dem ensam hjälte.
+  const vara = (data.goalies || []).filter(g => g.is_ours && (g.shots_against ?? 0) > 0);
+  const keeper = vara.length === 1 ? vara[0] : undefined;
   const opponent = shortTeam(ourSide === 'home' ? data.away_team : data.home_team);
 
   return {
