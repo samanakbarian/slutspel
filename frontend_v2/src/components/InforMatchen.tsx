@@ -401,14 +401,21 @@ export function InforMatchen({ season }: { season: string | null }) {
     const oss = league?.teams.find(t => t.is_ours);
     const dem = league?.teams.find(t => t.team === game.opponent);
     if (oss && dem && oss.gp >= MINSTA_MATCHER && dem.gp >= MINSTA_MATCHER) {
-      for (const [key, label] of [
-        ['shot_share', 'Andel av skotten'],
-        ['sv_pct', 'Räddningsprocent'],
+      const procent = (v: number) => `${Math.round(v)} %`;
+      const enDecimal = (v: number) => v.toFixed(1).replace('.', ',');
+      for (const [key, label, format, lowerIsBetter] of [
+        ['sf_pg', 'Skott per match', enDecimal, false],
+        ['shot_share', 'Andel av skotten', procent, false],
+        ['sh_pct', 'Skottprocent', (v: number) => `${enDecimal(v)} %`, false],
+        ['sv_pct', 'Räddningsprocent', procent, false],
+        ['fo_pct', 'Tekningar', procent, false],
+        ['pim_pg', 'Utvisningsmin per match', enDecimal, true],
       ] as const) {
         const a = oss.values[key];
         const b = dem.values[key];
-        // Hela procent: kolumnen rymmer inte "100,0 %" på en telefon.
-        if (a != null && b != null) duels.push({ label, us: a, them: b, format: v => `${Math.round(v)} %` });
+        // Hela procent där det går: kolumnen rymmer inte "100,0 %" på en
+        // telefon. Skottprocenten får en decimal, den ligger oftast kring tio.
+        if (a != null && b != null) duels.push({ label, us: a, them: b, format, lowerIsBetter });
       }
       // Powerplay möter boxplay, inte powerplay. Placeringen i serien säger
       // om talet är bra; 20 % i powerplay och 80 % i boxplay går inte att
