@@ -2089,6 +2089,12 @@ function Utveckling({
 
   const pointCurve = timeline.map(t => ({ label: shortDate(t.date), value: t.cumPts }));
   const rolling = form.filter(f => f.window >= 5);
+  const pdoPunkter = (shots?.rolling || []).filter(r => r.pdo !== null).map(r => ({ label: shortDate(r.date), value: r.pdo as number }));
+  const andelPunkter = (shots?.rolling || []).filter(r => r.shot_share_pct !== null).map(r => ({ label: shortDate(r.date), value: r.shot_share_pct as number }));
+  const sistaFonster = shots?.rolling[shots.rolling.length - 1]?.window ?? 0;
+  const fonster = shots && sistaFonster < shots.window
+    ? `alla ${sistaFonster} matcher hittills`
+    : `rullande ${shots?.window ?? 0} matcher`;
 
   return (
     <>
@@ -2139,22 +2145,31 @@ function Utveckling({
 
       {shots && shots.rolling.length > 1 && (
         <section className="mc-card">
-          <p className="mc-kicker">PDO — rullande {shots.window} matcher</p>
+          {/* Fönstret är aldrig större än antalet spelade matcher. Tidigt på
+              säsongen står det hur många kurvan faktiskt bygger på. */}
+          <p className="mc-kicker">PDO — {fonster}</p>
+          {/* Referenslinjen 100 hör till kurvan: utan den ser en återgång mot
+              det normala ut som ett ras, eftersom axeln bara spänner över
+              lagets egna värden. */}
           <Sparkline
-            points={shots.rolling.filter(r => r.pdo !== null).map(r => ({ label: shortDate(r.date), value: r.pdo as number }))}
+            points={pdoPunkter}
             height={100}
             colour="var(--brand-gold)"
             fill="rgba(255,199,44,0.3)"
             format={v => svNum(v, 1)}
+            guide={pdoPunkter.map(() => 100)}
+            guideLabel="100"
           />
           <p className="mc-note">
             PDO är skottprocent plus räddningsprocent. 100 är normalt.
           </p>
-          <p className="mc-kicker st-sub">Skottandel — rullande {shots.window} matcher</p>
+          <p className="mc-kicker st-sub">Skottandel — {fonster}</p>
           <Sparkline
-            points={shots.rolling.filter(r => r.shot_share_pct !== null).map(r => ({ label: shortDate(r.date), value: r.shot_share_pct as number }))}
+            points={andelPunkter}
             height={100}
             format={v => svNum(v, 1)}
+            guide={andelPunkter.map(() => 50)}
+            guideLabel="50"
           />
           <p className="mc-note">
             Över 50 sköt laget mer än motståndarna.
