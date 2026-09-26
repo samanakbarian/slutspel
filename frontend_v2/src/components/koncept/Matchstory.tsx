@@ -113,13 +113,33 @@ export function Matchstory({ data }: { data: MatchReport }) {
     }
   }
 
-  // Målvakten.
-  const mv = (data.goalies || []).find(g => g.is_ours);
-  if (mv && mv.saves != null) {
+  // Målvakterna. Vid ett byte står båda, med räddningar och speltid.
+  const mv = (data.goalies || []).filter(g => g.is_ours && g.saves != null && (g.shots_against ?? 0) > 0);
+  if (mv.length === 1) {
+    const g = mv[0];
     sidor.push({
       tid: 'I målet',
-      stor: String(mv.saves),
-      text: <><b>{surname(mv.name)}</b> räddade {mv.saves} av {mv.shots_against ?? '–'} skott{mv.save_pct != null ? `, ${komma(mv.save_pct)}\u00a0%` : ''}.</>,
+      stor: String(g.saves),
+      text: <><b>{surname(g.name)}</b> räddade {g.saves} av {g.shots_against} skott{g.save_pct != null ? `, ${komma(g.save_pct)}\u00a0%` : ''}.</>,
+      typ: 'vi',
+    });
+  } else if (mv.length > 1) {
+    const saves = mv.reduce((n, g) => n + (g.saves ?? 0), 0);
+    const skott = mv.reduce((n, g) => n + (g.shots_against ?? 0), 0);
+    sidor.push({
+      tid: 'I målet · målvaktsbyte',
+      stor: String(saves),
+      text: (
+        <>
+          {mv.map((g, n) => (
+            <span key={n}>
+              {n > 0 && ' '}<b>{surname(g.name)}</b> {g.saves} av {g.shots_against}
+              {g.time_on_ice ? ` på ${g.time_on_ice.replace(':', '.')}` : ''}.
+            </span>
+          ))}
+          {' '}Tillsammans {saves} av {skott}.
+        </>
+      ),
       typ: 'vi',
     });
   }
