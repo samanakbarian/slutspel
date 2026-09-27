@@ -237,6 +237,7 @@ function Prognosstapel({ p, opponent }: { p: Prognos; opponent: string }) {
   const vi = hemma ? p.p_home_regulation : p.p_away_regulation;
   const de = hemma ? p.p_away_regulation : p.p_home_regulation;
   const ot = p.p_overtime;
+  const vinst = (hemma ? p.p_home_win : p.p_away_win) ?? vi + ot / 2;
   const pct = (v: number) => `${Math.round(v * 100)} %`;
   return (
     <div className="pg">
@@ -251,6 +252,9 @@ function Prognosstapel({ p, opponent }: { p: Prognos; opponent: string }) {
         <span className="pg-f pg-f-ot" style={{ flexGrow: ot }}>{pct(ot)}</span>
         <span className="pg-f pg-f-de" style={{ flexGrow: de }}>{pct(de)}</span>
       </div>
+      {/* Stapeln gäller full tid. Förlängningen räknad till hela matchen
+          står här, så att den inte läses som ett annat svar. */}
+      <p className="mc-note">Efter full tid. Med förlängningen vinner Björklöven i {pct(vinst)}.</p>
     </div>
   );
 }

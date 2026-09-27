@@ -63,6 +63,14 @@ function drawBar(ctx: CanvasRenderingContext2D, m: ForeModel, x: number, y: numb
     ctx.fillText(pct(v), cx + bredd[i] / 2, top + H / 2 + 16);
     cx += bredd[i] + 6;
   });
+
+  // Stapeln gäller full tid, den stora siffran hela matchen. Utan raden
+  // läste man 50 % i stapeln mot 61 % ovanför som två olika svar.
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `500 26px ${SANS}`;
+  ctx.fillStyle = INK_3;
+  ctx.fillText(fit(ctx, `Efter full tid. Med förlängningen vinner Björklöven i ${m.big}.`, w), x, top + H + 42);
 }
 
 function drawForm(ctx: CanvasRenderingContext2D, m: ForeModel, x: number, y: number, w: number) {
@@ -154,7 +162,7 @@ export function drawForeMatchCard(ctx: CanvasRenderingContext2D, m: ForeModel) {
   const mitt = 560;
   if (m.prognos) {
     drawBar(ctx, m, PAD, mitt, S - PAD * 2);
-    drawForm(ctx, m, PAD, mitt + 190, S - PAD * 2);
+    drawForm(ctx, m, PAD, mitt + 206, S - PAD * 2);
   } else {
     drawForm(ctx, m, PAD, mitt + 60, S - PAD * 2);
   }
