@@ -14,7 +14,7 @@ import type { CardStat } from './matchCard';
 export type ForeModel = {
   when: string[];
   eyebrow: string;
-  /** Stor text: vinstchansen när prognosen finns, annars nedräkningen. */
+  /** Stor text: sannolikheten för vinst när prognosen finns, annars nedräkningen. */
   big: string;
   bigLabel: string;
   usLabel: string;
@@ -70,7 +70,7 @@ function drawBar(ctx: CanvasRenderingContext2D, m: ForeModel, x: number, y: numb
   ctx.textBaseline = 'alphabetic';
   sans(ctx, 26, 500);
   ctx.fillStyle = INK_3;
-  ctx.fillText(fit(ctx, `Efter full tid. Med förlängningen vinner Björklöven i ${m.big}.`, w), x, top + H + 42);
+  ctx.fillText(fit(ctx, `Efter full tid. Med förlängningen är sannolikheten för vinst ${m.big}.`, w), x, top + H + 42);
 }
 
 function drawForm(ctx: CanvasRenderingContext2D, m: ForeModel, x: number, y: number, w: number) {

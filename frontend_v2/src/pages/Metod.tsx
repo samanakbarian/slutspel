@@ -129,6 +129,25 @@ export function MetodSida() {
         <p className="mc-kicker">Prognoserna</p>
 
         <Matt
+          id="matchprognos"
+          namn="Matchprognosen"
+          formel="mål hemma ~ Poisson(e^(nivå + hemmafördel + anfall hemma − försvar borta)),  mål borta ~ Poisson(e^(nivå + anfall borta − försvar hemma))"
+          rad="Anfall och försvar skattas före varje speldag ur SHL:s matcher de senaste tre åren. En match väger hälften efter 240 dagar, och ett lag dras mot ett snittlag tills det spelat nog. Bygger bara på mål, inte på skott eller målvakter. Inställd på 2016/17–2021/22 och prövad på 2022/23–2025/26."
+        />
+        <Matt
+          id="forlangning"
+          namn="Sannolikheten för vinst"
+          formel="vinst på full tid + förlängning × 53 %"
+          rad="Lika efter full tid blir förlängning. Hemmalaget vann 53 % av de 531 förlängningarna i SHL 2015–2022, bortalaget 47 %. Förlängning och straffar ligger nära slumpen, så modellen räknar inte lagens styrka där."
+        />
+        <Matt
+          id="slutplacering"
+          namn="Slutplaceringen"
+          formel="resten av säsongen spelad match för match med matchprognosen, några tusen gånger"
+          rad="Poängen läggs till dagens tabell. Antalet körningar sänks när många matcher återstår, så svaret kommer inom rimlig tid. Fältet är åtta av tio simuleringar."
+        />
+
+        <Matt
           id="elo"
           namn="Elo"
           formel="R ← R + 20 × (utfall − förväntat),  förväntat hemma = 1 ÷ (1 + 10^((R borta − (R hemma + 40)) ÷ 400))"

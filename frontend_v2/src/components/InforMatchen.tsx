@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { humanName, ordinal, resultat } from '../lib/match';
 import { MINSTA_MATCHER, useLeague } from '../lib/serien';
@@ -254,7 +255,10 @@ function Prognosstapel({ p, opponent }: { p: Prognos; opponent: string }) {
       </div>
       {/* Stapeln gäller full tid. Förlängningen räknad till hela matchen
           står här, så att den inte läses som ett annat svar. */}
-      <p className="mc-note">Efter full tid. Med förlängningen vinner Björklöven i {pct(vinst)}.</p>
+      <p className="mc-note">
+        Efter full tid. Med förlängningen är sannolikheten för vinst {pct(vinst)}.{' '}
+        <Link className="md-lank" to="/metod#forlangning">Så räknas det</Link>
+      </p>
     </div>
   );
 }
@@ -283,7 +287,7 @@ function foreModel(data: NextMatch, p: Prognos | null): ForeModel {
     prognos = { vi, ot: p.p_overtime, de };
     const vinst = (hemma ? p.p_home_win : p.p_away_win) ?? vi + p.p_overtime / 2;
     big = `${Math.round(vinst * 100)} %`;
-    bigLabel = 'Björklövens vinstchans';
+    bigLabel = 'Sannolikhet för vinst';
   }
 
   const tp = data.them_players;
