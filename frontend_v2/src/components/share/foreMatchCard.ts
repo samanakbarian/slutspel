@@ -38,8 +38,6 @@ function drawBar(ctx: CanvasRenderingContext2D, m: ForeModel, x: number, y: numb
   ctx.textAlign = 'left';
   tracked(ctx, 'BJÖRKLÖVEN', x, y, 2);
   tracked(ctx, fit(ctx, m.opponent.toUpperCase(), 330), x + w, y, 2, 'right');
-  ctx.textAlign = 'center';
-  ctx.fillText('FÖRLÄNGNING', x + w / 2, y);
 
   // Fälten får minst en bredd som rymmer procenten; resten fördelas efter
   // sannolikheten. Annars hamnar "12 %" utanför ett för smalt fält.
@@ -47,6 +45,11 @@ function drawBar(ctx: CanvasRenderingContext2D, m: ForeModel, x: number, y: numb
   const rest = w - 3 * min - 12;
   const sum = p.vi + p.ot + p.de || 1;
   const bredd = [p.vi, p.ot, p.de].map(v => min + rest * (v / sum));
+
+  // Förlängningen står över sitt eget fält, inte mitt på kortet: fälten är
+  // olika breda, så mitten av kortet hamnade snett över det grå fältet.
+  ctx.textAlign = 'center';
+  ctx.fillText('FÖRLÄNGNING', x + bredd[0] + 6 + bredd[1] / 2, y);
   const farg = [GUL, 'rgba(243,245,241,0.2)', SVART];
   let cx = x;
   const top = y + 24;
