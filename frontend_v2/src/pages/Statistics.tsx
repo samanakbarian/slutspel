@@ -1252,7 +1252,8 @@ function Slutplacering({ proj }: { proj: Projection }) {
           diagram; det som måste stå är vad fältet och pricken betyder. */}
       <p className="mc-note">
         Fältet är åtta av tio simuleringar, pricken väntad plats.
-        {proj.reliability === 'low' && ' Få omgångar spelade, talen är osäkra.'}
+        {proj.reliability === 'low' && ' Få omgångar spelade, talen är osäkra.'}{' '}
+        <Formel till="slutplacering" />
       </p>
     </section>
   );
