@@ -68,7 +68,7 @@ function drawBar(ctx: CanvasRenderingContext2D, m: ForeModel, x: number, y: numb
   // läste man 50 % i stapeln mot 61 % ovanför som två olika svar.
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.font = `500 26px ${SANS}`;
+  sans(ctx, 26, 500);
   ctx.fillStyle = INK_3;
   ctx.fillText(fit(ctx, `Efter full tid. Med förlängningen vinner Björklöven i ${m.big}.`, w), x, top + H + 42);
 }
