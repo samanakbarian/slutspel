@@ -1482,6 +1482,36 @@ a {
 }
 .im-nspos { color: var(--text-muted); font-size: 0.66rem; }
 .im-nstal { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+/* Med rutor får raden en kolumn till. */
+.im-ns:has(.im-rutor) .im-nsrad { grid-template-columns: 1.6rem 1fr auto auto 2.8rem; align-items: center; }
+.im-nshead { display: flex; justify-content: space-between; align-items: baseline; }
+.im-nsfonster { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.04em; }
+.im-nsnamn em.im-nsstart { color: var(--text-muted); }
+.im-rutor { display: inline-flex; gap: 3px; }
+.im-ruta {
+  width: 15px; height: 15px; border-radius: 3px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-style: normal; font-size: 0.58rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--bg-dark);
+}
+.im-ruta-ej { box-shadow: inset 0 0 0 1px rgba(172, 199, 186, 0.25); }
+.im-ruta-0 { background: rgba(172, 199, 186, 0.14); }
+.im-ruta-1 { background: color-mix(in srgb, var(--brand-gold) 60%, transparent); }
+.im-ruta-2 { background: var(--brand-gold); }
+.im-ruta-start { background: var(--text-secondary); }
+/* Förstafemman som på isen: tre forwards över två backar. */
+.im-femma { margin-top: 0.55rem; }
+.im-femrad { display: flex; justify-content: center; gap: 0.3rem; margin-top: 0.25rem; }
+.im-femchip {
+  display: inline-flex; align-items: baseline; gap: 0.3rem;
+  max-width: 33%; min-width: 0;
+  padding: 0.2rem 0.5rem; border-radius: 999px;
+  background: rgba(172, 199, 186, 0.08);
+  border: 1px solid rgba(172, 199, 186, 0.14);
+  font-size: 0.7rem; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.im-femchip b { font-size: 0.62rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .im-h2hlabel {
   display: block;
   font-size: 0.62rem;
