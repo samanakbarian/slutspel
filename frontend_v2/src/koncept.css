@@ -1,0 +1,593 @@
+/* ── Koncept: nytt utseende ──────────────────────────────────────────────
+   Ligger efter index.css och skriver bara över tokens och ett fåtal ytor.
+   Tas konceptet bort räcker det att ta bort importen i main.tsx. */
+
+@font-face { font-family: 'Anybody'; font-style: normal; font-weight: 400 900; font-stretch: 50% 150%; font-display: swap;
+  src: url('/fonts/anybody-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Anybody'; font-style: normal; font-weight: 400 900; font-stretch: 50% 150%; font-display: swap;
+  src: url('/fonts/anybody-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Instrument Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/instrumentsans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Instrument Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/instrumentsans-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Martian Mono'; font-style: normal; font-weight: 400 700; font-stretch: 75% 112.5%; font-display: swap;
+  src: url('/fonts/martianmono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Martian Mono'; font-style: normal; font-weight: 400 700; font-stretch: 75% 112.5%; font-display: swap;
+  src: url('/fonts/martianmono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+:root {
+  /* Klubbens färger som ytor. */
+  --k-gron: #0b6b44;
+  --k-gul: #ffc72c;
+  --k-svart: #0f1a15;
+  --k-papper: #f3f5f1;
+  --k-rod: #e0552f;
+  --k-linje: rgba(15, 26, 21, 0.12);
+
+  --bg-dark: #f3f5f1;
+  --bg-darker: #eef1ec;
+  --bg-card: #ffffff;
+  --bg-card-solid: #ffffff;
+
+  --brand-green: #0b6b44;
+  --brand-green-light: #0b6b44;
+  /* Guldet var en accent på mörk botten. Här bär gult ytor, inte text. */
+  --brand-gold: #0f1a15;
+  --brand-gold-light: #0f1a15;
+
+  --text-primary: #0f1a15;
+  --text-secondary: #3b4a43;
+  --text-muted: #5d6b64;
+
+  --impact-positive: #0b7a4c;
+  --impact-negative: #c9391f;
+  --impact-warning: #c9391f;
+  --impact-neutral: #2f6fc1;
+
+  --data-for: #0b8a55;
+  --data-against: #e0552f;
+
+  --glass-border: rgba(15, 26, 21, 0.12);
+  --glass-bg: rgba(15, 26, 21, 0.03);
+  --glass-shadow: none;
+
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Anybody', 'Arial Narrow', system-ui, sans-serif;
+  --font-mono: 'Martian Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --display-stretch: 58%;
+  color-scheme: light;
+}
+
+body {
+  background: var(--k-papper);
+  color: var(--text-primary);
+}
+
+/* Kort: vit yta, rak kant, ingen skugga. Formen bär, inte glaset. */
+.mc-card, .mr-card, .im-card, .mc-hero, .sp-hero, .rs-source {
+  background: #fff;
+  border: 1px solid var(--k-linje);
+  border-radius: 6px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+/* Rubriketiketter i mono, som i skisserna. */
+.mc-kicker, .mr-kicker, .im-h2hlabel, .st-kol, .sp-lbl {
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  letter-spacing: .1em;
+}
+.mc-title, .mr-title { text-transform: uppercase; font-size: 1.5rem; line-height: .95; letter-spacing: 0; }
+
+/* ── Matchstoryn ── */
+.ks {
+  position: relative;
+  background: var(--k-gron);
+  color: #f3f5f1;
+  border-radius: 6px;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+.ks-dem { background: var(--k-svart); }
+.ks-prog { display: flex; gap: 4px; padding: 14px 14px 0; }
+.ks-prog i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.28); }
+.ks-prog i.ks-klar, .ks-prog i.ks-nu { background: #fff; }
+.ks-huvud {
+  display: flex; justify-content: space-between; padding: 10px 14px;
+  font: 500 10px/1 var(--font-mono); font-stretch: 87.5%; letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(243, 245, 241, 0.72);
+}
+.ks-sida { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 18px 18px 24px; }
+.ks-tid { font: 600 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--k-gul); }
+.ks-stor {
+  font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900;
+  font-size: 8.5rem; line-height: .8; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+}
+.ks-text { font-size: 1.1rem; line-height: 1.35; font-weight: 500; max-width: 28ch; }
+.ks-text b { color: var(--k-gul); font-weight: 700; }
+.ks-zon { position: absolute; top: 0; bottom: 0; width: 40%; background: transparent; border: 0; cursor: pointer; }
+.ks-bak { left: 0; } .ks-fram { right: 0; width: 60%; }
+.ks-zon:disabled { cursor: default; }
+.ks-zon:focus-visible { outline: 2px solid var(--k-gul); outline-offset: -4px; }
+
+/* ── Kedjekortet ── */
+.kk-val { display: flex; gap: 6px; margin: 0.6rem 0 0.8rem; }
+.kk-val button {
+  flex: 1; padding: 0.5rem 0; border: 1.5px solid var(--k-svart); border-radius: 4px; background: transparent;
+  font: 600 11px/1 var(--font-mono); font-stretch: 87.5%; color: var(--k-svart); cursor: pointer;
+}
+.kk-val button[aria-pressed="true"] { background: var(--k-svart); color: var(--k-gul); }
+.kk-rink {
+  position: relative; aspect-ratio: 1 / .95; max-width: 100%;
+  border: 2px solid var(--k-svart); border-radius: 0 0 38% 38% / 0 0 30% 30%; background: #fff;
+}
+.kk-rink::before { content: ""; position: absolute; left: 0; right: 0; top: 40%; border-top: 3px solid var(--k-gul); }
+.kk-rink::after {
+  content: ""; position: absolute; left: 50%; bottom: 7%; width: 46px; height: 22px; transform: translateX(-50%);
+  border: 2px solid var(--k-rod); border-bottom: 0; border-radius: 23px 23px 0 0;
+}
+.kk-sp { position: absolute; transform: translate(-50%, -50%); width: 30%; display: grid; justify-items: center; gap: 3px; text-align: center; }
+.kk-nr {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--k-gron); color: #fff; font: 600 13px/1 var(--font-mono);
+}
+.kk-back .kk-nr { background: var(--k-svart); }
+.kk-sp b { font-size: 12.5px; line-height: 1.1; overflow-wrap: anywhere; }
+.kk-p { font: 600 11px/1 var(--font-mono); color: var(--k-gron); }
+.kk-noll { color: var(--text-muted); }
+.kk-summa { display: flex; justify-content: space-between; margin-top: 0.7rem; font: 500 12px/1.3 var(--font-mono); color: var(--text-muted); }
+.kk-summa b { color: var(--text-primary); }
+
+/* ── Matchdagsläget ── */
+.lk { border-radius: 6px; padding: 18px 18px 20px; display: grid; gap: 10px; }
+.lk-efter { background: var(--k-gron); color: #f3f5f1; }
+.lk-forlust { background: var(--k-svart); }
+.lk-dag { background: var(--k-gul); color: var(--k-svart); }
+.lk-rubr { font: 600 11px/1 var(--font-mono); font-stretch: 87.5%; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
+.lk-jatte {
+  font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900;
+  font-size: 7rem; line-height: .8; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+}
+.lk-jatte small { font-size: 1.6rem; font-stretch: 70%; margin-left: 8px; }
+.lk-text { font-size: 1.15rem; line-height: 1.3; }
+.lk-efter .lk-text b { color: var(--k-gul); }
+.lk-knapp {
+  justify-self: start; margin-top: 4px; padding: 10px 16px; border-radius: 999px;
+  background: var(--k-gul); color: var(--k-svart); font-weight: 700; font-size: .9rem; text-decoration: none;
+}
+.lk-knapp:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ── Säsongsbandet ── */
+.sb-rutnat { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-top: .8rem; }
+.sb-cell {
+  aspect-ratio: 1; max-width: 100%; border: 0; border-radius: 3px; padding: 0; cursor: pointer;
+  background: #dfe7e2; color: var(--text-muted); font: 600 8.5px/1 var(--font-mono); font-stretch: 80%;
+}
+.sb-cell.sb-borta { background: transparent; box-shadow: inset 0 0 0 1.5px #c2cec7; }
+.sb-cell.sb-v { background: var(--k-gron); color: #fff; box-shadow: none; }
+.sb-cell.sb-f { background: var(--k-rod); color: #fff; box-shadow: none; }
+.sb-cell.sb-v.sb-ot { background: #fff; color: var(--k-gron); box-shadow: inset 0 0 0 3px var(--k-gron); }
+.sb-cell.sb-f.sb-ot { background: #fff; color: var(--k-rod); box-shadow: inset 0 0 0 3px var(--k-rod); }
+.sb-cell.sb-nasta { background: var(--k-gul); color: var(--k-svart); box-shadow: none; }
+.sb-cell[aria-pressed="true"] { outline: 2px solid var(--k-svart); outline-offset: 1px; }
+.sb-cell:focus-visible { outline: 2px solid var(--k-svart); outline-offset: 1px; }
+.sb-detalj { margin-top: .8rem; background: var(--k-svart); color: #f3f5f1; border-radius: 6px; padding: 12px 14px; display: grid; gap: 3px; }
+.sb-detalj b { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 800; font-size: 1.45rem; line-height: 1; text-transform: uppercase; }
+.sb-detalj span { font: 500 11px/1.4 var(--font-mono); font-stretch: 87.5%; color: #b8c6be; }
+.sb-lank { color: var(--k-gul); font-weight: 700; font-size: .85rem; text-decoration: none; margin-top: 4px; }
+.sb-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: .7rem; font: 500 10px/1 var(--font-mono); font-stretch: 87.5%; color: var(--text-muted); }
+.sb-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; background: #dfe7e2; }
+.sb-legend i.sb-borta { background: transparent; box-shadow: inset 0 0 0 1.5px #c2cec7; }
+.sb-legend i.sb-v { background: var(--k-gron); } .sb-legend i.sb-f { background: var(--k-rod); }
+.sb-legend i.sb-v.sb-ot { background: #fff; box-shadow: inset 0 0 0 2px var(--k-gron); }
+.sb-legend i.sb-nasta { background: var(--k-gul); }
+@media (prefers-reduced-motion: no-preference) {
+  .sb-cell.sb-nasta { animation: sb-puls 2.4s ease-in-out infinite; }
+  @keyframes sb-puls { 50% { box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.45); } }
+}
+
+/* ── Header och meny ── */
+.topbar { background: rgba(243, 245, 241, 0.94); border-bottom: 2px solid var(--k-svart); }
+.topbar-sida { background: var(--k-gul); color: var(--k-svart); border: 0; border-radius: 2px; font-family: var(--font-mono); }
+.topbar-kicker { color: var(--k-gron); font-family: var(--font-mono); font-stretch: 87.5%; }
+.topbar-title { font-stretch: var(--display-stretch); font-weight: 900; text-transform: uppercase; font-size: 1.6rem; }
+.bottom-nav { background: rgba(243, 245, 241, 0.97); border-top: 2px solid var(--k-svart); }
+.bottom-link { font-family: var(--font-mono); font-stretch: 87.5%; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; font-size: .58rem; }
+.bottom-link.active { background: var(--k-svart); color: var(--k-gul); border: 0; border-radius: 4px; }
+
+/* Knappar och segment i klubbens svart och gult. */
+.mc-seg { border-radius: 999px; border: 2px solid var(--k-svart); background: transparent; }
+.mc-segbtn.mc-on { background: var(--k-svart); color: var(--k-gul); }
+.mc-cta, .share-btn { background: var(--k-svart); color: var(--k-gul); border: 0; border-radius: 999px; }
+.st-row-ours { background: var(--k-gul); box-shadow: none; }
+.st-row-ours .st-team, .st-row-ours .st-rank, .st-row-ours .st-points { color: var(--k-svart); }
+
+/* ── Spelarkortet ── */
+.sp-hero {
+  position: relative; overflow: hidden;
+  background: var(--k-gron); color: #f3f5f1; border: 0; border-radius: 6px;
+  padding: 18px 16px 16px;
+}
+.sp-hero .sp-num {
+  position: absolute; right: -6px; top: -28px; z-index: 0;
+  font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900;
+  font-size: 12rem; line-height: 1; color: rgba(255, 199, 44, 0.16);
+  background: none; border: 0; width: auto; height: auto; padding: 0;
+  pointer-events: none;
+}
+.sp-hero .sp-head, .sp-hero .sp-totals { position: relative; z-index: 1; }
+.sp-hero .sp-name { max-width: 78%; font-size: 2.6rem; line-height: .88; text-transform: uppercase; font-weight: 900; color: #fff; }
+.sp-hero .sp-meta { color: rgba(243, 245, 241, 0.75); font-family: var(--font-mono); font-stretch: 87.5%; font-size: .72rem; letter-spacing: .04em; margin-top: 6px; }
+.sp-hero .sp-totals { border-top: 1px solid rgba(255, 255, 255, 0.25); margin-top: 14px; padding-top: 12px; }
+.sp-hero .sp-val { color: #fff; font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 2.2rem; }
+.sp-hero .sp-val.sp-gold { color: var(--k-gul); }
+.sp-hero .sp-lbl { color: rgba(243, 245, 241, 0.7); }
+.sp-hero .sp-nav button { background: rgba(0, 0, 0, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); }
+.sp-hero .sp-band { background: var(--k-gul); color: var(--k-svart); }
+
+/* Reelen är lägre än matchstoryn. */
+.ks-reel { min-height: 330px; }
+.ks-reel .ks-stor { font-size: 7rem; }
+.ks-lank {
+  position: absolute; right: 14px; bottom: 14px; z-index: 2;
+  padding: 7px 12px; border-radius: 999px; background: var(--k-gul); color: var(--k-svart);
+  font-weight: 700; font-size: .8rem; text-decoration: none;
+}
+
+/* ── Tröjväggen ── */
+.tv-vagg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; margin-top: .6rem; }
+@media (max-width: 340px) { .tv-vagg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tv-kort { display: grid; justify-items: center; gap: 4px; text-align: center; text-decoration: none; color: inherit; min-width: 0; }
+a.tv-kort:active .tv-troja { transform: scale(.96); }
+.tv-troja {
+  position: relative; width: 100%; max-width: 104px; aspect-ratio: 1 / 1.05;
+  background: var(--k-gron); color: #fff;
+  clip-path: polygon(22% 0, 38% 0, 42% 7%, 58% 7%, 62% 0, 78% 0, 100% 16%, 100% 40%, 84% 40%, 84% 100%, 16% 100%, 16% 40%, 0 40%, 0 16%);
+  display: grid; align-content: start; justify-items: center; padding-top: 16%;
+  transition: transform .12s ease;
+}
+.tv-ny { background: var(--k-gul); color: var(--k-svart); }
+.tv-gk { background: var(--k-svart); color: var(--k-gul); }
+.tv-rygg { font: 600 7.5px/1 var(--font-mono); letter-spacing: .06em; max-width: 64%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-nr { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 2.6rem; line-height: 1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.tv-namn { font-weight: 700; font-size: .8rem; line-height: 1.15; overflow-wrap: anywhere; }
+.tv-meta { font: 500 9.5px/1.35 var(--font-mono); font-stretch: 87.5%; color: var(--text-muted); }
+.tv-meta b { color: var(--k-gron); }
+.tv-status { font: 700 9px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; padding: 3px 6px; border-radius: 2px; box-shadow: inset 0 0 0 1px var(--k-linje); color: var(--text-muted); }
+.tv-status-ny { background: var(--k-gul); color: var(--k-svart); box-shadow: none; }
+
+/* ── Ledarkorten ── */
+.ld { margin: 0 -16px; }
+.ld-rad {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 62%; gap: 10px;
+  overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 16px 6px; scrollbar-width: none;
+}
+.ld-rad::-webkit-scrollbar { display: none; }
+.ld-kort {
+  scroll-snap-align: start; display: grid; gap: 4px; align-content: end; min-height: 190px;
+  padding: 16px; border-radius: 6px; text-decoration: none; color: #f3f5f1; background: var(--k-gron);
+  transition: transform .12s ease;
+}
+.ld-kort:active { transform: scale(.97); }
+.ld-1 { background: var(--k-svart); }
+.ld-2 { background: var(--k-gul); color: var(--k-svart); }
+.ld-etikett { font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+.ld-varde { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 5.2rem; line-height: .85; font-variant-numeric: tabular-nums; }
+.ld-namn { font-weight: 700; font-size: 1.05rem; }
+.ld-not { font: 500 10px/1.3 var(--font-mono); opacity: .75; }
+
+/* ── Nyheter och X ── */
+.ny-topp { background: var(--k-svart); color: #f3f5f1; border: 0; border-radius: 6px; }
+.ny-topptitel { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 2rem; line-height: .95; text-transform: uppercase; color: #fff; }
+.ny-topp .ny-tid, .ny-topp .ny-kalla { color: rgba(243, 245, 241, 0.7); }
+.ny-dagrubrik { font-family: var(--font-mono); font-stretch: 87.5%; letter-spacing: .1em; }
+.ny-rad { background: #fff; border: 1px solid var(--k-linje); border-radius: 4px; }
+.ny-chip { border-radius: 999px; border: 1.5px solid var(--k-svart); background: transparent; color: var(--k-svart); }
+.ny-chip-vald { background: var(--k-svart); color: var(--k-gul); }
+.xf-post { background: #fff; border: 1px solid var(--k-linje); border-radius: 4px; }
+
+/* Allt som går att trycka på ger efter lite, som en knapp ska. */
+a, button { -webkit-tap-highlight-color: transparent; }
+.mc-row-link:active, .mc-cta:active, .share-btn:active, .lk-knapp:active, .kk-val button:active,
+.sb-cell:active, .mc-segbtn:active, .ny-rad:active, .bottom-link:active, .st-row-knapp:active {
+  transform: scale(.97);
+}
+.mc-row-link, .mc-cta, .share-btn, .lk-knapp, .sb-cell, .mc-segbtn, .ny-rad, .bottom-link { transition: transform .1s ease; }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ── Facit: förlängning som ram, som i formen ── */
+.rs-v { background: var(--k-gron); }
+.rs-ov { background: #fff; color: var(--k-gron); box-shadow: inset 0 0 0 3px var(--k-gron); }
+.rs-of { background: #fff; color: var(--k-rod); box-shadow: inset 0 0 0 3px var(--k-rod); }
+.rs-f { background: var(--k-rod); }
+.rs-prick.rs-ov, .rs-prick.rs-of { box-shadow: inset 0 0 0 2px currentColor; }
+
+/* ── Specialteam ── */
+.stv-del { padding: 14px 0; border-bottom: 1px solid var(--k-linje); display: grid; gap: 10px; }
+.stv-del:last-of-type { border-bottom: 0; }
+.stv-huvud { display: flex; justify-content: space-between; align-items: baseline; }
+.stv-rubrik { font: 600 11px/1 var(--font-mono); font-stretch: 87.5%; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+.stv-tal { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 3.4rem; line-height: .85; font-variant-numeric: tabular-nums; }
+.stv-tal small { font-size: 1.4rem; margin-left: 3px; }
+.stv-rutor { display: flex; flex-wrap: wrap; gap: 5px; }
+.stv-ruta { width: 22px; height: 22px; border-radius: 3px; display: block; }
+.stv-pp-mal { background: var(--k-gron); }
+.stv-pp-tom { box-shadow: inset 0 0 0 2px #c2cec7; }
+.stv-pk-mal { background: var(--k-rod); }
+.stv-pk-tom { background: var(--k-svart); }
+.stv-text { font-size: .9rem; color: var(--text-secondary); }
+.stv-text b { color: var(--text-primary); }
+.stv-axel { position: relative; height: 26px; margin-top: 4px; }
+.stv-axel::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--k-linje); }
+.stv-lag, .stv-vi { position: absolute; top: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
+.stv-lag { width: 10px; height: 10px; background: #9fb0a7; }
+.stv-vi { width: 18px; height: 18px; background: var(--k-gul); box-shadow: 0 0 0 2px var(--k-svart); z-index: 1; }
+.stv-snitt { position: absolute; top: 2px; bottom: 2px; border-left: 2px dashed var(--k-svart); }
+.stv-skala { display: flex; justify-content: space-between; gap: 8px; font: 500 10px/1.3 var(--font-mono); font-stretch: 87.5%; color: var(--text-muted); }
+.stv-skala b { color: var(--text-primary); }
+.stv-mat { position: relative; height: 14px; border-radius: 7px; background: #e6ece8; overflow: hidden; }
+.stv-mitt { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 2px solid var(--k-svart); z-index: 1; }
+.stv-fyll { position: absolute; top: 0; bottom: 0; }
+.stv-plus { background: var(--k-gron); } .stv-minus { background: var(--k-rod); }
+
+/* Periodsammanfattningarna i matchstoryn: gult papper, svart text. */
+.ks-info { background: var(--k-gul); color: var(--k-svart); }
+.ks-info .ks-tid { color: var(--k-svart); }
+.ks-info .ks-huvud { color: rgba(15, 26, 21, 0.7); }
+.ks-info .ks-prog i { background: rgba(15, 26, 21, 0.25); }
+.ks-info .ks-prog i.ks-klar, .ks-info .ks-prog i.ks-nu { background: var(--k-svart); }
+.ks-info .ks-text b { color: var(--k-svart); }
+
+/* Formprickarna i statistiken: förlängning som ring, som överallt annars. */
+.fd-w { background: var(--k-gron); }
+.fd-l { background: var(--k-rod); }
+.fd-otw { background: transparent; box-shadow: inset 0 0 0 2.5px var(--k-gron); }
+.fd-otl { background: transparent; box-shadow: inset 0 0 0 2.5px var(--k-rod); }
+.sb-legend i.sb-f.sb-ot { background: #fff; box-shadow: inset 0 0 0 2px var(--k-rod); }
+
+/* ── Enhetlighet ─────────────────────────────────────────────────────────
+   Grundelementen som finns på alla sidor: etiketter i mono, tal i Anybody,
+   knappar och märken i svart, gult och grönt. Inga toningar eller glas. */
+
+/* Etiketter */
+.topbar-kicker, .empty-season-kicker, .mc-table th, .rs-difflbl, .mr-period-label, .im-count i, .im-ha,
+.du-head, .bx-table th, .rs-kpilbl, .st-statlbl, .st-minilbl, .mr-onice-label, .tor-sub-tag, .opp-tbl th,
+.swing-tag, .sp-stat-lbl, .sp-split-h, .sp-mates-h, .ny-dagrubrik, .ny-tagg, .ny-inofficiell, .pg-head,
+.mc-latest-label, .tab-vaxel, .mr-team, .mr-tag, .mc-res, .mc-ha, .sp-band, .freshness, .gk-num {
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  letter-spacing: .08em;
+  font-weight: 600;
+}
+.st-statlbl, .sp-stat-lbl, .rs-kpilbl, .st-minilbl { font-size: .6rem; text-transform: uppercase; color: var(--text-muted); }
+
+/* Tal */
+.st-statval, .sp-stat-val, .sp-split b, .rs-kpival, .pdo-tal, .mr-period-score, .im-count b, .rs-num, .du-val {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.st-statval { font-size: 2rem; line-height: .95; }
+.st-stats-tight .st-statval { font-size: 1.6rem; }
+.sp-stat-val { font-size: 1.8rem; line-height: .95; }
+.sp-split b { font-size: 1.8rem; }
+.pdo-tal { font-size: 3rem; line-height: .9; }
+.mr-period-score { font-size: 1.7rem; line-height: 1; }
+.st-kvvalue { font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 1.2rem; }
+.md-namn { text-transform: uppercase; font-size: 1.3rem; font-weight: 900; letter-spacing: 0; }
+
+/* Rubriker under kortets etikett: versaler, som kortens huvudrubrik. */
+.mc-card h3, .mr-card h3 { text-transform: uppercase; font-weight: 900; letter-spacing: 0; }
+
+/* Knappar som visar mer eller leder vidare */
+.st-more, .sp-ep, .sp-more, .mc-cta-soft, .bx-summary {
+  background: transparent;
+  border: 1.5px solid var(--k-svart);
+  border-radius: 4px;
+  color: var(--k-svart);
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.st-more:hover, .sp-ep:hover, .sp-more:hover, .bx-summary:hover { background: var(--k-svart); color: var(--k-gul); border-color: var(--k-svart); }
+
+/* Val och filter: samma form som nyheternas filter */
+.opp-chip, .share-format button {
+  border: 1.5px solid var(--k-svart);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--k-svart);
+  font-weight: 600;
+}
+.opp-chip[aria-pressed='true'], .share-format button.is-on { background: var(--k-svart); color: var(--k-gul); border-color: var(--k-svart); }
+.st-season, .sp-cmp select, select {
+  background-color: #fff;
+  border: 1.5px solid var(--k-svart);
+  border-radius: 4px;
+  color: var(--k-svart);
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  font-weight: 600;
+}
+.st-season optgroup, .st-season option { background: #fff; color: var(--k-svart); }
+.tab-vaxel { border: 1px solid var(--k-linje); color: var(--text-muted); border-radius: 3px; }
+.tab-vaxel-pa { background: var(--k-svart); border-color: var(--k-svart); color: var(--k-gul); }
+
+/* Uppdaterad-märket i toppen */
+.freshness { background: #fff; border: 1.5px solid var(--k-svart); color: var(--k-svart); font-size: .62rem; }
+.freshness-ok::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--k-gron); }
+.freshness-warn { background: var(--k-gul); color: var(--k-svart); border-color: var(--k-svart); }
+.freshness-bad { border-color: var(--k-rod); color: var(--k-rod); }
+
+/* Resultatmärken: samma språk som säsongsbandet */
+.mc-res { width: 30px; height: 20px; border-radius: 3px; font-size: .6rem; border: 1.5px solid currentColor; }
+.mc-res-w { background: var(--k-gron); border-color: var(--k-gron); color: #fff; }
+.mc-res-w.mc-res-ot { background: transparent; color: var(--k-gron); }
+.mc-res-otl { background: transparent; color: var(--k-rod); }
+.mc-res-l { background: var(--k-rod); border-color: var(--k-rod); color: #fff; }
+.mc-ha { background: transparent; border-radius: 3px; }
+.mc-ha-home { background: transparent; color: var(--k-svart); border: 1.5px solid var(--k-svart); }
+
+/* Inför matchen */
+.im-count { background: var(--k-gul); border: 0; border-radius: 4px; }
+.im-count b { color: var(--k-svart); font-size: 2.6rem; line-height: .9; }
+.im-count i { color: var(--k-svart); }
+.im-count-wait { background: var(--k-papper); }
+.im-premiere { background: #fff; border-color: var(--k-linje); border-top: 4px solid var(--k-gul); }
+.im-h2hwin { background: var(--k-gron); color: #fff; border-color: var(--k-gron); }
+
+/* Tabeller */
+.mc-table th { font-size: .58rem; color: var(--text-muted); }
+.mc-table tr.mc-hl td { background: var(--k-gul); color: var(--k-svart); }
+.sp-scored td { background: transparent; }
+.gk-num { background: var(--k-svart); color: var(--k-gul); border-radius: 3px; }
+
+/* Matchrapporten */
+.mr-period { background: #fff; border: 1px solid var(--k-linje); border-top: 4px solid var(--k-linje); border-radius: 4px; }
+.mr-period-win { border-color: var(--k-linje); border-top-color: var(--k-gron); }
+.mr-period-loss { border-color: var(--k-linje); border-top-color: var(--k-rod); }
+.mr-period-win .mr-period-score { color: var(--k-gron); }
+.mr-period-loss .mr-period-score { color: var(--k-rod); }
+.mr-team { background: transparent; border: 1px solid var(--k-linje); border-radius: 3px; color: var(--text-secondary); }
+.mr-team-ours { background: var(--k-gron); border-color: var(--k-gron); color: #fff; }
+.mr-tag { border-radius: 2px; }
+.mr-tag-pp { background: var(--k-gul); color: var(--k-svart); }
+.mr-tag-sh { background: var(--k-svart); color: #fff; }
+.mr-tag-eq { background: transparent; color: var(--text-muted); }
+.mr-tag-ps { background: transparent; color: var(--k-svart); box-shadow: inset 0 0 0 1px var(--k-svart); }
+.mr-tag-en { background: transparent; color: var(--k-rod); box-shadow: inset 0 0 0 1px var(--k-rod); }
+.mr-pen-min { color: var(--k-rod); font-family: var(--font-mono); font-stretch: 87.5%; }
+.mr-pen-out-goal { color: var(--k-svart); font-weight: 600; }
+.mr-pimtrack, .pb-track, .st-bartrack, .rs-difftrack { background: rgba(15, 26, 21, 0.08); border-radius: 2px; }
+.pm-row { border-radius: 0; }
+.pm-chip, .pm-row-pos .pm-chip, .pm-row-neg .pm-chip { background: #fff; border: 1px solid var(--k-linje); border-radius: 3px; }
+.pm-chip i { color: var(--k-gron); }
+.pm-chip-lank:hover { border-color: var(--k-svart); }
+
+/* Statistiken */
+.pj-span { background: rgba(15, 26, 21, 0.1); border-radius: 2px; }
+.pj-dot { background: var(--k-svart); }
+.pj-ours .pj-team { color: var(--k-svart); font-weight: 800; }
+.pj-ours .pj-span { background: var(--k-gul); }
+.pj-ours .pj-dot { background: var(--k-svart); }
+.swing-tag { border-radius: 2px; }
+.swing-tag.up { background: var(--k-gron); color: #fff; }
+.rs-kpi { background: #fff; border: 1px solid var(--k-linje); border-radius: 4px; }
+.rs-stale, .empty-season { background: #fff; border: 1px solid var(--k-linje); border-left: 4px solid var(--k-gul); border-radius: 4px; }
+.empty-season-btn { background: var(--k-svart); color: var(--k-gul); border-radius: 4px; }
+.st-skeleton { background: linear-gradient(90deg, rgba(15, 26, 21, 0.05) 25%, rgba(15, 26, 21, 0.1) 50%, rgba(15, 26, 21, 0.05) 75%); background-size: 200% 100%; border-radius: 3px; }
+
+/* Spelaren */
+.sp-band-a { background: var(--k-gul); color: var(--k-svart); }
+.sp-band { border-radius: 2px; }
+
+/* Nyheter */
+.ny-tagg { border-radius: 2px; background: transparent; color: var(--text-muted); padding-left: 0; }
+.ny-tagg-match, .ny-tagg-trupp, .ny-tagg-klipp, .ny-tagg-ungdom, .ny-tagg-snack { padding-left: .45rem; }
+.ny-tagg-match { background: var(--k-gron); color: #fff; }
+.ny-tagg-trupp { background: var(--k-gul); color: var(--k-svart); }
+.ny-tagg-klipp { background: var(--k-svart); color: var(--k-gul); }
+.ny-tagg-ungdom, .ny-tagg-snack { background: transparent; color: var(--k-svart); box-shadow: inset 0 0 0 1px var(--k-svart); }
+.ny-tumnagel { border-radius: 4px; }
+.ny-tumnagel:hover { border-color: var(--k-svart); }
+
+/* X */
+.xf-avatar { color: var(--k-gul); font-family: var(--font-display); font-stretch: var(--display-stretch); font-weight: 900; font-size: 1rem; }
+
+/* Metod */
+.md-formel {
+  border-radius: 0;
+  border-left: 4px solid var(--k-gul);
+  background: var(--k-papper);
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  font-size: .72rem;
+}
+
+/* Diagram */
+.pd-bar { width: 16px; border-radius: 1px 1px 0 0; }
+.pd-gf { background: var(--k-gron); }
+.pd-ga { background: var(--k-rod); }
+.pd-nums, .pd-diff, .pd-label { font-family: var(--font-mono); font-stretch: 87.5%; }
+
+/* ── Typsystemet ─────────────────────────────────────────────────────────
+   Tre roller och inga fler:
+   1. Anybody: stora tal och rubriker. En bredd, tjockast snitt, versaler,
+      aldrig under 20 px.
+   2. Martian Mono: etiketter, märken och enheter. Versaler, 87,5 % bredd.
+   3. Instrument Sans: löptext och små tal i listor, med tabellsiffror.
+   Blocket ligger sist så att det vinner över kortformen `font:`, som annars
+   nollställer bredden. */
+
+body :is(
+  h1, h2, h3, .mc-title, .mr-title, .md-namn, .topbar-title, .sp-name, .gk-name, .ny-rubrik, .ny-topptitel,
+  .im-opponent, .rs-source-title, .sb-detalj > b, .xf-avatar,
+  .ks-stor, .lk-jatte, .ld-varde, .sp-num, .sp-val, .sp-stat-val, .sp-split b, .st-statval, .st-kvvalue,
+  .stv-tal, .pdo-tal, .mr-period-score, .im-count b, .ctx-rankbig, .tv-nr, .rs-hjalte b, .mc-latest-score,
+  .ld-namn
+) {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  font-variant-numeric: normal;
+}
+/* Tal behåller sina enheter i gemener: "3 p", "31 min". */
+body :is(
+  .ks-stor, .lk-jatte, .ld-varde, .sp-num, .sp-val, .sp-stat-val, .sp-split b, .st-statval, .st-kvvalue,
+  .stv-tal, .pdo-tal, .mr-period-score, .im-count b, .ctx-rankbig, .tv-nr, .rs-hjalte b, .mc-latest-score
+) { text-transform: none; }
+body :is(.gk-name, .rs-source-title, .xf-avatar, .md-namn, .st-kvvalue, .ld-namn) { font-size: 1.25rem; line-height: 1; }
+body .rs-hjalte b { font-size: 3rem; line-height: .9; }
+
+/* Små tal i rader och tabeller: Instrument Sans, inte Anybody. */
+body :is(.mc-score, .st-points, .mr-goal-state, .pm-value, .du-val, .mr-gk-pct, .an-under) {
+  font-family: var(--font-sans);
+  font-stretch: 100%;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+body :is(
+  .bottom-link span, .bx-l, .bx-pos-tag, .bx-summary, .du-us, .du-them, .du-label, .du-head, .freshness, .gk-num,
+  .im-count i, .im-h2hlabel, .im-ha, .kk-nr, .kk-p, .kk-summa span, .kk-summa b, .kk-val button, .ks-huvud, .ks-tid,
+  .ld-etikett, .ld-not, .lk-rubr, .mc-ha, .mc-kicker, .mc-res, .mr-kicker, .mr-onice-label,
+  .mr-pen-min, .mr-period-label, .mr-tag, .mr-team, .ny-dagrubrik, .ny-tagg, .opp-num, .pd-diff, .pd-label,
+  .pd-nums, .rs-difflbl, .sb-cell, .sb-detalj span, .sb-legend, .sp-ep, .sp-lbl, .sp-mates-h, .sp-meta,
+  .sp-split-h, .sp-stat-lbl, .st-kol, .st-more, .st-sort, .st-statlbl, .stv-rubrik, .stv-skala, .tab-vaxel,
+  .topbar-kicker, .topbar-sida, .tv-meta, .tv-rygg, .tv-status, .mc-table th, .opp-tbl th, .bx-table th,
+  .st-minilbl, .rs-kpilbl, .swing-tag, .ny-inofficiell, .pg-head, .mc-latest-label, .tor-sub-tag,
+  .stv-tal small, .lk-jatte small, .ctx-rankbig i, .sp-cmp select, .st-season
+) {
+  font-family: var(--font-mono);
+  font-stretch: 87.5%;
+  text-transform: uppercase;
+  font-style: normal;
+}
+/* Enheterna efter ett stort tal: små, i mono, på baslinjen. */
+body :is(.stv-tal small, .lk-jatte small, .ctx-rankbig i) { font-size: .7rem; font-weight: 600; letter-spacing: .06em; margin-left: 4px; }
+/* Formlerna ska läsas som de står. */
+body .md-formel { text-transform: none; }
+
+/* Diagrammens axlar och etiketter. */
+body svg text, body .rl text { font-family: var(--font-mono); font-stretch: 87.5%; text-transform: uppercase; }
+/* Lagnamnen vid kurvornas slut är data, inte etiketter, och måste rymmas. */
+body .rl text.rl-end { font-family: var(--font-sans); font-stretch: 100%; text-transform: none; }
