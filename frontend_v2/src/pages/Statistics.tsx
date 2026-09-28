@@ -198,11 +198,13 @@ type TableHistory = {
   table_settled_after_last_round?: boolean;
 };
 
-type TrendPunkt = { match: number; date: string; window: number; shot_share: number | null; pdo: number | null; gf_pg: number; ga_pg: number };
+type TrendNyckel = 'shot_share' | 'pdo' | 'gf_pg' | 'ga_pg' | 'sf_pg' | 'sh_pct' | 'sv_pct' | 'pim_pg';
+// De fyra sista saknas i ett äldre API.
+type TrendPunkt = { match: number; date: string; window: number } & Partial<Record<TrendNyckel, number | null>>;
 type LeagueTrend = {
   window: number;
   teams: { team: string; is_ours: boolean; games: number; points: TrendPunkt[] }[];
-  league: ({ match: number; teams: number } & Partial<Record<'shot_share' | 'pdo' | 'gf_pg' | 'ga_pg', number | null>>)[];
+  league: ({ match: number; teams: number } & Partial<Record<TrendNyckel, number | null>>)[];
 };
 
 type OpponentRow = {
@@ -1538,12 +1540,19 @@ function TabellenOverTid({ data, state, markerade, vaxla }: {
   );
 }
 
-const TREND_MATT = [
-  { key: 'shot_share', label: 'Skottandel', format: (v: number) => `${svNum(v, 1)} %`, referens: 50 },
-  { key: 'pdo', label: 'PDO', format: (v: number) => svNum(v, 1), referens: 100 },
-  { key: 'gf_pg', label: 'Gjorda mål', format: (v: number) => svNum(v, 1), referens: undefined },
-  { key: 'ga_pg', label: 'Insläppta', format: (v: number) => svNum(v, 1), referens: undefined },
-] as const;
+const pct = (v: number) => `${svNum(v, 1)} %`;
+const TREND_MATT: { key: TrendNyckel; label: string; format: (v: number) => string; referens?: number; formel: string; not?: string }[] = [
+  { key: 'shot_share', label: 'Skottandel', format: pct, referens: 50, formel: 'skottandel',
+    not: 'Över 50 skjuter laget mer än motståndarna.' },
+  { key: 'pdo', label: 'PDO', format: (v: number) => svNum(v, 1), referens: 100, formel: 'pdo',
+    not: '100 är normalt; långt över brukar jämnas ut.' },
+  { key: 'gf_pg', label: 'Gjorda mål', format: (v: number) => svNum(v, 1), formel: 'skottandel', not: 'Mål per match.' },
+  { key: 'ga_pg', label: 'Insläppta', format: (v: number) => svNum(v, 1), formel: 'skottandel', not: 'Insläppta mål per match; lägre är bättre.' },
+  { key: 'sf_pg', label: 'Skott', format: (v: number) => svNum(v, 1), formel: 'skottandel', not: 'Skott på mål per match.' },
+  { key: 'sh_pct', label: 'Skottprocent', format: pct, formel: 'pdo', not: 'Andelen skott som blir mål.' },
+  { key: 'sv_pct', label: 'Räddningsprocent', format: pct, formel: 'raddningsprocent', not: 'Andelen skott mot laget som räddas.' },
+  { key: 'pim_pg', label: 'Utvisningar', format: (v: number) => svNum(v, 1), formel: 'specialteam', not: 'Utvisningsminuter per match; lägre är bättre.' },
+];
 
 /**
  * Björklöven mot resten av serien över tid, match för match.
@@ -1558,8 +1567,10 @@ function SerienOverTid({ data, markerade, vaxla }: {
   markerade: string[];
   vaxla: (l: string) => void;
 }) {
-  const [nyckel, setNyckel] = useState<(typeof TREND_MATT)[number]['key']>('shot_share');
-  const matt = TREND_MATT.find(m => m.key === nyckel)!;
+  const [nyckel, setNyckel] = useState<TrendNyckel>('shot_share');
+  // Ett äldre API har bara de fyra första måtten.
+  const finns = TREND_MATT.filter(m => data.teams.some(t => t.points.some(p => p[m.key] != null)));
+  const matt = finns.find(m => m.key === nyckel) ?? TREND_MATT[0];
   const langst = Math.max(0, ...data.teams.map(t => t.points.length));
   if (langst < 2) return null;
   const serier = data.teams.map(t => ({
@@ -1567,19 +1578,19 @@ function SerienOverTid({ data, markerade, vaxla }: {
     short: lagEtikett(t.team),
     ours: t.is_ours,
     markerad: markerade.includes(lagEtikett(t.team)),
-    varden: t.points.map(p => p[nyckel] ?? null),
+    varden: t.points.map(p => p[matt.key] ?? null),
   }));
-  const snitt = data.league.map(p => p[nyckel] ?? null);
+  const snitt = data.league.map(p => p[matt.key] ?? null);
   const ovriga = data.teams.filter(t => !t.is_ours).map(t => lagEtikett(t.team)).sort((a, b) => a.localeCompare(b, 'sv'));
   const fonster = langst < data.window ? `alla matcher hittills` : `rullande ${data.window} matcher`;
   return (
     <section className="mc-card">
       <p className="mc-kicker">Serien över tid · {fonster}</p>
       <h2 className="mc-title">Mot de andra</h2>
-      <div className="rl-val" role="tablist" aria-label="Mått">
-        {TREND_MATT.map(m => (
-          <button key={m.key} type="button" role="tab" className="opp-chip" aria-pressed={m.key === nyckel}
-                  aria-selected={m.key === nyckel} onClick={() => setNyckel(m.key)}>
+      <div className="rl-val rl-val-svep" role="tablist" aria-label="Mått">
+        {finns.map(m => (
+          <button key={m.key} type="button" role="tab" className="opp-chip" aria-pressed={m.key === matt.key}
+                  aria-selected={m.key === matt.key} onClick={() => setNyckel(m.key)}>
             {m.label}
           </button>
         ))}
@@ -1592,10 +1603,8 @@ function SerienOverTid({ data, markerade, vaxla }: {
       <LagKurvor serier={serier} snitt={snitt} format={matt.format} referens={matt.referens} />
       <LagVal lag={ovriga} markerade={markerade} vaxla={vaxla} />
       <p className="mc-note">
-        En linje per lag, räknat på lagets egna matcher.
-        {nyckel === 'pdo' && ' 100 är normalt; långt över brukar jämnas ut.'}
-        {nyckel === 'shot_share' && ' Över 50 skjuter laget mer än motståndarna.'}
-        {' '}<Formel till={nyckel === 'pdo' ? 'pdo' : 'skottandel'} />
+        En linje per lag, räknat på lagets egna matcher. {matt.not}
+        {' '}<Formel till={matt.formel} />
       </p>
     </section>
   );
