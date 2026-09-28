@@ -279,6 +279,13 @@ function Nyckelspelare({ data, opponent }: { data: NextMatch['them_players'] | n
           <span className="im-nstal">{komma(g.save_pct)} %</span>
         </div>
       )}
+      {/* Rutorna är inte självklara: en rad förklarar dem. */}
+      {visaRutor && (
+        <p className="mr-note im-nsforklaring">
+          Rutorna är de senaste {n} matcherna, äldst till vänster: siffran är poäng, tom ruta spelade inte.
+          {g?.starts && g.starts.length === n ? ' För målvakten: fylld ruta startade.' : ''}
+        </p>
+      )}
       <Femma unit={data.first_unit ?? null} />
     </div>
   );
