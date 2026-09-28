@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
@@ -7,7 +7,6 @@ import { Truppen } from '../components/Truppen';
 import { harSpelOchTur, useLeague } from '../lib/serien';
 import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
-import { BildSignatur, SparaBild } from '../components/share/SparaBild';
 import { Andel, FormDots, Jamforelse, LagKurvor, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 import { matcher } from '../lib/sprak';
@@ -1567,7 +1566,6 @@ function SerienOverTid({ data, markerade, vaxla }: {
   vaxla: (l: string) => void;
 }) {
   const [nyckel, setNyckel] = useState<TrendNyckel>('shot_share');
-  const kortRef = useRef<HTMLElement | null>(null);
   // Ett äldre API har bara de fyra första måtten.
   const finns = TREND_MATT.filter(m => data.teams.some(t => t.points.some(p => p[m.key] != null)));
   const matt = finns.find(m => m.key === nyckel) ?? TREND_MATT[0];
@@ -1584,7 +1582,7 @@ function SerienOverTid({ data, markerade, vaxla }: {
   const ovriga = data.teams.filter(t => !t.is_ours).map(t => lagEtikett(t.team)).sort((a, b) => a.localeCompare(b, 'sv'));
   const fonster = langst < data.window ? `alla matcher hittills` : `rullande ${data.window} matcher`;
   return (
-    <section className="mc-card" ref={kortRef}>
+    <section className="mc-card">
       <p className="mc-kicker">Serien över tid · {fonster}</p>
       <h2 className="mc-title">Mot de andra</h2>
       <div className="rl-val rl-val-svep" role="tablist" aria-label="Mått">
@@ -1604,10 +1602,8 @@ function SerienOverTid({ data, markerade, vaxla }: {
       <LagVal lag={ovriga} markerade={markerade} vaxla={vaxla} />
       <p className="mc-note">
         En linje per lag, räknat på lagets egna matcher. {matt.not}
-        {' '}<span className="ej-i-bild"><Formel till={matt.formel} /></span>
+        {' '}<Formel till={matt.formel} />
       </p>
-      <BildSignatur />
-      <SparaBild mal={kortRef} filnamn={`serien-${matt.key}.png`} titel={`${matt.label} över tid`} />
     </section>
   );
 }

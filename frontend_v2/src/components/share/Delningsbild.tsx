@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { CARD_SIZE, STORY_HEIGHT, cardBlob, cardFontsReady, drawStory } from './matchCard';
-import { delaEllerSpara } from './dela';
 
 type Format = 'kvadrat' | 'story';
 
@@ -56,8 +55,28 @@ export function Delningsbild({
     const namn = format === 'story' ? filnamn.replace(/\.png$/, '-story.png') : filnamn;
     try {
       const blob = await cardBlob(canvas);
-      const svar = await delaEllerSpara(blob, namn, titel);
-      setStatus(svar === 'delat' ? 'Delat.' : svar === 'sparat' ? 'Bilden är sparad.' : null);
+      const file = new File([blob], namn, { type: 'image/png' });
+      const nav = navigator as Navigator & {
+        canShare?: (d: ShareData) => boolean;
+        share?: (d: ShareData) => Promise<void>;
+      };
+      if (nav.share && nav.canShare?.({ files: [file] })) {
+        try {
+          await nav.share({ files: [file], title: titel });
+          setStatus('Delat.');
+          return;
+        } catch (e) {
+          // Avbrott är inte ett fel — användaren stängde delningsmenyn.
+          if ((e as Error).name === 'AbortError') { setStatus(null); return; }
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = namn;
+      a.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setStatus('Bilden är sparad.');
     } catch (e) {
       setStatus((e as Error).message || 'Kunde inte skapa bilden.');
     } finally {

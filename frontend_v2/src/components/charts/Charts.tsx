@@ -536,7 +536,7 @@ export function RankLines({
           eller utanför kortet; den här raden gör varken. */}
       <div className="rl-avlas" aria-live="polite">
         {vald == null ? (
-          <span className="rl-avlas-tom ej-i-bild">Dra för att läsa av en omgång.</span>
+          <span className="rl-avlas-tom">Dra för att läsa av en omgång.</span>
         ) : (
           <>
             <b>Omgång {rounds[vald]}</b>
@@ -663,7 +663,7 @@ export function LagKurvor({
       </svg>
       <div className="rl-avlas" aria-live="polite">
         {vald == null ? (
-          <span className="rl-avlas-tom ej-i-bild">Dra för att läsa av en match.</span>
+          <span className="rl-avlas-tom">Dra för att läsa av en match.</span>
         ) : (
           <>
             <b>Match {vald + 1}</b>
