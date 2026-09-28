@@ -174,7 +174,6 @@ function PointDots({ games }: { games: { points: number }[] }) {
   );
 }
 
-const FORWARD = /^(lw|rw|ce|c|f|fw)$/i;
 
 type Filter = 'all' | 'home' | 'away' | 'points';
 
@@ -586,7 +585,6 @@ export function Spelare() {
   const p = data.player;
   const display = humanName(p.name);
   const pos = String(p.detailed_position || p.position || '');
-  const isForward = FORWARD.test(pos);
   // Tekningar per match i stället för tjugo totalt. Tröskeln fanns för att en
   // ytter som tagit två tekningar inte ska stå med en procentsats, men tjugo
   // stycken tar en center två matcher att nå — och då syns rutan inte alls i
@@ -667,14 +665,16 @@ export function Spelare() {
 
       <Spelarreel namn={display} log={log} poang={p.points} matcher={p.games_played} />
 
-      {/* Nyckeltalen skiljer sig åt: en back mäts inte på skottprocent. */}
+      {/* Skottprocent för alla utespelare. Backarnas ligger lägre, de skjuter
+          från distans, men talet säger ändå något. Tekningar bara för dem
+          som tar dem. */}
       <section className="mc-card">
         <p className="mc-kicker">Nyckeltal</p>
         <div className="sp-stats">
           <Stat label="Plus/minus" value={p.plus_minus > 0 ? `+${p.plus_minus}` : String(p.plus_minus)}
                 hint="Swehockeys officiella" />
           {p.shots != null && <Stat label="Skott" value={String(p.shots)} />}
-          {isForward && p.shooting_pct != null && (
+          {p.shooting_pct != null && (
             <Stat label="Skottprocent" value={`${komma(p.shooting_pct)} %`} tone="var(--brand-green-light)"
                   hint={cov ? `${shotsGoals} mål på ${p.shots} skott · ${matcher(cov.games_with_report)} med skottdata` : undefined} />
           )}
