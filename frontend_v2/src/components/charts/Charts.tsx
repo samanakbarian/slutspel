@@ -391,7 +391,7 @@ export function RankLines({
   height = 210,
 }: {
   rounds: number[];
-  teams: { team: string; ranks: (number | null)[]; short: string; finalRank: number; ours: boolean }[];
+  teams: { team: string; ranks: (number | null)[]; short: string; finalRank: number; ours: boolean; markerad?: boolean }[];
   teamCount?: number;
   height?: number;
 }) {
@@ -404,7 +404,7 @@ export function RankLines({
   // Smal viewBox med flit: samma textstorlek i SVG-enheter blir fler faktiska
   // pixlar när bilden skalas till ~340 px på en telefon.
   const W = 360;
-  const L = 22, R = 74, T = 12, B = 30;
+  const L = 22, R = 84, T = 12, B = 30;
   const plotW = W - L - R;
   const plotH = height - T - B;
 
@@ -481,7 +481,7 @@ export function RankLines({
 
         {/* Kontexten först, vårt lag sist: accenten ska ligga överst där de korsar. */}
         <g clipPath="url(#rl-yta)">
-        {[...teams].sort((a, b) => Number(a.ours) - Number(b.ours)).map(t => {
+        {[...teams].sort((a, b) => Number(a.ours || !!a.markerad) - Number(b.ours || !!b.markerad) || Number(a.ours) - Number(b.ours)).map(t => {
           const pts = t.ranks
             .map((r, n) => (r == null ? null : `${x(n).toFixed(1)},${y(r).toFixed(1)}`))
             .filter(Boolean)
@@ -489,20 +489,21 @@ export function RankLines({
           return (
             <polyline
               key={t.team}
-              className={t.ours ? 'rl-series rl-ours' : 'rl-series rl-context'}
+              className={t.ours ? 'rl-series rl-ours' : t.markerad ? 'rl-series rl-mark'
+                : `rl-series rl-context${teams.length > 6 ? ' rl-svag' : ''}`}
               points={pts}
             />
           );
         })}
         </g>
 
-        {vald != null && sorterade.map(t => {
+        {vald != null && sorterade.filter(t => teams.length <= 6 || t.ours || t.markerad).map(t => {
           const r = t.ranks[vald];
           if (r == null || r > max) return null;
           return (
             <circle
               key={`p${t.team}`}
-              className={t.ours ? 'rl-dot rl-dot-ours' : 'rl-dot'}
+              className={t.ours ? 'rl-dot rl-dot-ours' : t.markerad ? 'rl-dot rl-dot-mark' : 'rl-dot'}
               cx={x(vald)}
               cy={y(r)}
               r={t.ours ? 3.4 : 2.4}
@@ -514,13 +515,13 @@ export function RankLines({
         {etiketter.map(({ t, y: ly }) => (
           <g key={`l${t.team}`}>
             <circle
-              className={t.ours ? 'rl-dot rl-dot-ours' : 'rl-dot'}
+              className={t.ours ? 'rl-dot rl-dot-ours' : t.markerad ? 'rl-dot rl-dot-mark' : 'rl-dot'}
               cx={L + plotW + 7}
               cy={ly - 2.5}
               r={2.6}
             />
             <text
-              className={t.ours ? 'rl-end rl-end-ours' : 'rl-end'}
+              className={t.ours ? 'rl-end rl-end-ours' : t.markerad ? 'rl-end rl-end-mark' : 'rl-end'}
               x={L + plotW + 13}
               y={ly + 1}
             >
@@ -539,12 +540,139 @@ export function RankLines({
         ) : (
           <>
             <b>Omgång {rounds[vald]}</b>
-            {sorterade.map(t => (
+            {sorterade.filter(t => teams.length <= 6 || t.ours || t.markerad).map(t => (
               <span key={`a${t.team}`} className={t.ours ? 'rl-avlas-ours' : undefined}>
                 <i className={t.ours ? 'rl-swatch rl-swatch-ours' : 'rl-swatch'} />
                 {t.short} {t.ranks[vald] ?? '–'}
               </span>
             ))}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
+ * Ett mått över tid för alla lag i serien, med vårt lag och valda lag
+ * framlyfta.
+ *
+ * X är lagets egen matchordning, inte datum: lagen har spelat olika många
+ * matcher, och efter tio matcher betyder samma sak för alla. De övriga lagen
+ * är sammanhang i dämpad grå; frågan är var vi ligger i fältet, inte att
+ * följa fjorton linjer. Snittet streckat, en referenslinje (50 eller 100)
+ * där måttet har en.
+ */
+export function LagKurvor({
+  serier,
+  snitt,
+  format,
+  referens,
+  height = 220,
+}: {
+  serier: { team: string; short: string; ours: boolean; markerad: boolean; varden: (number | null)[] }[];
+  snitt: (number | null)[];
+  format: (v: number) => string;
+  referens?: number;
+  height?: number;
+}) {
+  const [vald, setVald] = useState<number | null>(null);
+  const antal = Math.max(0, ...serier.map(s => s.varden.length));
+  if (antal < 2 || serier.length === 0) return null;
+
+  const W = 360;
+  const L = 44, R = 70, T = 12, B = 30;
+  const plotW = W - L - R;
+  const plotH = height - T - B;
+
+  const alla = serier.flatMap(s => s.varden).concat(snitt).filter((v): v is number => v != null);
+  if (referens != null) alla.push(referens);
+  const lo = Math.min(...alla);
+  const hi = Math.max(...alla);
+  const pad = (hi - lo) * 0.06 || 1;
+  const min = lo - pad, max = hi + pad;
+
+  const x = (i: number) => L + (i / (antal - 1)) * plotW;
+  const y = (v: number) => T + (1 - (v - min) / (max - min)) * plotH;
+  const linje = (v: (number | null)[]) =>
+    v.map((p, i) => (p == null ? null : `${x(i).toFixed(1)},${y(p).toFixed(1)}`)).filter(Boolean).join(' ');
+
+  const ticks = Array.from(new Set([0, Math.floor((antal - 1) / 2), antal - 1]));
+
+  // Etiketter bara för de framlyfta och snittet, hållna isär på höjden.
+  const sista = (v: (number | null)[]) => [...v].reverse().find((p): p is number => p != null);
+  const lyfta = serier.filter(s => s.ours || s.markerad);
+  const kandidater = [
+    ...lyfta.map(s => ({ nyckel: s.team, text: s.short, v: sista(s.varden), klass: s.ours ? 'rl-end rl-end-ours' : 'rl-end rl-end-mark' })),
+    { nyckel: '__snitt', text: 'Snitt', v: sista(snitt), klass: 'rl-end' },
+  ].filter((e): e is { nyckel: string; text: string; v: number; klass: string } => e.v != null)
+    .sort((a, b) => y(a.v) - y(b.v));
+  const LINJE = 11;
+  const etiketter: { nyckel: string; text: string; klass: string; y: number }[] = [];
+  for (const e of kandidater) {
+    const forra = etiketter[etiketter.length - 1];
+    etiketter.push({ ...e, y: forra ? Math.max(y(e.v), forra.y + LINJE) : y(e.v) });
+  }
+
+  const las = (e: React.PointerEvent<SVGSVGElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const enhet = ((e.clientX - box.left) / box.width) * W;
+    const n = Math.round(((enhet - L) / plotW) * (antal - 1));
+    setVald(n >= 0 && n < antal ? n : null);
+  };
+
+  const ordnade = [...serier].sort((a, b) => Number(a.ours || a.markerad) - Number(b.ours || b.markerad) || Number(a.ours) - Number(b.ours));
+
+  return (
+    <>
+      <svg className="rl" viewBox={`0 0 ${W} ${height}`} role="img"
+        onPointerMove={las} onPointerDown={las} onPointerLeave={() => setVald(null)}
+        aria-label={`Över tid för seriens ${serier.length} lag. ${lyfta.map(s => `${s.team} ${sista(s.varden) != null ? format(sista(s.varden) as number) : '–'}`).join('. ')}.`}>
+        <line className="rl-grid" x1={L} y1={y(hi)} x2={L + plotW} y2={y(hi)} />
+        <line className="rl-grid" x1={L} y1={y(lo)} x2={L + plotW} y2={y(lo)} />
+        <text className="rl-tick" x={L - 5} y={y(hi) + 3} textAnchor="end">{format(hi)}</text>
+        <text className="rl-tick" x={L - 5} y={y(lo) + 3} textAnchor="end">{format(lo)}</text>
+        {referens != null && (
+          <>
+            <line className="rl-ref" x1={L} y1={y(referens)} x2={L + plotW} y2={y(referens)} />
+            <text className="rl-tick" x={L - 5} y={y(referens) + 3} textAnchor="end">{format(referens)}</text>
+          </>
+        )}
+        {ticks.map(n => (
+          <text key={`x${n}`} className="rl-tick" x={x(n)} y={T + plotH + 13} textAnchor="middle">{n + 1}</text>
+        ))}
+        <text className="rl-tick" x={L + plotW / 2} y={T + plotH + 25} textAnchor="middle">Lagets match</text>
+        {vald != null && <line className="rl-kryss" x1={x(vald)} y1={T} x2={x(vald)} y2={T + plotH} />}
+
+        {ordnade.map(s => (
+          <polyline key={s.team} points={linje(s.varden)}
+            className={s.ours ? 'rl-series rl-ours' : s.markerad ? 'rl-series rl-mark' : 'rl-series rl-context rl-svag'} />
+        ))}
+        <polyline className="rl-series rl-snitt" points={linje(snitt)} />
+
+        {vald != null && ordnade.filter(s => s.ours || s.markerad).map(s => {
+          const v = s.varden[vald];
+          return v == null ? null : (
+            <circle key={`p${s.team}`} className={s.ours ? 'rl-dot rl-dot-ours' : 'rl-dot rl-dot-mark'} cx={x(vald)} cy={y(v)} r={3} />
+          );
+        })}
+
+        {etiketter.map(e => (
+          <text key={`l${e.nyckel}`} className={e.klass} x={L + plotW + 6} y={e.y + 3}>{e.text}</text>
+        ))}
+      </svg>
+      <div className="rl-avlas" aria-live="polite">
+        {vald == null ? (
+          <span className="rl-avlas-tom">Dra för att läsa av en match.</span>
+        ) : (
+          <>
+            <b>Match {vald + 1}</b>
+            {lyfta.map(s => (
+              <span key={`a${s.team}`} className={s.ours ? 'rl-avlas-ours' : undefined}>
+                {s.short} {s.varden[vald] != null ? format(s.varden[vald] as number) : '–'}
+              </span>
+            ))}
+            <span>Snitt {snitt[vald] != null ? format(snitt[vald] as number) : '–'}</span>
           </>
         )}
       </div>

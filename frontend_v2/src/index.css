@@ -2546,6 +2546,14 @@ a {
 .rl-series { fill: none; stroke-linejoin: round; stroke-linecap: round; }
 .rl-context { stroke: #6b8078; stroke-width: 1.4; opacity: 0.75; }
 .rl-ours { stroke: var(--brand-green-light); stroke-width: 2.4; }
+.rl-mark { stroke: var(--brand-gold); stroke-width: 2; }
+.rl-dot-mark { fill: var(--brand-gold); }
+.rl-end-mark { fill: var(--text-primary); font-weight: 700; }
+/* Hela serien som bakgrund: tunnare och svagare än när fyra lag ritades. */
+.rl-svag { stroke-width: 1; opacity: 0.35; }
+.rl-snitt { stroke: var(--text-muted); stroke-width: 1.4; stroke-dasharray: 4 4; }
+.rl-ref { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 2 4; opacity: 0.6; }
+.rl-val { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.4rem 0 0.2rem; }
 
 .rl-dot { fill: #6b8078; }
 .rl-dot-ours { fill: var(--brand-green-light); }
@@ -2582,6 +2590,8 @@ a {
 }
 
 .rl-swatch-ours { background: var(--brand-green-light); }
+.rl-swatch-mark { background: var(--brand-gold); }
+.rl-swatch-snitt { background: transparent; border: 1px dashed var(--text-muted); }
 
 .tor-sammanfattning { margin: 0.1rem 0 0.7rem; color: var(--text-secondary); }
 

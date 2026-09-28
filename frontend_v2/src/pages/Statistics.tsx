@@ -7,7 +7,7 @@ import { Truppen } from '../components/Truppen';
 import { harSpelOchTur, useLeague } from '../lib/serien';
 import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
-import { Andel, FormDots, Jamforelse, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
+import { Andel, FormDots, Jamforelse, LagKurvor, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 import { matcher } from '../lib/sprak';
 
@@ -196,6 +196,13 @@ type TableHistory = {
   table_settled_after_last_round?: boolean;
 };
 
+type TrendPunkt = { match: number; date: string; window: number; shot_share: number | null; pdo: number | null; gf_pg: number; ga_pg: number };
+type LeagueTrend = {
+  window: number;
+  teams: { team: string; is_ours: boolean; games: number; points: TrendPunkt[] }[];
+  league: ({ match: number; teams: number } & Partial<Record<'shot_share' | 'pdo' | 'gf_pg' | 'ga_pg', number | null>>)[];
+};
+
 type OpponentRow = {
   opponent: string; games: number; wins: number; losses: number;
   goals_for: number; goals_against: number; diff: number; beyond_regulation: number;
@@ -237,7 +244,10 @@ const shortTeam = (t: string) => String(t || '').replace(/^(IF|IK|HC|BIK)\s+/, '
 /** Kortaste formen som fortfarande pekar ut laget — för direktetiketter i
  *  diagram, där "MoDo Hockey" och "Kalmar HC" annars skjuter ut ur ytan. */
 const lagEtikett = (t: string) =>
-  shortTeam(t).replace(/\s+(HC|IF|IK|BK|AIK|Hockey|Lakers HC|Vikings IF)$/, '').trim();
+  shortTeam(t)
+    .replace(/\s+(HC|HF|HK|IF|IK|BK|AIK|Hockey|Lakers HC|Lakers|Vikings IF|Redhawks)$/, '')
+    .replace(/^Djurgårdens$/, 'Djurgården')
+    .trim();
 
 /**
  * "Efternamn, Förnamn" → "Efternamn, F".
@@ -736,6 +746,7 @@ export function StatisticsPage() {
   const [lines, setLines] = useState<LineData | null>(null);
   const [linesState, setLinesState] = useState<'idle' | 'loading' | 'missing'>('idle');
   const [history, setHistory] = useState<TableHistory | null>(null);
+  const [trend, setTrend] = useState<LeagueTrend | null>(null);
   const [historyState, setHistoryState] = useState<'idle' | 'loading' | 'missing'>('idle');
   const [opponents, setOpponents] = useState<OpponentData | null>(null);
   const [opponentsState, setOpponentsState] = useState<'idle' | 'loading' | 'missing'>('idle');
@@ -885,7 +896,14 @@ export function StatisticsPage() {
 
   const loadHistory = useCallback(() => {
     setHistory(null);
+    setTrend(null);
     setHistoryState('loading');
+    // Seriens utveckling hämtas med tabellen över tid. Saknas den (äldre API)
+    // faller bara det kortet bort.
+    fetch(`${API_URL}/api/v1/league-trend${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setTrend(d?.status === 'ok' && (d.teams || []).length ? d : null))
+      .catch(() => setTrend(null));
     fetch(`${API_URL}/api/v1/table-history${season ? `?season=${season}` : ''}`, { cache: 'no-store' })
       .then(r => (r.status === 404 ? Promise.reject(new Error('MISSING')) : r.json()))
       .then(d => {
@@ -1160,7 +1178,7 @@ export function StatisticsPage() {
       {hasPlayed && segment === 'utveckling' && (
         <Utveckling
           timeline={timeline} modules={modules} analyticsState={analyticsState} shots={shots}
-          history={history} historyState={historyState}
+          history={history} historyState={historyState} serieTrend={trend}
           swings={swings} swingsState={swingsState}
         />
       )}
@@ -1437,8 +1455,31 @@ function Motstandare({
   );
 }
 
-/** Tabellplacering per omgång för de fyra bästa lagen. */
-function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'idle' | 'loading' | 'missing' }) {
+/**
+ * Lagen att lyfta fram, som knappar. Valen gäller både tabellen över tid och
+ * seriens utveckling, så ett lag man följer syns i båda. Nyckeln är den
+ * korta etiketten, eftersom lagnamnen skrivs olika i spelschemat och i
+ * matchernas sammanfattning.
+ */
+function LagVal({ lag, markerade, vaxla }: { lag: string[]; markerade: string[]; vaxla: (l: string) => void }) {
+  return (
+    <div className="rl-val" role="group" aria-label="Jämför med">
+      {lag.map(l => (
+        <button key={l} type="button" className="opp-chip" aria-pressed={markerade.includes(l)} onClick={() => vaxla(l)}>
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Tabellplacering per omgång för hela serien, med valda lag framlyfta. */
+function TabellenOverTid({ data, state, markerade, vaxla }: {
+  data: TableHistory | null;
+  state: 'idle' | 'loading' | 'missing';
+  markerade: string[];
+  vaxla: (l: string) => void;
+}) {
   if (state === 'missing') return null;
   if (state === 'loading' || !data) {
     return (
@@ -1449,20 +1490,15 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
       </section>
     );
   }
-  // Fyra likvärdiga färger tvingade läsaren att följa varje linje för sig. Det
-  // här är Lövenläget: frågan är var VI låg, inte att skilja fyra lag åt. Vårt
-  // lag i accent, de andra i dämpad grå som sammanhang.
   // En omgång ger ingen kurva, och "låg etta efter 0 av 0 omgångar" är inget
-  // att visa. Utvecklingsfliken fångar normalt fallet tidigare, men kortet ska
-  // stå på egna ben.
+  // att visa.
   if (data.rounds.length < 2) return null;
-  const ours = data.teams.filter(t => t.is_bjk);
-  const bjk = ours[0];
-  // Vårt lag plus de tre som slutade högst. Hela serien ritades ett tag som
-  // bakgrund, men de tio kurvorna fanns bara för att fylla tomrummet under
-  // topp fyra — de sa ingenting om något läsaren frågat efter.
-  const visade = [...ours, ...data.teams.filter(t => !t.is_bjk).slice(0, 3)].slice(0, 4);
+  const bjk = data.teams.find(t => t.is_bjk);
   const ledde = bjk ? bjk.ranks.filter(r => r === 1).length : 0;
+  // Hela serien ritas, men de övriga som svag bakgrund: frågan är var vi låg.
+  // De lag man väljer lyfts fram. Tidigare visades bara topp fyra, och lagen
+  // runt oss i tabellen gick inte att följa.
+  const ovriga = data.teams.filter(t => !t.is_bjk).sort((a, b) => a.final_rank - b.final_rank);
   return (
     <section className="mc-card">
       <p className="mc-kicker">Tabellen över tid</p>
@@ -1474,23 +1510,90 @@ function TabellenOverTid({ data, state }: { data: TableHistory | null; state: 'i
       )}
       <div className="tor-legend">
         <span><i className="rl-swatch rl-swatch-ours" />Björklöven</span>
-        <span><i className="rl-swatch" />Övriga i topp fyra</span>
+        {markerade.length > 0 && <span><i className="rl-swatch rl-swatch-mark" />Valda lag</span>}
+        <span><i className="rl-swatch" />Övriga</span>
       </div>
       <RankLines
         rounds={data.rounds}
         teamCount={data.teams.length}
-        teams={visade.map(t => ({
+        height={250}
+        teams={data.teams.map(t => ({
           team: t.team,
           ranks: t.ranks,
           short: lagEtikett(t.team),
           finalRank: t.final_rank,
           ours: !!t.is_bjk,
+          markerad: markerade.includes(lagEtikett(t.team)),
         }))}
       />
+      <LagVal lag={ovriga.map(t => lagEtikett(t.team))} markerade={markerade} vaxla={vaxla} />
       <p className="mc-note">
         {data.table_settled_after_last_round
-          ? 'Kurvan slutar vid vår sista match, inte vid seriens.'
-          : 'Efter varje omgång Björklöven spelat.'}
+          ? 'Kurvan slutar vid vår sista match, inte vid seriens. Tryck på ett lag för att lyfta fram det.'
+          : 'Efter varje omgång Björklöven spelat. Tryck på ett lag för att lyfta fram det.'}
+      </p>
+    </section>
+  );
+}
+
+const TREND_MATT = [
+  { key: 'shot_share', label: 'Skottandel', format: (v: number) => `${svNum(v, 1)} %`, referens: 50 },
+  { key: 'pdo', label: 'PDO', format: (v: number) => svNum(v, 1), referens: 100 },
+  { key: 'gf_pg', label: 'Gjorda mål', format: (v: number) => svNum(v, 1), referens: undefined },
+  { key: 'ga_pg', label: 'Insläppta', format: (v: number) => svNum(v, 1), referens: undefined },
+] as const;
+
+/**
+ * Björklöven mot resten av serien över tid, match för match.
+ *
+ * Svarar på det vår egen kurva inte kan: blir vi bättre eller sämre än de
+ * andra, eller rör sig hela serien? Samma rullande fönster och samma
+ * definitioner som vår egen utveckling, så Björklövens linje här är exakt
+ * densamma som där.
+ */
+function SerienOverTid({ data, markerade, vaxla }: {
+  data: LeagueTrend;
+  markerade: string[];
+  vaxla: (l: string) => void;
+}) {
+  const [nyckel, setNyckel] = useState<(typeof TREND_MATT)[number]['key']>('shot_share');
+  const matt = TREND_MATT.find(m => m.key === nyckel)!;
+  const langst = Math.max(0, ...data.teams.map(t => t.points.length));
+  if (langst < 2) return null;
+  const serier = data.teams.map(t => ({
+    team: t.team,
+    short: lagEtikett(t.team),
+    ours: t.is_ours,
+    markerad: markerade.includes(lagEtikett(t.team)),
+    varden: t.points.map(p => p[nyckel] ?? null),
+  }));
+  const snitt = data.league.map(p => p[nyckel] ?? null);
+  const ovriga = data.teams.filter(t => !t.is_ours).map(t => lagEtikett(t.team)).sort((a, b) => a.localeCompare(b, 'sv'));
+  const fonster = langst < data.window ? `alla matcher hittills` : `rullande ${data.window} matcher`;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Serien över tid · {fonster}</p>
+      <h2 className="mc-title">Mot de andra</h2>
+      <div className="rl-val" role="tablist" aria-label="Mått">
+        {TREND_MATT.map(m => (
+          <button key={m.key} type="button" role="tab" className="opp-chip" aria-pressed={m.key === nyckel}
+                  aria-selected={m.key === nyckel} onClick={() => setNyckel(m.key)}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+      <div className="tor-legend">
+        <span><i className="rl-swatch rl-swatch-ours" />Björklöven</span>
+        {markerade.length > 0 && <span><i className="rl-swatch rl-swatch-mark" />Valda lag</span>}
+        <span><i className="rl-swatch rl-swatch-snitt" />Seriens snitt</span>
+      </div>
+      <LagKurvor serier={serier} snitt={snitt} format={matt.format} referens={matt.referens} />
+      <LagVal lag={ovriga} markerade={markerade} vaxla={vaxla} />
+      <p className="mc-note">
+        En linje per lag, räknat på lagets egna matcher.
+        {nyckel === 'pdo' && ' 100 är normalt; långt över brukar jämnas ut.'}
+        {nyckel === 'shot_share' && ' Över 50 skjuter laget mer än motståndarna.'}
+        {' '}<Formel till={nyckel === 'pdo' ? 'pdo' : 'skottandel'} />
       </p>
     </section>
   );
@@ -2053,7 +2156,7 @@ function GoalieCard({ g, ligaSv }: { g: GoalieFull; ligaSv: number | null }) {
 
 /* ── Utveckling ── */
 function Utveckling({
-  timeline, modules, analyticsState, shots, history, historyState, swings, swingsState,
+  timeline, modules, analyticsState, shots, history, historyState, serieTrend, swings, swingsState,
 }: {
   timeline: NonNullable<Modules['timeline']>;
   modules: Modules | null;
@@ -2061,9 +2164,15 @@ function Utveckling({
   shots: ShotData | null;
   history: TableHistory | null;
   historyState: 'idle' | 'loading' | 'missing';
+  serieTrend: LeagueTrend | null;
   swings: SwingData | null;
   swingsState: 'idle' | 'loading' | 'missing';
 }) {
+  // Valda lag gäller båda korten: den man följer i tabellen vill man se i
+  // skottandelen också.
+  const [markerade, setMarkerade] = useState<string[]>([]);
+  const vaxla = (lag: string) =>
+    setMarkerade(m => (m.includes(lag) ? m.filter(x => x !== lag) : [...m, lag]));
   const form = modules?.form || [];
   const elo = modules?.predictions?.elo_history || [];
   const scoring = modules?.predictions?.scoring_timeline || [];
@@ -2119,7 +2228,8 @@ function Utveckling({
         </section>
       )}
 
-      <TabellenOverTid data={history} state={historyState} />
+      <TabellenOverTid data={history} state={historyState} markerade={markerade} vaxla={vaxla} />
+      {serieTrend && <SerienOverTid data={serieTrend} markerade={markerade} vaxla={vaxla} />}
 
       {/* Sparkline ritar inget under två punkter, och kortet stod då kvar med
           en text om en kurva som inte fanns — synligt hela premiärkvällen, när
