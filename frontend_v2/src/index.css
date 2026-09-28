@@ -1485,6 +1485,7 @@ a {
 /* Med rutor får raden en kolumn till. */
 .im-ns:has(.im-rutor) .im-nsrad { grid-template-columns: 1.6rem 1fr auto auto 2.8rem; align-items: center; }
 .im-nshead { display: flex; justify-content: space-between; align-items: baseline; }
+.im-nsforklaring { margin: 0.3rem 0 0; font-size: 0.66rem; }
 .im-nsfonster { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.04em; }
 .im-nsnamn em.im-nsstart { color: var(--text-muted); }
 .im-rutor { display: inline-flex; gap: 3px; }
