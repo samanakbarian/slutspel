@@ -2585,6 +2585,16 @@ a {
 .rl-snitt { stroke: var(--text-muted); stroke-width: 1.4; stroke-dasharray: 4 4; }
 .rl-ref { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 2 4; opacity: 0.6; }
 .rl-val { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.4rem 0 0.2rem; }
+/* Många mått: en rad att svepa i stället för fyra rader knappar. Kanten
+   tonar ut så att det syns att det finns fler. */
+.rl-val-svep {
+  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  margin-inline: -0.2rem; padding: 0 0.2rem 0.15rem;
+  -webkit-mask-image: linear-gradient(to right, #000 85%, transparent);
+          mask-image: linear-gradient(to right, #000 85%, transparent);
+}
+.rl-val-svep::-webkit-scrollbar { display: none; }
+.rl-val-svep .opp-chip { flex: none; white-space: nowrap; }
 
 .rl-dot { fill: #6b8078; }
 .rl-dot-ours { fill: var(--brand-green-light); }
