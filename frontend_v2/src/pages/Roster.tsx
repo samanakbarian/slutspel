@@ -87,37 +87,7 @@ function groupByPosition(players: Player[]) {
  * som en egen länk i kanten. Den som inte spelat ännu har ingen säsong att
  * visa, och då är raden ingen länk.
  */
-/**
- * Spelaren som en tröja: numret stort, efternamnet på ryggen, och under den
- * det man vill veta i truppen. Nyförvärv får gul tröja, så de nya syns
- * direkt i en vägg av grönt.
- */
-function Troja({ p, namn }: { p: Player; namn: string }) {
-  const efternamn = p.name.split(' ').slice(1).join(' ') || p.name;
-  const ny = p.status === 'NYFÖRVÄRV';
-  const inner = (
-    <>
-      <span className={`tv-troja${ny ? ' tv-ny' : ''}${p.position === 'GK' ? ' tv-gk' : ''}`} aria-hidden="true">
-        <span className="tv-rygg">{efternamn.toUpperCase()}</span>
-        <span className="tv-nr">{p.jersey_number ?? '–'}</span>
-      </span>
-      <span className="tv-namn">{p.name}</span>
-      <span className="tv-meta">{[p.position, p.age ? `${p.age} år` : null].filter(Boolean).join(' · ')}</span>
-      <span className="tv-meta">
-        {p.games_played > 0 && <b>{p.points} p</b>}
-        {p.games_played > 0 && p.contract_until ? ' · ' : ''}
-        {p.contract_until ? `till ${p.contract_until}` : ''}
-      </span>
-      {p.status && <span className={`tv-status${ny ? " tv-status-ny" : ""}`}>{STATUS_LABELS[p.status] || p.status}</span>}
-    </>
-  );
-  return p.games_played > 0
-    ? <Link className="tv-kort" to={spelarsida(namn)} aria-label={`${p.name}, nummer ${p.jersey_number ?? ''}`}>{inner}</Link>
-    : <div className="tv-kort">{inner}</div>;
-}
-
-// Listraden ligger kvar för jämförelse med tröjväggen.
-export function PlayerRow({ p, namn }: { p: Player; namn: string }) {
+function PlayerRow({ p, namn }: { p: Player; namn: string }) {
   const colour = p.status ? STATUS_COLORS[p.status] || 'var(--text-muted)' : 'var(--glass-border)';
   const meta = [
     p.position,
@@ -249,9 +219,9 @@ export function Roster() {
         list.length > 0 ? (
           <section key={name} className="mc-card">
             <p className="mc-kicker">{name} ({list.length})</p>
-            <div className="tv-vagg">
+            <div className="rs-list">
               {list.map((p, i) => (
-                <Troja key={`${p.name}-${i}`} p={p} namn={namnform.get(p.name.toLowerCase()) || p.name} />
+                <PlayerRow key={`${p.name}-${i}`} p={p} namn={namnform.get(p.name.toLowerCase()) || p.name} />
               ))}
             </div>
           </section>

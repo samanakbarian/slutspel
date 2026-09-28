@@ -4,7 +4,6 @@ import { API_URL } from '../config/api';
 import { PercentileBar, Sparkline } from '../components/charts/Charts';
 import { matcher } from '../lib/sprak';
 import { resultat } from '../lib/match';
-import { Spelarreel } from '../components/koncept/Spelarreel';
 
 /**
  * Spelarsidan.
@@ -663,8 +662,6 @@ export function Spelare() {
         </div>
       </section>
 
-      <Spelarreel namn={display} log={log} poang={p.points} matcher={p.games_played} />
-
       {/* Skottprocent för alla utespelare. Backarnas ligger lägre, de skjuter
           från distans, men talet säger ändå något. Tekningar bara för dem
           som tar dem. */}
@@ -709,7 +706,7 @@ export function Spelare() {
         <section className="mc-card">
           <p className="mc-kicker">Form — poäng på rullande 10 matcher</p>
           <Sparkline points={rolling} height={104} unit=" p" colour="var(--brand-gold)"
-                     fill="rgba(255,199,44,0.3)" />
+                     fill="rgba(245, 192, 69, 0.12)" />
           {last10.length > 0 && (
             <>
               <p className="mc-kicker st-sub">Senaste {last10.length}</p>
