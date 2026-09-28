@@ -1434,33 +1434,31 @@ a {
 
 .im-h2h { padding: 0.5rem 0 0.2rem; }
 
-/* Specialteam: powerplay mot boxplay, med placeringen i serien under talet. */
+/* Specialteam: två markörer på en skala från seriens bästa till sämsta. */
 .im-st { padding: 0.6rem 0 0.2rem; }
-.im-strad {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto 1fr;
-  align-items: baseline;
-  gap: 0.45rem;
-  padding: 0.2rem 0;
-  font-size: 0.72rem;
-}
-.im-stnamn { color: var(--text-secondary); }
-.im-stnamnr { text-align: right; }
-.im-stmot { color: var(--text-muted); font-size: 0.66rem; }
-.im-sttal {
-  font-weight: 700;
-  color: var(--text-primary);
+.im-sv { padding: 0.35rem 0 0.2rem; }
+.im-sv-titel { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; font-size: 0.74rem; color: var(--text-primary); }
+.im-sv-titel i { font-style: normal; color: var(--text-muted); }
+.im-sv-dom { font-size: 0.64rem; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+.im-sv-dom-vi { color: var(--data-for); }
+.im-sv-skala { position: relative; padding: 0 0.1rem; }
+.im-sv-ovan, .im-sv-under { position: relative; height: 1.05rem; }
+.im-sv-mark {
+  position: absolute; transform: translateX(-50%);
+  font-size: 0.64rem; white-space: nowrap; color: var(--text-muted);
   font-variant-numeric: tabular-nums;
-  text-align: center;
-  min-width: 2.6rem;
 }
-.im-sttal i {
-  display: block;
-  font-style: normal;
-  font-weight: 500;
-  font-size: 0.6rem;
-  color: var(--text-muted);
-}
+.im-sv-ovan .im-sv-mark { bottom: 0.1rem; }
+.im-sv-under .im-sv-mark { top: 0.1rem; }
+.im-sv-mark b { font-size: 0.74rem; }
+.im-sv-vi b { color: var(--data-for); }
+.im-sv-de b { color: var(--text-primary); }
+.im-sv-l { transform: translateX(-0.45rem); }
+.im-sv-r { transform: translateX(calc(-100% + 0.45rem)); }
+.im-sv-linje { display: flex; gap: 2px; height: 8px; }
+.im-sv-linje i { flex: 1; border-radius: 2px; background: rgba(172, 199, 186, 0.12); }
+.im-sv-linje i.im-sv-pvi { background: var(--data-for); }
+.im-sv-linje i.im-sv-pde { background: var(--text-secondary); }
 
 /* Motståndarens nyckelspelare. */
 .im-ns { padding: 0.6rem 0 0.2rem; border-top: 1px solid rgba(172, 199, 186, 0.12); margin-top: 0.4rem; }
