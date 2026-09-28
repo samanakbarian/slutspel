@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { humanName, ordinal, resultat } from '../lib/match';
 import { MINSTA_MATCHER, useLeague } from '../lib/serien';
 import { Delningsbild } from './share/Delningsbild';
+import { BildSignatur, SparaBild } from './share/SparaBild';
 import { drawForeMatchCard } from './share/foreMatchCard';
 import type { ForeModel } from './share/foreMatchCard';
 
@@ -443,6 +444,7 @@ function foreModel(data: NextMatch, p: Prognos | null): ForeModel {
 
 export function InforMatchen({ season }: { season: string | null }) {
   const [data, setData] = useState<NextMatch | null>(null);
+  const kortRef = useRef<HTMLElement | null>(null);
   const [prognos, setPrognos] = useState<Prognos | null>(null);
   const [dela, setDela] = useState(false);
   const league = useLeague(season || '');
@@ -557,7 +559,7 @@ export function InforMatchen({ season }: { season: string | null }) {
     t && t.streak.length > 1 ? `${t.streak.length} raka ${t.streak.won ? 'vinster' : 'förluster'}` : null;
 
   return (
-    <section className={`im-card${data.is_premiere ? ' im-premiere' : ''}`}>
+    <section ref={kortRef} className={`im-card${data.is_premiere ? ' im-premiere' : ''}`}>
       <p className="mc-kicker">
         {data.is_premiere ? `Premiär · ${data.season}` : `Inför omgång ${data.round} av ${data.total_rounds}`}
       </p>
@@ -653,7 +655,7 @@ export function InforMatchen({ season }: { season: string | null }) {
       )}
 
       {dela ? (
-        <div className="im-dela">
+        <div className="im-dela ej-i-bild">
           <Delningsbild
             draw={ctx => drawForeMatchCard(ctx, foreModel(data, visaPrognos ? prognos : null))}
             filnamn={`infor-${game.date}-${opponent.replace(/\s+/g, '-').toLowerCase()}.png`}
@@ -664,10 +666,12 @@ export function InforMatchen({ season }: { season: string | null }) {
           />
         </div>
       ) : (
-        <button type="button" className="share-btn im-delaknapp" onClick={() => setDela(true)}>
-          Dela som bild
+        <button type="button" className="share-btn im-delaknapp ej-i-bild" onClick={() => setDela(true)}>
+          Dela kort
         </button>
       )}
+      <SparaBild mal={kortRef} filnamn={`infor-${game.date}-hela.png`}
+        titel={`Inför Björklöven mot ${opponent}`} />
 
       {data.venue_average != null && (
         <p className="mr-note">
@@ -675,6 +679,7 @@ export function InforMatchen({ season }: { season: string | null }) {
           {data.venue_games} {data.venue_games === 1 ? 'hemmamatch' : 'hemmamatcher'} i år.
         </p>
       )}
+      <BildSignatur />
     </section>
   );
 }
