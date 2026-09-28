@@ -81,11 +81,28 @@ type NextMatch = {
       name: string; number: number | null; position: string | null;
       games_played: number; goals: number; assists: number; points: number;
       points_last5: number;
+      /** Poäng per match, äldst först; null = spelade inte. Saknas i äldre API. */
+      last?: (number | null)[];
+      hot?: boolean;
     }[];
-    goalie: { name: string; games_played: number; save_pct: number | null; gaa: number | null } | null;
+    goalie: {
+      name: string; games_played: number; save_pct: number | null; gaa: number | null;
+      started_last?: boolean | null;
+      /** Startade i respektive match; null = okänt. */
+      starts?: (boolean | null)[];
+      save_pct_last?: number | null;
+    } | null;
     games_last: number;
+    last_dates?: string[];
+    first_unit?: {
+      date: string | null;
+      forwards: Plats[];
+      defense: Plats[];
+    } | null;
   } | null;
 };
+
+type Plats = { name: string; number: number | null; position: string | null };
 
 /** Ett mått ställt mellan lagen. `better` säger vilket håll som är bra. */
 type Duel = {
@@ -178,36 +195,112 @@ function Duels({ rows, opponent }: { rows: Duel[]; opponent: string }) {
 type Specialrad = { etikett: string; a: number; ap: number | null; b: number; bp: number | null; motEtikett: string };
 
 /**
- * Motståndarens poängbästa och förstemålvakt. Poängen de senaste fem
- * matcherna visas bara när säsongen är längre än så — annars är det samma tal.
+ * Poäng match för match som rutor, äldst till vänster. Tom ram: spelade
+ * inte. Ljus ruta: spelade utan poäng. Fylld: poäng, med antalet i rutan.
+ * Rutorna säger på en blick det som "5 p senaste 5" bara påstår: om det
+ * kom jämnt eller i en enda match.
+ */
+function Rutor({ last, dates }: { last: (number | null)[]; dates: string[] }) {
+  return (
+    <span className="im-rutor" aria-hidden="true">
+      {last.map((v, i) => (
+        <i
+          key={i}
+          className={`im-ruta${v == null ? ' im-ruta-ej' : v === 0 ? ' im-ruta-0' : v === 1 ? ' im-ruta-1' : ' im-ruta-2'}`}
+          title={`${dates[i] ? shortDate(dates[i]) : ''}: ${v == null ? 'spelade inte' : `${v} p`}`}
+        >
+          {v ? v : ''}
+        </i>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Motståndarens poängbästa, den som är het just nu och den troliga
+ * startmålvakten. Rutorna visar de senaste matcherna. Säsongens siffror står
+ * till höger, eftersom det är dem Swehockey räknar som facit.
  */
 function Nyckelspelare({ data, opponent }: { data: NextMatch['them_players'] | null; opponent: string }) {
   if (!data || (data.players.length === 0 && !data.goalie)) return null;
   const komma = (v: number, d = 1) => v.toFixed(d).replace('.', ',');
+  const dates = data.last_dates ?? [];
+  const n = data.games_last;
+  // Rutorna behövs bara när de säger något utöver säsongen: från två matcher.
+  const visaRutor = n >= 2 && data.players.some(p => p.last && p.last.length === n);
+  const g = data.goalie;
+  const aria = (p: NonNullable<NextMatch['them_players']>['players'][number]) =>
+    p.last ? `, ${p.last.map(v => (v == null ? 'spelade inte' : `${v} p`)).join(', ')} i de senaste ${n} matcherna` : '';
   return (
     <div className="im-ns">
-      <span className="im-h2hlabel">Att hålla koll på · {opponent}</span>
+      <div className="im-nshead">
+        <span className="im-h2hlabel">Att hålla koll på · {opponent}</span>
+        {visaRutor && <span className="im-nsfonster">senaste {n} →</span>}
+      </div>
       {data.players.map(p => (
-        <div className="im-nsrad" key={p.name}>
+        <div className="im-nsrad" key={p.name}
+          aria-label={`${humanName(p.name)}, ${p.goals} mål och ${p.assists} assist på ${p.games_played} matcher${aria(p)}`}>
           <span className="im-nsnr">{p.number ?? ''}</span>
           <span className="im-nsnamn">
             {humanName(p.name)}
-            {p.games_played > data.games_last && p.points_last5 >= Math.max(3, data.games_last - 1) && (
-              <em>{p.points_last5} p senaste {data.games_last}</em>
+            {p.hot && <em>Het · {p.points_last5} p senaste {n}</em>}
+            {p.hot == null && p.games_played > n && p.points_last5 >= Math.max(3, n - 1) && (
+              <em>{p.points_last5} p senaste {n}</em>
             )}
           </span>
           <span className="im-nspos">{p.position ?? ''}</span>
+          {visaRutor && (p.last ? <Rutor last={p.last} dates={dates} /> : <span />)}
           <span className="im-nstal">{p.goals}+{p.assists}</span>
         </div>
       ))}
-      {data.goalie && data.goalie.save_pct != null && (
-        <div className="im-nsrad">
+      {g && g.save_pct != null && (
+        <div className="im-nsrad" aria-label={`Målvakt ${humanName(g.name)}, ${komma(g.save_pct)} procent räddningar`}>
           <span className="im-nsnr" />
-          <span className="im-nsnamn">{humanName(data.goalie.name)}</span>
+          <span className="im-nsnamn">
+            {humanName(g.name)}
+            {g.started_last && <em className="im-nsstart">Startade senast</em>}
+            {/* Senaste matcherna bara när säsongen är längre än så; annars
+                är det samma matcher, och protokollen och Swehockeys
+                målvaktsstatistik skiljer sig ibland åt. */}
+            {g.save_pct_last != null && g.games_played > n && (
+              <em className="im-nsstart">{komma(g.save_pct_last)} % senaste {n}</em>
+            )}
+          </span>
           <span className="im-nspos">GK</span>
-          <span className="im-nstal">{komma(data.goalie.save_pct)} %</span>
+          {visaRutor && (g.starts && g.starts.length === n ? (
+            <span className="im-rutor" aria-hidden="true">
+              {g.starts.map((st, i) => (
+                <i key={i}
+                  className={`im-ruta${st ? ' im-ruta-start' : ' im-ruta-ej'}`}
+                  title={`${dates[i] ? shortDate(dates[i]) : ''}: ${st ? 'startade' : st === false ? 'startade inte' : 'okänt'}`} />
+              ))}
+            </span>
+          ) : <span />)}
+          <span className="im-nstal">{komma(g.save_pct)} %</span>
         </div>
       )}
+      <Femma unit={data.first_unit ?? null} />
+    </div>
+  );
+}
+
+/**
+ * Motståndarens förstafemma i senaste matchen, uppställd som på isen:
+ * forwards överst, backparet under. Uppställningen säger bara kedja, så
+ * forward eller back kommer ur spelarens position i statistiken.
+ */
+function Femma({ unit }: { unit: NonNullable<NextMatch['them_players']>['first_unit'] | null }) {
+  if (!unit || unit.forwards.length === 0) return null;
+  const chip = (p: Plats) => (
+    <span className="im-femchip" key={p.name} title={humanName(p.name)}>
+      <b>{p.number ?? ''}</b>{p.name.split(',')[0].trim()}
+    </span>
+  );
+  return (
+    <div className="im-femma" aria-label={`Förstafemman senast: ${[...unit.forwards, ...unit.defense].map(p => humanName(p.name)).join(', ')}`}>
+      <span className="im-h2hlabel">Förstafemman{unit.date ? ` · ${shortDate(unit.date)}` : ''}</span>
+      <div className="im-femrad">{unit.forwards.map(chip)}</div>
+      {unit.defense.length > 0 && <div className="im-femrad">{unit.defense.map(chip)}</div>}
     </div>
   );
 }
@@ -572,7 +665,7 @@ export function InforMatchen({ season }: { season: string | null }) {
       {data.venue_average != null && (
         <p className="mr-note">
           Arenan drar {data.venue_average.toLocaleString('sv-SE')} i snitt över{' '}
-          {data.venue_games} hemmamatcher i år.
+          {data.venue_games} {data.venue_games === 1 ? 'hemmamatch' : 'hemmamatcher'} i år.
         </p>
       )}
     </section>
