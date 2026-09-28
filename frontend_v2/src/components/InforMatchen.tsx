@@ -192,70 +192,7 @@ function Duels({ rows, opponent }: { rows: Duel[]; opponent: string }) {
   );
 }
 
-type Specialrad = {
-  etikett: string; a: number; ap: number | null; b: number; bp: number | null; motEtikett: string;
-  /** Sant när a är Björklöven. */
-  viArA: boolean;
-  /** Lag med placering, skalans längd. */
-  antal: number;
-};
-
-/**
- * Powerplay mot boxplay som två markörer på en skala från seriens bästa
- * till sämsta. Procenten går inte att jämföra rakt — 20 % i powerplay och
- * 80 % i boxplay är olika mått — men placeringen går: den som står längre
- * till vänster har övertaget. Vi alltid ovanför linjen och i grönt, som i
- * jämförelsen ovanför; motståndaren under, i grått.
- */
-function Specialteam({ rader, opponent }: { rader: Specialrad[]; opponent: string }) {
-  if (rader.length === 0) return null;
-  const x = (plats: number, n: number) => ((plats - 0.5) / n) * 100;
-  const markor = (plats: number | null, n: number, tal: number, vi: boolean) => {
-    if (plats == null) return null;
-    const left = x(plats, n);
-    // Nära kanterna ankras etiketten mot kanten, annars klipps den.
-    const ankare = left < 18 ? 'im-sv-l' : left > 82 ? 'im-sv-r' : '';
-    return (
-      <span className={`im-sv-mark ${vi ? 'im-sv-vi' : 'im-sv-de'} ${ankare}`} style={{ left: `${left}%` }}>
-        <b>{tal} %</b> {ordinal(plats)}
-      </span>
-    );
-  };
-  return (
-    <div className="im-st">
-      <div className="im-nshead">
-        <span className="im-h2hlabel">Specialteam</span>
-        <span className="im-nsfonster">bäst ← i serien → sämst</span>
-      </div>
-      {rader.map(r => {
-        const vi = r.viArA ? { v: r.a, p: r.ap } : { v: r.b, p: r.bp };
-        const de = r.viArA ? { v: r.b, p: r.bp } : { v: r.a, p: r.ap };
-        // Två placeringar eller mindre är brus så här tidigt.
-        const dom = vi.p == null || de.p == null ? ''
-          : Math.abs(vi.p - de.p) <= 2 ? 'Jämnt'
-          : vi.p < de.p ? 'Fördel Björklöven' : `Fördel ${opponent}`;
-        return (
-          <div className="im-sv" key={r.etikett}
-            aria-label={`${r.etikett} ${r.a} procent, ${r.ap ?? '?'}:e i serien, mot ${r.motEtikett} ${r.b} procent, ${r.bp ?? '?'}:e. ${dom}.`}>
-            <div className="im-sv-titel">
-              <span>{r.etikett} <i>mot {r.motEtikett}</i></span>
-              {dom && <span className={`im-sv-dom${dom.includes('Björklöven') ? ' im-sv-dom-vi' : ''}`}>{dom}</span>}
-            </div>
-            <div className="im-sv-skala" aria-hidden="true">
-              <div className="im-sv-ovan">{markor(vi.p, r.antal, vi.v, true)}</div>
-              <div className="im-sv-linje">
-                {Array.from({ length: r.antal }, (_, i) => (
-                  <i key={i} className={i + 1 === vi.p ? 'im-sv-pvi' : i + 1 === de.p ? 'im-sv-pde' : ''} />
-                ))}
-              </div>
-              <div className="im-sv-under">{markor(de.p, r.antal, de.v, false)}</div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+type Specialrad = { etikett: string; a: number; ap: number | null; b: number; bp: number | null; motEtikett: string };
 
 /**
  * Poäng match för match som rutor, äldst till vänster. Tom ram: spelade
@@ -428,9 +365,6 @@ function Prognosstapel({ p, opponent }: { p: Prognos; opponent: string }) {
 
 const BJK_RE = /bj[oö]rkl[oö]ven/i;
 
-/** Skalan kräver att seriens lag är kända. */
-const antalOk = (r: Specialrad[]) => r.filter(x => x.antal > 1);
-
 const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `\u2212${Math.abs(v)}` : '0');
 const decimal = (v: number) => v.toFixed(2).replace('.', ',');
 
@@ -600,15 +534,14 @@ export function InforMatchen({ season }: { season: string | null }) {
       const plats = (key: 'pp_pct' | 'pk_pct', v: number | null | undefined) =>
         v == null || !league ? null
           : 1 + league.teams.filter(t => t.gp >= MINSTA_MATCHER && (t.values[key] ?? -1) > v).length;
-      const antal = league ? league.teams.filter(t => t.gp >= MINSTA_MATCHER).length : 0;
       const rad = (etikett: string, a: number | null | undefined, ak: 'pp_pct' | 'pk_pct',
-                   b: number | null | undefined, bk: 'pp_pct' | 'pk_pct', motEtikett: string, viArA: boolean) =>
+                   b: number | null | undefined, bk: 'pp_pct' | 'pk_pct', motEtikett: string) =>
         a != null && b != null
-          ? { etikett, a: Math.round(a), ap: plats(ak, a), b: Math.round(b), bp: plats(bk, b), motEtikett, viArA, antal }
+          ? { etikett, a: Math.round(a), ap: plats(ak, a), b: Math.round(b), bp: plats(bk, b), motEtikett }
           : null;
       specialteam = [
-        rad('Vårt powerplay', oss.values.pp_pct, 'pp_pct', dem.values.pk_pct, 'pk_pct', 'deras boxplay', true),
-        rad('Deras powerplay', dem.values.pp_pct, 'pp_pct', oss.values.pk_pct, 'pk_pct', 'vårt boxplay', false),
+        rad('Vårt powerplay', oss.values.pp_pct, 'pp_pct', dem.values.pk_pct, 'pk_pct', 'deras boxplay'),
+        rad('Deras powerplay', dem.values.pp_pct, 'pp_pct', oss.values.pk_pct, 'pk_pct', 'vårt boxplay'),
       ].filter(x => x != null);
     }
   }
@@ -675,7 +608,20 @@ export function InforMatchen({ season }: { season: string | null }) {
         </p>
       )}
 
-      <Specialteam rader={antalOk(specialteam)} opponent={opponent} />
+      {specialteam.length > 0 && (
+        <div className="im-st">
+          <span className="im-h2hlabel">Specialteam</span>
+          {specialteam.map(r => (
+            <div className="im-strad" key={r.etikett}>
+              <span className="im-stnamn">{r.etikett}</span>
+              <span className="im-sttal">{r.a} %{r.ap && <i>{ordinal(r.ap)}</i>}</span>
+              <span className="im-stmot">mot</span>
+              <span className="im-sttal">{r.b} %{r.bp && <i>{ordinal(r.bp)}</i>}</span>
+              <span className="im-stnamn im-stnamnr">{r.motEtikett}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Nyckelspelare data={data.them_players ?? null} opponent={opponent} />
 
