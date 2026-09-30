@@ -125,7 +125,7 @@ function Rubrik({ nasta, status }: { nasta: NastaMatch | null; status: string })
   const nar = d && !Number.isNaN(d.getTime()) ? `${d.getDate()} ${MANADER[d.getMonth()]}` : '';
   const rad = match
     ? [
-      `${match.opponent?.replace(/^IF\s+/, '') || ''} ${match.is_home ? 'hemma' : 'borta'}`.trim(),
+      `${match.opponent || ''} ${match.is_home ? 'hemma' : 'borta'}`.trim(),
       nar,
       (match.time || '').replace(':', '.'),
       match.venue || '',

@@ -381,7 +381,7 @@ function MatchensBastaKort({ best, till }: { best: MatchensBasta[] | undefined; 
               <span className="mb-namn">
                 {till && b.is_ours && !b.goalie ? <Link to={till(b.name)}>{humanName(b.name)}</Link> : humanName(b.name)}
                 <em className={b.is_ours ? 'mb-vi' : ''}>
-                  {(b.team || '').replace(/^IF\s+/, '')}{b.goalie ? ' · MV' : ''}
+                  {(b.team || '')}{b.goalie ? ' · MV' : ''}
                 </em>
               </span>
               <span className="mb-stapel"><i className={b.is_ours ? 'mb-vi' : ''}
@@ -845,7 +845,7 @@ function LagMotLag({
 
   const pct = (x: number | null) => (x == null ? '–' : `${String(x.toFixed(1)).replace('.', ',')} %`);
   const tal = (x: number | null) => (x == null ? '–' : String(x));
-  const namn = (x: string | null) => (x || '').replace(/^IF\s+/, '');
+  const namn = (x: string | null) => (x || '');
 
   // Rubriken ovanför kortet skriver hemmalaget först. Gjorde inte det här
   // kortet samma sak stod lagen i omvänd ordning två kort i rad, vilket är
@@ -988,11 +988,11 @@ export function Matchrapport() {
         <p className="mr-kicker">{data.date}{data.venue ? ` · ${data.venue}` : ''}</p>
         <div className="mr-score">
           <span className={`mr-side${ourSide === 'home' ? ' mr-side-ours' : ''}`}>
-            {data.home_team.replace(/^IF\s+/, '')}
+            {data.home_team}
           </span>
           <span className="mr-scorenum">{hg}–{ag}</span>
           <span className={`mr-side${ourSide === 'away' ? ' mr-side-ours' : ''}`}>
-            {data.away_team.replace(/^IF\s+/, '')}
+            {data.away_team}
           </span>
         </div>
         <p className={`mr-outcome mr-outcome-${outcome.toLowerCase()}`}>

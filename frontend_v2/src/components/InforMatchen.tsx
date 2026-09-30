@@ -161,7 +161,7 @@ function Duels({ rows, opponent }: { rows: Duel[]; opponent: string }) {
   return (
     <div className="du">
       <div className="du-head">
-        <span className="du-us">Björklöven</span>
+        <span className="du-us">IF Björklöven</span>
         <span className="du-them">{opponent}</span>
       </div>
       {rows.map(r => {
@@ -343,7 +343,7 @@ function Prognosstapel({ p, opponent }: { p: Prognos; opponent: string }) {
   return (
     <div className="pg">
       <div className="pg-head">
-        <span className="pg-vi">Björklöven</span>
+        <span className="pg-vi">IF Björklöven</span>
         <span className="pg-mitt">Förlängning</span>
         <span className="pg-de">{opponent}</span>
       </div>
@@ -373,7 +373,7 @@ const WEEKDAYS = ['sön', 'mån', 'tis', 'ons', 'tor', 'fre', 'lör'];
 /** Kortet inför matchen byggs ur samma svar som rutan visar, inget annat. */
 function foreModel(data: NextMatch, p: Prognos | null): ForeModel {
   const { game } = data;
-  const opponent = game.opponent.replace(/^IF\s+/, '');
+  const opponent = game.opponent;
   const d = new Date(`${String(game.date).slice(0, 10)}T00:00:00`);
   const days = daysUntil(game.date);
 
@@ -419,7 +419,7 @@ function foreModel(data: NextMatch, p: Prognos | null): ForeModel {
   }
 
   const form = [
-    { team: 'Björklöven', games: (data.us_form ?? []).map(g => ({ won: g.won, ot: g.beyond_regulation })) },
+    { team: 'IF Björklöven', games: (data.us_form ?? []).map(g => ({ won: g.won, ot: g.beyond_regulation })) },
     { team: opponent, games: (data.them_form ?? []).map(g => ({ won: g.won, ot: g.beyond_regulation })) },
   ].filter(f => f.games.length > 0);
 
@@ -431,7 +431,7 @@ function foreModel(data: NextMatch, p: Prognos | null): ForeModel {
     eyebrow: data.is_premiere ? 'Premiär' : `Inför omgång ${data.round} av ${data.total_rounds}`,
     big,
     bigLabel,
-    usLabel: 'Björklöven',
+    usLabel: 'IF Björklöven',
     themLabel: `${game.is_home ? 'hemma' : 'borta'} mot ${opponent}`,
     opponent,
     hero,
@@ -475,7 +475,7 @@ export function InforMatchen({ season }: { season: string | null }) {
 
   const { game, previous } = data;
   const days = daysUntil(game.date);
-  const opponent = game.opponent.replace(/^IF\s+/, '');
+  const opponent = game.opponent;
   const meetings = data.meetings ?? [];
   const upcoming = data.upcoming ?? [];
   const usForm = data.us_form ?? [];
@@ -604,7 +604,7 @@ export function InforMatchen({ season }: { season: string | null }) {
 
       {duels.length === 0 && upcoming.length > 1 && (
         <p className="im-fact im-next-after">
-          Därefter: {upcoming[1].opponent.replace(/^IF\s+/, '')} {upcoming[1].is_home ? 'hemma' : 'borta'}
+          Därefter: {upcoming[1].opponent} {upcoming[1].is_home ? 'hemma' : 'borta'}
         </p>
       )}
 
@@ -625,12 +625,12 @@ export function InforMatchen({ season }: { season: string | null }) {
 
       <Nyckelspelare data={data.them_players ?? null} opponent={opponent} />
 
-      <Form games={usForm} label="Form · Björklöven" />
+      <Form games={usForm} label="Form · IF Björklöven" />
       <Form games={themForm} label={`Form · ${opponent}`} />
 
       {(streakText(usSeason) || streakText(themSeason)) && (
         <div className="im-streaks">
-          {streakText(usSeason) && <span><b>Björklöven</b> {streakText(usSeason)}</span>}
+          {streakText(usSeason) && <span><b>IF Björklöven</b> {streakText(usSeason)}</span>}
           {streakText(themSeason) && <span><b>{opponent}</b> {streakText(themSeason)}</span>}
         </div>
       )}

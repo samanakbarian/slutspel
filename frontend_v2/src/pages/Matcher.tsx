@@ -113,7 +113,7 @@ function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) 
       <p className="mc-kicker">Senaste matchen · {formatDate(game.date)}</p>
       <div className="mc-latest-row">
         <span className={`mc-ha${game.isHome ? ' mc-ha-home' : ''}`}>{game.isHome ? 'H' : 'B'}</span>
-        <span className="mc-latest-opp">{game.opponent.replace(/^IF\s+/, '')}</span>
+        <span className="mc-latest-opp">{game.opponent}</span>
         <span className="mc-latest-score">{resultat(game.gf, game.ga, game.isHome)}</span>
       </div>
       <p className="mc-latest-label">{label}</p>
@@ -128,7 +128,7 @@ function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) 
               ingen rapport. Hellre vidare till den senaste som har en an en
               atervandsgrand. */}
           <Link to={`/matcher/${fallback.gameId}`} className="mc-cta mc-cta-soft">
-            Senaste rapporten: {formatDateShort(fallback.date)} mot {fallback.opponent.replace(/^IF\s+/, '')}
+            Senaste rapporten: {formatDateShort(fallback.date)} mot {fallback.opponent}
             <span aria-hidden="true"> →</span>
           </Link>
           <p className="mc-note">Slutspelsmatcher saknar matchrapport hos Swehockey.</p>
@@ -223,7 +223,7 @@ function GameRow({ game }: { game: Game }) {
       <span className={`mc-ha${game.isHome ? ' mc-ha-home' : ''}`} title={game.isHome ? 'Hemma' : 'Borta'}>
         {game.isHome ? 'H' : 'B'}
       </span>
-      <span className="mc-opponent">{game.opponent.replace(/^IF\s+/, '')}</span>
+      <span className="mc-opponent">{game.opponent}</span>
       {game.played ? (
         <>
           <span className="mc-score">{resultat(game.gf, game.ga, game.isHome)}</span>
@@ -244,7 +244,7 @@ function GameRow({ game }: { game: Game }) {
       <Link
         to={`/matcher/${game.gameId}`}
         className="mc-row mc-row-link"
-        aria-label={`Matchrapport: ${game.isHome ? 'Björklöven' : game.opponent} mot ${game.isHome ? game.opponent : 'Björklöven'} ${resultat(game.gf, game.ga, game.isHome)}`}
+        aria-label={`Matchrapport: ${game.isHome ? 'IF Björklöven' : game.opponent} mot ${game.isHome ? game.opponent : 'IF Björklöven'} ${resultat(game.gf, game.ga, game.isHome)}`}
       >
         {body}
         <span className="mc-chevron" aria-hidden="true">›</span>

@@ -187,8 +187,8 @@ export function buildCardModel(data: MatchReport): CardModel | null {
     eyebrow: eyebrowFor(steps, ourGoals - theirGoals, theirGoals, periods.length),
     score: resultat(ourGoals, theirGoals, ourSide === 'home'),
     lag: ourSide === 'home'
-      ? [{ text: 'Björklöven', ours: true }, { text: opponent, ours: false }]
-      : [{ text: opponent, ours: false }, { text: 'Björklöven', ours: true }],
+      ? [{ text: 'IF Björklöven', ours: true }, { text: opponent, ours: false }]
+      : [{ text: opponent, ours: false }, { text: 'IF Björklöven', ours: true }],
     hero: heroFor(data, ourGoals, theirGoals, keeper),
     steps,
     periods: Math.max(3, periods.length),

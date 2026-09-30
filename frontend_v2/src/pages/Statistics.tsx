@@ -1511,7 +1511,7 @@ function TabellenOverTid({ data, state, markerade, vaxla }: {
         </p>
       )}
       <div className="tor-legend">
-        <span><i className="rl-swatch rl-swatch-ours" />Björklöven</span>
+        <span><i className="rl-swatch rl-swatch-ours" />IF Björklöven</span>
         {markerade.length > 0 && <span><i className="rl-swatch rl-swatch-mark" />Valda lag</span>}
         <span><i className="rl-swatch" />Övriga</span>
       </div>
@@ -1594,7 +1594,7 @@ function SerienOverTid({ data, markerade, vaxla }: {
         ))}
       </div>
       <div className="tor-legend">
-        <span><i className="rl-swatch rl-swatch-ours" />Björklöven</span>
+        <span><i className="rl-swatch rl-swatch-ours" />IF Björklöven</span>
         {markerade.length > 0 && <span><i className="rl-swatch rl-swatch-mark" />Valda lag</span>}
         <span><i className="rl-swatch rl-swatch-snitt" />Seriens snitt</span>
       </div>
@@ -1939,7 +1939,7 @@ function Spelare({
   return (
     <>
       <div className="mc-seg" role="tablist" aria-label="Urval">
-        <button role="tab" aria-selected={loven} className={`mc-segbtn${loven ? ' mc-on' : ''}`} onClick={() => setScope('loven')}>Björklöven</button>
+        <button role="tab" aria-selected={loven} className={`mc-segbtn${loven ? ' mc-on' : ''}`} onClick={() => setScope('loven')}>IF Björklöven</button>
         <button role="tab" aria-selected={!loven} className={`mc-segbtn${!loven ? ' mc-on' : ''}`} onClick={() => setScope('serien')}>Hela {leagueName}</button>
       </div>
 

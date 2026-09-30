@@ -133,7 +133,7 @@ function Klassisk({ rows, streck, moten, form }: {
           const cells = (
             <>
               <span className="st-rank">{r.rank ?? i + 1}</span>
-              <span className="st-team">{(r.team_name || '').replace(/^IF\s+/, '')}</span>
+              <span className="st-team">{(r.team_name || '')}</span>
               <span className="st-n">{r.games_played ?? 0}</span>
               <span className="st-n">{r.wins ?? 0}</span>
               <span className="st-n st-dim">{r.ot_wins ?? 0}</span>
@@ -144,7 +144,7 @@ function Klassisk({ rows, streck, moten, form }: {
                   {(form[lag] || []).slice(-5).map((g, j) => (
                     <i key={j}
                        className={`st-formprick st-formprick-${g.won ? 'v' : 'f'}${g.ot ? ' st-formprick-ot' : ''}`}
-                       title={`${g.won ? 'Vinst' : 'Förlust'}${g.ot ? ' efter förlängning' : ''} ${g.gf}–${g.ga} mot ${g.opponent.replace(/^IF\s+/, '')}`} />
+                       title={`${g.won ? 'Vinst' : 'Förlust'}${g.ot ? ' efter förlängning' : ''} ${g.gf}–${g.ga} mot ${g.opponent}`} />
                   ))}
                 </span>
               ) : (
