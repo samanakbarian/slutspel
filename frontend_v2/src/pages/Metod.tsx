@@ -89,6 +89,12 @@ export function MetodSida() {
           rad="Samma tal som i Swehockeys protokoll. Powerplaymål och straffar räknas inte."
         />
         <Matt
+          id="gamescore"
+          namn="GameScore (matchens bästa)"
+          formel="0,75 × mål + 0,7 × första assist + 0,55 × andra assist + 0,075 × skott − 0,15 × utvisningar + 0,01 × (vunna − förlorade tekningar) + 0,15 × (mål för − mål emot på isen i lika styrka).  Målvakt: 0,1 × räddningar − 0,75 × insläppta"
+          rad="Dom Luszczyszyns vikter. Blockerade skott, dragna utvisningar och skottförsök på isen finns inte hos Swehockey och är inte med, så talet blir något lägre än där de räknas. Skott och tekningar kommer ur matchrapporten; saknas den är de inte med."
+        />
+        <Matt
           id="onice"
           namn="On-ice ±"
           formel="alla mål för − alla mål emot på isen, oavsett spelform"

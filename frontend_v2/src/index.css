@@ -3217,3 +3217,28 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   color: var(--text-secondary);
 }
 .ctx-serienrad b { color: var(--text-primary); font-weight: 700; }
+
+/* Matchens bästa: plats, namn med lag, stapel mot den bästa och vad som gav
+   poängen. Björklöven i grönt, motståndaren grått. */
+.mb-lista { margin-top: 0.4rem; }
+.mb-rad {
+  display: grid; grid-template-columns: 1.3rem 1fr auto; gap: 0.6rem;
+  align-items: start; padding: 0.7rem 0; border-top: 1px solid rgba(172, 199, 186, 0.12);
+}
+.mb-rad:first-child { border-top: 0; }
+.mb-plats { font-weight: 800; color: var(--text-muted); padding-top: 0.1rem; }
+.mb-ett .mb-plats, .mb-ett .mb-tal { color: var(--brand-gold); }
+.mb-mitt { min-width: 0; }
+.mb-namn { display: block; font-weight: 700; font-size: 0.9rem; color: var(--text-primary); }
+.mb-namn a { color: inherit; text-decoration: none; }
+.mb-namn em { font-style: normal; font-weight: 500; font-size: 0.72rem; color: var(--text-muted); margin-left: 0.35rem; }
+.mb-namn em.mb-vi { color: var(--brand-green-light); }
+.mb-stapel { display: block; height: 6px; border-radius: 3px; background: rgba(172, 199, 186, 0.08); margin: 0.45rem 0; }
+.mb-stapel i { display: block; height: 100%; border-radius: 3px; background: var(--text-secondary); }
+.mb-stapel i.mb-vi { background: var(--data-for); }
+.mb-delar { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.mb-delar span {
+  font-size: 0.66rem; color: var(--text-secondary);
+  border: 1px solid rgba(172, 199, 186, 0.14); border-radius: 999px; padding: 0.1rem 0.5rem;
+}
+.mb-tal { font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; }

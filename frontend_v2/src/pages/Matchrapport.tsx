@@ -5,7 +5,7 @@ import { API_URL } from '../config/api';
 import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
-import type { Goal, MatchContext, MatchReport, Penalty, Skater } from '../lib/match';
+import type { Goal, MatchContext, MatchReport, MatchensBasta, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, resultat, positionOf, surname } from '../lib/match';
 import { sasongForDatum, spelarsida } from '../lib/lankar';
 import { skrivSidhuvud } from '../lib/sidhuvud';
@@ -336,6 +336,72 @@ type TillSpelare = ((namn: string) => string) | null;
 function Namn({ namn, till, children }: { namn: string | null; till: TillSpelare; children: ReactNode }) {
   if (!till || !namn) return <>{children}</>;
   return <Link to={till(namn)} className="mr-namnlank">{children}</Link>;
+}
+
+/** Det som gav poängen, i ord. Bara delar som finns, så raden hålls kort. */
+function delar(b: MatchensBasta): string[] {
+  const p = b.parts;
+  if (b.goalie) return [`${p.sv} räddningar`, `${p.ga} insläppta`];
+  const ut: string[] = [];
+  if (p.g) ut.push(`${p.g} mål`);
+  const a = (p.a1 || 0) + (p.a2 || 0);
+  if (a) ut.push(`${a} assist`);
+  if (p.sog) ut.push(`${p.sog} skott`);
+  if (p.gf || p.ga) {
+    const pm = (p.gf || 0) - (p.ga || 0);
+    ut.push(`${pm > 0 ? '+' : pm < 0 ? '\u2212' : '±'}${Math.abs(pm)} på isen`);
+  }
+  if ((p.fow || 0) + (p.fol || 0) >= 5) ut.push(`${p.fow}–${p.fol} tekningar`);
+  if (p.pt) ut.push(`${p.pt} ${p.pt === 1 ? 'utvisning' : 'utvisningar'}`);
+  return ut;
+}
+
+/**
+ * Matchens tre bästa enligt GameScore, båda lagen.
+ *
+ * Ett tal per spelare som väger ihop mål, assist, skott, tekningar,
+ * utvisningar och mål på isen. Talet står till höger, stapeln visar
+ * avståndet till den bästa och raden under vad som gav poängen — utan den
+ * vore talet en svart låda.
+ */
+function MatchensBastaKort({ best, till }: { best: MatchensBasta[] | undefined; till: TillSpelare }) {
+  if (!best || best.length === 0) return null;
+  const max = Math.max(...best.map(b => b.score), 0.01);
+  const komma = (v: number) => v.toFixed(2).replace('.', ',');
+  const utanRapport = best.some(b => !b.full);
+  return (
+    <section className="mr-card">
+      <p className="mr-kicker">GameScore</p>
+      <h2 className="mr-title">Matchens bästa</h2>
+      <div className="mb-lista">
+        {best.map((b, i) => (
+          <div className={`mb-rad${i === 0 ? ' mb-ett' : ''}`} key={b.name}>
+            <span className="mb-plats">{i + 1}</span>
+            <div className="mb-mitt">
+              <span className="mb-namn">
+                {till && b.is_ours && !b.goalie ? <Link to={till(b.name)}>{humanName(b.name)}</Link> : humanName(b.name)}
+                <em className={b.is_ours ? 'mb-vi' : ''}>
+                  {(b.team || '').replace(/^IF\s+/, '')}{b.goalie ? ' · MV' : ''}
+                </em>
+              </span>
+              <span className="mb-stapel"><i className={b.is_ours ? 'mb-vi' : ''}
+                style={{ width: `${Math.max(0, b.score) / max * 100}%` }} /></span>
+              <span className="mb-delar">
+                {delar(b).map(d => <span key={d}>{d}</span>)}
+              </span>
+            </div>
+            <span className="mb-tal">{komma(b.score)}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mr-note">
+        GameScore väger ihop mål, assist, skott, tekningar, utvisningar och mål för och emot på
+        isen i lika styrka. För målvakter räddningar och insläppta mål.
+        {utanRapport && ' Matchrapporten saknas än, så skott och tekningar är inte med.'}{' '}
+        <Link className="md-lank" to="/metod#gamescore">Formel</Link>
+      </p>
+    </section>
+  );
 }
 
 function Boxscore({ skaters, squad, till }: { skaters: Skater[] | undefined; squad: MatchReport['squad']; till: TillSpelare }) {
@@ -935,6 +1001,7 @@ export function Matchrapport() {
         </p>
       </section>
 
+      <Guard name="Matchens bästa"><MatchensBastaKort best={data.best} till={till} /></Guard>
       <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []}
         goals={data.goals || []} penalties={data.penalties || []} /></Guard>
       <Guard name="Sammanhang"><Kontext

@@ -171,6 +171,20 @@ export type MatchReport = {
   skaters?: Skater[];
   lineup?: LineupBlock[];
   context?: MatchContext | null;
+  /** Matchens tre bästa enligt GameScore, båda lagen. Saknas i äldre API. */
+  best?: MatchensBasta[];
+};
+
+export type MatchensBasta = {
+  name: string;
+  team: string | null;
+  is_ours: boolean;
+  goalie: boolean;
+  score: number;
+  /** Utespelare: g, a1, a2, sog, fow, fol, gf, ga, pt. Målvakt: sv, ga. */
+  parts: Record<string, number>;
+  /** Falskt när matchrapporten saknas: då är skott och tekningar inte med. */
+  full: boolean;
 };
 
 export const BJK = /bj[oö]rkl[oö]ven/i;
