@@ -201,6 +201,8 @@ type TrendNyckel = 'shot_share' | 'pdo' | 'gf_pg' | 'ga_pg' | 'sf_pg' | 'sh_pct'
 type TrendPunkt = { match: number; date: string; window: number } & Partial<Record<TrendNyckel, number | null>>;
 type LeagueTrend = {
   window: number;
+  /** Spelade matcher mot matcher med båda lagens siffror. Saknas i äldre API. */
+  coverage?: { games: number; played: number };
   teams: { team: string; is_ours: boolean; games: number; points: TrendPunkt[] }[];
   league: ({ match: number; teams: number } & Partial<Record<TrendNyckel, number | null>>)[];
 };
@@ -247,8 +249,9 @@ const shortTeam = (t: string) => String(t || '').replace(/^(IF|IK|HC|BIK)\s+/, '
  *  diagram, där "MoDo Hockey" och "Kalmar HC" annars skjuter ut ur ytan. */
 const lagEtikett = (t: string) =>
   shortTeam(t)
-    .replace(/\s+(HC|HF|HK|IF|IK|BK|AIK|Hockey|Lakers HC|Lakers|Vikings IF|Redhawks)$/, '')
+    .replace(/\s+(HC|HF|HK|IF|IK|IS|SK|BK|AIK|Hockey|Lakers HC|Lakers|Vikings IF|Redhawks)$/, '')
     .replace(/^Djurgårdens$/, 'Djurgården')
+    .replace(/^Östersunds$/, 'Östersund')
     .trim();
 
 /**
@@ -1571,14 +1574,18 @@ function SerienOverTid({ data, markerade, vaxla }: {
   const matt = finns.find(m => m.key === nyckel) ?? TREND_MATT[0];
   const langst = Math.max(0, ...data.teams.map(t => t.points.length));
   if (langst < 2) return null;
-  const serier = data.teams.map(t => ({
+  // Seriens övriga matcher finns från hösten 2026. Utan dem bygger de andra
+  // lagens kurvor bara på matcherna mot oss, och då visas bara vår.
+  const helSerie = !data.coverage || data.coverage.played === 0
+    || data.coverage.games / data.coverage.played >= 0.9;
+  const serier = data.teams.filter(t => helSerie || t.is_ours).map(t => ({
     team: t.team,
     short: lagEtikett(t.team),
     ours: t.is_ours,
     markerad: markerade.includes(lagEtikett(t.team)),
     varden: t.points.map(p => p[matt.key] ?? null),
   }));
-  const snitt = data.league.map(p => p[matt.key] ?? null);
+  const snitt = helSerie ? data.league.map(p => p[matt.key] ?? null) : [];
   const ovriga = data.teams.filter(t => !t.is_ours).map(t => lagEtikett(t.team)).sort((a, b) => a.localeCompare(b, 'sv'));
   const fonster = langst < data.window ? `alla matcher hittills` : `rullande ${data.window} matcher`;
   return (
@@ -1595,13 +1602,16 @@ function SerienOverTid({ data, markerade, vaxla }: {
       </div>
       <div className="tor-legend">
         <span><i className="rl-swatch rl-swatch-ours" />IF Björklöven</span>
-        {markerade.length > 0 && <span><i className="rl-swatch rl-swatch-mark" />Valda lag</span>}
-        <span><i className="rl-swatch rl-swatch-snitt" />Seriens snitt</span>
+        {helSerie && markerade.length > 0 && <span><i className="rl-swatch rl-swatch-mark" />Valda lag</span>}
+        {helSerie && <span><i className="rl-swatch rl-swatch-snitt" />Seriens snitt</span>}
       </div>
       <LagKurvor serier={serier} snitt={snitt} format={matt.format} referens={matt.referens} />
-      <LagVal lag={ovriga} markerade={markerade} vaxla={vaxla} />
+      {helSerie && <LagVal lag={ovriga} markerade={markerade} vaxla={vaxla} />}
       <p className="mc-note">
-        En linje per lag, räknat på lagets egna matcher. {matt.not}
+        {helSerie
+          ? 'En linje per lag, räknat på lagets egna matcher.'
+          : 'Seriens övriga matcher finns inte för den här säsongen, så bara IF Björklöven visas.'}
+        {' '}{matt.not}
         {' '}<Formel till={matt.formel} />
       </p>
     </section>

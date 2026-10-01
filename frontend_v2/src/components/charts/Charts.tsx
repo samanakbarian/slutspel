@@ -630,8 +630,14 @@ export function LagKurvor({
         aria-label={`Över tid för seriens ${serier.length} lag. ${lyfta.map(s => `${s.team} ${sista(s.varden) != null ? format(sista(s.varden) as number) : '–'}`).join('. ')}.`}>
         <line className="rl-grid" x1={L} y1={y(hi)} x2={L + plotW} y2={y(hi)} />
         <line className="rl-grid" x1={L} y1={y(lo)} x2={L + plotW} y2={y(lo)} />
-        <text className="rl-tick" x={L - 5} y={y(hi) + 3} textAnchor="end">{format(hi)}</text>
-        <text className="rl-tick" x={L - 5} y={y(lo) + 3} textAnchor="end">{format(lo)}</text>
+        {/* Ytterlägena skrivs inte när de ligger på referenslinjen: då
+            krockar etiketterna, och referensen säger redan var vi är. */}
+        {(referens == null || Math.abs(y(hi) - y(referens)) > 12) && (
+          <text className="rl-tick" x={L - 5} y={y(hi) + 3} textAnchor="end">{format(hi)}</text>
+        )}
+        {(referens == null || Math.abs(y(lo) - y(referens)) > 12) && (
+          <text className="rl-tick" x={L - 5} y={y(lo) + 3} textAnchor="end">{format(lo)}</text>
+        )}
         {referens != null && (
           <>
             <line className="rl-ref" x1={L} y1={y(referens)} x2={L + plotW} y2={y(referens)} />

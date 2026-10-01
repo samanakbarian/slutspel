@@ -349,7 +349,7 @@ function delar(b: MatchensBasta): string[] {
   if (p.sog) ut.push(`${p.sog} skott`);
   if (p.gf || p.ga) {
     const pm = (p.gf || 0) - (p.ga || 0);
-    ut.push(`${pm > 0 ? '+' : pm < 0 ? '\u2212' : '±'}${Math.abs(pm)} på isen`);
+    ut.push(`${pm > 0 ? '+' : pm < 0 ? '\u2212' : '±'}${Math.abs(pm)}`);
   }
   if ((p.fow || 0) + (p.fol || 0) >= 5) ut.push(`${p.fow}–${p.fol} tekningar`);
   if (p.pt) ut.push(`${p.pt} ${p.pt === 1 ? 'utvisning' : 'utvisningar'}`);
