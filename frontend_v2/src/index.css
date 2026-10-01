@@ -3242,3 +3242,24 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   border: 1px solid rgba(172, 199, 186, 0.14); border-radius: 999px; padding: 0.1rem 0.5rem;
 }
 .mb-tal { font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+
+/* Tekningar per spelare: stapelns längd är antalet, fyllnaden de vunna. */
+.tk-lag { margin-top: 0.6rem; }
+.tk-lag + .tk-lag { margin-top: 1rem; }
+.tk-huvud { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+.tk-huvud .tk-vi { color: var(--brand-green-light); }
+.tk-summa { font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; font-size: 0.74rem; }
+.tk-rad { display: grid; grid-template-columns: 6.5rem 1fr 4.6rem; gap: 0.5rem; align-items: center; padding: 0.22rem 0; font-size: 0.78rem; }
+.tk-namn { color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-namn a { color: inherit; text-decoration: none; }
+.tk-stapel { display: block; height: 10px; border-radius: 3px; background: rgba(172, 199, 186, 0.16); overflow: hidden; }
+.tk-stapel i { display: block; height: 100%; background: var(--text-secondary); }
+.tk-stapel i.tk-vi { background: var(--data-for); }
+.tk-tal { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tk-tal em { font-style: normal; font-weight: 500; color: var(--text-muted); margin-left: 0.35rem; font-size: 0.7rem; }
+
+/* Skott per spelare: en prick per skott, målen i guld. */
+.sk-rad { display: grid; grid-template-columns: 6.5rem 1fr 2rem; gap: 0.5rem; align-items: center; padding: 0.24rem 0; font-size: 0.78rem; }
+.sk-prickar { display: flex; flex-wrap: wrap; gap: 4px; }
+.sk-prickar i { width: 11px; height: 11px; border-radius: 50%; background: rgba(27, 175, 122, 0.35); box-shadow: inset 0 0 0 1.5px var(--data-for); }
+.sk-prickar i.sk-mal { background: var(--brand-gold); box-shadow: none; }

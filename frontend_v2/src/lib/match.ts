@@ -173,6 +173,8 @@ export type MatchReport = {
   context?: MatchContext | null;
   /** Matchens tre bästa enligt GameScore, båda lagen. Saknas i äldre API. */
   best?: MatchensBasta[];
+  /** Tekningar per spelare, båda lagen, vårt lag först. Saknas i äldre API. */
+  faceoffs?: { name: string; team: string | null; is_ours: boolean; won: number; lost: number }[];
 };
 
 export type MatchensBasta = {
