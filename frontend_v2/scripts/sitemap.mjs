@@ -101,6 +101,7 @@ async function matcher() {
         if (!g.game_id || !/\d+\s*-\s*\d+/.test(g.result || '')) continue;
         rader.set(String(g.game_id), [
           `/matcher/${g.game_id}`, 'monthly', '0.6', String(g.match_date || '').slice(0, 10),
+          { hemma: g.home_team, borta: g.away_team, resultat: g.result },
         ]);
         n++;
       }
@@ -131,6 +132,12 @@ if (!rapporter.length) {
     process.exit(0);
   }
 }
+
+// Matcherna till scripts/sidor.mjs, som skriver en HTML-fil per rapport efter
+// bygget. Filen ligger utanför repot (.gitignore).
+await fs.writeFile(new URL('./.matcher.json', import.meta.url), JSON.stringify(
+  rapporter.map(([vag, , , datum, m]) => ({ vag, datum, ...m })),
+));
 
 const alla = [...STATISKA, ...rapporter];
 skriv(`sitemap.xml: ${alla.length} adresser`);
