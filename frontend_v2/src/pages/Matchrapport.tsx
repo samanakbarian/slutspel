@@ -341,7 +341,6 @@ function Namn({ namn, till, children }: { namn: string | null; till: TillSpelare
 /** Det som gav poängen, i ord. Bara delar som finns, så raden hålls kort. */
 function delar(b: MatchensBasta): string[] {
   const p = b.parts;
-  if (b.goalie) return [`${p.sv} räddningar`, `${p.ga} insläppta`];
   const ut: string[] = [];
   if (p.g) ut.push(`${p.g} mål`);
   const a = (p.a1 || 0) + (p.a2 || 0);
@@ -364,8 +363,11 @@ function delar(b: MatchensBasta): string[] {
  * avståndet till den bästa och raden under vad som gav poängen — utan den
  * vore talet en svart låda.
  */
-function MatchensBastaKort({ best, till }: { best: MatchensBasta[] | undefined; till: TillSpelare }) {
-  if (!best || best.length === 0) return null;
+function MatchensBastaKort({ best: alla, till }: { best: MatchensBasta[] | undefined; till: TillSpelare }) {
+  // Bara utespelare. API:t räknar inte längre målvakter, men ett svar ur
+  // cachen från före ändringen kan ha dem kvar.
+  const best = (alla || []).filter(b => !b.goalie);
+  if (best.length === 0) return null;
   const max = Math.max(...best.map(b => b.score), 0.01);
   const komma = (v: number) => v.toFixed(2).replace('.', ',');
   const utanRapport = best.some(b => !b.full);
@@ -379,9 +381,9 @@ function MatchensBastaKort({ best, till }: { best: MatchensBasta[] | undefined; 
             <span className="mb-plats">{i + 1}</span>
             <div className="mb-mitt">
               <span className="mb-namn">
-                {till && b.is_ours && !b.goalie ? <Link to={till(b.name)}>{humanName(b.name)}</Link> : humanName(b.name)}
+                {till && b.is_ours ? <Link to={till(b.name)}>{humanName(b.name)}</Link> : humanName(b.name)}
                 <em className={b.is_ours ? 'mb-vi' : ''}>
-                  {(b.team || '')}{b.goalie ? ' · MV' : ''}
+                  {b.team || ''}
                 </em>
               </span>
               <span className="mb-stapel"><i className={b.is_ours ? 'mb-vi' : ''}

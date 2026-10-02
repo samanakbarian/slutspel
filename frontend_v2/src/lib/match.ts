@@ -190,9 +190,10 @@ export type MatchensBasta = {
   name: string;
   team: string | null;
   is_ours: boolean;
+  /** Alltid falskt sedan målvakterna togs bort ur GameScore. */
   goalie: boolean;
   score: number;
-  /** Utespelare: g, a1, a2, sog, fow, fol, gf, ga, pt. Målvakt: sv, ga. */
+  /** g, a1, a2, sog, fow, fol, gf, ga, pt. */
   parts: Record<string, number>;
   /** Falskt när matchrapporten saknas: då är skott och tekningar inte med. */
   full: boolean;
