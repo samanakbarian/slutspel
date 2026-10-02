@@ -569,6 +569,14 @@ a {
 
 .mc-note { margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted); }
 
+/* Preliminärt protokoll. Gul, inte röd: inget är fel, det är bara inte
+   färdigt än. */
+.mr-prelim {
+  margin: 0.5rem 0 0;
+  font-size: 0.7rem;
+  color: var(--impact-warning);
+}
+
 /* ── Facit: poängen som hjältesiffra, resultaten som stapel ── */
 /* Proportionella siffror, inte tabular: i 3 rem ger tabular varje tecken
    nollans bredd och "119" blir glest. Tabular hör hemma i kolumner. */

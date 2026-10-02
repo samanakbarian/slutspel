@@ -1085,6 +1085,12 @@ export function Matchrapport() {
           {outcome}{extra ? (periods.length > 4 ? ' efter straffar' : ' efter förlängning') : ''}
           {data.spectators ? ` · ${data.spectators.toLocaleString('sv-SE')} åskådare` : ''}
         </p>
+        {/* Står högst upp därför att ett halvskrivet protokoll rör allt på
+            sidan — skott, tekningar, GameScore, målvaktsraderna. En markör
+            per kort hade blivit fyra meningar om samma sak. */}
+        {data.provisional && (
+          <p className="mr-prelim">Preliminärt — Swehockey skrev fortfarande på protokollet.</p>
+        )}
       </section>
 
       <Guard name="Matchens bästa"><MatchensBastaKort best={data.best} till={till} /></Guard>

@@ -152,6 +152,15 @@ export type MatchContext = {
 export type MatchReport = {
   status: string;
   error?: string;
+  /**
+   * Sant när Swehockey fortfarande skrev på protokollet när vi läste det.
+   * Siffrorna är då inte fel, bara inte färdiga — 1 oktober stod Forsberg på
+   * två skott i vår kopia och tre i den färdiga. Saknas för allt som skördats
+   * innan fältet fanns.
+   */
+  provisional?: boolean | null;
+  /** Swehockeys egen redigeringstid, svensk lokaltid. */
+  source_updated_at?: string | null;
   game_id: number;
   date: string;
   time?: string | null;
