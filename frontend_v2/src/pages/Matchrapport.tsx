@@ -363,7 +363,9 @@ function delar(b: MatchensBasta): string[] {
  * avståndet till den bästa och raden under vad som gav poängen — utan den
  * vore talet en svart låda.
  */
-function MatchensBastaKort({ best: alla, till }: { best: MatchensBasta[] | undefined; till: TillSpelare }) {
+function MatchensBastaKort({ best: alla, till, preliminar }: {
+  best: MatchensBasta[] | undefined; till: TillSpelare; preliminar: boolean;
+}) {
   // Bara utespelare. API:t räknar inte längre målvakter, men ett svar ur
   // cachen från före ändringen kan ha dem kvar.
   const best = (alla || []).filter(b => !b.goalie);
@@ -375,6 +377,9 @@ function MatchensBastaKort({ best: alla, till }: { best: MatchensBasta[] | undef
     <section className="mr-card">
       <p className="mr-kicker">GameScore</p>
       <h2 className="mr-title">Matchens bästa</h2>
+      {/* Resultatet ändras sällan när protokollet skrivs klart, men skott,
+          tekningar och assist gör det — och då också ordningen här. */}
+      {preliminar && <p className="mr-prelim">Preliminärt — Swehockey skrev fortfarande på protokollet när datan hämtades.</p>}
       <div className="mb-lista">
         {best.map((b, i) => (
           <div className={`mb-rad${i === 0 ? ' mb-ett' : ''}`} key={b.name}>
@@ -1087,15 +1092,9 @@ export function Matchrapport() {
           {outcome}{extra ? (periods.length > 4 ? ' efter straffar' : ' efter förlängning') : ''}
           {data.spectators ? ` · ${data.spectators.toLocaleString('sv-SE')} åskådare` : ''}
         </p>
-        {/* Står högst upp därför att ett halvskrivet protokoll rör allt på
-            sidan — skott, tekningar, GameScore, målvaktsraderna. En markör
-            per kort hade blivit fyra meningar om samma sak. */}
-        {data.provisional && (
-          <p className="mr-prelim">Preliminärt — Swehockey skrev fortfarande på protokollet.</p>
-        )}
       </section>
 
-      <Guard name="Matchens bästa"><MatchensBastaKort best={data.best} till={till} /></Guard>
+      <Guard name="Matchens bästa"><MatchensBastaKort best={data.best} till={till} preliminar={!!data.provisional} /></Guard>
       <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []}
         goals={data.goals || []} penalties={data.penalties || []} /></Guard>
       <Guard name="Sammanhang"><Kontext
