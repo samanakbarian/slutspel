@@ -512,10 +512,12 @@ const SKATER_COLUMNS: { key: SortKey; label: string; left?: boolean; desc: boole
   { key: 'g', label: 'M', desc: true, title: 'Mål' },
   { key: 'a', label: 'A', desc: true, title: 'Assist' },
   { key: 'p', label: 'P', desc: true, title: 'Poäng' },
-  { key: 'ppg', label: 'P/M', desc: true, title: 'Poäng per match' },
-  { key: 'pim', label: 'PIM', desc: true, title: 'Utvisningsminuter' },
+  // Plus/minus direkt efter poängen, så det syns utan att skrolla i sidled
+  // på mobilen. Poäng per match går att räkna ut ur GP och P och står sist.
   { key: 'pm', label: '+/-', desc: true, title: 'Plus/minus: mål för minus mål emot i lika styrka och underläge' },
   { key: 'onice', label: 'På is', desc: true, title: 'Samma sak men med powerplay inräknat' },
+  { key: 'pim', label: 'PIM', desc: true, title: 'Utvisningsminuter' },
+  { key: 'ppg', label: 'P/M', desc: true, title: 'Poäng per match' },
 ];
 
 /**
@@ -653,10 +655,10 @@ function SkaterTable({
                 <td>{s.g}</td>
                 <td>{s.a}</td>
                 <td className="mc-pts">{s.p}</td>
-                <td>{s.ppg}</td>
-                <td>{s.pim}</td>
                 <td>{s.pm || '–'}</td>
                 {hasOnIce && <td>{oi ? (oi.diff > 0 ? `+${oi.diff}` : oi.diff) : '–'}</td>}
+                <td>{s.pim}</td>
+                <td>{s.ppg}</td>
                 {showTeam && <td>{shortTeam(s.team)}</td>}
                 <td>{s.pos || '–'}</td>
               </tr>
