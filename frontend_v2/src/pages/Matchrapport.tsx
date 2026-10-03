@@ -397,8 +397,8 @@ function MatchensBastaKort({ best: alla, till }: { best: MatchensBasta[] | undef
         ))}
       </div>
       <p className="mr-note">
-        GameScore väger ihop mål, assist, skott, tekningar, utvisningar och mål för och emot på
-        isen i lika styrka. För målvakter räddningar och insläppta mål.
+        GameScore väger ihop utespelarnas mål, assist, skott, tekningar, utvisningar och mål för
+        och emot på isen i lika styrka.
         {utanRapport && ' Matchrapporten saknas än, så skott och tekningar är inte med.'}{' '}
         <Link className="md-lank" to="/metod#gamescore">Formel</Link>
       </p>
