@@ -584,7 +584,7 @@ function Boxscore({ skaters, squad, till }: { skaters: Skater[] | undefined; squ
                     <td>{p.shots ?? '–'}</td>
                     <td>
                       {p.faceoffs_won != null && p.faceoffs_won + (p.faceoffs_lost || 0) > 0
-                        ? `${p.faceoffs_won}/${p.faceoffs_won + (p.faceoffs_lost || 0)}`
+                        ? `${p.faceoffs_won}–${p.faceoffs_lost || 0}`
                         : '–'}
                     </td>
                   </>
