@@ -23,28 +23,48 @@ function Linje({ teams, k, higher, snitt }: { teams: LeagueTeam[]; k: string; hi
   if (vals.length < 2) return null;
   const lo = Math.min(...vals);
   const hi = Math.max(...vals);
-  const W = 300, H = 18, P = 7;
+  const W = 300, P = 7, STEG = 9;
   const x = (v: number) => {
     const f = hi === lo ? 0.5 : (v - lo) / (hi - lo);
     return P + (higher ? f : 1 - f) * (W - 2 * P);
   };
-  const oss = teams.find(t => t.is_ours);
+
+  // Lag med samma värde hamnade på samma punkt, och fjorton lag kunde se ut
+  // som elva. Varje prick får därför en egen nivå: mitten om den är ledig,
+  // annars strax ovanför eller under, tills den inte rör en granne.
+  const prickar = teams
+    .filter(t => t.values[k] != null)
+    .map(t => ({ t, cx: x(t.values[k] as number), r: t.is_ours ? 5 : 3, niva: 0 }))
+    // Vårt lag placeras först och står alltid på linjen; de andra viker undan.
+    .sort((a, b) => Number(b.t.is_ours) - Number(a.t.is_ours) || a.cx - b.cx);
+  const placerade: typeof prickar = [];
+  for (const pr of prickar) {
+    for (const n of [0, -1, 1, -2, 2, -3, 3, -4, 4]) {
+      const krock = placerade.some(q => q.niva === n && Math.abs(q.cx - pr.cx) < q.r + pr.r + 1);
+      if (!krock) { pr.niva = n; break; }
+    }
+    placerade.push(pr);
+  }
+  const maxNiva = Math.max(0, ...placerade.map(q => Math.abs(q.niva)));
+  const H = 18 + 2 * STEG * maxNiva;
+  const y = (n: number) => H / 2 + n * STEG;
+
   return (
     <svg className="se-linje" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
       <line className="se-spar" x1={P} x2={W - P} y1={H / 2} y2={H / 2} />
       {snitt != null && snitt >= lo && snitt <= hi && (
-        <line className="se-snitt" x1={x(snitt)} x2={x(snitt)} y1={3} y2={H - 3} />
+        <line className="se-snitt" x1={x(snitt)} x2={x(snitt)} y1={H / 2 - 6} y2={H / 2 + 6} />
       )}
-      {teams.filter(t => !t.is_ours && t.values[k] != null).map(t => (
-        <circle key={t.code} className="se-lag" cx={x(t.values[k] as number)} cy={H / 2} r={3}>
-          <title>{`${t.team}: ${formatMatt(k, t.values[k])}`}</title>
+      {placerade.filter(q => !q.t.is_ours).map(q => (
+        <circle key={q.t.code} className="se-lag" cx={q.cx} cy={y(q.niva)} r={q.r}>
+          <title>{`${q.t.team}: ${formatMatt(k, q.t.values[k])}`}</title>
         </circle>
       ))}
-      {oss && oss.values[k] != null && (
-        <circle className="se-vi" cx={x(oss.values[k] as number)} cy={H / 2} r={5}>
-          <title>{`${oss.team}: ${formatMatt(k, oss.values[k])}`}</title>
+      {placerade.filter(q => q.t.is_ours).map(q => (
+        <circle key={q.t.code} className="se-vi" cx={q.cx} cy={y(q.niva)} r={q.r}>
+          <title>{`${q.t.team}: ${formatMatt(k, q.t.values[k])}`}</title>
         </circle>
-      )}
+      ))}
     </svg>
   );
 }
