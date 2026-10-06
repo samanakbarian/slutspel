@@ -14,17 +14,28 @@ import { useLocation } from 'react-router-dom';
  * varje mått inte fångar och läste som en lärobok.
  */
 
-function Matt({ id, namn, formel, rad }: {
+function Matt({ id, namn, formel, rad, matte, matteText }: {
   id: string;
   namn: string;
   formel: string;
   rad?: string;
+  /** Den matematiska formen, dold tills den klickas fram. Formeln ovan är
+   *  den läsbara; den här är för den som vill räkna själv. */
+  matte?: string;
+  matteText?: string;
 }) {
   return (
     <div className="md-matt" id={id}>
       <h3 className="md-namn">{namn}</h3>
       <p className="md-formel">{formel}</p>
       {rad && <p className="mc-note">{rad}</p>}
+      {matte && (
+        <details className="md-matte">
+          <summary>Visa formeln</summary>
+          <pre className="md-formel">{matte}</pre>
+          {matteText && <p className="mc-note">{matteText}</p>}
+        </details>
+      )}
     </div>
   );
 }
@@ -139,11 +150,28 @@ export function MetodSida() {
           namn="Matchprognosen"
           formel="mål hemma ~ Poisson(e^(nivå + hemmafördel + anfall hemma − försvar borta)),  mål borta ~ Poisson(e^(nivå + anfall borta − försvar hemma))"
           rad="Anfall och försvar skattas före varje speldag ur SHL:s matcher de senaste tre åren. En match väger hälften efter 240 dagar, och ett lag dras mot ett snittlag tills det spelat nog. Bygger bara på mål, inte på skott eller målvakter. Inställd på 2016/17–2021/22 och prövad på 2022/23–2025/26."
+          matte={`λh = e^(n + h + Ah − Fb)
+λb = e^(n + Ab − Fh)
+
+P(i–j) = Pois(i; λh) · Pois(j; λb)
+Pois(k; λ) = λᵏ · e^(−λ) / k!
+
+H = Σ P(i–j) för i > j
+X = Σ P(i–i)
+B = Σ P(i–j) för i < j
+
+X′ = X + 0,04 · (1 − X)
+H′ = H · (1 − X′) / (H + B)
+B′ = B · (1 − X′) / (H + B)`}
+          matteText="λ väntade mål, n nivå, h hemmafördel, A anfall och F försvar för hemma- (h) och bortalaget (b). H, X och B är hemmavinst, lika och bortavinst på full tid. Hockey slutar lika oftare än två oberoende Poisson säger, så X′ lägger till skillnaden."
         />
         <Matt
           id="forlangning"
           namn="Sannolikheten för vinst"
           formel="vinst på full tid + förlängning × 53 %"
+          matte={`P(vinst h) = H′ + 0,53 · X′
+P(vinst b) = B′ + 0,47 · X′`}
+          matteText="H′, X′ och B′ från matchprognosen ovan."
           rad="Lika efter full tid blir förlängning. Hemmalaget vann 53 % av de 531 förlängningarna i SHL 2015–2022, bortalaget 47 %. Förlängning och straffar ligger nära slumpen, så modellen räknar inte lagens styrka där."
         />
         <Matt
