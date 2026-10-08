@@ -826,7 +826,7 @@ function outcome(
   goals: Goal[],
   penalties: Penalty[],
 ): { text: string; scored: boolean; even?: boolean } | null {
-  if (![2, 4, 5].includes(pen.minutes)) return null;
+  if (!ger_pp(pen)) return null;
   // Sammanfallande utvisningar: får båda lagen en vid samma tid spelas det
   // fyra mot fyra, och ingen har övertaget. Att skriva "Powerplay: inget mål"
   // hade påstått ett numerärt läge som aldrig fanns.
@@ -846,20 +846,28 @@ function outcome(
   return { text: `${hit.time} ${humanName(hit.scorer)}`, scored: true };
 }
 
+/** Straff som ger motståndaren powerplay. 10 minuter och game misconduct
+ *  (20) gör det inte: spelaren sitter men laget är fullt. Samma regel som
+ *  powerplaytillfällena i API:t. */
+const ger_pp = (p: Penalty) => [2, 4, 5].includes(p.minutes);
+
+/**
+ * "varav 20 game misconduct". Ett game misconduct räknas som 20 minuter i den
+ * officiella statistiken (Swehockey och SHL), men laget spelar fullt. Utan
+ * förklaring ser 5 + 20 ut som ett fel i summan.
+ */
+function varav(list: Penalty[]): string {
+  const gm = list.filter(p => /game misconduct|matchstraff/i.test(p.type || '')).reduce((s, p) => s + (p.minutes || 0), 0);
+  const tio = list.filter(p => p.minutes === 10 && !/game misconduct/i.test(p.type || '')).reduce((s, p) => s + p.minutes, 0);
+  const delar = [gm ? `${gm} game misconduct` : '', tio ? `${tio} misconduct` : ''].filter(Boolean);
+  return delar.length ? `varav ${delar.join(' och ')}` : '';
+}
+
 function Penalties({ penalties, goals }: { penalties: Penalty[]; goals: Goal[] }) {
   if (penalties.length === 0) return null;
   const ours = penalties.filter(p => isOurs(p.team_code));
   const theirs = penalties.filter(p => !isOurs(p.team_code));
   const pim = (list: Penalty[]) => list.reduce((s, p) => s + (p.minutes || 0), 0);
-  // Ett game misconduct räknas som 20 minuter i den officiella statistiken
-  // (Swehockey och SHL), men laget spelar fullt. Utan förklaring ser 5 + 20
-  // ut som ett fel i summan.
-  const varav = (list: Penalty[]) => {
-    const gm = list.filter(p => /game misconduct|matchstraff/i.test(p.type || '')).reduce((s, p) => s + (p.minutes || 0), 0);
-    const tio = list.filter(p => p.minutes === 10 && !/game misconduct/i.test(p.type || '')).reduce((s, p) => s + p.minutes, 0);
-    const delar = [gm ? `${gm} game misconduct` : '', tio ? `${tio} misconduct` : ''].filter(Boolean);
-    return delar.length ? `varav ${delar.join(' och ')}` : '';
-  };
 
   return (
     <section className="mr-card">
@@ -937,8 +945,8 @@ function LagMotLag({
   //
   // Utvisningar utan minuter ar straffslag och lagstraff. De ger inget spel i
   // numerart overlage och far darfor inte raknas som tillfallen.
-  const vartPp = penalties.filter(p => !isOurs(p.team_code) && p.minutes > 0).length;
-  const derasPp = penalties.filter(p => isOurs(p.team_code) && p.minutes > 0).length;
+  const vartPp = penalties.filter(p => !isOurs(p.team_code) && ger_pp(p)).length;
+  const derasPp = penalties.filter(p => isOurs(p.team_code) && ger_pp(p)).length;
   const vartPpMal = goals.filter(g => isOurs(g.team_code) && g.is_power_play).length;
   const derasPpMal = goals.filter(g => !isOurs(g.team_code) && g.is_power_play).length;
   const vartUnderlagsmal = goals.filter(g => isOurs(g.team_code) && g.is_short_handed).length;
@@ -985,6 +993,12 @@ function LagMotLag({
       {rad('Räddningsprocent', v.save_pct ?? 0, m.save_pct ?? 0, pct(v.save_pct), pct(m.save_pct))}
       {tekningar && rad('Tekningar', vunna, forlorade, String(vunna), String(forlorade))}
       {rad('Utvisningsminuter', v.pim ?? 0, m.pim ?? 0, tal(v.pim), tal(m.pim))}
+      {(() => {
+        const vi = varav(penalties.filter(p => isOurs(p.team_code)));
+        const de = varav(penalties.filter(p => !isOurs(p.team_code)));
+        if (!vi && !de) return null;
+        return <div className="mr-pimnot"><span>{viHemma ? vi : de}</span><span>{viHemma ? de : vi}</span></div>;
+      })()}
       {specialteam && (
         <>
           {rad('Powerplay', vartPp > 0 ? vartPpMal / vartPp : 0, derasPp > 0 ? derasPpMal / derasPp : 0,

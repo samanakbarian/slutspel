@@ -147,7 +147,7 @@ type Modules = {
   };
   special_teams?: { pp_goals: number; pp_opportunities: number; pp_pct: number; pk_goals_against: number; pk_times: number; pk_pct: number; total_pim: number; avg_pim_per_game: number; special_teams_index: number };
   attendance?: { avg: number; max: number; min: number; home_games: number; trend?: { date: string; opponent: string; spectators: number }[] };
-  penalty_breakdown?: { by_period: { period: number; count: number }[]; most_penalized: { name: string; count: number; minutes: number }[] };
+  penalty_breakdown?: { by_period: { period: number; count: number }[]; most_penalized: { name: string; count: number; minutes: number; misconduct_minutes?: number }[] };
   game_state?: {
     lead_after_1: StateRecord; trail_after_1: StateRecord; tied_after_1: StateRecord;
     lead_after_2: StateRecord; trail_after_2: StateRecord; tied_after_2: StateRecord;
@@ -2378,7 +2378,8 @@ function Utveckling({
             <>
               <p className="mc-kicker st-sub">Mest utvisade</p>
               {pen.most_penalized.slice(0, 5).map(p => (
-                <KV key={p.name} label={humanName(p.name)} value={`${p.minutes} min`} hint={`${p.count} utvisningar`} />
+                <KV key={p.name} label={humanName(p.name)} value={`${p.minutes} min`}
+                  hint={`${p.count} ${p.count === 1 ? 'utvisning' : 'utvisningar'}${p.misconduct_minutes ? `, plus ${p.misconduct_minutes} min ${p.misconduct_minutes === 10 ? 'misconduct' : 'game misconduct'}` : ''}`} />
               ))}
             </>
           )}
