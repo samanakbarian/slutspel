@@ -817,14 +817,16 @@ function Goals({ goals, squad, till }: { goals: Goal[]; squad: MatchReport['squa
  * eller ett mål faller. Ett mål inom utvisningens minuter, gjort av det lag
  * som hade övertaget, är alltså utfallet av just den här utvisningen.
  * Lagstraff och straffslag har noll minuter och ger inget spel i numerärt
- * överläge — de får ingen rad.
+ * överläge — de får ingen rad. Detsamma gäller 10 minuter och game
+ * misconduct (20): spelaren sitter men laget är fullt. Bara 2, 4 och 5 ger
+ * powerplay, samma regel som powerplaytillfällena i API:t.
  */
 function outcome(
   pen: Penalty,
   goals: Goal[],
   penalties: Penalty[],
 ): { text: string; scored: boolean; even?: boolean } | null {
-  if (!pen.minutes) return null;
+  if (![2, 4, 5].includes(pen.minutes)) return null;
   // Sammanfallande utvisningar: får båda lagen en vid samma tid spelas det
   // fyra mot fyra, och ingen har övertaget. Att skriva "Powerplay: inget mål"
   // hade påstått ett numerärt läge som aldrig fanns.
