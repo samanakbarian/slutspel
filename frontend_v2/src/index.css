@@ -3289,3 +3289,7 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   overflow-wrap: normal;
   font-size: 0.74rem;
 }
+
+/* "varav 20 game misconduct" under utvisningsstapeln. */
+.mr-pimnot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 0.25rem; font-size: 0.66rem; color: var(--text-muted); }
+.mr-pimnot span:last-child { text-align: right; }

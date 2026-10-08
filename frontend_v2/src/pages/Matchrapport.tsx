@@ -851,6 +851,15 @@ function Penalties({ penalties, goals }: { penalties: Penalty[]; goals: Goal[] }
   const ours = penalties.filter(p => isOurs(p.team_code));
   const theirs = penalties.filter(p => !isOurs(p.team_code));
   const pim = (list: Penalty[]) => list.reduce((s, p) => s + (p.minutes || 0), 0);
+  // Ett game misconduct räknas som 20 minuter i den officiella statistiken
+  // (Swehockey och SHL), men laget spelar fullt. Utan förklaring ser 5 + 20
+  // ut som ett fel i summan.
+  const varav = (list: Penalty[]) => {
+    const gm = list.filter(p => /game misconduct|matchstraff/i.test(p.type || '')).reduce((s, p) => s + (p.minutes || 0), 0);
+    const tio = list.filter(p => p.minutes === 10 && !/game misconduct/i.test(p.type || '')).reduce((s, p) => s + p.minutes, 0);
+    const delar = [gm ? `${gm} game misconduct` : '', tio ? `${tio} misconduct` : ''].filter(Boolean);
+    return delar.length ? `varav ${delar.join(' och ')}` : '';
+  };
 
   return (
     <section className="mr-card">
@@ -863,6 +872,9 @@ function Penalties({ penalties, goals }: { penalties: Penalty[]; goals: Goal[] }
           <span style={{ flex: Math.max(pim(ours), 0.4), background: 'var(--impact-warning)' }} />
           <span style={{ flex: Math.max(pim(theirs), 0.4), background: 'rgba(255,255,255,.12)' }} />
         </div>
+        {(varav(ours) || varav(theirs)) && (
+          <div className="mr-pimnot"><span>{varav(ours)}</span><span>{varav(theirs)}</span></div>
+        )}
       </div>
       {penalties.map((p, i) => (
         <div key={i} className={`mr-pen${isOurs(p.team_code) ? ' mr-pen-ours' : ''}`}>
