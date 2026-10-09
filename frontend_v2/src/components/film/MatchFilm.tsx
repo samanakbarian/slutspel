@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FILM_URL } from '../../config/api';
 
 /**
@@ -16,6 +17,7 @@ type Meta = { game_id: number; generated_at: string; duration: number; home_team
 export function MatchFilm({ gameId }: { gameId: string }) {
   const [meta, setMeta] = useState<Meta | null>(null);
   const [delar, setDelar] = useState<'' | 'hamtar' | 'kopierad' | 'fel'>('');
+  const [spelar, setSpelar] = useState(false);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -80,17 +82,36 @@ export function MatchFilm({ gameId }: { gameId: string }) {
     }
   };
 
+  // Kompakt i rapporten: en liten stillbild och knapparna. Filmen själv
+  // öppnas i helskärm, annars tar den en hel telefonskärm i flödet.
   return (
     <section className="mr-card mf-kort">
-      <p className="mr-kicker">Matchen på {Math.round(meta.duration)} sekunder</p>
-      <video className="mf-video" src={mp4} poster={poster} controls playsInline preload="none" />
-      <div className="mf-knappar">
-        <button type="button" className="mf-knapp" onClick={spara} disabled={delar === 'hamtar'}>Spara</button>
-        <button type="button" className="mf-knapp" onClick={dela} disabled={delar === 'hamtar'}>Dela</button>
+      <div className="mf-rad">
+        <button type="button" className="mf-tumme" onClick={() => setSpelar(true)} aria-label="Spela matchfilmen">
+          <img src={poster} alt="" loading="lazy" />
+          <span className="mf-play" aria-hidden="true">▶</span>
+        </button>
+        <div className="mf-text">
+          <p className="mr-kicker">Matchen på {Math.round(meta.duration)} sekunder</p>
+          <div className="mf-knappar">
+            <button type="button" className="mf-knapp" onClick={() => setSpelar(true)}>Spela</button>
+            <button type="button" className="mf-knapp mf-knapp-svag" onClick={spara} disabled={delar === 'hamtar'}>Spara</button>
+            <button type="button" className="mf-knapp mf-knapp-svag" onClick={dela} disabled={delar === 'hamtar'}>Dela</button>
+          </div>
+          {delar === 'hamtar' && <p className="mr-note">Hämtar filmen…</p>}
+          {delar === 'kopierad' && <p className="mr-note">Länken är kopierad.</p>}
+          {delar === 'fel' && <p className="mr-note">Det gick inte just nu. Försök igen.</p>}
+        </div>
       </div>
-      {delar === 'hamtar' && <p className="mr-note">Hämtar filmen…</p>}
-      {delar === 'kopierad' && <p className="mr-note">Länken är kopierad.</p>}
-      {delar === 'fel' && <p className="mr-note">Det gick inte just nu. Försök igen.</p>}
+      {/* Direkt i body: sidans kort har transform för inanimationen, och då
+          blir position: fixed relativ till kortet i stället för skärmen. */}
+      {spelar && createPortal(
+        <div className="mf-helskarm" role="dialog" aria-label="Matchfilmen" onClick={() => setSpelar(false)}>
+          <video className="mf-video" src={mp4} poster={poster} controls autoPlay playsInline onClick={e => e.stopPropagation()} />
+          <button type="button" className="mf-stang" onClick={() => setSpelar(false)} aria-label="Stäng">✕</button>
+        </div>,
+        document.body,
+      )}
     </section>
   );
 }
