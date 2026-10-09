@@ -8,9 +8,6 @@ import { FILM_URL } from '../../config/api';
  * Filmen renderas av backend efter varje skörd (loven-stats-backend/film) och
  * ligger i en publik bucket. Den här komponenten visar den bara om den finns:
  * JSON-filen skrivs sist, så finns den är filmen klar.
- *
- * Dold tills vidare: visas bara med ?film=1 i adressen, så den kan provas på
- * riktiga telefoner innan besökarna ser den.
  */
 type Meta = { game_id: number; generated_at: string; duration: number; home_team: string; away_team: string; result: string };
 

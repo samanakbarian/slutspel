@@ -6,7 +6,6 @@ import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
 import { MatchFilm } from '../components/film/MatchFilm';
-import { filmPaslagen } from '../lib/film';
 import type { Goal, MatchContext, MatchReport, MatchensBasta, Penalty, Skater } from '../lib/match';
 import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, resultat, positionOf, surname } from '../lib/match';
 import { sasongForDatum, spelarsida } from '../lib/lankar';
@@ -1124,7 +1123,7 @@ export function Matchrapport() {
         </p>
       </section>
 
-      {gameId && filmPaslagen() && <Guard name="Matchfilm"><MatchFilm gameId={gameId} /></Guard>}
+      {gameId && <Guard name="Matchfilm"><MatchFilm gameId={gameId} /></Guard>}
       <Guard name="Matchens bästa"><MatchensBastaKort best={data.best} till={till} preliminar={!!data.provisional} /></Guard>
       <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []}
         goals={data.goals || []} penalties={data.penalties || []} /></Guard>
