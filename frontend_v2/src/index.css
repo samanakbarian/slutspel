@@ -3293,3 +3293,28 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 /* "varav 20 game misconduct" under utvisningsstapeln. */
 .mr-pimnot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 0.25rem; font-size: 0.66rem; color: var(--text-muted); }
 .mr-pimnot span:last-child { text-align: right; }
+
+/* ── Matchfilmen ── */
+.mf-video {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  margin: 0.6rem auto 0;
+  aspect-ratio: 9 / 16;
+  background: #000;
+  border-radius: 0.5rem;
+}
+.mf-knappar { display: flex; gap: 0.6rem; justify-content: center; margin-top: 0.8rem; }
+.mf-knapp {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(66, 216, 131, 0.45);
+  background: rgba(66, 216, 131, 0.1);
+  color: var(--brand-green-light);
+  cursor: pointer;
+}
+.mf-knapp:disabled { opacity: 0.5; cursor: default; }
+.mf-knapp:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; }
