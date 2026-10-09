@@ -7,6 +7,8 @@ import { Truppen } from '../components/Truppen';
 import { harSpelOchTur, useLeague } from '../lib/serien';
 import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
+import { Guard } from '../components/Guard';
+import { SasongsFilm } from '../components/film/SasongsFilm';
 import { Andel, FormDots, Jamforelse, LagKurvor, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 import { matcher } from '../lib/sprak';
@@ -191,6 +193,8 @@ type TableTeam = {
   points: number; games_played: number; ranks: (number | null)[];
 };
 type TableHistory = {
+  /** Säsongens nyckel, t.ex. shl_2627. Säsongsfilmen ligger under den. */
+  season_key?: string;
   rounds: number[];
   teams: TableTeam[];
   table_settled_after_last_round?: boolean;
@@ -2248,6 +2252,9 @@ function Utveckling({
           </p>
         </section>
       )}
+
+      {/* Visas bara när backend har gjort en film för säsongen. */}
+      {history?.season_key && <Guard name="Säsongsfilm"><SasongsFilm sasong={history.season_key} /></Guard>}
 
       <TabellenOverTid data={history} state={historyState} markerade={markerade} vaxla={vaxla} />
       {serieTrend && <SerienOverTid data={serieTrend} markerade={markerade} vaxla={vaxla} />}
