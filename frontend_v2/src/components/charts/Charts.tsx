@@ -337,22 +337,38 @@ export function Tornado({
   leftLabel,
   rightLabel,
   wideLabels = false,
+  legend = true,
+  max: fastMax,
 }: {
-  rows: { key: string; label: string; sub?: ReactNode; left: number; right: number }[];
+  /** utanStapel: raden visas med namn men utan staplar, för ett för litet underlag. */
+  rows: { key: string; label: string; sub?: ReactNode; left: number; right: number; utanStapel?: boolean }[];
   leftLabel: string;
   rightLabel: string;
   /** Bredare etikettkolumn. Personnamn ryms inte i den som räcker för "Femma 1". */
   wideLabels?: boolean;
+  /** Av när flera diagram står under varandra och ska dela en förklaring. */
+  legend?: boolean;
+  /** Gemensam skala för flera diagram under varandra. */
+  max?: number;
 }) {
   if (rows.length === 0) return null;
-  const max = Math.max(1, ...rows.flatMap(r => [r.left, r.right]));
+  const max = fastMax ?? Math.max(1, ...rows.filter(r => !r.utanStapel).flatMap(r => [r.left, r.right]));
   return (
     <div className={`tor${wideLabels ? ' tor-wide' : ''}`}>
-      <div className="tor-legend">
-        <span><i style={{ background: 'var(--data-for)' }} />{rightLabel}</span>
-        <span><i style={{ background: 'var(--data-against)' }} />{leftLabel}</span>
-      </div>
-      {rows.map(r => (
+      {legend && (
+        <div className="tor-legend">
+          <span><i style={{ background: 'var(--data-for)' }} />{rightLabel}</span>
+          <span><i style={{ background: 'var(--data-against)' }} />{leftLabel}</span>
+        </div>
+      )}
+      {rows.map(r => r.utanStapel ? (
+        <div className="tor-row" key={r.key}>
+          <div className="tor-name"><b>{r.label}</b></div>
+          <div className="tor-bars" />
+          <div className="tor-diff" />
+          {r.sub && <div className="tor-sub">{r.sub}</div>}
+        </div>
+      ) : (
         <div className="tor-row" key={r.key}>
           <div className="tor-name"><b>{r.label}</b></div>
           <div className="tor-bars">

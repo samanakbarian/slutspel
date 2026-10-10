@@ -3375,3 +3375,4 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .mc-kvall-vann { color: var(--text-primary); font-weight: 600; }
 .mc-kvall-res { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); text-align: center; min-width: 2.6rem; }
 .mc-kvall-ot { font-size: 0.62rem; color: var(--text-muted); }
+

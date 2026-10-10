@@ -178,8 +178,16 @@ type LineRow = {
   rotated?: number;
   players: string[];
 };
+/** En kedja eller ett backpar som de faktiskt spelat ihop, oavsett nummer. */
+type Kombination = {
+  players: string[]; games: number; goals_for: number; goals_against: number;
+  /** Femmans nummer i senaste matchen, null om de inte spelade ihop då. */
+  latest_line: number | null;
+};
 type LineData = {
   lines: LineRow[];
+  /** Saknas i äldre API. */
+  combinations?: { latest_game_id: number | null; latest_date: string | null; forwards: Kombination[]; defence: Kombination[] } | null;
   totals: {
     goals_for: number; goals_against: number;
     without_line_for: number; without_line_against: number;
@@ -1351,6 +1359,7 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
   // något. Kortet ser ut som ett facit och läses som ett facit, så det får
   // vänta tills det finns mål att fördela.
   if (t.goals_for + t.goals_against < 30) return null;
+  if (data.combinations) return <Kombinationer k={data.combinations} t={t} />;
 
   return (
     <section className="mc-card">
@@ -1379,6 +1388,63 @@ function Kedjorna({ data, state }: { data: LineData | null; state: 'idle' | 'loa
       />
       <p className="mc-note">
         Målet räknas till femman med flest spelare på isen.
+        {(t.without_line_for + t.without_line_against) > 0 && (
+          <> {t.without_line_for + t.without_line_against} mål i tom bur räknas inte.</>
+        )}
+      </p>
+    </section>
+  );
+}
+
+/**
+ * Femmorna som de faktiskt spelat ihop.
+ *
+ * Femmans nummer säger vem som stod där en viss kväll, inte över säsongen:
+ * gör tränaren om hamnar olika spelare under samma rubrik, och "Femma 1"
+ * blev ett tal om spelare som aldrig stått på isen ihop. Här är kedjan de tre
+ * forwardsen och backparet de två backarna, var för sig, med sina mål
+ * oavsett vilket nummer de hade. Senaste matchens uppställning står först.
+ * En enda match ihop får ingen stapel — det ser ut som ett facit och är det
+ * inte.
+ */
+function Kombinationer({ k, t }: { k: NonNullable<LineData['combinations']>; t: LineData['totals'] }) {
+  const namn = (r: Kombination) => r.players.map(surname).join(', ');
+  const ihop = (r: Kombination) => (r.games === 1 ? 'ny ihop' : `${r.games} matcher ihop`);
+  const stapel = (r: Kombination, etikett: string) => ({
+    key: r.players.join('|'), label: etikett,
+    sub: <>{namn(r)} <span className="tor-sub-tag">{ihop(r)}</span></>,
+    left: r.goals_against, right: r.goals_for,
+  });
+  const nuF = k.forwards.filter(r => r.latest_line !== null);
+  const nuD = k.defence.filter(r => r.latest_line !== null && r.players.length > 1);
+  const tidigare = k.forwards.filter(r => r.latest_line === null && r.games >= 2);
+  // En skala för hela kortet, så staplarna går att jämföra mellan grupperna.
+  const max = Math.max(1, ...[...nuF, ...nuD, ...tidigare].filter(r => r.games >= 2).flatMap(r => [r.goals_for, r.goals_against]));
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Femmorna</p>
+      <h2 className="mc-title">Målbalans per kedja</h2>
+      <p className="mc-note">Som de stod {k.latest_date ? shortDate(k.latest_date) : 'i senaste matchen'}.</p>
+      <Tornado
+        leftLabel="Mål emot"
+        rightLabel="Mål för"
+        max={max}
+        rows={nuF.map(r => ({ ...stapel(r, `Kedja ${r.latest_line}`), utanStapel: r.games < 2 }))}
+      />
+      {nuD.length > 0 && (
+        <>
+          <p className="mc-kicker st-sub">Backpar</p>
+          <Tornado legend={false} max={max} leftLabel="Mål emot" rightLabel="Mål för" rows={nuD.map(r => ({ ...stapel(r, `Par ${r.latest_line}`), utanStapel: r.games < 2 }))} />
+        </>
+      )}
+      {tidigare.length > 0 && (
+        <>
+          <p className="mc-kicker st-sub">Tidigare kedjor</p>
+          <Tornado legend={false} max={max} leftLabel="Mål emot" rightLabel="Mål för" rows={tidigare.map(r => stapel(r, ''))} />
+        </>
+      )}
+      <p className="mc-note">
+        Målet räknas till femman med flest spelare på isen, och till dess kedja och backpar.
         {(t.without_line_for + t.without_line_against) > 0 && (
           <> {t.without_line_for + t.without_line_against} mål i tom bur räknas inte.</>
         )}
