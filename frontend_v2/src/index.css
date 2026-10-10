@@ -3350,9 +3350,25 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .mc-kvall { margin-top: 0.85rem; padding-top: 0.7rem; border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.08)); }
 .mc-kvall-rubrik { font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem; }
 .mc-kvall-rad {
-  display: grid; grid-template-columns: 1fr auto 1fr 2rem; align-items: center; gap: 0.5rem;
-  padding: 0.22rem 0; font-size: 0.8rem; color: var(--text-secondary);
+  display: grid; grid-template-columns: 1fr auto 1fr 1.6rem 1rem; align-items: center; gap: 0.5rem;
+  width: 100%; padding: 0.3rem 0; font: inherit; font-size: 0.8rem; color: var(--text-secondary);
+  background: none; border: 0; cursor: pointer; text-align: inherit;
 }
+.mc-kvall-rad:focus-visible { outline: 2px solid var(--brand-gold-light); outline-offset: 2px; border-radius: 6px; }
+.mc-kvall-pil { color: var(--text-muted); font-weight: 700; text-align: right; }
+.mc-kvall-oppen .mc-kvall-pil { color: var(--brand-green-light); }
+.mc-kvall-detalj { margin: 0.15rem 0 0.55rem; padding: 0.55rem 0.7rem; border-radius: 9px; background: rgba(255,255,255,0.035); font-size: 0.74rem; color: var(--text-secondary); }
+.mc-kvall-perioder { text-align: center; font-variant-numeric: tabular-nums; color: var(--text-muted); margin-bottom: 0.35rem; }
+.mc-kvall-mal { list-style: none; margin: 0; padding: 0; }
+.mc-kvall-mal li { display: grid; grid-template-columns: 2.8rem 2.2rem 1fr; gap: 0.4rem; padding: 0.12rem 0; }
+.mc-kvall-tid { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.mc-kvall-stall { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.mc-kvall-skytt { min-width: 0; overflow-wrap: anywhere; }
+.mc-kvall-lagnamn { color: var(--text-muted); }
+.mc-kvall-tagg { color: var(--brand-gold); font-size: 0.66rem; }
+.mc-kvall-siffror { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin-top: 0.45rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.06); }
+.mc-kvall-siffror b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.mc-kvall-mv { margin-top: 0.3rem; color: var(--text-muted); }
 .mc-kvall-lag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mc-kvall-borta { text-align: left; }
 .mc-kvall-rad .mc-kvall-lag:first-child { text-align: right; }

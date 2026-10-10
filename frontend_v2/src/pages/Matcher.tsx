@@ -4,6 +4,7 @@ import { API_URL } from '../config/api';
 import { InforMatchen } from '../components/InforMatchen';
 import { resultat } from '../lib/match';
 import { Guard } from '../components/Guard';
+import { SerieRad } from '../components/SerieMatch';
 import { Tabellen } from '../components/Tabellen';
 import { SIDA, TextTvSida, TextTvVaxel, ttLag, useTextTv } from '../components/texttv';
 import type { Formkarta, Standing } from '../components/Tabellen';
@@ -124,14 +125,7 @@ function Kvallen({ omgang }: { omgang: Omgang }) {
   return (
     <div className="mc-kvall">
       <p className="mc-kvall-rubrik">Övriga matcher samma dag</p>
-      {omgang.games.map(g => (
-        <div key={g.game_id} className="mc-kvall-rad">
-          <span className={`mc-kvall-lag${g.home_goals > g.away_goals ? ' mc-kvall-vann' : ''}`}>{kortLag(g.home_team)}</span>
-          <span className="mc-kvall-res">{g.home_goals}–{g.away_goals}</span>
-          <span className={`mc-kvall-lag mc-kvall-borta${g.away_goals > g.home_goals ? ' mc-kvall-vann' : ''}`}>{kortLag(g.away_team)}</span>
-          <span className="mc-kvall-ot">{g.shootout ? 'STR' : g.overtime ? 'ÖT' : ''}</span>
-        </div>
-      ))}
+      {omgang.games.map(g => <SerieRad key={g.game_id} g={g} kortLag={kortLag} />)}
     </div>
   );
 }
