@@ -3345,3 +3345,17 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
   background: rgba(255, 255, 255, 0.15); color: #fff;
   font-size: 1.1rem; cursor: pointer;
 }
+
+/* Övriga matcher samma dag, under senaste matchen på Matcher. */
+.mc-kvall { margin-top: 0.85rem; padding-top: 0.7rem; border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.08)); }
+.mc-kvall-rubrik { font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem; }
+.mc-kvall-rad {
+  display: grid; grid-template-columns: 1fr auto 1fr 2rem; align-items: center; gap: 0.5rem;
+  padding: 0.22rem 0; font-size: 0.8rem; color: var(--text-secondary);
+}
+.mc-kvall-lag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-kvall-borta { text-align: left; }
+.mc-kvall-rad .mc-kvall-lag:first-child { text-align: right; }
+.mc-kvall-vann { color: var(--text-primary); font-weight: 600; }
+.mc-kvall-res { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); text-align: center; min-width: 2.6rem; }
+.mc-kvall-ot { font-size: 0.62rem; color: var(--text-muted); }

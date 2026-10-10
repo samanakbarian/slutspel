@@ -103,7 +103,40 @@ function formatDateShort(dateStr: string): string {
  * matchrapporten det man vill vidare till. En rad i listan langre ner sager
  * inte att det finns nagot mer att lasa.
  */
-function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) {
+/** Seriens övriga matcher samma dag som vår senaste, ur /standings. */
+type Omgang = {
+  date: string;
+  games: { game_id: number; home_team: string; away_team: string; home_goals: number; away_goals: number; overtime: boolean; shootout: boolean }[];
+};
+
+/** "Frölunda HC" -> "Frölunda". Bolagsformen säger inget i en resultatlista. */
+const FORMORD = /^(if|ik|hc|bk|sk|hk|hf|is|aik|hockey)$/i;
+function kortLag(namn: string): string {
+  const delar = namn.replace(/Djurgårdens/, 'Djurgården').trim().split(/\s+/);
+  const kvar = delar.filter(d => !FORMORD.test(d));
+  const ut = kvar.length > 0 ? kvar : delar;
+  // "Växjö Lakers", "Malmö Redhawks": staden räcker.
+  return ut.length > 1 && /lakers|redhawks/i.test(ut[ut.length - 1]) ? ut.slice(0, -1).join(' ') : ut.join(' ');
+}
+
+function Kvallen({ omgang }: { omgang: Omgang }) {
+  if (omgang.games.length === 0) return null;
+  return (
+    <div className="mc-kvall">
+      <p className="mc-kvall-rubrik">Övriga matcher samma dag</p>
+      {omgang.games.map(g => (
+        <div key={g.game_id} className="mc-kvall-rad">
+          <span className={`mc-kvall-lag${g.home_goals > g.away_goals ? ' mc-kvall-vann' : ''}`}>{kortLag(g.home_team)}</span>
+          <span className="mc-kvall-res">{g.home_goals}–{g.away_goals}</span>
+          <span className={`mc-kvall-lag mc-kvall-borta${g.away_goals > g.home_goals ? ' mc-kvall-vann' : ''}`}>{kortLag(g.away_team)}</span>
+          <span className="mc-kvall-ot">{g.shootout ? 'STR' : g.overtime ? 'ÖT' : ''}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LatestMatch({ game, fallback, omgang }: { game: Game; fallback: Game | null; omgang: Omgang | null }) {
   const linkable = game.gameId !== null;
   const label = game.result === 'W' ? 'Vinst'
     : game.result === 'OTL' ? 'Förlust efter övertid'
@@ -136,6 +169,8 @@ function LatestMatch({ game, fallback }: { game: Game; fallback: Game | null }) 
       ) : (
         <p className="mc-note">Matchrapport saknas för den här matchen.</p>
       )}
+      {/* Bara om svaret gäller just den här matchens dag. */}
+      {omgang && omgang.date === game.date.slice(0, 10) && <Kvallen omgang={omgang} />}
     </section>
   );
 }
@@ -257,6 +292,7 @@ function GameRow({ game }: { game: Game }) {
 export function Matcher() {
   const [games, setGames] = useState<Game[]>([]);
   const [standings, setStandings] = useState<Standing[]>([]);
+  const [omgang, setOmgang] = useState<Omgang | null>(null);
   const [seasonName, setSeasonName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -334,6 +370,7 @@ export function Matcher() {
       .then(d => {
         const rows = d?.standings ?? d;
         if (Array.isArray(rows) && rows.length > 1) setStandings(rows);
+        setOmgang(d?.same_day && Array.isArray(d.same_day.games) ? d.same_day : null);
       })
       .catch(() => { /* endpointen svarar inte — inline-raden får stå kvar */ });
 
@@ -383,6 +420,7 @@ export function Matcher() {
         <LatestMatch
           game={played[0]}
           fallback={played[0].gameId === null ? played.find(g => g.gameId !== null) || null : null}
+          omgang={omgang}
         />
       )}
       {next && <Guard name="Inför matchen"><InforMatchen season={season} /></Guard>}
