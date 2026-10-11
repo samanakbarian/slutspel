@@ -19,6 +19,8 @@ type Player = {
   age: number | null;
   note: string | null;
   has_contract_info: boolean;
+  /** Skadad och därför inte i Swehockeys trupp just nu. Saknas i äldre API. */
+  injured?: boolean;
   eliteprospects?: { url: string; confidence: string } | null;
 };
 
@@ -121,6 +123,7 @@ function Kontraktslaget({ players: trupp, utanfor = [], season, updated }: {
       {p.name}
       <small>{posKort((p.position || '').toUpperCase())}</small>
       {p.status === 'NYFÖRVÄRV' && <em>ny</em>}
+      {p.injured && <em className="kl-borta">skadad</em>}
       {borta.has(p.name) && <em className="kl-borta">{borta.get(p.name)}</em>}
     </span>
   );
@@ -163,6 +166,7 @@ function Kontraktslaget({ players: trupp, utanfor = [], season, updated }: {
 function PlayerRow({ p, namn }: { p: Player; namn: string }) {
   const colour = p.status ? STATUS_COLORS[p.status] || 'var(--text-muted)' : 'var(--glass-border)';
   const meta = [
+    p.injured ? 'skadad' : null,
     p.position,
     p.age ? `${p.age} år` : null,
     p.contract_until ? `kontrakt t.o.m. ${p.contract_until}` : null,
