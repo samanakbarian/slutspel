@@ -130,8 +130,7 @@ function Kontraktslaget({ players: trupp, utanfor = [], season, updated }: {
   );
   return (
     <section className="mc-card">
-      <p className="mc-kicker">Kontrakten</p>
-      <h2 className="mc-title">Vem har år kvar</h2>
+      <p className="mc-kicker">Kontraktsstatus</p>
       <div className="kl-stapel" role="img" aria-label={alla.map(a => `${a.n}`).join(', ')}>
         {alla.filter(a => a.n > 0).map(a => (
           <span key={a.key} style={{ flex: a.n, background: a.farg }}>{a.n}</span>
