@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { spelarsida } from '../lib/lankar';
@@ -136,23 +137,40 @@ function Kontraktslaget({ players: trupp, utanfor = [], season, updated }: {
           <span key={a.key} style={{ flex: a.n, background: a.farg }}>{a.n}</span>
         ))}
       </div>
+      {/* Grupperna är hopfällda: stapeln och antalen räcker för överblicken,
+          och namnen tog en hel skärm. */}
       {iGrupp.map(g => g.spelare.length > 0 && (
-        <div key={g.key} className="kl-grupp">
-          <p className="kl-rubrik"><span className="kl-prick" style={{ background: g.farg }} />{g.rubrik} <b>{g.spelare.length}</b><small>{g.hint}</small></p>
+        <Grupp key={g.key} farg={g.farg} rubrik={g.rubrik} antal={g.spelare.length} hint={g.hint}>
           <div className="kl-chips">{[...g.spelare].sort(sortera).map(chip)}</div>
-        </div>
+        </Grupp>
       ))}
       {okanda.length > 0 && (
-        <div className="kl-grupp">
-          <p className="kl-rubrik"><span className="kl-prick" style={{ background: 'var(--glass-border)' }} />Uppgift saknas <b>{okanda.length}</b></p>
+        <Grupp farg="var(--glass-border)" rubrik="Uppgift saknas" antal={okanda.length}>
           <div className="kl-chips kl-svag">{[...okanda].sort(sortera).map(chip)}</div>
-        </div>
+        </Grupp>
       )}
       <p className="mc-note">
         MV målvakt, B back, F forward.
         {updated && ` Kontraktsuppgifterna är från ${new Date(updated).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })}.`}
       </p>
     </section>
+  );
+}
+
+/** En kontraktsgrupp som fälls ut när man trycker på rubriken. */
+function Grupp({ farg, rubrik, antal, hint, children }: {
+  farg: string; rubrik: string; antal: number; hint?: string; children: ReactNode;
+}) {
+  const [oppen, setOppen] = useState(false);
+  return (
+    <div className="kl-grupp">
+      <button type="button" className="kl-rubrik" onClick={() => setOppen(o => !o)} aria-expanded={oppen}>
+        <span className="kl-prick" style={{ background: farg }} />{rubrik} <b>{antal}</b>
+        {hint && <small>{hint}</small>}
+        <span className="kl-pil" aria-hidden="true">{oppen ? '−' : '+'}</span>
+      </button>
+      {oppen && children}
+    </div>
   );
 }
 
