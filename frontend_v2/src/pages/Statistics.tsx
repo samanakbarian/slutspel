@@ -1412,7 +1412,14 @@ function Kombinationer({ k, t }: { k: NonNullable<LineData['combinations']>; t: 
   const ihop = (r: Kombination) => (r.games === 1 ? 'ny ihop' : `${r.games} matcher ihop`);
   const stapel = (r: Kombination, etikett: string) => ({
     key: r.players.join('|'), label: etikett,
-    sub: <>{namn(r)} <span className="tor-sub-tag">{ihop(r)}</span></>,
+    sub: (
+      <>
+        {namn(r)} <span className="tor-sub-tag">{ihop(r)}</span>
+        {/* Utan stapel men inte utan siffror: en match är för lite för en
+            stapel som ser ut som ett facit, men vad som hände ska synas. */}
+        {r.games < 2 && <span className="km-forsta"> {r.goals_for}–{r.goals_against} i första matchen</span>}
+      </>
+    ),
     left: r.goals_against, right: r.goals_for,
   });
   const nuF = k.forwards.filter(r => r.latest_line !== null);
