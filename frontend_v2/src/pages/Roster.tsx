@@ -81,6 +81,65 @@ function groupByPosition(players: Player[]) {
 }
 
 /**
+ * Kontraktsläget: vilka som går ut efter säsongen och vilka som har år kvar.
+ *
+ * "2027" i kontraktsdatan betyder säsongen som slutar våren 2027. Grupperna
+ * räknas mot säsongens slutår, så kortet stämmer även nästa säsong. Spelare
+ * utan uppgift står i en egen grupp — hellre en synlig lucka än en gissning.
+ */
+function Kontraktslaget({ players, season, updated }: { players: Player[]; season?: string; updated?: string | null }) {
+  const slut = Number((season || '').match(/\/(\d{2})\b/)?.[1]);
+  if (!slut) return null;
+  const slutar = 2000 + slut;
+  const grupper = [
+    { key: 'ut', rubrik: 'Går ut efter säsongen', hint: `t.o.m. våren ${slutar}`, farg: 'var(--impact-warning)', test: (y: number) => y <= slutar },
+    { key: 'ett', rubrik: 'Ett år till', hint: `t.o.m. ${slutar + 1}`, farg: 'var(--impact-neutral)', test: (y: number) => y === slutar + 1 },
+    { key: 'fler', rubrik: 'Två år eller mer', hint: `t.o.m. ${slutar + 2} eller längre`, farg: 'var(--impact-positive)', test: (y: number) => y >= slutar + 2 },
+  ];
+  const ar = (p: Player) => Number(p.contract_until) || null;
+  const iGrupp = grupper.map(g => ({ ...g, spelare: players.filter(p => ar(p) !== null && g.test(ar(p)!)) }));
+  const okanda = players.filter(p => ar(p) === null);
+  const alla = [...iGrupp.map(g => ({ key: g.key, n: g.spelare.length, farg: g.farg })), { key: 'okand', n: okanda.length, farg: 'var(--glass-border)' }];
+  const posKort = (pos: string) => (pos.startsWith('G') ? 'MV' : /D$/.test(pos) ? 'B' : 'F');
+  const sortera = (a: Player, b: Player) => (ar(a) ?? 9999) - (ar(b) ?? 9999) || (POS_ORDER[a.position] ?? 99) - (POS_ORDER[b.position] ?? 99) || (a.jersey_number ?? 999) - (b.jersey_number ?? 999);
+  const chip = (p: Player) => (
+    <span key={p.name} className="kl-chip">
+      {p.jersey_number != null && <i>{p.jersey_number}</i>}
+      {p.name}
+      <small>{posKort((p.position || '').toUpperCase())}</small>
+      {p.status === 'NYFÖRVÄRV' && <em>ny</em>}
+    </span>
+  );
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Kontrakten</p>
+      <h2 className="mc-title">Vem har år kvar</h2>
+      <div className="kl-stapel" role="img" aria-label={alla.map(a => `${a.n}`).join(', ')}>
+        {alla.filter(a => a.n > 0).map(a => (
+          <span key={a.key} style={{ flex: a.n, background: a.farg }}>{a.n}</span>
+        ))}
+      </div>
+      {iGrupp.map(g => g.spelare.length > 0 && (
+        <div key={g.key} className="kl-grupp">
+          <p className="kl-rubrik"><span className="kl-prick" style={{ background: g.farg }} />{g.rubrik} <b>{g.spelare.length}</b><small>{g.hint}</small></p>
+          <div className="kl-chips">{[...g.spelare].sort(sortera).map(chip)}</div>
+        </div>
+      ))}
+      {okanda.length > 0 && (
+        <div className="kl-grupp">
+          <p className="kl-rubrik"><span className="kl-prick" style={{ background: 'var(--glass-border)' }} />Uppgift saknas <b>{okanda.length}</b></p>
+          <div className="kl-chips kl-svag">{[...okanda].sort(sortera).map(chip)}</div>
+        </div>
+      )}
+      <p className="mc-note">
+        MV målvakt, B back, F forward.
+        {updated && ` Kontraktsuppgifterna är från ${new Date(updated).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })}.`}
+      </p>
+    </section>
+  );
+}
+
+/**
  * En spelare i truppen.
  *
  * Raden leder till spelarens säsong här på sajten; EliteProspects ligger kvar
@@ -214,6 +273,8 @@ export function Roster() {
           {missingContract > 0 && ` Kontrakt saknas för ${missingContract}.`}
         </p>
       </section>
+
+      <Kontraktslaget players={players} season={data.season} updated={data.contract_data_updated} />
 
       {Object.entries(groups).map(([name, list]) =>
         list.length > 0 ? (
