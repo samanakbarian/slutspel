@@ -31,6 +31,8 @@ type RosterResponse = {
   contract_data_updated?: string | null;
   contract_matches?: number;
   players: Player[];
+  /** Kontrakterade som inte står i Swehockeys trupp, t.ex. långtidsskadade. */
+  outside_roster?: { name: string; position: string; status: string | null; contract_until: string | null; absent: string | null }[];
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -87,7 +89,18 @@ function groupByPosition(players: Player[]) {
  * räknas mot säsongens slutår, så kortet stämmer även nästa säsong. Spelare
  * utan uppgift står i en egen grupp — hellre en synlig lucka än en gissning.
  */
-function Kontraktslaget({ players, season, updated }: { players: Player[]; season?: string; updated?: string | null }) {
+function Kontraktslaget({ players: trupp, utanfor = [], season, updated }: {
+  players: Player[]; utanfor?: NonNullable<RosterResponse['outside_roster']>; season?: string; updated?: string | null;
+}) {
+  // De utanför truppen hör till kontraktsläget men har ingen rad i listan nedan.
+  const borta = new Map(utanfor.map(u => [u.name, u.absent || 'ej i truppen']));
+  const players: Player[] = [
+    ...trupp,
+    ...utanfor.map(u => ({
+      name: u.name, jersey_number: null, position: u.position, games_played: 0, goals: 0, assists: 0, points: 0,
+      status: u.status, contract_until: u.contract_until, age: null, note: null, has_contract_info: true,
+    })),
+  ];
   const slut = Number((season || '').match(/\/(\d{2})\b/)?.[1]);
   if (!slut) return null;
   const slutar = 2000 + slut;
@@ -108,6 +121,7 @@ function Kontraktslaget({ players, season, updated }: { players: Player[]; seaso
       {p.name}
       <small>{posKort((p.position || '').toUpperCase())}</small>
       {p.status === 'NYFÖRVÄRV' && <em>ny</em>}
+      {borta.has(p.name) && <em className="kl-borta">{borta.get(p.name)}</em>}
     </span>
   );
   return (
@@ -274,7 +288,7 @@ export function Roster() {
         </p>
       </section>
 
-      <Kontraktslaget players={players} season={data.season} updated={data.contract_data_updated} />
+      <Kontraktslaget players={players} utanfor={data.outside_roster} season={data.season} updated={data.contract_data_updated} />
 
       {Object.entries(groups).map(([name, list]) =>
         list.length > 0 ? (
