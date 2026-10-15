@@ -3403,3 +3403,20 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .kl-svag .kl-chip { color: var(--text-secondary); background: rgba(255,255,255,0.025); }
 .kl-chip em.kl-borta { color: var(--impact-warning); text-transform: none; letter-spacing: 0; }
 .km-forsta { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* Marginalen: Löven mot en placering, omgång för omgång. */
+.mg-val { display: flex; gap: 0.4rem; margin: 0.4rem 0 0.6rem; }
+.mg-svg { width: 100%; height: auto; display: block; }
+.mg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 1; }
+.mg-axel { fill: var(--text-muted); font-size: 9px; }
+.mg-yta { fill: rgba(27, 175, 122, 0.14); }
+.mg-yta-neg { fill: rgba(217, 89, 38, 0.16); }
+.mg-vara { fill: none; stroke: var(--data-for); stroke-width: 2.4; stroke-linejoin: round; }
+.mg-deras { fill: none; stroke: var(--data-against); stroke-width: 1.8; stroke-dasharray: 5 4; }
+.mg-punkt { fill: var(--data-for); }
+.mg-diff { fill: var(--text-secondary); font-size: 8.5px; font-weight: 700; }
+.mg-slut { fill: var(--data-against); font-size: 10px; font-weight: 700; }
+.mg-slut-vara { fill: var(--data-for); }
+.mg-forklaring { display: flex; gap: 1rem; font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.3rem; }
+.mg-forklaring i { display: inline-block; width: 1.1rem; height: 0; vertical-align: middle; margin-right: 0.35rem; border-top: 2.4px solid var(--data-for); }
+.mg-forklaring .mg-f-deras { border-top: 2px dashed var(--data-against); }
