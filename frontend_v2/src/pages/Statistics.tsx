@@ -9,6 +9,7 @@ import type { LeagueData } from '../lib/serien';
 import { EmptySeason } from '../components/EmptySeason';
 import { Guard } from '../components/Guard';
 import { SasongsFilm } from '../components/film/SasongsFilm';
+import { Marginal } from '../components/Marginal';
 import { Andel, FormDots, Jamforelse, LagKurvor, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 import { matcher } from '../lib/sprak';
@@ -199,6 +200,8 @@ type LineData = {
 type TableTeam = {
   team: string; is_bjk: boolean; final_rank: number;
   points: number; games_played: number; ranks: (number | null)[];
+  /** Poängen efter varje omgång. Saknas i äldre API. */
+  points_by_round?: (number | null)[];
 };
 type TableHistory = {
   /** Säsongens nyckel, t.ex. shl_2627. Säsongsfilmen ligger under den. */
@@ -2323,6 +2326,7 @@ function Utveckling({
       {history?.season_key && <Guard name="Säsongsfilm"><SasongsFilm sasong={history.season_key} /></Guard>}
 
       <TabellenOverTid data={history} state={historyState} markerade={markerade} vaxla={vaxla} />
+      {history && <Guard name="Marginalen"><Marginal rounds={history.rounds} teams={history.teams} /></Guard>}
       {serieTrend && <SerienOverTid data={serieTrend} markerade={markerade} vaxla={vaxla} />}
 
       {/* Sparkline ritar inget under två punkter, och kortet stod då kvar med
