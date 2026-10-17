@@ -1,5 +1,5 @@
 import type { GoalieLine, MatchReport } from '../../lib/match';
-import { isOurs, ordinal, parsePeriods, resultat, surname } from '../../lib/match';
+import { isOurs, ordinal, parsePeriods, ppTillfallen, resultat, surname } from '../../lib/match';
 import { drawMatchCard } from './matchCard';
 import { Delningsbild } from './Delningsbild';
 import type { CardModel, CardStat, CardStep } from './matchCard';
@@ -114,7 +114,7 @@ function statsFor(data: MatchReport, periods: [number, number][], ourSide: 'home
     out.push({ label: 'Skott', value: resultat(t.ours.shots, t.theirs.shots, ourSide === 'home') });
   }
 
-  const ppChances = data.penalties.filter(p => !isOurs(p.team_code) && p.minutes > 0).length;
+  const ppChances = ppTillfallen(data.penalties).vi;
   const ppGoals = data.goals.filter(g => isOurs(g.team_code) && g.is_power_play).length;
   if (ppChances > 0) out.push({ label: 'Powerplay', value: `${ppGoals} av ${ppChances}` });
 

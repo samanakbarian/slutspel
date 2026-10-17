@@ -7,7 +7,7 @@ import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
 import { MatchFilm } from '../components/film/MatchFilm';
 import type { Goal, MatchContext, MatchReport, MatchensBasta, Penalty, Skater } from '../lib/match';
-import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, resultat, positionOf, surname } from '../lib/match';
+import { BJK, humanName, isDefence, isOurs, motSerien, parsePeriods, ppTillfallen, resultat, positionOf, surname } from '../lib/match';
 import { sasongForDatum, spelarsida } from '../lib/lankar';
 import { skrivSidhuvud } from '../lib/sidhuvud';
 import { matcher } from '../lib/sprak';
@@ -946,8 +946,8 @@ function LagMotLag({
   //
   // Utvisningar utan minuter ar straffslag och lagstraff. De ger inget spel i
   // numerart overlage och far darfor inte raknas som tillfallen.
-  const vartPp = penalties.filter(p => !isOurs(p.team_code) && ger_pp(p)).length;
-  const derasPp = penalties.filter(p => isOurs(p.team_code) && ger_pp(p)).length;
+  // Samtidiga utvisningar tar ut varandra, se ppTillfallen.
+  const { vi: vartPp, de: derasPp } = ppTillfallen(penalties);
   const vartPpMal = goals.filter(g => isOurs(g.team_code) && g.is_power_play).length;
   const derasPpMal = goals.filter(g => !isOurs(g.team_code) && g.is_power_play).length;
   const vartUnderlagsmal = goals.filter(g => isOurs(g.team_code) && g.is_short_handed).length;
@@ -992,6 +992,16 @@ function LagMotLag({
       {rad('Skott som blev mål', v.shooting_pct ?? 0, m.shooting_pct ?? 0, pct(v.shooting_pct), pct(m.shooting_pct))}
       {rad('Räddningar', v.saves ?? 0, m.saves ?? 0, tal(v.saves), tal(m.saves))}
       {rad('Räddningsprocent', v.save_pct ?? 0, m.save_pct ?? 0, pct(v.save_pct), pct(m.save_pct))}
+      {(() => {
+        // Lagets räddningsprocent räknar alla skott, även mot tom bur. Målvaktens
+        // i kortet nedanför räknar bara dem han mötte, så de två skiljer sig
+        // efter ett tommål: Lehtinen 92,0 mot lagets 88,5 i Timrå (17 okt).
+        const tomma = (ours: boolean) => goals.filter(g => isOurs(g.team_code) !== ours && (g.score_state || '').includes('ENG')).length;
+        const text = (n: number) => (n ? `inkl. ${n} mål i tom bur` : '');
+        const vi = text(tomma(true)), de = text(tomma(false));
+        if (!vi && !de) return null;
+        return <div className="mr-pimnot"><span>{viHemma ? vi : de}</span><span>{viHemma ? de : vi}</span></div>;
+      })()}
       {tekningar && rad('Tekningar', vunna, forlorade, String(vunna), String(forlorade))}
       {rad('Utvisningsminuter', v.pim ?? 0, m.pim ?? 0, tal(v.pim), tal(m.pim))}
       {(() => {

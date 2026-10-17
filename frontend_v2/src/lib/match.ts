@@ -206,6 +206,36 @@ export function isOurs(teamCode: string | null): boolean {
   return BJK_CODES.includes((teamCode || '').toUpperCase());
 }
 
+/**
+ * Powerplaytillfällen i en match, per lag, som Swehockey och SHL.se räknar
+ * dem. Samma regel som `serien.powerplaytillfallen` i API:t:
+ *
+ * - Bara 2, 4 och 5 minuter ger numerärt överläge.
+ * - Utvisningar som döms samtidigt på båda lagen tar ut varandra. Roughing
+ *   på Genborg och Didier 49:01 mot Timrå (17 okt) gav annars Timrå sex
+ *   tillfällen där SHL.se skriver fem.
+ * - En utvisning när matchen tar slut ger inget tillfälle.
+ *
+ * `vi` är de tillfällen Björklöven fick, alltså motståndarnas utvisningar.
+ */
+export function ppTillfallen(penalties: Penalty[]): { vi: number; de: number } {
+  const slut = penalties.some(p => p.minute > 60) ? 65 : 60;
+  const per = new Map<string, { vi: number; de: number }>();
+  for (const p of penalties) {
+    if (![2, 4, 5].includes(p.minutes) || p.minute >= slut) continue;
+    const c = per.get(p.time) ?? { vi: 0, de: 0 };
+    if (isOurs(p.team_code)) c.de++; else c.vi++;
+    per.set(p.time, c);
+  }
+  let vi = 0, de = 0;
+  for (const c of per.values()) {
+    const lika = Math.min(c.vi, c.de);
+    vi += c.vi - lika;
+    de += c.de - lika;
+  }
+  return { vi, de };
+}
+
 /** Swehockeys namnform är "Efternamn, Förnamn" — vänd till läsbar ordning. */
 export function humanName(n: string | null): string {
   if (!n) return '—';
