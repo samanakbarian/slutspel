@@ -1496,6 +1496,9 @@ a {
 .im-nsforklaring { margin: 0.3rem 0 0; font-size: 0.66rem; }
 .im-nsfonster { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.04em; }
 .im-nsnamn em.im-nsstart { color: var(--text-muted); }
+.im-nskolumner { padding: 0.35rem 0 0; }
+.im-nskol-rutor { text-align: center; }
+.im-nskol-tal { text-align: right; }
 .im-rutor { display: inline-flex; gap: 3px; }
 .im-ruta {
   width: 15px; height: 15px; border-radius: 3px;

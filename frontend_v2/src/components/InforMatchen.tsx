@@ -235,7 +235,13 @@ function Nyckelspelare({ data, opponent }: { data: NextMatch['them_players'] | n
     <div className="im-ns">
       <div className="im-nshead">
         <span className="im-h2hlabel">Att hålla koll på · {opponent}</span>
-        {visaRutor && <span className="im-nsfonster">senaste {n} →</span>}
+      </div>
+      {/* Kolumnrubriker: rutorna är de senaste matcherna, talet till höger
+          hela säsongen. Utan rubriker lästes 4+3 som de senaste fem. */}
+      <div className="im-nsrad im-nskolumner" aria-hidden="true">
+        <span /><span /><span />
+        {visaRutor && <span className="im-nsfonster im-nskol-rutor">senaste {n}</span>}
+        <span className="im-nsfonster im-nskol-tal">i år</span>
       </div>
       {data.players.map(p => (
         <div className="im-nsrad" key={p.name}
