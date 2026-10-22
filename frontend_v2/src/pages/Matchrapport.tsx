@@ -828,14 +828,18 @@ function outcome(
   penalties: Penalty[],
 ): { text: string; scored: boolean; even?: boolean } | null {
   if (!ger_pp(pen)) return null;
-  // Sammanfallande utvisningar: får båda lagen en vid samma tid spelas det
-  // fyra mot fyra, och ingen har övertaget. Att skriva "Powerplay: inget mål"
-  // hade påstått ett numerärt läge som aldrig fanns.
-  const coincidental = penalties.some(
-    o => o !== pen && o.time === pen.time && o.minutes === pen.minutes
-      && isOurs(o.team_code) !== isOurs(pen.team_code),
+  // Sammanfallande utvisningar tar ut varandra parvis: en mot en blir fyra
+  // mot fyra, och ingen har övertaget. Får ena laget fler vid samma tid ger
+  // de överblivna motståndaren powerplay — Kovacs och Niemelä mot Norén
+  // 24:34 mot Malmö (22 okt) var ett par och ett powerplay, inte tre gånger
+  // fyra mot fyra. Vilken av de två som "blev över" säger protokollet inte;
+  // den som står sist i listan får powerplayet.
+  const samtidigt = (vara: boolean) => penalties.filter(
+    o => o.time === pen.time && o.minutes === pen.minutes && isOurs(o.team_code) === vara,
   );
-  if (coincidental) return { text: 'Fyra mot fyra', scored: false, even: true };
+  const egna = samtidigt(isOurs(pen.team_code));
+  const deras = samtidigt(!isOurs(pen.team_code)).length;
+  if (egna.indexOf(pen) < deras) return { text: 'Fyra mot fyra', scored: false, even: true };
   const hit = goals.find(
     g =>
       isOurs(g.team_code) !== isOurs(pen.team_code) &&
