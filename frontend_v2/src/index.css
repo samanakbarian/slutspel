@@ -3477,7 +3477,6 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .ts-tal b { font-size: 1.35rem; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.25; }
 .ts-x { font-size: 0.7rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .ts-sub { margin-top: 1rem; }
-.ts-ingress { margin: 0.15rem 0 0.3rem; font-size: 0.8rem; color: var(--text-secondary); }
 .ts-svg { width: 100%; height: auto; display: block; }
 .ts-yta { fill: rgba(27, 175, 122, 0.14); }
 .ts-yta-neg { fill: rgba(217, 89, 38, 0.16); }
