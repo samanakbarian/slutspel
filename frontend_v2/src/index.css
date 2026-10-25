@@ -3468,3 +3468,4 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .fm-ejmed { color: var(--text-muted); font-size: 0.68rem; font-style: italic; }
 .fm-f-for { background: var(--data-for); border-radius: 2px !important; }
 .fm-f-emot { background: var(--data-against); border-radius: 2px !important; }
+.fm-fonster { margin-left: auto; color: var(--text-muted); }

@@ -98,6 +98,7 @@ export function Formen({ season }: { season: string }) {
       <div className="fm-forklaring">
         <span><i className="fm-f-for" />Lövens skott</span>
         <span><i className="fm-f-emot" />Motståndarnas</span>
+        {games.length > MAX_MATCHER && <span className="fm-fonster">senaste {MAX_MATCHER} matcherna</span>}
       </div>
       <MatchForMatch games={games} k={k} />
 
@@ -130,8 +131,15 @@ export function Formen({ season }: { season: string }) {
  * Skotten match för match: Lövens uppåt, motståndarnas nedåt, resultatet
  * överst. De senaste k matcherna ligger på en ljusare bakgrund.
  */
-function MatchForMatch({ games, k }: { games: Match[]; k: number }) {
-  const W = 340, H = 190, L = 4, R = 4, MITT = 98, SKALA = 1.55;
+// Fler staplar än så blir för smala på en telefon, och resultaten krockar.
+const MAX_MATCHER = 15;
+
+function MatchForMatch({ games: alla, k }: { games: Match[]; k: number }) {
+  const games = alla.slice(-MAX_MATCHER);
+  const W = 340, H = 190, L = 4, R = 4, MITT = 98;
+  // Skalan växer inte förbi ytan: 1,55 punkter per skott, mindre om någon
+  // match haft fler än runt 55 skott åt något håll.
+  const SKALA = Math.min(1.55, 80 / Math.max(1, ...games.map(g => Math.max(g.shots_for, g.shots_against))));
   const steg = (W - L - R) / games.length;
   const bredd = Math.max(6, Math.min(14, steg - 8));
   const fran = games.length - k;
