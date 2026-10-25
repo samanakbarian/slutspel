@@ -14,7 +14,8 @@ type Match = {
   game_id: number; date: string; opponent: string; is_home: boolean;
   goals_for: number; goals_against: number; shots_for: number; shots_against: number;
 };
-type Lag = { team: string; counts: { gf: number; ga: number; sf: number; sa: number } };
+type Lag = { team: string; gp: number; counts: { gf: number; ga: number; sf: number; sa: number } };
+type Tabellrad = { team_name: string; rank: number };
 type Rad = Match & { xFor: number; xEmot: number; xPoang: number; poang: number | null };
 
 const SENASTE = 5;
@@ -42,6 +43,7 @@ function forvantadePoang(a: number, b: number): number {
 export function TurEllerSpel({ season, poang }: { season: string; poang: { date: string; pts: number }[] }) {
   const [games, setGames] = useState<Match[] | null>(null);
   const [lag, setLag] = useState<Lag[] | null>(null);
+  const [tabell, setTabell] = useState<Tabellrad[]>([]);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -49,9 +51,12 @@ export function TurEllerSpel({ season, poang }: { season: string; poang: { date:
     Promise.all([
       fetch(`${API_URL}/api/v1/formen${q}`, { signal: ctrl.signal }).then(r => (r.ok ? r.json() : null)),
       fetch(`${API_URL}/api/v1/league${q}`, { signal: ctrl.signal }).then(r => (r.ok ? r.json() : null)),
+      // Tabellen bara till placeringen bredvid staplarna; saknas den syns de ändå.
+      fetch(`${API_URL}/api/v1/standings${q}`, { signal: ctrl.signal }).then(r => (r.ok ? r.json() : null)).catch(() => null),
     ])
-      .then(([f, l]) => {
+      .then(([f, l, t]) => {
         if (f?.status === 'ok' && l?.status === 'ok') { setGames(f.games); setLag(l.teams); }
+        if (Array.isArray(t?.standings)) setTabell(t.standings);
       })
       .catch(() => { /* kortet syns inte */ });
     return () => ctrl.abort();
@@ -103,6 +108,9 @@ export function TurEllerSpel({ season, poang }: { season: string; poang: { date:
 
       <p className="mc-kicker st-sub ts-sub">Poäng över säsongen</p>
       <Kurvor rader={rader} />
+
+      <p className="mc-kicker st-sub ts-sub">Förväntad målskillnad per match, hela serien</p>
+      <Serien lag={lag} takt={takt} tabell={tabell} />
 
       <p className="mc-note">
         Förväntat är om skotten för och emot hade gått in i seriens snittakt,
@@ -157,5 +165,45 @@ function Kurvor({ rader }: { rader: Rad[] }) {
         <text x={L + 88} y={T + 7} className="mg-axel">förväntade</text>
       </g>
     </svg>
+  );
+}
+
+/**
+ * Alla lag efter förväntad målskillnad per match: skott för minus skott emot,
+ * gånger seriens skottprocent. Placeringen i tabellen står bredvid, så att
+ * man ser vilka som står högre eller lägre än skotten säger.
+ */
+function Serien({ lag, takt, tabell }: { lag: Lag[]; takt: number; tabell: Tabellrad[] }) {
+  const plats = new Map(tabell.map(r => [r.team_name, r.rank]));
+  const rader = lag
+    .map(t => ({ team: t.team, x: t.gp ? ((t.counts.sf - t.counts.sa) * takt) / t.gp : 0, plats: plats.get(t.team) }))
+    .sort((a, b) => b.x - a.x);
+  const max = Math.max(0.5, ...rader.map(r => Math.abs(r.x)));
+  return (
+    <div className="ts-serien" role="table" aria-label="Förväntad målskillnad per match och placering i tabellen">
+      <div className="ts-srad ts-shuvud" role="row">
+        <span role="columnheader" />
+        <span role="columnheader" />
+        <span role="columnheader">per match</span>
+        <span role="columnheader">tabell</span>
+      </div>
+      {rader.map((r, i) => {
+        const vi = /bj[oö]rkl[oö]ven/i.test(r.team);
+        const bredd = (Math.abs(r.x) / max) * 50;
+        return (
+          <div key={r.team} className={`ts-srad${vi ? ' ts-vi' : ''}`} role="row">
+            <span className="ts-snr" role="cell">{i + 1}</span>
+            <span className="ts-snamn" role="cell">{kort(r.team)}</span>
+            <span className="ts-sbar" role="cell" aria-label={`${r.x > 0 ? '+' : ''}${komma(r.x, 2)}`}>
+              <i className="ts-smitt" />
+              <i className={r.x >= 0 ? 'ts-sst ts-sst-p' : 'ts-sst ts-sst-n'}
+                style={r.x >= 0 ? { left: '50%', width: `${bredd}%` } : { right: '50%', width: `${bredd}%` }} />
+              <em className={r.x >= 0 ? 'ts-sval ts-sval-p' : 'ts-sval ts-sval-n'}>{r.x > 0 ? '+' : ''}{komma(r.x, 2)}</em>
+            </span>
+            <span className="ts-splats" role="cell">{r.plats ? `${r.plats}:${r.plats === 1 || r.plats === 2 ? 'a' : 'e'}` : '–'}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
