@@ -3423,3 +3423,48 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .mg-forklaring { display: flex; gap: 1rem; font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.3rem; }
 .mg-forklaring i { display: inline-block; width: 1.1rem; height: 0; vertical-align: middle; margin-right: 0.35rem; border-top: 2.4px solid var(--data-for); }
 .mg-forklaring .mg-f-deras { border-top: 2px dashed var(--data-against); }
+
+/* Formen just nu: senaste matcherna mot resten av säsongen. */
+.fm-svg { width: 100%; height: auto; display: block; margin-top: 0.3rem; }
+.fm-nu-yta { fill: rgba(255,255,255,0.045); }
+.fm-noll { stroke: rgba(255,255,255,0.18); stroke-width: 1; }
+.fm-for { fill: var(--data-for); }
+.fm-emot { fill: var(--data-against); opacity: 0.85; }
+.fm-res { fill: var(--text-muted); font-size: 8.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fm-res-v { fill: var(--text-primary); }
+.fm-axel { fill: var(--text-muted); font-size: 8.5px; }
+.fm-sub { margin-top: 1rem; }
+.fm-forklaring { display: flex; gap: 1rem; font-size: 0.7rem; color: var(--text-secondary); margin: 0.2rem 0 0.4rem; }
+.fm-forklaring i { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 999px; margin-right: 0.35rem; vertical-align: -1px; }
+.fm-p-fore { border: 2px solid var(--text-muted); }
+.fm-p-nu { background: var(--text-primary); }
+.fm-rad { padding: 0.35rem 0 0.15rem; border-top: 1px solid rgba(255,255,255,0.05); }
+.fm-radtopp { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; font-size: 0.8rem; }
+.fm-namn { color: var(--text-secondary); }
+.fm-tal { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-muted); }
+.fm-tal b { color: var(--text-primary); }
+.fm-tal b.fm-battre { color: var(--brand-green-light); }
+.fm-tal b.fm-samre { color: var(--data-against); }
+.fm-hantel { width: 100%; height: auto; display: block; }
+.fm-skala { stroke: rgba(255,255,255,0.08); stroke-width: 2; stroke-linecap: round; }
+.fm-mitt { stroke: rgba(255,255,255,0.22); stroke-width: 1; }
+.fm-stang { stroke: rgba(255,255,255,0.3); stroke-width: 3; }
+.fm-stang-b { stroke: rgba(27,175,122,0.55); }
+.fm-stang-s { stroke: rgba(217,89,38,0.55); }
+.fm-p-fore-c { fill: var(--bg-card-solid); stroke: var(--text-muted); stroke-width: 2; }
+.fm-p-nu-c { fill: var(--text-primary); stroke: var(--bg-card-solid); stroke-width: 2; }
+.fm-p-nu-c.fm-p-b { fill: var(--brand-green-light); }
+.fm-p-nu-c.fm-p-s { fill: var(--data-against); }
+.fm-poang { display: grid; gap: 0.15rem; }
+.fm-prad { display: grid; grid-template-columns: 7.5rem 1fr 1fr; gap: 0.5rem; align-items: center; font-size: 0.76rem; }
+.fm-phuvud { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.fm-pnamn { color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-pcell { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+.fm-pst { height: 8px; border-radius: 4px; flex: none; }
+.fm-pst-fore { background: rgba(255,255,255,0.28); }
+.fm-pst-nu { background: var(--data-for); }
+.fm-pst-noll { background: var(--data-against); width: 4px !important; }
+.fm-ptext { color: var(--text-muted); font-size: 0.68rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fm-ejmed { color: var(--text-muted); font-size: 0.68rem; font-style: italic; }
+.fm-f-for { background: var(--data-for); border-radius: 2px !important; }
+.fm-f-emot { background: var(--data-against); border-radius: 2px !important; }

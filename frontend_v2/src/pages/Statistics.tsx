@@ -10,6 +10,7 @@ import { EmptySeason } from '../components/EmptySeason';
 import { Guard } from '../components/Guard';
 import { SasongsFilm } from '../components/film/SasongsFilm';
 import { Marginal } from '../components/Marginal';
+import { Formen } from '../components/Formen';
 import { Andel, FormDots, Jamforelse, LagKurvor, PairedBar, PeriodBars, RankLines, Sparkline, Tornado } from '../components/charts/Charts';
 import { SIDA, TextTvSida, TextTvVaxel, ttNamn, useTextTv } from '../components/texttv';
 import { matcher } from '../lib/sprak';
@@ -2331,6 +2332,7 @@ function Utveckling({
 
       {/* Visas bara när backend har gjort en film för säsongen. */}
       {history?.season_key && <Guard name="Säsongsfilm"><SasongsFilm sasong={history.season_key} /></Guard>}
+      {history?.season_key && <Guard name="Formen"><Formen season={history.season_key} /></Guard>}
 
       <TabellenOverTid data={history} state={historyState} markerade={markerade} vaxla={vaxla} />
       {history && <Guard name="Marginalen"><Marginal rounds={history.rounds} teams={history.teams} /></Guard>}
