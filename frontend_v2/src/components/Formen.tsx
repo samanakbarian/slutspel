@@ -49,20 +49,6 @@ function summera(ms: Match[]) {
   };
 }
 
-/** Rubriken: det som ändrats mest, i en mening. */
-function rubrik(fore: ReturnType<typeof summera>, nu: ReturnType<typeof summera>): string {
-  const dAndel = nu.andel - fore.andel, dSkjut = nu.skjut - fore.skjut, dRadd = nu.radd - fore.radd;
-  if (Math.abs(dAndel) < 3) {
-    if (dSkjut <= -4 && dRadd <= -3) return 'Samma skottandel, färre mål och fler insläppta';
-    if (dSkjut <= -4) return 'Samma skottandel, färre skott går in';
-    if (dRadd <= -3) return 'Samma skottandel, färre räddningar';
-    if (dSkjut >= 4) return 'Samma skottandel, fler skott går in';
-    if (dRadd >= 3) return 'Samma skottandel, fler räddningar';
-    return 'Formen håller i sig';
-  }
-  return dAndel < 0 ? 'Laget har tappat skotten' : 'Laget har tagit över skotten';
-}
-
 export function Formen({ season }: { season: string }) {
   const [data, setData] = useState<Svar | null>(null);
   const [n, setN] = useState(5);
@@ -86,7 +72,6 @@ export function Formen({ season }: { season: string }) {
   return (
     <section className="mc-card fm-kort">
       <p className="mc-kicker">Formen just nu</p>
-      <h2 className="mc-title">{rubrik(fore, nu)}</h2>
       <div className="mg-val" role="group" aria-label="Antal senaste matcher">
         {val.map(v => (
           <button key={v} type="button" className="opp-chip" aria-pressed={k === v} onClick={() => setN(v)}>
