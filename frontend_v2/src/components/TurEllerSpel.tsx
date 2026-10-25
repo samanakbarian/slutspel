@@ -106,9 +106,7 @@ export function TurEllerSpel({ season, poang }: { season: string; poang: { date:
 
       <p className="mc-note">
         Förväntat är om skotten för och emot hade gått in i seriens snittakt,
-        {` ${komma(takt * 100)} %`}. Skottens kvalitet vet vi inte, bara antalet,
-        så ett lag som skjuter från bra lägen ligger över förväntat utan att det
-        är tur.
+        {` ${komma(takt * 100)} %`}.
       </p>
     </section>
   );
