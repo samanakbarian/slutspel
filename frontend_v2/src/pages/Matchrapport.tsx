@@ -419,13 +419,16 @@ function MatchensBastaKort({ best: alla, till, preliminar }: {
  * den fyllda delen är de vunna. Procent står bara vid fem tekningar eller
  * fler — 1 av 1 är inte 100 procent av något.
  */
-function Tekningar({ rader, till }: { rader: MatchReport['faceoffs']; till: TillSpelare }) {
+function Tekningar({ rader, till, preliminar }: { rader: MatchReport['faceoffs']; till: TillSpelare; preliminar: boolean }) {
   if (!rader || rader.length === 0) return null;
   const max = Math.max(...rader.map(r => r.won + r.lost));
   const lag = [true, false].map(vi => rader.filter(r => r.is_ours === vi)).filter(l => l.length > 0);
   return (
     <section className="mr-card">
       <p className="mr-kicker">Tekningar</p>
+      {/* Det preliminära protokollet har bara en del av tekningarna: 17–16
+          mot Luleå (29 okt) där det fastställda gav 30–22. */}
+      {preliminar && <p className="mr-prelim">Preliminärt: alla tekningar är inte registrerade än.</p>}
       {lag.map(l => {
         const v = l.reduce((n, r) => n + r.won, 0);
         const f = l.reduce((n, r) => n + r.lost, 0);
@@ -465,7 +468,9 @@ function Tekningar({ rader, till }: { rader: MatchReport['faceoffs']; till: Till
  * Våra skott, spelare för spelare: en prick per skott, målen i guld.
  * Motståndarens skott per spelare finns inte i rapporten vi läser.
  */
-function Skott({ skaters, till }: { skaters: Skater[] | undefined; till: TillSpelare }) {
+function Skott({ skaters, till, lagSkott, preliminar }: {
+  skaters: Skater[] | undefined; till: TillSpelare; lagSkott: number | null | undefined; preliminar: boolean;
+}) {
   const rader = (skaters || [])
     .filter(p => (p.shots ?? 0) > 0)
     .sort((a, b) => (b.shots ?? 0) - (a.shots ?? 0) || b.goals - a.goals || a.name.localeCompare(b.name, 'sv'));
@@ -475,6 +480,12 @@ function Skott({ skaters, till }: { skaters: Skater[] | undefined; till: TillSpe
   return (
     <section className="mr-card">
       <p className="mr-kicker">Skott</p>
+      {/* Lagets skott står i summeringen redan medan protokollet skrivs; per
+          spelare kommer de när det fastställs. Mot Luleå (29 okt) stod 12 av
+          22 på spelare. */}
+      {preliminar && lagSkott != null && skott < lagSkott && (
+        <p className="mr-prelim">Preliminärt: {skott} av lagets {lagSkott} skott är registrerade på spelare än.</p>
+      )}
       <div className="tk-huvud">
         <span className="tk-vi">IF Björklöven</span>
         <span className="tk-summa">{skott} skott · {mal} mål</span>
@@ -1156,8 +1167,8 @@ export function Matchrapport() {
       <Matchbild goals={data.goals} totalMin={periods.length > 3 ? 65 : 60} />
       <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
       <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} till={till} /></Guard>
-      <Guard name="Skott"><Skott skaters={data.skaters} till={till} /></Guard>
-      <Guard name="Tekningar"><Tekningar rader={data.faceoffs} till={till} /></Guard>
+      <Guard name="Skott"><Skott skaters={data.skaters} till={till} lagSkott={data.teams?.ours?.shots} preliminar={!!data.provisional} /></Guard>
+      <Guard name="Tekningar"><Tekningar rader={data.faceoffs} till={till} preliminar={!!data.provisional} /></Guard>
       <Guard name="Målvakter"><Malvakter goalies={data.goalies} till={till} /></Guard>
       <Guard name="Uppställning"><Femmorna lineup={data.lineup} squad={data.squad} till={till} /></Guard>
       <Goals goals={data.goals} squad={data.squad} till={till} />
