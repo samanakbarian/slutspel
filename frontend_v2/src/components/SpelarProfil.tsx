@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 import { Delningsbild } from './share/Delningsbild';
-import { BRAND, CARD_SIZE, DISPLAY, GOLD, INK, INK_2, INK_3, SANS, drawFrame, tracked } from './share/matchCard';
+import { AGAINST, BRAND, CARD_SIZE, DISPLAY, GOLD, INK, INK_2, INK_3, SANS, drawFrame, tracked } from './share/matchCard';
 
 /**
  * Spelarprofilen: åtta mått per match, som percentil mot seriens forwards
@@ -13,21 +13,22 @@ import { BRAND, CARD_SIZE, DISPLAY, GOLD, INK, INK_2, INK_3, SANS, drawFrame, tr
  * Samma radar ritas som delningsbild, med sida377.se i bilden.
  */
 type Profil = {
-  name: string; team: string; number: number | null; position: string; group: 'F' | 'D';
+  name: string; team: string; number: number | null; position: string; group: 'F' | 'D'; role: 'topp' | 'ovriga' | null; compared_with?: number;
   games_played: number; goals: number; assists: number; points: number;
   values: Record<string, number>;
   percentiles: Record<string, number | null> | null;
 };
 type Svar = { status: string; season: string; min_games: number; pool: Record<string, number>; players: Profil[] };
 
+// Fem mot fem är kärnan; powerplay och disciplin står för sig.
 const AXLAR: { key: string; namn: string; kort: string; text: (v: number) => string }[] = [
-  { key: 'mal', namn: 'Mål', kort: 'Mål', text: v => per(v) },
-  { key: 'assist1', namn: 'Förstaassist', kort: 'Första-\nassist', text: v => per(v) },
-  { key: 'assist2', namn: 'Andraassist', kort: 'Andra-\nassist', text: v => per(v) },
-  { key: 'pp_poang', namn: 'Powerplaypoäng', kort: 'PP-\npoäng', text: v => per(v) },
-  { key: 'lika_poang', namn: 'Poäng i lika styrka', kort: 'Poäng 5\nmot 5', text: v => per(v) },
-  { key: 'isen_for', namn: 'Mål för på isen, lika styrka', kort: 'Mål för\npå isen', text: v => per(v) },
-  { key: 'isen_emot', namn: 'Mål emot på isen, lika styrka', kort: 'Defensiv', text: v => per(v) },
+  { key: 'mal', namn: 'Mål, 5 mot 5', kort: 'Mål', text: v => per(v) },
+  { key: 'assist1', namn: 'Förstaassist, 5 mot 5', kort: 'Första-\nassist', text: v => per(v) },
+  { key: 'assist2', namn: 'Andraassist, 5 mot 5', kort: 'Andra-\nassist', text: v => per(v) },
+  { key: 'isen_for', namn: 'Mål för på isen, 5 mot 5', kort: 'Mål för\npå isen', text: v => per(v) },
+  { key: 'isen_emot', namn: 'Mål emot på isen, 5 mot 5', kort: 'Defensiv', text: v => per(v) },
+  { key: 'isen_andel', namn: 'Målandel på isen, 5 mot 5', kort: 'Målandel\npå isen', text: v => `${Math.round(v)} %` },
+  { key: 'pp_poang', namn: 'Powerplaypoäng', kort: 'Power-\nplay', text: v => per(v) },
   { key: 'utv_min', namn: 'Utvisningsminuter', kort: 'Disciplin', text: v => `${v.toFixed(1).replace('.', ',')} min` },
 ];
 function per(v: number): string { return v.toFixed(2).replace('.', ','); }
@@ -52,7 +53,11 @@ export function SpelarProfil({ name, season }: { name: string; season: string })
   if (!data) return null;
   const p = data.players.find(x => nyckel(x.name) === nyckel(name));
   if (!p || !p.percentiles) return null;
-  const grupp = p.group === 'D' ? 'backar' : 'forwards';
+  // Vilka spelaren jämförs med: samma position och roll, som rollen ersätter istiden.
+  const grupp = p.group === 'D'
+    ? (p.role === 'topp' ? 'backar i par 1–2' : p.role === 'ovriga' ? 'backar i par 3' : 'backar')
+    : (p.role === 'topp' ? 'forwards i kedja 1–2' : p.role === 'ovriga' ? 'forwards i kedja 3–4' : 'forwards');
+  const antal = p.compared_with ?? data.pool[p.group];
   const { fornamn, efternamn } = fornamnEfternamn(p.name);
   const pcts = AXLAR.map(a => p.percentiles?.[a.key] ?? 0);
 
@@ -70,10 +75,10 @@ export function SpelarProfil({ name, season }: { name: string; season: string })
         ))}
       </div>
       <p className="mc-note">
-        Per match, percentil mot seriens {data.pool[p.group]} {grupp}. Streckat är mitten.
+        Per match, percentil mot seriens {antal} {grupp}. Streckat är mitten.
       </p>
       <Delningsbild
-        draw={ctx => ritaProfil(ctx, p, pcts, data.season, `${data.pool[p.group]} ${grupp}`)}
+        draw={ctx => ritaProfil(ctx, p, pcts, data.season, `${antal} ${grupp}`)}
         filnamn={`profil-${efternamn.toLowerCase().replace(/[^a-zåäö0-9]+/g, '-')}.png`}
         titel={`${fornamn} ${efternamn} – spelarprofil`}
         beskrivning={`${fornamn} ${efternamn} mot seriens ${grupp}, sida377.se`}
@@ -156,7 +161,7 @@ function ritaProfil(ctx: CanvasRenderingContext2D, p: Profil, pcts: number[], sa
   ctx.stroke();
   pcts.forEach((v, i) => {
     const [x, y] = punkt(i, Math.max(4, v));
-    ctx.fillStyle = v >= 67 ? GOLD : BRAND;
+    ctx.fillStyle = v >= 67 ? GOLD : v <= 33 ? AGAINST : BRAND;
     ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
   });
 
@@ -168,7 +173,7 @@ function ritaProfil(ctx: CanvasRenderingContext2D, p: Profil, pcts: number[], sa
     ctx.fillStyle = INK_2;
     ctx.font = `500 27px ${SANS}`;
     rader.forEach((r, k) => ctx.fillText(r, x, y - (rader.length - 1) * 15 + k * 30));
-    ctx.fillStyle = pcts[i] >= 67 ? GOLD : INK;
+    ctx.fillStyle = pcts[i] >= 67 ? GOLD : pcts[i] <= 33 ? AGAINST : INK;
     ctx.font = `700 34px ${DISPLAY}`;
     ctx.fillText(String(pcts[i]), x, y + (rader.length - 1) * 15 + 38);
   });
