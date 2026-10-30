@@ -151,7 +151,7 @@ const PROFIL: { key: string; kort: string }[] = [
   { key: 'pim_pg', kort: 'Disciplin' },
   { key: 'pk_pct', kort: 'Box-\nplay' },
   { key: 'sv_pct', kort: 'Rädd-\nningar' },
-  { key: 'ga_pg', kort: 'Få\ninsläppta' },
+  { key: 'ga_pg', kort: 'Insläppta' },
 ];
 
 const profil = (liga: LeagueData, t: LeagueTeam) => PROFIL.map(a => {
