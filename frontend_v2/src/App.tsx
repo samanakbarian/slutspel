@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { AlertTriangle, CalendarDays, LineChart, MessageSquare, Newspaper, Users } from 'lucide-react';
+import { AlertTriangle, CalendarDays, LineChart, MessageSquare, Newspaper, Trophy, Users } from 'lucide-react';
 import { Matcher } from './pages/Matcher';
 import { Matchrapport } from './pages/Matchrapport';
 import { Nyheter } from './pages/Nyheter';
@@ -8,15 +8,17 @@ import { Roster } from './pages/Roster';
 import { Spelare } from './pages/Spelare';
 import { XFeedPage } from './pages/XFeed';
 import { StatisticsPage } from './pages/Statistics';
+import { SerienPage } from './pages/Serien';
 import { useLageStore } from './store/useLageStore';
 import { Sidhuvud } from './lib/sidhuvud';
 
 const MetodSida = lazy(() => import('./pages/Metod').then(m => ({ default: m.MetodSida })));
 
-/** Fem flikar. */
+/** Sex flikar. */
 const navItems = [
   { to: '/matcher', label: 'Matcher', icon: CalendarDays },
   { to: '/statistik', label: 'Statistik', icon: LineChart },
+  { to: '/serien', label: 'Serien', icon: Trophy },
   { to: '/trupp', label: 'Trupp', icon: Users },
   { to: '/nyheter', label: 'Nyheter', icon: Newspaper },
   { to: '/x', label: 'X-flöde', icon: MessageSquare },
@@ -148,6 +150,7 @@ function App() {
             <Route path="/matcher/:gameId" element={<Matchrapport />} />
             <Route path="/statistik" element={<StatisticsPage />} />
             <Route path="/statistik/spelare/:name" element={<Spelare />} />
+            <Route path="/serien" element={<SerienPage />} />
             <Route path="/trupp" element={<Roster />} />
             <Route path="/nyheter" element={<Nyheter />} />
             <Route path="/x" element={<XFeedPage />} />

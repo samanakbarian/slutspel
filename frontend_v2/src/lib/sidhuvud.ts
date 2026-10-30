@@ -28,6 +28,10 @@ const SIDOR: Record<string, Sidtext> = {
     titel: 'Statistik och poängliga · Björklöven — Sida 377',
     text: 'Poängliga, målvaktsstatistik och lagets siffror för IF Björklöven i SHL 2026/27.',
   },
+  '/serien': {
+    titel: 'Serien · alla lag i SHL — Sida 377',
+    text: 'Alla lag i SHL 2026/27: form, utveckling, spelare och målvakter, och lagen sida vid sida.',
+  },
   '/trupp': {
     titel: 'Truppen · Björklöven — Sida 377',
     text: 'Björklövens trupp i SHL 2026/27, med position, nummer och säsongens siffror per spelare.',
