@@ -27,7 +27,8 @@ type LagSpelare = {
   shots: number | null; faceoffs: number; fo_pct: number | null; games_with_report: number;
 };
 type LagMalvakt = { name: string; games_played: number; save_pct: number | null; gaa: number | null; shots_against: number | null };
-type Lag = { status: string; team: string; games: LagMatch[]; players: LagSpelare[]; goalies: LagMalvakt[] };
+type Period = { period: number; gf: number; ga: number; gf_pp: number; ga_pp: number; gf_sh: number; ga_sh: number; gf_en: number; ga_en: number };
+type Lag = { status: string; team: string; games: LagMatch[]; players: LagSpelare[]; goalies: LagMalvakt[]; periods?: Period[] };
 
 const FORM = /^(if|ik|hc|bk|hk|hf|aik)$/i;
 const kortLag = (n: string) => {
@@ -46,6 +47,7 @@ export function SerienPage() {
   const [trend, setTrend] = useState<Trend | null>(null);
   const [params, setParams] = useSearchParams();
   const valjare = useRef<HTMLDivElement>(null);
+  const valjareB = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -70,19 +72,32 @@ export function SerienPage() {
     const rad = valjare.current;
     const knapp = rad?.querySelector<HTMLElement>('.sr-chip-on');
     if (rad && knapp) rad.scrollTo({ left: knapp.offsetLeft - rad.clientWidth / 2 + knapp.clientWidth / 2, behavior: 'smooth' });
-  }, [kod, lag]);
+    const radB = valjareB.current;
+    const knappB = radB?.querySelector<HTMLElement>('.sr-chip-b');
+    if (radB && knappB) radB.scrollTo({ left: knappB.offsetLeft - radB.clientWidth / 2 + knappB.clientWidth / 2, behavior: 'smooth' });
+  }, [kod, lag, params]);
 
   if (!liga) {
     return <div className="page"><section className="mc-card"><p className="mc-kicker">Serien</p><p className="mc-text">Laddar seriens lag …</p></section></div>;
   }
   const vald = lag.find(t => t.code === kod) ?? lag.find(t => !t.is_ours) ?? lag[0];
-  const valj = (t: LeagueTeam) => {
-    setParams({ lag: t.code }, { replace: true });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const jamfor = params.has('mot');
+  const mot = jamfor
+    ? (lag.find(t => t.code === params.get('mot') && t.code !== vald.code) ?? lag.find(t => t.is_ours && t.code !== vald.code) ?? lag.find(t => t.code !== vald.code)!)
+    : null;
+  const satt = (a: string, b: string | null, upp = true) => {
+    setParams(b ? { lag: a, mot: b } : { lag: a }, { replace: true });
+    if (upp) window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  const valj = (t: LeagueTeam) => satt(t.code, mot && mot.code !== t.code ? mot.code : jamfor ? (lag.find(x => x.code !== t.code)?.code ?? null) : null);
 
   return (
     <div className="page sr-sida">
+      <div className="mc-seg" role="tablist" aria-label="Vy">
+        <button role="tab" aria-selected={!jamfor} className={`mc-segbtn${!jamfor ? ' mc-on' : ''}`} onClick={() => satt(vald.code, null, false)}>Ett lag</button>
+        <button role="tab" aria-selected={jamfor} className={`mc-segbtn${jamfor ? ' mc-on' : ''}`}
+          onClick={() => satt(vald.code, (lag.find(t => t.is_ours && t.code !== vald.code) ?? lag.find(t => t.code !== vald.code))!.code, false)}>Jämför två lag</button>
+      </div>
       <div className="sr-valjare" ref={valjare} role="tablist" aria-label="Välj lag">
         {lag.map(t => {
           const r = tabell.find(x => x.team_name === t.team)?.rank;
@@ -96,10 +111,29 @@ export function SerienPage() {
         })}
       </div>
 
-      <Oversikt liga={liga} t={vald} rad={tabell.find(x => x.team_name === vald.team)} />
-      {trend && <Utveckling trend={trend} lag={vald.team} />}
-      <LagDetaljer key={vald.team} team={vald.team} snittRadd={liga.league.sv_pct ?? null} />
-      <AllaLag liga={liga} tabell={tabell} vald={vald.team} valj={valj} />
+      {mot && (
+        <div className="sr-valjare sr-valjare-b" ref={valjareB} role="tablist" aria-label="Jämför med">
+          <span className="sr-mot">mot</span>
+          {lag.filter(t => t.code !== vald.code).map(t => (
+            <button key={t.code} role="tab" aria-selected={t.code === mot.code}
+              className={`sr-chip${t.code === mot.code ? ' sr-chip-b' : ''}${t.is_ours ? ' sr-chip-vi' : ''}`}
+              onClick={() => satt(vald.code, t.code, false)} title={t.team}>
+              {kortLag(t.team)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {mot ? (
+        <Jamforelse liga={liga} a={vald} b={mot} tabell={tabell} trend={trend} />
+      ) : (
+        <>
+          <Oversikt liga={liga} t={vald} rad={tabell.find(x => x.team_name === vald.team)} />
+          {trend && <Utveckling trend={trend} lag={vald.team} />}
+          <LagDetaljer key={vald.team} team={vald.team} snittRadd={liga.league.sv_pct ?? null} />
+        </>
+      )}
+      <AllaLag liga={liga} tabell={tabell} vald={vald.team} mot={mot?.team} valj={valj} />
     </div>
   );
 }
@@ -161,7 +195,7 @@ function Oversikt({ liga, t, rad }: { liga: LeagueData; t: LeagueTeam; rad?: Tab
 }
 
 /** Åtta axlar, bäst ytterst. Siffran under axeln är placeringen. */
-function LagRadar({ liga, t, vi }: { liga: LeagueData; t: LeagueTeam; vi?: LeagueTeam }) {
+function LagRadar({ liga, t, vi, jmfKlass = 'sr-radar-vi' }: { liga: LeagueData; t: LeagueTeam; vi?: LeagueTeam; jmfKlass?: string }) {
   const S = 320, C = S / 2, R = 104;
   const punkt = (i: number, v: number) => {
     const a = -Math.PI / 2 + (i / PROFIL.length) * Math.PI * 2;
@@ -175,7 +209,7 @@ function LagRadar({ liga, t, vi }: { liga: LeagueData; t: LeagueTeam; vi?: Leagu
       {[25, 75, 100].map(r => <circle key={r} cx={C} cy={C} r={(R * r) / 100} className="pf-ring" />)}
       <circle cx={C} cy={C} r={R / 2} className="pf-median" />
       {PROFIL.map((_, i) => { const [x, y] = punkt(i, 100); return <line key={i} x1={C} y1={C} x2={x} y2={y} className="pf-ring" />; })}
-      {vi && <polygon points={form(profil(liga, vi))} className="sr-radar-vi" />}
+      {vi && <polygon points={form(profil(liga, vi))} className={jmfKlass} />}
       <polygon points={form(varden)} className="sr-radar-vald" />
       {varden.map((v, i) => { const [x, y] = punkt(i, Math.max(5, v)); return <circle key={i} cx={x} cy={y} r={3.2} className="sr-p-vald" />; })}
       {PROFIL.map((a, i) => {
@@ -202,11 +236,11 @@ const TRENDMATT = [
   { key: 'ga_pg', label: 'Mål emot', fmt: (v: number) => komma(v, 2), axel: (v: number) => komma(v), mitt: null },
 ] as const;
 
-function Utveckling({ trend, lag }: { trend: Trend; lag: string }) {
+function Utveckling({ trend, lag, jmf }: { trend: Trend; lag: string; jmf?: string }) {
   const [matt, setMatt] = useState<(typeof TRENDMATT)[number]['key']>('shot_share');
   const m = TRENDMATT.find(x => x.key === matt)!;
   const vald = trend.teams.find(t => t.team === lag);
-  const vi = trend.teams.find(t => /bj[oö]rkl[oö]ven/i.test(t.team));
+  const vi = trend.teams.find(t => (jmf ? t.team === jmf : /bj[oö]rkl[oö]ven/i.test(t.team)));
   if (!vald || vald.points.length < 3) return null;
   const serie = (pts: Partial<Trendpunkt>[]) => pts.map(p => p[matt] as number | null | undefined).map(v => (v == null ? null : v));
   const a = serie(vald.points), b = vi && vi.team !== lag ? serie(vi.points) : [], s = serie(trend.league);
@@ -235,7 +269,7 @@ function Utveckling({ trend, lag }: { trend: Trend; lag: string }) {
         <text x={L - 4} y={y(hi) + 3} textAnchor="end" className="mg-axel">{m.axel(hi)}</text>
         <text x={L - 4} y={y(lo) + 3} textAnchor="end" className="mg-axel">{m.axel(lo)}</text>
         <path d={linje(s)} className="sr-l-snitt" />
-        {b.length > 0 && <path d={linje(b)} className="sr-l-vi" />}
+        {b.length > 0 && <path d={linje(b)} className={jmf ? 'sr-l-b' : 'sr-l-vi'} />}
         <path d={linje(a)} className="sr-l-vald" />
         {sista != null && <text x={x(a.length - 1) + 5} y={y(sista) + 3} className="sr-l-etikett">{m.fmt(sista)}</text>}
         <text x={L} y={H - 4} className="mg-axel">match 1</text>
@@ -243,27 +277,34 @@ function Utveckling({ trend, lag }: { trend: Trend; lag: string }) {
       </svg>
       <div className="sr-leg">
         <span><i className="sr-leg-vald" />{kortLag(lag)}</span>
-        {b.length > 0 && <span><i className="sr-leg-vi" />Björklöven</span>}
+        {b.length > 0 && <span><i className={jmf ? 'sr-leg-b' : 'sr-leg-vi'} />{jmf ? kortLag(jmf) : 'Björklöven'}</span>}
         <span><i className="sr-leg-snitt" />serien</span>
       </div>
     </section>
   );
 }
 
-function LagDetaljer({ team, snittRadd }: { team: string; snittRadd: number | null }) {
-  const [data, setData] = useState<Lag | null | 'fel'>(null);
+function useLag(team: string): Lag | null | 'fel' {
+  const [data, setData] = useState<{ team: string; v: Lag | 'fel' } | null>(null);
   useEffect(() => {
     const ctrl = new AbortController();
     fetch(`${API_URL}/api/v1/lag?team=${encodeURIComponent(team)}`, { signal: ctrl.signal }).then(jsonEllerNull)
-      .then(d => setData(d?.status === 'ok' ? d : 'fel'))
-      .catch(() => { if (!ctrl.signal.aborted) setData('fel'); });
+      .then(d => setData({ team, v: d?.status === 'ok' ? d : 'fel' }))
+      .catch(() => { if (!ctrl.signal.aborted) setData({ team, v: 'fel' }); });
     return () => ctrl.abort();
   }, [team]);
+  return data && data.team === team ? data.v : null;
+}
+
+function LagDetaljer({ team, snittRadd }: { team: string; snittRadd: number | null }) {
+  const data = useLag(team);
   if (data === 'fel') return null;
   if (!data) return <section className="mc-card"><p className="mc-kicker">Matcher och spelare</p><p className="mc-text">Laddar …</p></section>;
   return (
     <>
       <Sasongen games={data.games} />
+      {data.periods && data.periods.length > 0 && <NarMalen periods={data.periods} />}
+      <HemmaBorta games={data.games} />
       <Spelare players={data.players} />
       {data.goalies.length > 0 && <Malvakter goalies={data.goalies} snitt={snittRadd} />}
     </>
@@ -452,7 +493,7 @@ const JAMFOR: { key: string; label: string; d: number }[] = [
   { key: 'sv_pct', label: 'Rädd', d: 1 },
 ];
 
-function AllaLag({ liga, tabell, vald, valj }: { liga: LeagueData; tabell: Tabellrad[]; vald: string; valj: (t: LeagueTeam) => void }) {
+function AllaLag({ liga, tabell, vald, mot, valj }: { liga: LeagueData; tabell: Tabellrad[]; vald: string; mot?: string; valj: (t: LeagueTeam) => void }) {
   const [visaTabell, setVisaTabell] = useState(false);
   const lagen = liga.teams.filter(t => t.values.shot_share != null && t.values.pdo != null);
   const W = 340, H = 260, L = 30, R = 10, T = 12, B = 30;
@@ -461,7 +502,8 @@ function AllaLag({ liga, tabell, vald, valj }: { liga: LeagueData; tabell: Tabel
   const dy = Math.max(2, ...ys.map(v => Math.abs(v - 100))) + 1;
   const x = (v: number) => L + ((v - (50 - dx)) / (2 * dx)) * (W - L - R);
   const y = (v: number) => T + (1 - (v - (100 - dy)) / (2 * dy)) * (H - T - B);
-  const ordning = [...lagen].sort((a, b) => Number(a.team === vald) - Number(b.team === vald) || Number(a.is_ours) - Number(b.is_ours));
+  const vikt = (t: LeagueTeam) => (t.team === vald ? 3 : t.team === mot ? 2 : t.is_ours ? 1 : 0);
+  const ordning = [...lagen].sort((a, b) => vikt(a) - vikt(b));
   // Etiketten till höger om pricken, annars vänster, annars ingen. Valt lag
   // och vårt placeras först så att deras alltid får plats.
   type Ruta = { x0: number; x1: number; y0: number; y1: number };
@@ -491,15 +533,15 @@ function AllaLag({ liga, tabell, vald, valj }: { liga: LeagueData; tabell: Tabel
           <text className="rl-tick" x={L} y={T - 2} textAnchor="start">↑ PDO</text>
           {ordning.map(t => {
             const cx = x(t.values.shot_share as number), cy = y(t.values.pdo as number);
-            const ar = t.team === vald;
+            const ar = t.team === vald, b = t.team === mot;
             return (
               <g key={t.code} className="sr-punkt" onClick={() => valj(t)}>
                 <title>{`${t.team}: ${komma(t.values.shot_share as number)} % av skotten, PDO ${komma(t.values.pdo as number)}`}</title>
                 <circle cx={cx} cy={cy} r={12} fill="transparent" />
-                <circle cx={cx} cy={cy} r={ar ? 6.5 : t.is_ours ? 5 : 4} className={ar ? 'sr-p-vald' : t.is_ours ? 'sr-p-vi' : 'sr-p'} />
+                <circle cx={cx} cy={cy} r={ar || b ? 6.5 : t.is_ours ? 5 : 4} className={ar ? 'sr-p-vald' : b ? 'sr-p-b' : t.is_ours ? 'sr-p-vi' : 'sr-p'} />
                 {etikett.has(t.code) && (
                   <text x={etikett.get(t.code)!.ax} y={cy + 3} textAnchor={etikett.get(t.code)!.anchor}
-                    className={`sr-pkod${ar ? ' sr-pkod-vald' : t.is_ours ? ' sr-pkod-vi' : ''}`}>{t.code}</text>
+                    className={`sr-pkod${ar ? ' sr-pkod-vald' : b ? ' sr-pkod-b' : t.is_ours ? ' sr-pkod-vi' : ''}`}>{t.code}</text>
                 )}
               </g>
             );
@@ -549,5 +591,222 @@ function LagTabell({ liga, tabell, vald, valj }: { liga: LeagueData; tabell: Tab
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Målen per period, för uppåt och emot nedåt. Powerplay mörkare i stapeln. */
+function NarMalen({ periods }: { periods: Period[] }) {
+  const namn = (p: number) => (p === 4 ? 'Förl.' : `${p}:a`);
+  const max = Math.max(1, ...periods.flatMap(p => [p.gf, p.ga]));
+  const H = 64;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">När målen kommer</p>
+      <div className="sr-perioder">
+        {periods.map(p => (
+          <div key={p.period} className="sr-per" title={`${namn(p.period)} perioden: ${p.gf} gjorda (${p.gf_pp} i powerplay), ${p.ga} insläppta (${p.ga_pp} i boxplay)`}>
+            <span className="sr-per-tal sr-v">{p.gf}</span>
+            <div className="sr-per-upp" style={{ height: H }}>
+              <i className="sr-bar-v" style={{ height: `${(p.gf / max) * 100}%` }}>
+                <i className="sr-per-pp" style={{ height: `${p.gf ? (p.gf_pp / p.gf) * 100 : 0}%` }} />
+              </i>
+            </div>
+            <div className="sr-per-ned" style={{ height: H }}>
+              <i className="sr-bar-f" style={{ height: `${(p.ga / max) * 100}%` }}>
+                <i className="sr-per-pp" style={{ height: `${p.ga ? (p.ga_pp / p.ga) * 100 : 0}%` }} />
+              </i>
+            </div>
+            <span className="sr-per-tal sr-f">{p.ga}</span>
+            <span className="sr-per-namn">{namn(p.period)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="sr-leg">
+        <span><i className="sr-leg-ruta sr-bar-v" />gjorda</span>
+        <span><i className="sr-leg-ruta sr-bar-f" />insläppta</span>
+        <span><i className="sr-leg-ruta sr-leg-pp" />i powerplay/boxplay</span>
+      </div>
+    </section>
+  );
+}
+
+/** Poäng per match hemma och borta, med målskillnaden under. */
+function HemmaBorta({ games }: { games: LagMatch[] }) {
+  const del = (h: boolean) => {
+    const g = games.filter(x => x.is_home === h);
+    const p = g.reduce((a, x) => a + x.points, 0);
+    const ms = g.reduce((a, x) => a + x.goals_for - x.goals_against, 0);
+    return { n: g.length, ppm: g.length ? p / g.length : 0, ms };
+  };
+  const hemma = del(true), borta = del(false);
+  if (!hemma.n || !borta.n) return null;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Hemma och borta · poäng per match</p>
+      <div className="sr-liga">
+        {([['Hemma', hemma], ['Borta', borta]] as const).map(([namn, d]) => (
+          <div key={namn} className="sr-lrad">
+            <span className="sr-lnamn">{namn} <small>{d.n} m · {d.ms > 0 ? '+' : ''}{d.ms}</small></span>
+            <span className="sr-lbar"><i className="sr-lmal" style={{ width: `${(d.ppm / 3) * 100}%` }} /></span>
+            <span className="sr-lp"><b>{komma(d.ppm, 2)}</b></span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** Två lag mot varandra. A guld, B blått. */
+function Jamforelse({ liga, a, b, tabell, trend }: { liga: LeagueData; a: LeagueTeam; b: LeagueTeam; tabell: Tabellrad[]; trend: Trend | null }) {
+  const da = useLag(a.team), db = useLag(b.team);
+  const ra = tabell.find(x => x.team_name === a.team), rb = tabell.find(x => x.team_name === b.team);
+  const A = da && da !== 'fel' ? da : null, B = db && db !== 'fel' ? db : null;
+  return (
+    <>
+      <section className="mc-card">
+        <div className="sr-jhuvud">
+          {([[a, ra, 'sr-ja'], [b, rb, 'sr-jb']] as const).map(([t, r, k]) => (
+            <div key={t.code} className={`sr-jlag ${k}`}>
+              <span className="sr-jnamn">{kortLag(t.team)}</span>
+              <span className="sr-jplats">{r ? ordinal(r.rank) : ''}</span>
+              <span className="sr-jp">{r ? `${r.points} p · ${r.goal_diff > 0 ? '+' : ''}${r.goal_diff}` : ''}</span>
+              <span className="sr-jform">
+                {t.form.map((m, i) => <i key={i} className={m.gf > m.ga ? 'sr-bar-v' : 'sr-bar-f'} title={`${m.opponent} ${m.gf}–${m.ga}`} />)}
+              </span>
+            </div>
+          ))}
+        </div>
+        <LagRadar liga={liga} t={a} vi={b} jmfKlass="sr-radar-b" />
+        <div className="sr-leg sr-leg-mitt">
+          <span><i className="sr-leg-vald" />{kortLag(a.team)}</span>
+          <span><i className="sr-leg-b" />{kortLag(b.team)}</span>
+        </div>
+      </section>
+      <Fjaril liga={liga} a={a} b={b} />
+      {trend && <Utveckling trend={trend} lag={a.team} jmf={b.team} />}
+      {A && <Inbordes a={A} b={b.team} />}
+      {A && B && A.periods && B.periods && <PerioderJmf a={A} b={B} />}
+      {A && B && <SpelareJmf a={A} b={B} />}
+    </>
+  );
+}
+
+const FJARIL: { key: string; label: string; d: number; enhet: string }[] = [
+  { key: 'gf_pg', label: 'Mål per match', d: 2, enhet: '' },
+  { key: 'ga_pg', label: 'Insläppta per match', d: 2, enhet: '' },
+  { key: 'shot_share', label: 'Andel av skotten', d: 1, enhet: ' %' },
+  { key: 'sh_pct', label: 'Skottprocent', d: 1, enhet: ' %' },
+  { key: 'sv_pct', label: 'Räddningsprocent', d: 1, enhet: ' %' },
+  { key: 'pp_pct', label: 'Powerplay', d: 1, enhet: ' %' },
+  { key: 'pk_pct', label: 'Boxplay', d: 1, enhet: ' %' },
+  { key: 'fo_pct', label: 'Tekningar', d: 1, enhet: ' %' },
+  { key: 'pim_pg', label: 'Utvisningsminuter', d: 1, enhet: '' },
+];
+
+/** Måtten sida vid sida. Stapelns längd är placeringen; det bättre laget i fetstil. */
+function Fjaril({ liga, a, b }: { liga: LeagueData; a: LeagueTeam; b: LeagueTeam }) {
+  const n = liga.teams.length;
+  const len = (r: number | null | undefined) => (r == null ? 0 : 8 + ((n - r) / (n - 1)) * 92);
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Sida vid sida</p>
+      <div className="sr-fjaril">
+        {FJARIL.map(m => {
+          const va = a.values[m.key], vb = b.values[m.key];
+          const ra = a.ranks[m.key], rb = b.ranks[m.key];
+          const aBattre = ra != null && rb != null && ra < rb, bBattre = ra != null && rb != null && rb < ra;
+          const f = (v: number | null | undefined) => (v == null ? '–' : `${komma(v, m.d)}${m.enhet}`);
+          return (
+            <div key={m.key} className="sr-frad">
+              <span className={`sr-fv${aBattre ? ' sr-fbattre' : ''}`}>{f(va)}</span>
+              <span className="sr-fbar sr-fbar-a"><i style={{ width: `${len(ra)}%` }} /></span>
+              <span className="sr-fnamn">{m.label}</span>
+              <span className="sr-fbar sr-fbar-b"><i style={{ width: `${len(rb)}%` }} /></span>
+              <span className={`sr-fv sr-fv-b${bBattre ? ' sr-fbattre' : ''}`}>{f(vb)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** Lagens möten den här säsongen, ur A:s matcher. */
+function Inbordes({ a, b }: { a: Lag; b: string }) {
+  const moten = a.games.filter(g => g.opponent === b);
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Inbördes</p>
+      {moten.length === 0 ? <p className="mc-text">Lagen har inte mötts än den här säsongen.</p> : (
+        <div className="sr-moten">
+          {moten.map(g => {
+            const ah = g.is_home;
+            return (
+              <div key={g.game_id} className="sr-mote">
+                <span className="sr-mdatum">{Number(g.date.slice(8, 10))}/{Number(g.date.slice(5, 7))}</span>
+                <span className={`sr-mote-lag sr-mote-h ${ah ? 'sr-ja' : 'sr-jb'}`}>{kortLag(ah ? a.team : b)}</span>
+                <b className="sr-mote-res">{ah ? g.goals_for : g.goals_against}–{ah ? g.goals_against : g.goals_for}{g.beyond_regulation ? <small> ÖT</small> : null}</b>
+                <span className={`sr-mote-lag sr-mote-b ${ah ? 'sr-jb' : 'sr-ja'}`}>{kortLag(ah ? b : a.team)}</span>
+                <span className="sr-mskott">{g.shots_for != null && g.shots_against != null ? `skott ${ah ? g.shots_for : g.shots_against}–${ah ? g.shots_against : g.shots_for}` : ''}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Mål per match och period för båda lagen: gjorda till vänster om mitten, insläppta till höger. */
+function PerioderJmf({ a, b }: { a: Lag; b: Lag }) {
+  const ga = a.games.length || 1, gb = b.games.length || 1;
+  const per = [1, 2, 3].map(p => ({
+    p,
+    a: a.periods!.find(x => x.period === p), b: b.periods!.find(x => x.period === p),
+  }));
+  const max = Math.max(0.5, ...per.flatMap(x => [(x.a?.gf ?? 0) / ga, (x.a?.ga ?? 0) / ga, (x.b?.gf ?? 0) / gb, (x.b?.ga ?? 0) / gb]));
+  const bar = (v: number, k: string) => <span className="sr-pbar"><i className={k} style={{ width: `${(v / max) * 100}%` }} /></span>;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Per period · mål per match</p>
+      <div className="sr-pjmf">
+        <span /><span className="sr-pjh">gjorda</span><span className="sr-pjh">insläppta</span>
+        {per.map(x => (
+          <div key={x.p} className="sr-pjgrupp">
+            <span className="sr-pjnamn">{x.p}:a</span>
+            {([[x.a, ga, 'sr-ja-fyll', a.team], [x.b, gb, 'sr-jb-fyll', b.team]] as const).map(([d, g, k, t]) => (
+              <div key={t} className="sr-pjrad" title={`${t}: ${komma((d?.gf ?? 0) / g, 2)} gjorda och ${komma((d?.ga ?? 0) / g, 2)} insläppta per match`}>
+                {bar((d?.gf ?? 0) / g, k)}<em>{komma((d?.gf ?? 0) / g, 2)}</em>
+                {bar((d?.ga ?? 0) / g, `${k} sr-pinsl`)}<em>{komma((d?.ga ?? 0) / g, 2)}</em>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** De fem poängbästa i varje lag. */
+function SpelareJmf({ a, b }: { a: Lag; b: Lag }) {
+  const max = Math.max(1, ...a.players.slice(0, 5).map(p => p.points), ...b.players.slice(0, 5).map(p => p.points));
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Poängbästa</p>
+      <div className="sr-sjmf">
+        {([[a, 'sr-ja'], [b, 'sr-jb']] as const).map(([l, k]) => (
+          <div key={l.team}>
+            <p className={`sr-sjlag ${k}`}>{kortLag(l.team)}</p>
+            {l.players.slice(0, 5).map(p => (
+              <div key={p.name} className="sr-sjrad" title={`${fornamnEfternamn(p.name)}: ${p.goals}+${p.assists}`}>
+                <span className="sr-sjnamn">{fornamnEfternamn(p.name).split(' ').slice(-1)[0]}</span>
+                <span className="sr-lbar"><i className={`${k}-fyll`} style={{ width: `${(p.points / max) * 100}%` }} /></span>
+                <b>{p.points}</b>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
