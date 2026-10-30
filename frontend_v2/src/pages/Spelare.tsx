@@ -664,6 +664,10 @@ export function Spelare() {
         </div>
       </section>
 
+      {/* Överblicken först: profilen mot hela serien. Visas för utespelare
+          med percentil. */}
+      <Guard name="Spelarprofil"><SpelarProfil name={p.name} season={season} /></Guard>
+
       {/* Skottprocent för alla utespelare. Backarnas ligger lägre, de skjuter
           från distans, men talet säger ändå något. Tekningar bara för dem
           som tar dem. */}
@@ -804,9 +808,6 @@ export function Spelare() {
           </div>
         </section>
       )}
-
-      {/* Hela seriens profil; visas bara för utespelare med percentil. */}
-      <Guard name="Spelarprofil"><SpelarProfil name={p.name} season={season} /></Guard>
 
       <section className="mc-card">
         <p className="mc-kicker">Percentil</p>

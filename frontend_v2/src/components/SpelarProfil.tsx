@@ -27,8 +27,8 @@ const AXLAR: { key: string; namn: string; kort: string; text: (v: number) => str
   { key: 'pp_poang', namn: 'Powerplaypoäng', kort: 'PP-\npoäng', text: v => per(v) },
   { key: 'lika_poang', namn: 'Poäng i lika styrka', kort: 'Poäng 5\nmot 5', text: v => per(v) },
   { key: 'isen_for', namn: 'Mål för på isen, lika styrka', kort: 'Mål för\npå isen', text: v => per(v) },
-  { key: 'isen_emot', namn: 'Mål emot på isen, lika styrka (lågt är bra)', kort: 'Få mål\nemot', text: v => per(v) },
-  { key: 'utv_min', namn: 'Utvisningsminuter (lågt är bra)', kort: 'Disciplin', text: v => `${v.toFixed(1).replace('.', ',')} min` },
+  { key: 'isen_emot', namn: 'Mål emot på isen, lika styrka', kort: 'Få mål\nemot', text: v => per(v) },
+  { key: 'utv_min', namn: 'Utvisningsminuter', kort: 'Disciplin', text: v => `${v.toFixed(1).replace('.', ',')} min` },
 ];
 function per(v: number): string { return v.toFixed(2).replace('.', ','); }
 const nyckel = (n: string) => n.replace(/[*]+/g, '').replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
@@ -70,9 +70,7 @@ export function SpelarProfil({ name, season }: { name: string; season: string })
         ))}
       </div>
       <p className="mc-note">
-        Per match, som percentil mot seriens {data.pool[p.group]} {grupp} med minst {data.min_games} matcher.
-        50 är mitten av serien, den streckade ringen. Mål på isen räknas i lika styrka,
-        utan tomma burar.
+        Per match, percentil mot seriens {data.pool[p.group]} {grupp}. Streckat är mitten.
       </p>
       <Delningsbild
         draw={ctx => ritaProfil(ctx, p, pcts, data.season, `${data.pool[p.group]} ${grupp}`)}
@@ -178,5 +176,5 @@ function ritaProfil(ctx: CanvasRenderingContext2D, p: Profil, pcts: number[], sa
   ctx.textAlign = 'left';
   ctx.fillStyle = INK_3;
   ctx.font = `400 24px ${SANS}`;
-  ctx.fillText(`Per match · percentil mot seriens ${jmf} · 50 = mitten (streckat)`, PAD, S - 40);
+  ctx.fillText(`Per match · percentil mot seriens ${jmf} · streckat = mitten`, PAD, S - 40);
 }
