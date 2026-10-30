@@ -4,6 +4,8 @@ import { API_URL } from '../config/api';
 import { PercentileBar, Sparkline } from '../components/charts/Charts';
 import { matcher } from '../lib/sprak';
 import { resultat } from '../lib/match';
+import { SpelarProfil } from '../components/SpelarProfil';
+import { Guard } from '../components/Guard';
 
 /**
  * Spelarsidan.
@@ -802,6 +804,9 @@ export function Spelare() {
           </div>
         </section>
       )}
+
+      {/* Hela seriens profil; visas bara för utespelare med percentil. */}
+      <Guard name="Spelarprofil"><SpelarProfil name={p.name} season={season} /></Guard>
 
       <section className="mc-card">
         <p className="mc-kicker">Percentil</p>
