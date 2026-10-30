@@ -3695,3 +3695,39 @@ text .sr-botten { fill: #f29a74; }
 .sr-sjrad { display: grid; grid-template-columns: 4.6rem 1fr 1.4rem; gap: 0.35rem; align-items: center; font-size: 0.74rem; margin-bottom: 0.3rem; }
 .sr-sjnamn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sr-sjrad b { text-align: right; }
+
+/* ── Serien: tabellresa, matchbild, lägen, målskyttar ── */
+.sr-bump { fill: none; stroke: rgba(172, 199, 186, 0.16); stroke-width: 1.2; }
+.sr-bump-vi { fill: none; stroke: var(--brand-green-light); stroke-width: 1.8; opacity: 0.8; }
+.sr-bump-a { fill: none; stroke: var(--brand-gold); stroke-width: 2.8; stroke-linejoin: round; }
+.sr-bump-b { fill: none; stroke: var(--data-t2); stroke-width: 2.6; stroke-linejoin: round; }
+.sr-bump-vi-p { fill: var(--brand-green-light); }
+.sr-bump-a-p { fill: var(--brand-gold); }
+.sr-bump-b-p { fill: var(--data-t2); }
+.sr-bump-namn { font-size: 10px; font-weight: 700; }
+.sr-bump-vi-t { fill: var(--brand-green-light); }
+.sr-bump-a-t { fill: var(--brand-gold); }
+.sr-bump-b-t { fill: #7fb2f2; }
+.sr-mb-v { fill: var(--data-for); }
+.sr-mb-f { fill: var(--data-against); }
+.sr-mb-ot { opacity: 0.6; }
+.sr-ja-mb { fill: var(--brand-gold); stroke: var(--brand-gold); stroke-width: 1.5; }
+.sr-jb-mb { fill: var(--data-t2); stroke: var(--data-t2); stroke-width: 1.5; }
+.sr-mb-tom { fill: var(--bg-card-solid); }
+.sr-leg i.sr-leg-rund { border-radius: 50%; }
+.sr-leg i.sr-leg-ring { background: transparent; border: 1.5px solid var(--text-secondary) !important; }
+.sr-lagen { display: grid; gap: 0.55rem; }
+.sr-lgrupp { display: grid; gap: 0.2rem; }
+.sr-lgnamn { font-size: 0.76rem; color: var(--text-secondary); }
+.sr-lgrad { display: grid; grid-template-columns: 1fr 3.8rem; gap: 0.4rem; align-items: center; }
+.sr-lgrad-jmf { grid-template-columns: 8px 1fr 3.8rem; }
+.sr-lgprick { width: 8px; height: 8px; border-radius: 50%; }
+.sr-lgbar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; background: rgba(255, 255, 255, 0.04); }
+.sr-lgbar i { display: block; height: 100%; }
+.sr-lgtal { text-align: right; font-size: 0.74rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.sr-lgtal b { color: var(--text-primary); }
+.sr-vgm-rubrik { font-size: 0.82rem; color: var(--text-secondary); margin: 0 0 0.5rem; }
+.sr-vgm-rubrik b { color: var(--brand-gold); font-size: 1rem; }
+.sr-vgm { display: flex; height: 26px; border-radius: 5px; overflow: hidden; gap: 2px; }
+.sr-vgm span { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: #08130e; min-width: 0; }
+.sr-vgm-ovr { background: rgba(172, 199, 186, 0.25) !important; color: var(--text-primary) !important; }

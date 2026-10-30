@@ -20,7 +20,9 @@ type LagMatch = {
   game_id: number; date: string; opponent: string; is_home: boolean;
   goals_for: number; goals_against: number; beyond_regulation: boolean; points: number;
   shots_for: number | null; shots_against: number | null;
+  score_by_period?: [number, number][]; first_goal?: 'for' | 'against' | null;
 };
+type Historik = { rounds: number[]; teams: { team: string; ranks: (number | null)[] }[] };
 type LagSpelare = {
   name: string; number: number | null; position: string | null; games_played: number;
   goals: number; assists: number; points: number; plus_minus: number | null; pim: number;
@@ -45,6 +47,7 @@ export function SerienPage() {
   const liga = useLeague('');
   const [tabell, setTabell] = useState<Tabellrad[]>([]);
   const [trend, setTrend] = useState<Trend | null>(null);
+  const [historik, setHistorik] = useState<Historik | null>(null);
   const [params, setParams] = useSearchParams();
   const valjare = useRef<HTMLDivElement>(null);
   const valjareB = useRef<HTMLDivElement>(null);
@@ -57,6 +60,9 @@ export function SerienPage() {
     fetch(`${API_URL}/api/v1/league-trend`, { signal: ctrl.signal }).then(jsonEllerNull)
       .then(d => { if (d?.status === 'ok') setTrend(d); })
       .catch(() => { /* utvecklingen syns inte */ });
+    fetch(`${API_URL}/api/v1/table-history`, { signal: ctrl.signal }).then(jsonEllerNull)
+      .then(d => { if (d?.status === 'ok' && Array.isArray(d.teams)) setHistorik(d); })
+      .catch(() => { /* tabellresan syns inte */ });
     return () => ctrl.abort();
   }, []);
 
@@ -125,10 +131,11 @@ export function SerienPage() {
       )}
 
       {mot ? (
-        <Jamforelse liga={liga} a={vald} b={mot} tabell={tabell} trend={trend} />
+        <Jamforelse liga={liga} a={vald} b={mot} tabell={tabell} trend={trend} historik={historik} />
       ) : (
         <>
           <Oversikt liga={liga} t={vald} rad={tabell.find(x => x.team_name === vald.team)} />
+          {historik && <Tabellresan historik={historik} a={vald.team} />}
           {trend && <Utveckling trend={trend} lag={vald.team} />}
           <LagDetaljer key={vald.team} team={vald.team} snittRadd={liga.league.sv_pct ?? null} />
         </>
@@ -303,8 +310,11 @@ function LagDetaljer({ team, snittRadd }: { team: string; snittRadd: number | nu
   return (
     <>
       <Sasongen games={data.games} />
+      <Matchbilden lag={[{ namn: data.team, games: data.games, klass: 'sr-ja' }]} />
+      <Lagen lag={[{ namn: data.team, games: data.games, klass: 'sr-ja' }]} />
       {data.periods && data.periods.length > 0 && <NarMalen periods={data.periods} />}
       <HemmaBorta games={data.games} />
+      <VemGorMalen players={data.players} />
       <Spelare players={data.players} />
       {data.goalies.length > 0 && <Malvakter goalies={data.goalies} snitt={snittRadd} />}
     </>
@@ -657,7 +667,7 @@ function HemmaBorta({ games }: { games: LagMatch[] }) {
 }
 
 /** Två lag mot varandra. A guld, B blått. */
-function Jamforelse({ liga, a, b, tabell, trend }: { liga: LeagueData; a: LeagueTeam; b: LeagueTeam; tabell: Tabellrad[]; trend: Trend | null }) {
+function Jamforelse({ liga, a, b, tabell, trend, historik }: { liga: LeagueData; a: LeagueTeam; b: LeagueTeam; tabell: Tabellrad[]; trend: Trend | null; historik: Historik | null }) {
   const da = useLag(a.team), db = useLag(b.team);
   const ra = tabell.find(x => x.team_name === a.team), rb = tabell.find(x => x.team_name === b.team);
   const A = da && da !== 'fel' ? da : null, B = db && db !== 'fel' ? db : null;
@@ -683,8 +693,11 @@ function Jamforelse({ liga, a, b, tabell, trend }: { liga: LeagueData; a: League
         </div>
       </section>
       <Fjaril liga={liga} a={a} b={b} />
+      {historik && <Tabellresan historik={historik} a={a.team} b={b.team} />}
       {trend && <Utveckling trend={trend} lag={a.team} jmf={b.team} />}
       {A && <Inbordes a={A} b={b.team} />}
+      {A && B && <Matchbilden lag={[{ namn: A.team, games: A.games, klass: 'sr-ja' }, { namn: B.team, games: B.games, klass: 'sr-jb' }]} />}
+      {A && B && <Lagen lag={[{ namn: A.team, games: A.games, klass: 'sr-ja' }, { namn: B.team, games: B.games, klass: 'sr-jb' }]} />}
       {A && B && A.periods && B.periods && <PerioderJmf a={A} b={B} />}
       {A && B && <SpelareJmf a={A} b={B} />}
     </>
@@ -806,6 +819,202 @@ function SpelareJmf({ a, b }: { a: Lag; b: Lag }) {
             ))}
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Tabellresan: placeringen efter varje omgång för alla lag. Valt lag guld,
+ * jämförelselaget blått, Björklöven grönt, resten svagt.
+ */
+function Tabellresan({ historik, a, b }: { historik: Historik; a: string; b?: string }) {
+  const n = historik.rounds.length;
+  const lagen = historik.teams.length;
+  if (n < 2) return null;
+  const W = 340, H = 210, L = 22, R = 64, T = 10, B = 20;
+  const x = (i: number) => L + (i / (n - 1)) * (W - L - R);
+  const y = (r: number) => T + ((r - 1) / Math.max(1, lagen - 1)) * (H - T - B);
+  const vi = historik.teams.find(t => /bj[oö]rkl[oö]ven/i.test(t.team))?.team;
+  const klass = (t: string) => (t === a ? 'sr-bump-a' : t === b ? 'sr-bump-b' : t === vi ? 'sr-bump-vi' : 'sr-bump');
+  const vikt = (t: string) => (t === a ? 3 : t === b ? 2 : t === vi ? 1 : 0);
+  const ordning = [...historik.teams].sort((p, q) => vikt(p.team) - vikt(q.team));
+  const linje = (rs: (number | null)[]) => rs.map((r, i) => (r == null ? '' : `${i && rs[i - 1] != null ? 'L' : 'M'}${x(i).toFixed(1)},${y(r).toFixed(1)}`)).join(' ');
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Tabellresan</p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="ts-svg" role="img" aria-label={`Placering omgång för omgång för ${a}${b ? ` och ${b}` : ''}`}>
+        {[1, Math.ceil(lagen / 2), lagen].map(r => (
+          <text key={r} x={L - 6} y={y(r) + 3} textAnchor="end" className="mg-axel">{r}</text>
+        ))}
+        {ordning.map(t => {
+          const sist = [...t.ranks].reverse().find(r => r != null);
+          const v = vikt(t.team);
+          return (
+            <g key={t.team}>
+              <path d={linje(t.ranks)} className={klass(t.team)}><title>{t.team}</title></path>
+              {v > 0 && sist != null && (
+                <>
+                  <circle cx={x(t.ranks.length - 1)} cy={y(sist)} r={v >= 2 ? 3.6 : 2.8} className={`${klass(t.team)}-p`} />
+                  <text x={x(n - 1) + 7} y={y(sist) + 3} className={`sr-bump-namn ${klass(t.team)}-t`}>{kortLag(t.team)}</text>
+                </>
+              )}
+            </g>
+          );
+        })}
+        <text x={L} y={H - 4} className="mg-axel">omgång 1</text>
+        <text x={x(n - 1)} y={H - 4} textAnchor="end" className="mg-axel">{historik.rounds[n - 1]}</text>
+      </svg>
+    </section>
+  );
+}
+
+type Serie = { namn: string; games: LagMatch[]; klass: string };
+
+/**
+ * Matchbilden: varje match som en prick, skott för åt höger och skott emot
+ * nedåt. Uppe till höger styrde laget matchen. Fylld prick är vinst.
+ */
+function Matchbilden({ lag }: { lag: Serie[] }) {
+  const alla = lag.flatMap(l => l.games.filter(g => g.shots_for != null && g.shots_against != null).map(g => ({ g, l })));
+  if (alla.length < 3) return null;
+  const v = alla.flatMap(({ g }) => [g.shots_for as number, g.shots_against as number]);
+  const lo = Math.max(0, Math.min(...v) - 3), hi = Math.max(...v) + 3;
+  const W = 340, H = 260, L = 30, R = 10, T = 12, B = 30;
+  const x = (s: number) => L + ((s - lo) / (hi - lo)) * (W - L - R);
+  const y = (s: number) => T + ((s - lo) / (hi - lo)) * (H - T - B);
+  const ett = lag.length === 1;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Matchbilden · skott per match</p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="ts-svg" role="img" aria-label="Skott för och emot i varje match">
+        <polygon points={`${x(lo)},${y(lo)} ${x(hi)},${y(lo)} ${x(hi)},${y(hi)}`} className="sr-kvadrant" />
+        <line x1={x(lo)} y1={y(lo)} x2={x(hi)} y2={y(hi)} className="rl-grid" />
+        <text className="rl-tick" x={W - R} y={H - 4} textAnchor="end">Skott för →</text>
+        <text className="rl-tick" x={L} y={H - 4} textAnchor="start">↓ skott emot</text>
+        <text className="rl-tick" x={x(hi) - 4} y={y(lo) + 12} textAnchor="end">laget styrde</text>
+        <text className="rl-tick" x={x(lo) + 4} y={y(hi) - 6} textAnchor="start">motståndaren styrde</text>
+        {[Math.ceil(lo / 10) * 10, Math.floor(hi / 10) * 10].filter((t, i, arr) => arr.indexOf(t) === i).map(t => (
+          <g key={t}>
+            <text className="rl-tick" x={x(t)} y={H - B + 12} textAnchor="middle">{t}</text>
+            <text className="rl-tick" x={L - 4} y={y(t) + 3} textAnchor="end">{t}</text>
+          </g>
+        ))}
+        {alla.map(({ g, l }) => {
+          const vann = g.goals_for > g.goals_against;
+          const k = ett ? (vann ? 'sr-mb-v' : 'sr-mb-f') : `${l.klass}-mb${vann ? '' : ' sr-mb-tom'}`;
+          return (
+            <circle key={`${l.namn}-${g.game_id}`} cx={x(g.shots_for as number)} cy={y(g.shots_against as number)} r={4.5}
+              className={`${k}${g.beyond_regulation ? ' sr-mb-ot' : ''}`}>
+              <title>{`${kortLag(l.namn)} ${g.is_home ? 'mot' : 'borta mot'} ${kortLag(g.opponent)} ${g.goals_for}–${g.goals_against}, skott ${g.shots_for}–${g.shots_against}`}</title>
+            </circle>
+          );
+        })}
+      </svg>
+      <div className="sr-leg">
+        {ett ? (
+          <>
+            <span><i className="sr-leg-ruta sr-bar-v sr-leg-rund" />vinst</span>
+            <span><i className="sr-leg-ruta sr-bar-f sr-leg-rund" />förlust</span>
+          </>
+        ) : (
+          <>
+            {lag.map(l => <span key={l.namn}><i className={`sr-leg-ruta sr-leg-rund ${l.klass}-fyll`} />{kortLag(l.namn)}</span>)}
+            <span><i className="sr-leg-ruta sr-leg-rund sr-leg-ring" />ofylld är förlust</span>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+type Utfall = { v: number; vo: number; fo: number; f: number };
+const utfall = (gs: LagMatch[]): Utfall => gs.reduce((u, g) => {
+  const vann = g.goals_for > g.goals_against;
+  if (vann) { if (g.beyond_regulation) u.vo++; else u.v++; } else if (g.beyond_regulation) u.fo++; else u.f++;
+  return u;
+}, { v: 0, vo: 0, fo: 0, f: 0 });
+
+/**
+ * Lägen: hur det slutar beroende på ställningen efter två perioder och på
+ * vem som gör första målet. Varje rad en stapel med vinster till vänster
+ * och förluster till höger.
+ */
+function Lagen({ lag }: { lag: Serie[] }) {
+  const lagen = (gs: LagMatch[]) => {
+    const efter2 = (g: LagMatch) => g.score_by_period && g.score_by_period.length >= 2 ? g.score_by_period[1] : null;
+    return [
+      { namn: 'Gör första målet', gs: gs.filter(g => g.first_goal === 'for') },
+      { namn: 'Släpper in första', gs: gs.filter(g => g.first_goal === 'against') },
+      { namn: 'Leder efter två', gs: gs.filter(g => { const s = efter2(g); return s && s[0] > s[1]; }) },
+      { namn: 'Lika efter två', gs: gs.filter(g => { const s = efter2(g); return s && s[0] === s[1]; }) },
+      { namn: 'Under efter två', gs: gs.filter(g => { const s = efter2(g); return s && s[0] < s[1]; }) },
+    ];
+  };
+  const per = lag.map(l => ({ l, rader: lagen(l.games) }));
+  if (!per[0].rader.some(r => r.gs.length)) return null;
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Lägen · hur matcherna slutar</p>
+      <div className="sr-lagen">
+        {per[0].rader.map((r, i) => (
+          <div key={r.namn} className="sr-lgrupp">
+            <span className="sr-lgnamn">{r.namn}</span>
+            {per.map(({ l, rader }) => {
+              const gs = rader[i].gs;
+              const u = utfall(gs);
+              const n = gs.length || 1;
+              const vinst = u.v + u.vo;
+              return (
+                <div key={l.namn} className={`sr-lgrad${per.length > 1 ? ' sr-lgrad-jmf' : ''}`} title={`${kortLag(l.namn)}: ${u.v} vinster, ${u.vo} efter full tid, ${u.fo} förluster efter full tid, ${u.f} förluster`}>
+                  {per.length > 1 && <i className={`sr-lgprick ${l.klass}-fyll`} />}
+                  <span className="sr-lgbar">
+                    <i className="sr-bar-v" style={{ width: `${(u.v / n) * 100}%` }} />
+                    <i className="sr-bar-v sr-bar-ot" style={{ width: `${(u.vo / n) * 100}%` }} />
+                    <i className="sr-bar-f sr-bar-ot" style={{ width: `${(u.fo / n) * 100}%` }} />
+                    <i className="sr-bar-f" style={{ width: `${(u.f / n) * 100}%` }} />
+                  </span>
+                  <span className="sr-lgtal">{gs.length ? <><b>{vinst}</b> av {gs.length}</> : '–'}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <div className="sr-leg">
+        <span><i className="sr-leg-ruta sr-bar-v" />vinst</span>
+        <span><i className="sr-leg-ruta sr-bar-v sr-bar-ot" />efter full tid</span>
+        <span><i className="sr-leg-ruta sr-bar-f" />förlust</span>
+      </div>
+    </section>
+  );
+}
+
+/** Lagets mål fördelade på målskyttarna: hur beroende laget är av några få. */
+function VemGorMalen({ players }: { players: LagSpelare[] }) {
+  const skyttar = players.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
+  const totalt = skyttar.reduce((a, p) => a + p.goals, 0);
+  if (totalt < 5) return null;
+  const visas = skyttar.slice(0, 6);
+  const ovriga = totalt - visas.reduce((a, p) => a + p.goals, 0);
+  const tre = skyttar.slice(0, 3).reduce((a, p) => a + p.goals, 0);
+  const farg = ['var(--data-t1)', 'var(--data-t2)', 'var(--data-t3)', 'var(--data-t4)', '#8d6fd1', '#4fb3bf'];
+  const efternamn = (n: string) => n.split(',')[0];
+  return (
+    <section className="mc-card">
+      <p className="mc-kicker">Vem gör målen</p>
+      <p className="sr-vgm-rubrik"><b>{Math.round((tre / totalt) * 100)} %</b> av lagets {totalt} mål kommer från tre spelare</p>
+      <div className="sr-vgm">
+        {visas.map((p, i) => (
+          <span key={p.name} style={{ flex: p.goals, background: farg[i] }} title={`${fornamnEfternamn(p.name)}: ${p.goals} mål`}>
+            {p.goals / totalt >= 0.09 ? p.goals : ''}
+          </span>
+        ))}
+        {ovriga > 0 && <span className="sr-vgm-ovr" style={{ flex: ovriga }} title={`Övriga: ${ovriga} mål`}>{ovriga / totalt >= 0.09 ? ovriga : ''}</span>}
+      </div>
+      <div className="sr-leg">
+        {visas.map((p, i) => <span key={p.name}><i className="sr-leg-ruta" style={{ background: farg[i] }} />{efternamn(p.name)}</span>)}
+        {ovriga > 0 && <span><i className="sr-leg-ruta sr-vgm-ovr" />övriga</span>}
       </div>
     </section>
   );
