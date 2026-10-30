@@ -3519,3 +3519,5 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .pf-pct { text-align: right; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .pf-hog { color: var(--brand-gold); }
 .pf-lag { color: var(--data-against); }
+.ts-over { color: var(--data-against) !important; }
+.ts-under { color: var(--brand-green-light) !important; }

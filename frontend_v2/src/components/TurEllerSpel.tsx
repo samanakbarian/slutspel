@@ -109,7 +109,7 @@ export function TurEllerSpel({ season, poang }: { season: string; poang: { date:
       <p className="mc-kicker st-sub ts-sub">Poäng över säsongen</p>
       <Kurvor rader={rader} />
 
-      <p className="mc-kicker st-sub ts-sub">Förväntad målskillnad per match, hela serien</p>
+      <p className="mc-kicker st-sub ts-sub">Tabellen enligt skotten</p>
       <Serien lag={lag} takt={takt} tabell={tabell} />
 
       <p className="mc-note">
@@ -180,12 +180,12 @@ function Serien({ lag, takt, tabell }: { lag: Lag[]; takt: number; tabell: Tabel
     .sort((a, b) => b.x - a.x);
   const max = Math.max(0.5, ...rader.map(r => Math.abs(r.x)));
   return (
-    <div className="ts-serien" role="table" aria-label="Förväntad målskillnad per match och placering i tabellen">
+    <div className="ts-serien" role="table" aria-label="Tabellen enligt skotten, med skillnaden mot den riktiga tabellen">
       <div className="ts-srad ts-shuvud" role="row">
         <span role="columnheader" />
         <span role="columnheader" />
         <span role="columnheader">per match</span>
-        <span role="columnheader">tabell</span>
+        <span role="columnheader">±tabell</span>
       </div>
       {rader.map((r, i) => {
         const vi = /bj[oö]rkl[oö]ven/i.test(r.team);
@@ -200,7 +200,11 @@ function Serien({ lag, takt, tabell }: { lag: Lag[]; takt: number; tabell: Tabel
                 style={r.x >= 0 ? { left: '50%', width: `${bredd}%` } : { right: '50%', width: `${bredd}%` }} />
               <em className={r.x >= 0 ? 'ts-sval ts-sval-p' : 'ts-sval ts-sval-n'}>{r.x > 0 ? '+' : ''}{komma(r.x, 2)}</em>
             </span>
-            <span className="ts-splats" role="cell">{r.plats ? `${r.plats}:${r.plats === 1 || r.plats === 2 ? 'a' : 'e'}` : '–'}</span>
+            {/* Placeringen enligt skotten minus den riktiga: plus står högre än
+                skotten motiverar och borde falla, minus borde klättra. */}
+            <span className={`ts-splats${r.plats ? (i + 1 - r.plats > 0 ? ' ts-over' : i + 1 - r.plats < 0 ? ' ts-under' : '') : ''}`} role="cell">
+              {r.plats ? `${i + 1 - r.plats > 0 ? '+' : ''}${i + 1 - r.plats}` : '–'}
+            </span>
           </div>
         );
       })}
