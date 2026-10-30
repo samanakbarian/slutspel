@@ -27,7 +27,7 @@ const AXLAR: { key: string; namn: string; kort: string; text: (v: number) => str
   { key: 'pp_poang', namn: 'Powerplaypoäng', kort: 'PP-\npoäng', text: v => per(v) },
   { key: 'lika_poang', namn: 'Poäng i lika styrka', kort: 'Poäng 5\nmot 5', text: v => per(v) },
   { key: 'isen_for', namn: 'Mål för på isen, lika styrka', kort: 'Mål för\npå isen', text: v => per(v) },
-  { key: 'isen_emot', namn: 'Mål emot på isen, lika styrka', kort: 'Få mål\nemot', text: v => per(v) },
+  { key: 'isen_emot', namn: 'Mål emot på isen, lika styrka', kort: 'Defensiv', text: v => per(v) },
   { key: 'utv_min', namn: 'Utvisningsminuter', kort: 'Disciplin', text: v => `${v.toFixed(1).replace('.', ',')} min` },
 ];
 function per(v: number): string { return v.toFixed(2).replace('.', ','); }
