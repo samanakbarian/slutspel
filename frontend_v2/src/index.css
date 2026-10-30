@@ -3475,7 +3475,8 @@ a.ny-rad:focus-visible, a.ny-topp:focus-visible { outline: 2px solid var(--brand
 .ts-tal > div { display: flex; flex-direction: column; padding: 0.5rem 0.6rem; border-radius: 10px; background: rgba(255,255,255,0.035); }
 .ts-etikett { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .ts-tal b { font-size: 1.35rem; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.25; }
-.ts-x { font-size: 0.7rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.ts-x { font-size: 0.66rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.ts-x b { display: block; font-size: 0.86rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
 .ts-sub { margin-top: 1rem; }
 .ts-svg { width: 100%; height: auto; display: block; }
 .ts-yta { fill: rgba(27, 175, 122, 0.14); }

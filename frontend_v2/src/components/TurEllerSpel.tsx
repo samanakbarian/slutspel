@@ -92,17 +92,17 @@ export function TurEllerSpel({ season, poang }: { season: string; poang: { date:
         <div>
           <span className="ts-etikett">Poäng</span>
           <b>{hela.poang}</b>
-          <span className="ts-x">förväntat {komma(hela.xPoang)}</span>
+          <span className="ts-x">av skotten <b>{komma(hela.xPoang)}</b></span>
         </div>
         <div>
           <span className="ts-etikett">Mål</span>
           <b>{hela.mal}–{hela.insl}</b>
-          <span className="ts-x">förväntat {Math.round(hela.xMal)}–{Math.round(hela.xInsl)}</span>
+          <span className="ts-x">av skotten <b>{Math.round(hela.xMal)}–{Math.round(hela.xInsl)}</b></span>
         </div>
         <div>
           <span className="ts-etikett">Senaste {SENASTE}</span>
           <b>{nu.poang} p</b>
-          <span className="ts-x">förväntat {komma(nu.xPoang)}</span>
+          <span className="ts-x">av skotten <b>{komma(nu.xPoang)}</b></span>
         </div>
       </div>
 
@@ -113,7 +113,7 @@ export function TurEllerSpel({ season, poang }: { season: string; poang: { date:
       <Serien lag={lag} takt={takt} tabell={tabell} />
 
       <p className="mc-note">
-        Förväntat är om skotten för och emot hade gått in i seriens snittakt,
+        Förväntat av skotten: om skotten för och emot hade gått in i seriens snittakt,
         {` ${komma(takt * 100)} %`}.
       </p>
     </section>
@@ -162,7 +162,7 @@ function Kurvor({ rader }: { rader: Rad[] }) {
         <line x1={L + 4} x2={L + 18} y1={T + 4} y2={T + 4} className="ts-fakt" />
         <text x={L + 22} y={T + 7} className="mg-axel">faktiska</text>
         <line x1={L + 70} x2={L + 84} y1={T + 4} y2={T + 4} className="ts-forv" />
-        <text x={L + 88} y={T + 7} className="mg-axel">förväntade</text>
+        <text x={L + 88} y={T + 7} className="mg-axel">av skotten</text>
       </g>
     </svg>
   );

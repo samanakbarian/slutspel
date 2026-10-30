@@ -1917,7 +1917,7 @@ function Laget({
               <h2 className={`mc-title${harSkott ? ' st-sub2' : ''}`}>Tabellpoäng mot målskillnad</h2>
               <div className="st-stats">
                 <Stat label="Tabellpoäng" value={pyth.pts} tone="var(--brand-gold)" />
-                <Stat label="Förväntat" value={svNum(pyth.exp_pts, 1)} />
+                <Stat label="Förväntat av målskillnaden" value={svNum(pyth.exp_pts, 1)} />
                 <Stat
                   label="Skillnad"
                   value={`${pyth.diff > 0 ? '+' : ''}${svNum(pyth.diff, 1)}`}
