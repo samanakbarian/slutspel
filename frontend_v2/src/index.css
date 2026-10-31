@@ -3731,3 +3731,75 @@ text .sr-botten { fill: #f29a74; }
 .sr-vgm { display: flex; height: 26px; border-radius: 5px; overflow: hidden; gap: 2px; }
 .sr-vgm span { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: #08130e; min-width: 0; }
 .sr-vgm-ovr { background: rgba(172, 199, 186, 0.25) !important; color: var(--text-primary) !important; }
+
+/* ── Inför matchen: lag mot lag ── */
+.sr-jv { color: var(--brand-green-light); }
+.sr-jv-fyll { background: var(--brand-green-light); }
+.sr-jv-mb { fill: var(--brand-green-light); stroke: var(--brand-green-light); stroke-width: 1.5; }
+.sr-radar-gron { fill: rgba(66, 216, 131, 0.16); stroke: var(--brand-green-light); stroke-width: 2; stroke-linejoin: round; }
+.mu-nycklar { display: grid; gap: 0.7rem; }
+.mu-nyckel { display: grid; grid-template-columns: 6.4rem 1fr; gap: 0.7rem; align-items: baseline; }
+.mu-nyckel b { font-family: var(--font-display); font-size: 0.98rem; color: var(--brand-gold); white-space: nowrap; }
+.mu-nyckel span { font-size: 0.84rem; line-height: 1.4; color: var(--text-primary); }
+.mu-mrad { grid-template-columns: 9.5rem 1fr 3.6rem; }
+.mu-mrad small { display: block; font-size: 0.66rem; }
+.mu-tabell { display: grid; gap: 0.3rem; }
+.mu-trad { display: grid; grid-template-columns: 1.4rem 6.4rem 1fr 1.8rem; gap: 0.45rem; align-items: center; font-size: 0.8rem; color: var(--text-secondary); }
+.mu-tplats { color: var(--text-muted); font-size: 0.72rem; text-align: right; }
+.mu-tbar { display: flex; height: 10px; }
+.mu-tbar i { display: block; height: 100%; background: rgba(172, 199, 186, 0.28); border-radius: 2px 0 0 2px; }
+.mu-tbar i.mu-tplus { background: transparent; border: 1.5px dashed var(--brand-green-light); border-left: none; border-radius: 0 2px 2px 0; }
+.mu-tp { text-align: right; font-variant-numeric: tabular-nums; }
+.mu-vi { color: var(--brand-green-light); font-weight: 700; }
+.mu-vi .mu-tbar i:first-child { background: var(--brand-green-light); }
+.mu-de { color: var(--brand-gold); font-weight: 700; }
+.mu-de .mu-tbar i { background: var(--brand-gold); }
+.mu-spel { font-size: 0.8rem; color: var(--text-secondary); margin: 0.6rem 0 0; }
+.mu-spel b { color: var(--brand-green-light); }
+.im-mer { margin-top: 0.4rem; }
+
+/* ── Matchrapport: jämförelser och utfällbara detaljer ── */
+.mj-rader { display: grid; gap: 0.7rem; }
+.mj-grupp { display: grid; gap: 0.25rem; }
+.mj-namn { font-size: 0.76rem; color: var(--text-secondary); }
+.mj-rad { display: grid; grid-template-columns: 5.4rem 1fr 4.4rem; gap: 0.5rem; align-items: center; }
+.mj-lag { font-size: 0.74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mj-vi .mj-lag { color: var(--brand-green-light); }
+.mj-de .mj-lag { color: var(--text-secondary); }
+.mj-spar { position: relative; height: 14px; background: linear-gradient(var(--glass-border), var(--glass-border)) center / 100% 1px no-repeat; }
+.mj-spar i { position: absolute; top: 50%; transform: translate(-50%, -50%); }
+.mj-linje { height: 3px; transform: translateY(-50%) !important; background: var(--text-muted); border-radius: 2px; }
+.mj-linje.mj-battre { background: var(--data-for); }
+.mj-linje.mj-samre { background: var(--data-against); }
+.mj-snitt { width: 9px; height: 9px; border-radius: 50%; border: 1.5px dashed var(--text-secondary); background: var(--bg-card-solid); }
+.mj-nu { width: 11px; height: 11px; border-radius: 50%; background: var(--text-primary); }
+.mj-nu.mj-battre { background: var(--data-for); }
+.mj-nu.mj-samre { background: var(--data-against); }
+.mj-tal { text-align: right; font-size: 0.78rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mj-tal small { color: var(--text-muted); font-size: 0.66rem; }
+.sr-leg i.mj-leg-snitt { border-radius: 50%; border: 1.5px dashed var(--text-secondary) !important; background: transparent; }
+.sr-leg i.mj-leg-battre { border-radius: 50%; background: var(--data-for); }
+.sr-leg i.mj-leg-samre { border-radius: 50%; background: var(--data-against); }
+.mj-fakta { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.5rem; }
+.mj-fakta li { position: relative; padding-left: 1rem; font-size: 0.86rem; line-height: 1.4; }
+.mj-fakta li::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-gold); }
+.mj-tabell { display: grid; gap: 0.4rem; }
+.mj-trad { display: grid; grid-template-columns: 1fr 2.6rem 1rem 2.6rem 3rem; gap: 0.4rem; align-items: baseline; font-size: 0.9rem; }
+.mj-trad .mj-lag { font-size: 0.86rem; }
+.mj-plats { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.mj-efter { color: var(--text-primary); font-weight: 700; }
+.mj-pil { color: var(--text-muted); }
+.mj-upp { color: var(--data-for); font-size: 0.78rem; }
+.mj-ned { color: var(--data-against); font-size: 0.78rem; }
+.mj-still { color: var(--text-muted); font-size: 0.78rem; }
+.mj-detaljer { margin: 1rem 0 0.4rem 0.2rem; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+.mj-fall {
+  width: 100%; display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.4rem;
+  padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid var(--glass-border);
+  background: var(--bg-card); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.86rem; font-weight: 600; text-align: left; cursor: pointer;
+}
+.mj-fall-rad { color: var(--text-muted); font-weight: 500; font-size: 0.76rem; flex: 1; }
+.mj-fall-titel { flex: none; }
+.mj-fall-pil { margin-left: auto; color: var(--brand-green-light); font-size: 1rem; }
+.mj-fall-oppen { border-color: rgba(66, 216, 131, 0.35); }
+.mj-fall:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; }

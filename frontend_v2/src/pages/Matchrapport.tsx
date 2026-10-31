@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { API_URL } from '../config/api';
+import { Fallbar, MatchJamfor } from '../components/MatchJamfor';
 import { PairedBar } from '../components/charts/Charts';
 import { DelaMatchen } from '../components/share/DelaMatchen';
 import { Guard } from '../components/Guard';
@@ -1150,6 +1151,9 @@ export function Matchrapport() {
 
       {gameId && <Guard name="Matchfilm"><MatchFilm gameId={gameId} /></Guard>}
       <Guard name="Matchens bästa"><MatchensBastaKort best={data.best} till={till} preliminar={!!data.provisional} /></Guard>
+      <Guard name="Jämförelser"><MatchJamfor gameId={data.game_id} datum={data.date}
+        vi={ourSide === 'home' ? data.home_team : data.away_team}
+        de={ourSide === 'home' ? data.away_team : data.home_team} /></Guard>
       <Guard name="Lag mot lag"><LagMotLag teams={data.teams} skaters={data.skaters || []}
         goals={data.goals || []} penalties={data.penalties || []} /></Guard>
       <Guard name="Sammanhang"><Kontext
@@ -1165,14 +1169,33 @@ export function Matchrapport() {
           Räknat som 20 minuter per period blev en straffmatch 100 minuter lång,
           och tiden i ledning därmed nästan dubbelt så lång som den var. */}
       <Matchbild goals={data.goals} totalMin={periods.length > 3 ? 65 : 60} />
-      <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
-      <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} till={till} /></Guard>
-      <Guard name="Skott"><Skott skaters={data.skaters} till={till} lagSkott={data.teams?.ours?.shots} preliminar={!!data.provisional} /></Guard>
-      <Guard name="Tekningar"><Tekningar rader={data.faceoffs} till={till} preliminar={!!data.provisional} /></Guard>
-      <Guard name="Målvakter"><Malvakter goalies={data.goalies} till={till} /></Guard>
-      <Guard name="Uppställning"><Femmorna lineup={data.lineup} squad={data.squad} till={till} /></Guard>
-      <Goals goals={data.goals} squad={data.squad} till={till} />
-      <Penalties penalties={data.penalties} goals={data.goals} />
+
+      {/* Detaljerna: allt finns kvar, men fälls ut när läsaren vill. */}
+      <p className="mj-detaljer">Detaljer</p>
+      <Fallbar titel="Målkronologi" rad={`${data.goals.length} mål`}>
+        <Goals goals={data.goals} squad={data.squad} till={till} />
+      </Fallbar>
+      <Fallbar titel="Period för period" rad={data.period_results ? String(data.period_results).replace(/[()]/g, '') : undefined}>
+        <Periods periods={periods} ourSide={ourSide} teams={data.teams} />
+      </Fallbar>
+      <Fallbar titel="Spelarna">
+        <Guard name="Spelarna"><Boxscore skaters={data.skaters} squad={data.squad} till={till} /></Guard>
+      </Fallbar>
+      <Fallbar titel="Skott per spelare">
+        <Guard name="Skott"><Skott skaters={data.skaters} till={till} lagSkott={data.teams?.ours?.shots} preliminar={!!data.provisional} /></Guard>
+      </Fallbar>
+      <Fallbar titel="Tekningar">
+        <Guard name="Tekningar"><Tekningar rader={data.faceoffs} till={till} preliminar={!!data.provisional} /></Guard>
+      </Fallbar>
+      <Fallbar titel="Målvakter">
+        <Guard name="Målvakter"><Malvakter goalies={data.goalies} till={till} /></Guard>
+      </Fallbar>
+      <Fallbar titel="Uppställning">
+        <Guard name="Uppställning"><Femmorna lineup={data.lineup} squad={data.squad} till={till} /></Guard>
+      </Fallbar>
+      <Fallbar titel="Utvisningar" rad={`${data.penalties.length} st`}>
+        <Penalties penalties={data.penalties} goals={data.goals} />
+      </Fallbar>
       <Guard name="Dela matchen"><DelaMatchen data={data} /></Guard>
 
       {data.counts.events === 0 && (

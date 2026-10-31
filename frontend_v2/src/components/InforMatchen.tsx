@@ -5,6 +5,7 @@ import { humanName, ordinal, resultat } from '../lib/match';
 import { MINSTA_MATCHER, useLeague } from '../lib/serien';
 import { Delningsbild } from './share/Delningsbild';
 import { drawForeMatchCard } from './share/foreMatchCard';
+import { Matchupen } from './Matchupen';
 import type { ForeModel } from './share/foreMatchCard';
 
 /**
@@ -444,6 +445,7 @@ export function InforMatchen({ season }: { season: string | null }) {
   const [data, setData] = useState<NextMatch | null>(null);
   const [prognos, setPrognos] = useState<Prognos | null>(null);
   const [dela, setDela] = useState(false);
+  const [mer, setMer] = useState(false);
   const league = useLeague(season || '');
 
   useEffect(() => {
@@ -555,7 +557,13 @@ export function InforMatchen({ season }: { season: string | null }) {
   const streakText = (t: TeamSeason) =>
     t && t.streak.length > 1 ? `${t.streak.length} raka ${t.streak.won ? 'vinster' : 'förluster'}` : null;
 
+  // Med jämförelsen nedanför är säsongssiffrorna, formen och nyckelspelarna
+  // detaljer. De ligger kvar, men bakom en knapp.
+  const jamforelse = !data.is_premiere && !!league;
+  const detaljer = !jamforelse || mer;
+
   return (
+    <>
     <section className={`im-card${data.is_premiere ? ' im-premiere' : ''}`}>
       <p className="mc-kicker">
         {data.is_premiere ? `Premiär · ${data.season}` : `Inför omgång ${data.round} av ${data.total_rounds}`}
@@ -591,6 +599,12 @@ export function InforMatchen({ season }: { season: string | null }) {
           och bara om den är densamma som kortet handlar om. */}
       {visaPrognos && <Prognosstapel p={prognos!} opponent={opponent} />}
 
+      {jamforelse && (
+        <button type="button" className="st-more im-mer" onClick={() => setMer(v => !v)}>
+          {mer ? 'Färre detaljer' : 'Säsongssiffror, form och nyckelspelare'}
+        </button>
+      )}
+      {detaljer && <>
       <Duels rows={duels} opponent={opponent} />
       {duelNote && <p className="mr-note im-duelnote">{duelNote}</p>}
 
@@ -651,6 +665,8 @@ export function InforMatchen({ season }: { season: string | null }) {
         </div>
       )}
 
+      </>}
+
       {dela ? (
         <div className="im-dela">
           <Delningsbild
@@ -675,5 +691,7 @@ export function InforMatchen({ season }: { season: string | null }) {
         </p>
       )}
     </section>
+    {jamforelse && <Matchupen liga={league} them={opponent} />}
+    </>
   );
 }
