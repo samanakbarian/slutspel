@@ -208,7 +208,7 @@ export function Lagen({ lag }: { lag: Serie[] }) {
               const n = gs.length || 1;
               const vinst = u.v + u.vo;
               return (
-                <div key={l.namn} className={`sr-lgrad${per.length > 1 ? ' sr-lgrad-jmf' : ''}`} title={`${kortLag(l.namn)}: ${u.v} vinster, ${u.vo} efter full tid, ${u.fo} förluster efter full tid, ${u.f} förluster`}>
+                <div key={l.namn} className={`sr-lgrad${per.length > 1 ? ' sr-lgrad-jmf' : ''}`} title={`${kortLag(l.namn)}: ${u.v} vinster, ${u.vo} vinster i förlängning eller straffar, ${u.fo} förluster i förlängning eller straffar, ${u.f} förluster`}>
                   {per.length > 1 && <span className={`sr-lgteam ${l.klass}`}>{kortLag(l.namn)}</span>}
                   <span className="sr-lgbar">
                     <i className="sr-bar-v" style={{ width: `${(u.v / n) * 100}%` }} />
@@ -225,7 +225,8 @@ export function Lagen({ lag }: { lag: Serie[] }) {
       </div>
       <div className="sr-leg">
         <span><i className="sr-leg-ruta sr-bar-v" />vinst</span>
-        <span><i className="sr-leg-ruta sr-bar-v sr-bar-ot" />efter full tid</span>
+        <span><i className="sr-leg-ruta sr-bar-v sr-bar-ot" />vinst i förl./straffar</span>
+        <span><i className="sr-leg-ruta sr-bar-f sr-bar-ot" />förlust i förl./straffar</span>
         <span><i className="sr-leg-ruta sr-bar-f" />förlust</span>
       </div>
     </section>
