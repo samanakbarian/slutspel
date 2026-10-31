@@ -6,6 +6,7 @@ import type { LeagueData, LeagueTeam } from '../lib/serien';
 import { jsonEllerNull, kortLag, useLag, utfall } from '../lib/lag';
 import type { Lag, LagMatch, Tabellrad } from '../lib/lag';
 import { LagRadar, Lagen, PerioderJmf } from './LagViz';
+import { Fallbar } from './MatchJamfor';
 
 /**
  * Inför matchen, lag mot lag: det som avgör snarare än det som hänt.
@@ -46,10 +47,18 @@ export function Matchupen({ liga, them }: { liga: LeagueData | null; them: strin
           <span><i className="sr-leg-vi" />Björklöven</span>
         </div>
       </section>
-      {a && b && <Lagen lag={[lagB, lagA]} />}
-      {a && b && a.periods && b.periods && <PerioderJmf a={b} b={a} klassB="sr-jv" />}
       {a && b && <Malvaktsduell a={b} b={a} snitt={liga.league.sv_pct ?? null} />}
       {tabell.length > 0 && <PaSpel tabell={tabell} vi={oss.team} dem={them} />}
+      {a && b && (
+        <Fallbar titel="Lägen" rad="första målet och ställningen efter två">
+          <Lagen lag={[lagB, lagA]} />
+        </Fallbar>
+      )}
+      {a && b && a.periods && b.periods && (
+        <Fallbar titel="Per period" rad="mål per match">
+          <PerioderJmf a={b} b={a} klassB="sr-jv" />
+        </Fallbar>
+      )}
     </>
   );
 }
@@ -177,8 +186,20 @@ function PaSpel({ tabell, vi, dem }: { tabell: Tabellrad[]; vi: string; dem: str
   const fran = Math.max(1, Math.min(ra.rank, rb.rank) - 1), till = Math.min(sorterad.length, Math.max(ra.rank, rb.rank) + 1);
   const utsnitt = sorterad.filter(r => r.rank >= fran && r.rank <= till);
   const max = Math.max(...utsnitt.map(r => r.points)) + 3;
-  const platsVid = (p: number) => 1 + sorterad.filter(r => r.team_name !== vi && r.points > p).length;
-  const medVinst = platsVid(ra.points + 3);
+  // Placeringen beror också på omgångens övriga matcher. Bästa fallet: alla
+  // andra lag förlorar. Sämsta: alla andra vinner. Lag på samma poäng står
+  // kvar i den ordning de står nu i det bästa fallet, och räknas före oss i
+  // det sämsta; målskillnaden avgör och den vet vi inte i förväg.
+  const andra = sorterad.filter(r => r.team_name !== vi && r.team_name !== dem);
+  const fore = (r: Tabellrad, p: number, vara: number) => p > vara || (p === vara && r.rank < ra.rank);
+  const spann = (vara: number, deras: number) => ({
+    bast: 1 + andra.filter(r => fore(r, r.points, vara)).length + (fore(rb, deras, vara) ? 1 : 0),
+    samst: 1 + andra.filter(r => r.points + 3 >= vara).length + (deras >= vara ? 1 : 0),
+  });
+  const vinst = spann(ra.points + 3, rb.points), forlust = spann(ra.points, rb.points + 3);
+  const text = (x: { bast: number; samst: number }) => (
+    <strong>{x.bast === x.samst ? <b>{ordinal(x.bast)}</b> : <><b>{ordinal(x.bast)}</b> – <b>{ordinal(x.samst)}</b></>}</strong>
+  );
   return (
     <section className="mc-card">
       <p className="mc-kicker">Vad står på spel</p>
@@ -198,10 +219,11 @@ function PaSpel({ tabell, vi, dem }: { tabell: Tabellrad[]; vi: string; dem: str
           );
         })}
       </div>
-      <p className="mu-spel">
-        Med vinst: <b>{ordinal(medVinst)}</b> med {ra.points + 3} poäng{medVinst < ra.rank ? `, upp ${ra.rank - medVinst} ${ra.rank - medVinst === 1 ? 'plats' : 'platser'}` : ''}.
-        {' '}Avståndet till {kortLag(dem)} är {Math.abs(rb.points - ra.points)} poäng.
-      </p>
+      <div className="mu-spann">
+        <div><span>Vinst</span>{text(vinst)}</div>
+        <div><span>Förlust</span>{text(forlust)}</div>
+      </div>
+      <p className="mu-spel">Placeringen efter omgången, beroende på hur de andra matcherna slutar. Nu {ordinal(ra.rank)}.</p>
     </section>
   );
 }

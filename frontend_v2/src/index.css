@@ -3803,3 +3803,9 @@ text .sr-botten { fill: #f29a74; }
 .mj-fall-pil { margin-left: auto; color: var(--brand-green-light); font-size: 1rem; }
 .mj-fall-oppen { border-color: rgba(66, 216, 131, 0.35); }
 .mj-fall:focus-visible { outline: 2px solid var(--brand-gold); outline-offset: 2px; }
+.mu-spann { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.8rem; }
+.mu-spann div { display: grid; gap: 0.1rem; padding: 0.5rem 0.7rem; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); font-family: var(--font-display); font-size: 1.15rem; }
+.mu-spann span { font-family: var(--font-sans); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.mu-spann div:first-child b { color: var(--data-for); }
+.mu-spann div:last-child b { color: var(--data-against); }
+.mu-spann strong { font-weight: 700; white-space: nowrap; color: var(--text-muted); }
