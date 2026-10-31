@@ -38,7 +38,11 @@ const fornamnEfternamn = (n: string) => {
   return { fornamn: f || '', efternamn: e || n };
 };
 
-export function SpelarProfil({ name, season }: { name: string; season: string }) {
+/**
+ * `jmf`: en lagkamrat att rita i samma radar. `inbaddad`: utan kortets ram,
+ * för spelarsidans jämförelse som har sin egen.
+ */
+export function SpelarProfil({ name, season, jmf, inbaddad }: { name: string; season: string; jmf?: string; inbaddad?: boolean }) {
   const [data, setData] = useState<Svar | null>(null);
 
   useEffect(() => {
@@ -60,37 +64,74 @@ export function SpelarProfil({ name, season }: { name: string; season: string })
   const antal = p.compared_with ?? data.pool[p.group];
   const { fornamn, efternamn } = fornamnEfternamn(p.name);
   const pcts = AXLAR.map(a => p.percentiles?.[a.key] ?? 0);
+  const q = jmf ? data.players.find(x => nyckel(x.name) === nyckel(jmf) && x.percentiles) ?? null : null;
+  const qpcts = q ? AXLAR.map(a => q.percentiles?.[a.key] ?? 0) : null;
+  const ton = (v: number) => (v >= 67 ? ' pf-hog' : v <= 33 ? ' pf-lag' : '');
+  const kort = (n: string) => fornamnEfternamn(n).efternamn;
+
+  const innehall = (
+    <>
+      <Radar varden={pcts} jmf={qpcts} />
+      {q && (
+        <div className="sr-leg sr-leg-mitt">
+          <span><i className="sr-leg-vi" />{kort(p.name)}</span>
+          <span><i className="sr-leg-b" />{kort(q.name)}</span>
+        </div>
+      )}
+      {q && qpcts ? (
+        <div className="pf-lista pf-lista-jmf">
+          <div className="pf-rad pf-huvud">
+            <span />
+            <span className="pf-a">{kort(p.name)}</span>
+            <span className="pf-b">{kort(q.name)}</span>
+          </div>
+          {AXLAR.map((a, i) => (
+            <div key={a.key} className="pf-rad">
+              <span className="pf-namn">{a.namn}</span>
+              <span className={`pf-pct${ton(pcts[i])}`}>{pcts[i]}</span>
+              <span className={`pf-pct${ton(qpcts[i])}`}>{qpcts[i]}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="pf-lista">
+          {AXLAR.map((a, i) => (
+            <div key={a.key} className="pf-rad">
+              <span className="pf-namn">{a.namn}</span>
+              <span className="pf-varde">{a.text(p.values[a.key] ?? 0)}</span>
+              <span className={`pf-pct${ton(pcts[i])}`}>{pcts[i]}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="mc-note">
+        Per match, percentil mot seriens {antal} {grupp}.{q && q.group !== p.group ? ` ${kort(q.name)} jämförs med seriens ${q.group === 'D' ? 'backar' : 'forwards'}.` : ''} Streckat är mitten.
+      </p>
+    </>
+  );
+  const dela = (
+    <Delningsbild
+      draw={ctx => ritaProfil(ctx, p, pcts, data.season, `${antal} ${grupp}`)}
+      filnamn={`profil-${efternamn.toLowerCase().replace(/[^a-zåäö0-9]+/g, '-')}.png`}
+      titel={`${fornamn} ${efternamn} – spelarprofil`}
+      beskrivning={`${fornamn} ${efternamn} mot seriens ${grupp}, sida377.se`}
+      rubrik={`${fornamn} ${efternamn}`.toUpperCase()}
+      nyckel={`${p.name}-${pcts.join(',')}`}
+    />
+  );
+  if (inbaddad) return <>{innehall}{!q && dela}</>;
 
   return (
     <section className="mc-card">
       <p className="mc-kicker">Spelarprofil</p>
-      <Radar varden={pcts} />
-      <div className="pf-lista">
-        {AXLAR.map((a, i) => (
-          <div key={a.key} className="pf-rad">
-            <span className="pf-namn">{a.namn}</span>
-            <span className="pf-varde">{a.text(p.values[a.key] ?? 0)}</span>
-            <span className={`pf-pct${pcts[i] >= 67 ? ' pf-hog' : pcts[i] <= 33 ? ' pf-lag' : ''}`}>{pcts[i]}</span>
-          </div>
-        ))}
-      </div>
-      <p className="mc-note">
-        Per match, percentil mot seriens {antal} {grupp}. Streckat är mitten.
-      </p>
-      <Delningsbild
-        draw={ctx => ritaProfil(ctx, p, pcts, data.season, `${antal} ${grupp}`)}
-        filnamn={`profil-${efternamn.toLowerCase().replace(/[^a-zåäö0-9]+/g, '-')}.png`}
-        titel={`${fornamn} ${efternamn} – spelarprofil`}
-        beskrivning={`${fornamn} ${efternamn} mot seriens ${grupp}, sida377.se`}
-        rubrik={`${fornamn} ${efternamn}`.toUpperCase()}
-        nyckel={`${p.name}-${pcts.join(',')}`}
-      />
+      {innehall}
+      {dela}
     </section>
   );
 }
 
 /** Radarn på sidan: åtta axlar, 0 i mitten, 100 ytterst, 50 streckad. */
-function Radar({ varden }: { varden: number[] }) {
+function Radar({ varden, jmf }: { varden: number[]; jmf?: number[] | null }) {
   const S = 320, C = S / 2, R = 108;
   const punkt = (i: number, v: number) => {
     const a = -Math.PI / 2 + (i / AXLAR.length) * Math.PI * 2;
@@ -103,6 +144,7 @@ function Radar({ varden }: { varden: number[] }) {
       {[25, 75, 100].map(r => <circle key={r} cx={C} cy={C} r={(R * r) / 100} className="pf-ring" />)}
       <circle cx={C} cy={C} r={R / 2} className="pf-median" />
       {AXLAR.map((_, i) => { const [x, y] = punkt(i, 100); return <line key={i} x1={C} y1={C} x2={x} y2={y} className="pf-ring" />; })}
+      {jmf && <polygon points={jmf.map((v, i) => punkt(i, Math.max(4, v)).map(n => n.toFixed(1)).join(',')).join(' ')} className="pf-yta-b" />}
       <polygon points={form} className="pf-yta" />
       {varden.map((v, i) => { const [x, y] = punkt(i, Math.max(4, v)); return <circle key={i} cx={x} cy={y} r={3.2} className="pf-punkt" />; })}
       {AXLAR.map((a, i) => {

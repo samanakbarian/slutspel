@@ -3822,3 +3822,8 @@ text .sr-botten { fill: #f29a74; }
 .mj-nbar.mj-samre { background: var(--data-against); }
 .mj-ntal { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mj-ntal small { color: var(--text-muted); font-size: 0.66rem; }
+.pf-yta-b { fill: rgba(57, 135, 229, 0.18); stroke: var(--data-t2); stroke-width: 2; stroke-linejoin: round; }
+.pf-lista-jmf .pf-rad { grid-template-columns: 1fr 4rem 4rem; }
+.pf-huvud span { font-size: 0.7rem; font-weight: 700; text-align: right; }
+.pf-a { color: var(--brand-green-light); }
+.pf-b { color: #7fb2f2; }

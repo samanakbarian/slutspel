@@ -365,7 +365,8 @@ function Jamforelse({ a, season, squad }: { a: PlayerResponse; season: string; s
   };
 
   const andra = squad.filter(n => n !== a.player.name);
-  if (andra.length === 0) return null;
+  // Utan lagkamrater att välja blir kortet bara profilen.
+  if (andra.length === 0) return <Guard name="Spelarprofil"><SpelarProfil name={a.player.name} season={season} /></Guard>;
   const bd = b && b.namn === vem && b.data && b.data.role !== 'goalie' ? b.data : null;
 
   const rader: Rad[] = [];
@@ -414,16 +415,18 @@ function Jamforelse({ a, season, squad }: { a: PlayerResponse; season: string; s
   return (
     <section className="mc-card">
       <div className="st-head">
-        <p className="mc-kicker">Jämför</p>
+        <p className="mc-kicker">{bd ? 'Jämför' : 'Spelarprofil'}</p>
         <select className="st-season" value={vem} onChange={e => valj(e.target.value)} aria-label="Jämför med lagkamrat">
-          <option value="">Välj lagkamrat</option>
+          <option value="">Jämför med…</option>
           {andra.map(n => <option key={n} value={n}>{humanName(n)}</option>)}
         </select>
       </div>
       {vem && !bd && b?.namn === vem && <p className="mc-text">Kunde inte hämta {humanName(vem)}.</p>}
       {vem && !b && <div className="st-skeleton" />}
+      <Guard name="Spelarprofil"><SpelarProfil name={a.player.name} season={season} jmf={bd ? bd.player.name : undefined} inbaddad /></Guard>
       {bd && (
         <>
+          <p className="mc-kicker st-sub">Sida vid sida</p>
           <div className="du">
             <div className="du-head">
               <span className="du-us">{humanName(a.player.name)}</span>
@@ -664,9 +667,9 @@ export function Spelare() {
         </div>
       </section>
 
-      {/* Överblicken först: profilen mot hela serien. Visas för utespelare
-          med percentil. */}
-      <Guard name="Spelarprofil"><SpelarProfil name={p.name} season={season} /></Guard>
+      {/* Överblicken först: profilen mot hela serien, med en lagkamrat i
+          samma radar när man väljer en. */}
+      <Jamforelse a={data} season={season} squad={squad} />
 
       {/* Skottprocent för alla utespelare. Backarnas ligger lägre, de skjuter
           från distans, men talet säger ändå något. Tekningar bara för dem
@@ -696,7 +699,6 @@ export function Spelare() {
         </p>
       </section>
 
-      <Jamforelse a={data} season={season} squad={squad} />
 
       {curve.length > 1 && (
         <section className="mc-card">
