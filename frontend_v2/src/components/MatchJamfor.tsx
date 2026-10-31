@@ -21,6 +21,7 @@ export function MatchJamfor({ gameId, vi, de, datum }: { gameId: number; vi: str
     <>
       {a && ga && <ISasongen games={a.games} g={ga} />}
       {a && b && ga && gb && <MotSasongen vi={{ namn: vi, games: a.games, g: ga }} de={{ namn: de, games: b.games, g: gb }} />}
+      <SpelarnaMotNiva gameId={gameId} de={de} />
       <Tabelleffekt vi={vi} de={de} datum={datum} />
     </>
   );
@@ -208,5 +209,58 @@ export function Fallbar({ titel, rad, children }: { titel: string; rad?: string;
       </button>
       {oppen && children}
     </>
+  );
+}
+
+type Niva = { name: string; team: string | null; is_ours: boolean; score: number; average: number | null; games_before: number; diff: number | null };
+
+/**
+ * Spelarna mot sin egen nivå: GameScore i matchen mot spelarens snitt i
+ * lagets tidigare matcher. Över nivån åt höger, under åt vänster.
+ */
+function SpelarnaMotNiva({ gameId, de }: { gameId: number; de: string }) {
+  const [rader, setRader] = useState<Niva[] | null>(null);
+  const [vara, setVara] = useState(true);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(`${API_URL}/api/v1/match/${gameId}/niva`, { signal: ctrl.signal }).then(jsonEllerNull)
+      .then(d => setRader(d?.status === 'ok' ? d.players : []))
+      .catch(() => { if (!ctrl.signal.aborted) setRader([]); });
+    return () => ctrl.abort();
+  }, [gameId]);
+  if (!rader) return null;
+  const urval = rader.filter(r => r.is_ours === vara && r.diff != null);
+  if (rader.filter(r => r.is_ours && r.diff != null).length < 4) return null;
+  const max = Math.max(0.5, ...urval.map(r => Math.abs(r.diff as number)));
+  const namn = (n: string) => { const [e, f] = n.split(',').map(x => x.trim()); return f ? `${f[0]}. ${e}` : n; };
+  return (
+    <section className="mr-card">
+      <p className="mr-kicker">Spelarna mot sin nivå · GameScore</p>
+      <div className="mc-seg mc-seg-liten" role="tablist" aria-label="Lag">
+        <button role="tab" aria-selected={vara} className={`mc-segbtn${vara ? ' mc-on' : ''}`} onClick={() => setVara(true)}>Björklöven</button>
+        <button role="tab" aria-selected={!vara} className={`mc-segbtn${!vara ? ' mc-on' : ''}`} onClick={() => setVara(false)}>{kortLag(de)}</button>
+      </div>
+      <div className="mj-niva">
+        {urval.map(r => {
+          const d = r.diff as number;
+          const w = (Math.abs(d) / max) * 50;
+          return (
+            <div key={r.name} className="mj-nrad" title={`${r.name}: ${komma(r.score, 2)} i matchen, snitt ${komma(r.average as number, 2)} på ${r.games_before} matcher`}>
+              <span className="mj-nnamn">{namn(r.name)}</span>
+              <span className="mj-nspar">
+                <i className="mj-nmitt" />
+                <i className={d >= 0 ? 'mj-nbar mj-battre' : 'mj-nbar mj-samre'} style={d >= 0 ? { left: '50%', width: `${w}%` } : { right: '50%', width: `${w}%` }} />
+              </span>
+              <span className="mj-ntal"><b>{komma(r.score, 2)}</b> <small>{komma(r.average as number, 2)}</small></span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="sr-leg">
+        <span><i className="sr-leg-ruta mj-leg-battre" />över sin nivå</span>
+        <span><i className="sr-leg-ruta mj-leg-samre" />under</span>
+        <span>siffror: matchen och snittet före</span>
+      </div>
+    </section>
   );
 }

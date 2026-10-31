@@ -53,6 +53,10 @@ export function PerioderJmf({ a, b, klassA = 'sr-ja', klassB = 'sr-jb' }: { a: L
   return (
     <section className="mc-card">
       <p className="mc-kicker">Per period · mål per match</p>
+      <div className="sr-leg sr-leg-topp">
+        <span className={klassA}><i className={`sr-leg-ruta ${klassA}-fyll`} />{kortLag(a.team)}</span>
+        <span className={klassB}><i className={`sr-leg-ruta ${klassB}-fyll`} />{kortLag(b.team)}</span>
+      </div>
       <div className="sr-pjmf">
         <span /><span className="sr-pjh">gjorda</span><span className="sr-pjh">insläppta</span>
         {per.map(x => (
@@ -205,7 +209,7 @@ export function Lagen({ lag }: { lag: Serie[] }) {
               const vinst = u.v + u.vo;
               return (
                 <div key={l.namn} className={`sr-lgrad${per.length > 1 ? ' sr-lgrad-jmf' : ''}`} title={`${kortLag(l.namn)}: ${u.v} vinster, ${u.vo} efter full tid, ${u.fo} förluster efter full tid, ${u.f} förluster`}>
-                  {per.length > 1 && <i className={`sr-lgprick ${l.klass}-fyll`} />}
+                  {per.length > 1 && <span className={`sr-lgteam ${l.klass}`}>{kortLag(l.namn)}</span>}
                   <span className="sr-lgbar">
                     <i className="sr-bar-v" style={{ width: `${(u.v / n) * 100}%` }} />
                     <i className="sr-bar-v sr-bar-ot" style={{ width: `${(u.vo / n) * 100}%` }} />
