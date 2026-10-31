@@ -3740,7 +3740,7 @@ text .sr-botten { fill: #f29a74; }
 .sr-jv-mb { fill: var(--brand-green-light); stroke: var(--brand-green-light); stroke-width: 1.5; }
 .sr-radar-gron { fill: rgba(66, 216, 131, 0.16); stroke: var(--brand-green-light); stroke-width: 2; stroke-linejoin: round; }
 .mu-nycklar { display: grid; gap: 0.7rem; }
-.mu-nyckel { display: grid; grid-template-columns: 6.4rem 1fr; gap: 0.7rem; align-items: baseline; }
+.mu-nyckel { display: grid; grid-template-columns: 5.8rem 1fr; gap: 0.7rem; align-items: baseline; }
 .mu-nyckel b { font-family: var(--font-display); font-size: 0.98rem; color: var(--brand-gold); white-space: nowrap; }
 .mu-nyckel span { font-size: 0.84rem; line-height: 1.4; color: var(--text-primary); }
 .mu-mrad { grid-template-columns: 9.5rem 1fr 3.6rem; }

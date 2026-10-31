@@ -80,7 +80,7 @@ function Nycklar({ liga, oss, dem, a, b }: { liga: LeagueData; oss: LeagueTeam; 
   if (fb.gjorde >= 3) {
     nycklar.push({
       tal: `${fb.vann} av ${fb.gjorde}`,
-      text: `${de} vinner ${fb.vann} av ${fb.gjorde} matcher där de gör första målet. ${vi} har gjort det i ${fa.gjorde} av ${fa.av}.`,
+      text: `${de} vinner ${fb.vann} av ${fb.gjorde} med första målet. ${vi} gör första målet i ${fa.gjorde} av ${fa.av}.`,
     });
   }
 
@@ -92,23 +92,23 @@ function Nycklar({ liga, oss, dem, a, b }: { liga: LeagueData; oss: LeagueTeam; 
   const vunna = (gs: LagMatch[]) => { const u = utfall(gs); return u.v + u.vo; };
   const ua = under(a.games), la = leder(a.games), lb = leder(b.games), ub = under(b.games);
   if (ua.length >= 3 && vunna(ua) === 0) {
-    nycklar.push({ tal: `0 av ${ua.length}`, text: `${vi} har inte vunnit någon av ${ua.length} matcher där laget legat under efter två perioder.` });
+    nycklar.push({ tal: `0 av ${ua.length}`, text: `${vi} har vunnit 0 av ${ua.length} i underläge efter två perioder.` });
   } else if (la.length >= 3) {
-    nycklar.push({ tal: `${vunna(la)} av ${la.length}`, text: `${vi} har vunnit ${vunna(la)} av ${la.length} matcher där laget lett efter två perioder.` });
+    nycklar.push({ tal: `${vunna(la)} av ${la.length}`, text: `${vi} har vunnit ${vunna(la)} av ${la.length} i ledning efter två perioder.` });
   }
   if (lb.length >= 3 && vunna(lb) === lb.length) {
-    nycklar.push({ tal: `${lb.length} av ${lb.length}`, text: `${de} har vunnit alla ${lb.length} matcher där de lett efter två perioder.` });
+    nycklar.push({ tal: `${lb.length} av ${lb.length}`, text: `${de} har vunnit ${lb.length} av ${lb.length} i ledning efter två perioder.` });
   } else if (ub.length >= 3 && vunna(ub) > 0) {
-    nycklar.push({ tal: `${vunna(ub)} av ${ub.length}`, text: `${de} har vänt ${vunna(ub)} av ${ub.length} matcher där de legat under efter två perioder.` });
+    nycklar.push({ tal: `${vunna(ub)} av ${ub.length}`, text: `${de} har vänt ${vunna(ub)} av ${ub.length} i underläge efter två perioder.` });
   }
 
   // Specialteamen mot varandra, när skillnaden i placering är stor.
   const n = liga.teams.length;
   const deraspp = dem.ranks.pp_pct, varpk = oss.ranks.pk_pct, varpp = oss.ranks.pp_pct, deraspk = dem.ranks.pk_pct;
   if (deraspp != null && varpk != null && varpk - deraspp >= 4) {
-    nycklar.push({ tal: `${ordinal(deraspp)} mot ${ordinal(varpk)}`, text: `${de}s powerplay är ${ordinal(deraspp)} bäst av ${n}, vårt boxplay ${ordinal(varpk)}. Utvisningarna kan avgöra.` });
+    nycklar.push({ tal: `${ordinal(deraspp)} mot ${ordinal(varpk)}`, text: `Powerplay: ${de} ${ordinal(deraspp)} av ${n}. Boxplay: ${vi} ${ordinal(varpk)}.` });
   } else if (varpp != null && deraspk != null && deraspk - varpp >= 4) {
-    nycklar.push({ tal: `${ordinal(varpp)} mot ${ordinal(deraspk)}`, text: `Vårt powerplay är ${ordinal(varpp)} bäst av ${n}, ${de}s boxplay ${ordinal(deraspk)}. Ett läge att ta vara på.` });
+    nycklar.push({ tal: `${ordinal(varpp)} mot ${ordinal(deraspk)}`, text: `Powerplay: ${vi} ${ordinal(varpp)} av ${n}. Boxplay: ${de} ${ordinal(deraspk)}.` });
   }
 
   // Perioderna: när de gör flest mål och när vi släpper in flest.
@@ -120,7 +120,7 @@ function Nycklar({ liga, oss, dem, a, b }: { liga: LeagueData; oss: LeagueTeam; 
     if (deBast.period && viSamst.period && deBast.period === viSamst.period) {
       nycklar.push({
         tal: `${ord[deBast.period - 1]}`,
-        text: `${de} gör flest mål i ${ord[deBast.period - 1]} perioden (${deBast.gf}), och det är där ${vi} släpper in flest (${viSamst.ga}).`,
+        text: `${de} gör flest mål i ${ord[deBast.period - 1]} perioden (${deBast.gf}). ${vi} släpper in flest där (${viSamst.ga}).`,
       });
     }
   }
@@ -128,7 +128,7 @@ function Nycklar({ liga, oss, dem, a, b }: { liga: LeagueData; oss: LeagueTeam; 
   // Skotten: vem som brukar ha pucken.
   const sa = oss.values.shot_share, sb = dem.values.shot_share;
   if (sa != null && sb != null && Math.abs(sa - sb) >= 5) {
-    nycklar.push({ tal: `${Math.round(sb)} %`, text: `${de} tar ${komma(sb)} % av skotten i sina matcher, ${vi} ${komma(sa)} %.` });
+    nycklar.push({ tal: `${Math.round(sb)} %`, text: `Andel av skotten: ${de} ${komma(sb)} %, ${vi} ${komma(sa)} %.` });
   }
 
   if (nycklar.length === 0) return null;
